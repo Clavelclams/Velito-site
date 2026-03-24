@@ -11,17 +11,26 @@ interface Partner {
 }
 
 const INSTITUTIONNELS: Partner[] = [
-  { name: "Amiens Métropole", category: "Services Jeunesse" },
-  { name: "France Esport", category: "Réseau national esport" },
-  { name: "FFJV", category: "Fédération Française de Jeu Vidéo" },
-  { name: "UFOLEP Somme", category: "Fédération sportive multisport" },
+  { name: "France Esport", category: "Réseau national esport (affiliation officielle)" },
+  { name: "FFJV", category: "Fédération Française de Jeu Vidéo (affiliation officielle)" },
+];
+
+/** Structures auprès desquelles VEA intervient — pas des partenaires officiels */
+interface Terrain {
+  name: string;
+  type: string;
+}
+
+const TERRAINS: Terrain[] = [
+  { name: "Service Jeunesse d'Amiens", type: "Collectivité territoriale" },
+  { name: "UFOLEP Somme", type: "Fédération sportive multisport" },
 ];
 
 const ASSOCIATIFS: Partner[] = [
   { name: "MABB", category: "Métropole Amiénoise Basket-Ball" },
   { name: "Jeunesse en Or", category: "Association QPV" },
   { name: "Comité Basket Somme", category: "Comité départemental basket-ball" },
-  { name: "OMNE Esport", category: "Organisateur INTERCUP" },
+  { name: "OMNE Esport", category: "Organisateur INTERCUP 2026" },
 ];
 
 const LOCAUX: Partner[] = [
@@ -51,6 +60,25 @@ function PartnerCard({ partner }: { partner: Partner }) {
         {partner.name}
       </h3>
       <p className="text-xs text-vea-text-muted">{partner.category}</p>
+    </div>
+  );
+}
+
+function TerrainCard({ terrain }: { terrain: Terrain }) {
+  return (
+    <div className="border border-dashed border-vea-border/50 rounded-2xl p-6 text-center opacity-80">
+      <div className="w-14 h-14 bg-vea-bg/50 rounded-lg mx-auto mb-3 flex items-center justify-center">
+        <span className="text-vea-text-dim text-lg font-bold">
+          {terrain.name[0]}
+        </span>
+      </div>
+      <h3 className="text-sm font-bold text-vea-white mb-1">
+        {terrain.name}
+      </h3>
+      <p className="text-xs text-vea-text-muted mb-2">{terrain.type}</p>
+      <span className="inline-block text-[10px] uppercase tracking-wider font-semibold text-vea-text-dim bg-vea-bg/80 border border-vea-border/30 px-2.5 py-0.5 rounded-full">
+        Terrain
+      </span>
     </div>
   );
 }
@@ -101,6 +129,24 @@ export default function PartenairesPage() {
       <section className="py-16 px-4">
         <div className="max-w-5xl mx-auto">
           <PartnerSection title="Partenaires institutionnels" partners={INSTITUTIONNELS} delay={0} />
+
+          {/* ===== TERRAINS D'INTERVENTION ===== */}
+          <ScrollReveal delay={0.05}>
+            <div className="mb-12">
+              <h3 className="text-lg font-bold text-vea-white mb-2 border-left-red">
+                Nos terrains d&apos;intervention
+              </h3>
+              <p className="text-xs text-vea-text-muted mb-6 pl-5">
+                Structures auprès desquelles VEA intervient en tant que prestataire.
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {TERRAINS.map((t) => (
+                  <TerrainCard key={t.name} terrain={t} />
+                ))}
+              </div>
+            </div>
+          </ScrollReveal>
+
           <PartnerSection title="Partenaires associatifs" partners={ASSOCIATIFS} delay={0.1} />
           <PartnerSection title="Partenaires locaux" partners={LOCAUX} delay={0.2} />
           <PartnerSection title="Médias partenaires" partners={MEDIAS} delay={0.3} />

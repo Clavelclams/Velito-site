@@ -3,6 +3,7 @@
  * Hero + 3 cards (histoire/valeurs/vision) + bureau + CA + partenaires + activités
  */
 import ScrollReveal from "@/components/ScrollReveal";
+import BureauSection from "@/components/BureauSection";
 
 const VALUES = [
   { icon: "🏆", label: "Excellence & Performance" },
@@ -36,11 +37,14 @@ interface OperationalMember {
   name: string;
   role: string;
   pseudo?: string;
+  description?: string;
+  agency?: { name: string; href: string };
 }
 
 const EQUIPE_OPERATIONNELLE: OperationalMember[] = [
-  { name: "Berstelien MILAPIE", role: "Community Manager" },
+  { name: "Berstelien MILAPIE", role: "Community Manager", pseudo: "Nesquiik (LNSK)", agency: { name: "EB2C Vision", href: "https://www.instagram.com/eb2cvision/" } },
   { name: "Tony TAGOE", role: "Responsable Partenariats & Subventions", pseudo: "Chewing Gum" },
+  { name: "Maya", role: "Responsable Administrative Junior", description: "Gestion administrative et traçabilité des activités de l'association." },
 ];
 
 interface PartnerOrg {
@@ -175,44 +179,8 @@ export default function AssociationPage() {
         </div>
       </section>
 
-      {/* ===== BUREAU EXÉCUTIF ===== */}
-      <section className="py-16 px-4">
-        <div className="max-w-5xl mx-auto">
-          <ScrollReveal>
-            <h2 className="text-2xl font-bold text-gradient-vea mb-2 text-center">
-              Bureau Exécutif
-            </h2>
-            <p className="text-sm text-vea-text-muted text-center mb-8">
-              L&apos;équipe qui dirige VEA au quotidien.
-            </p>
-          </ScrollReveal>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {BUREAU.map((member, i) => (
-              <ScrollReveal key={member.name} delay={i * 0.05}>
-                <MemberCard member={member} />
-              </ScrollReveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ===== CONSEIL D'ADMINISTRATION ===== */}
-      <section className="py-12 px-4">
-        <div className="max-w-4xl mx-auto">
-          <ScrollReveal>
-            <h2 className="text-xl font-bold text-gradient-vea mb-6 text-center">
-              Conseil d&apos;Administration
-            </h2>
-          </ScrollReveal>
-          <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto">
-            {CA.map((member, i) => (
-              <ScrollReveal key={member.name} delay={i * 0.05}>
-                <MemberCard member={member} size="small" />
-              </ScrollReveal>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* ===== BUREAU EXÉCUTIF + CA (condensé avec toggle) ===== */}
+      <BureauSection />
 
       {/* ===== ÉQUIPE OPÉRATIONNELLE ===== */}
       <section className="py-12 px-4">
@@ -225,7 +193,7 @@ export default function AssociationPage() {
               Ceux qui font vivre VEA sur le terrain.
             </p>
           </ScrollReveal>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
             {EQUIPE_OPERATIONNELLE.map((member, i) => {
               const initials = member.name
                 .split(" ")
@@ -249,6 +217,21 @@ export default function AssociationPage() {
                     {member.pseudo && (
                       <p className="text-[11px] text-vea-text-muted mt-1">
                         Pseudo : {member.pseudo}
+                      </p>
+                    )}
+                    {member.agency && (
+                      <a
+                        href={member.agency.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block mt-2 text-[11px] text-vea-text-muted hover:text-vea-white transition-colors"
+                      >
+                        {member.agency.name} ↗
+                      </a>
+                    )}
+                    {member.description && (
+                      <p className="text-[11px] text-vea-text-muted mt-1.5 leading-relaxed">
+                        {member.description}
                       </p>
                     )}
                   </div>

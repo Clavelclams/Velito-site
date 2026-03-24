@@ -92,12 +92,22 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="https://www.velitoesport.com"
+                  href="https://velito.com"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-vea-white transition-colors"
                 >
-                  www.velitoesport.com
+                  velito.com
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://vea.velito.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-vea-white transition-colors text-xs"
+                >
+                  vea.velito.com
                 </a>
               </li>
             </ul>

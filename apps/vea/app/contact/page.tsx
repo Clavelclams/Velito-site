@@ -153,7 +153,8 @@ export default function ContactPage() {
                     </li>
                     <li>
                       <span className="block text-vea-text-dim text-xs uppercase tracking-wider mb-1">Site web</span>
-                      <a href="https://www.velitoesport.com" target="_blank" rel="noopener noreferrer" className="text-vea-white hover:text-vea-red transition-colors">www.velitoesport.com</a>
+                      <a href="https://velito.com" target="_blank" rel="noopener noreferrer" className="text-vea-white hover:text-vea-red transition-colors block">velito.com</a>
+                      <a href="https://vea.velito.com" target="_blank" rel="noopener noreferrer" className="text-vea-text-muted hover:text-vea-red transition-colors text-xs mt-1 block">vea.velito.com</a>
                     </li>
                   </ul>
                 </div>

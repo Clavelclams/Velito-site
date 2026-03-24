@@ -142,6 +142,7 @@ body {
     rgba(124,58,237,0.05), transparent);
   opacity: 0;
   transition: opacity 0.3s;
+  pointer-events: none;
 }
 
 .card-glow:hover {

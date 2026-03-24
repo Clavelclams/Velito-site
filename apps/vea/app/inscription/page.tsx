@@ -1,15 +1,10 @@
 /**
  * Page Inscription VEA — REFONTE VIOLET + ROUGE + MOTION
  *
- * 👉 ÉTAPE 1 (Identification) : "Tu es déjà venu ?"
- *    - Prénom + Téléphone → appelle /api/participants/check
- *    - Si trouvé → pré-remplit le formulaire
- *    - Lien "Première fois ?" pour skip directement à l'étape 2
- *
- * 👉 ÉTAPE 2 (Formulaire) : Tous les champs + événement (depuis l'API)
- *    - Appelle /api/participants/register au submit
- *
- * 👉 ÉTAPE 3 (Confirmation) : Message de succès personnalisé
+ * Flow :
+ *   'check'   → Étape 1 : "Tu es déjà venu ?" + "Première fois ?"
+ *   'form'    → Étape 2 : Formulaire complet
+ *   'success' → Étape 3 : Confirmation
  *
  * "use client" car on utilise useState, useEffect, fetch
  */
@@ -60,8 +55,10 @@ const INITIAL_FORM: FormData = {
   accepteContact: false,
 };
 
+type Step = "check" | "form" | "success";
+
 export default function InscriptionPage() {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<Step>("check");
   const [checkPrenom, setCheckPrenom] = useState("");
   const [checkTel, setCheckTel] = useState("");
   const [form, setForm] = useState<FormData>(INITIAL_FORM);
@@ -79,7 +76,7 @@ export default function InscriptionPage() {
       .catch(() => {});
   }, []);
 
-  // ÉTAPE 1 — Vérification
+  // Vérification — "Tu es déjà venu ?"
   async function handleCheck() {
     setError("");
     if (!checkPrenom.trim() || !checkTel.trim()) {
@@ -113,7 +110,7 @@ export default function InscriptionPage() {
       } else {
         setForm({ ...INITIAL_FORM, prenom: checkPrenom, telephone: checkTel });
       }
-      setStep(2);
+      setStep("form");
     } catch {
       setError("Erreur de connexion au serveur.");
     } finally {
@@ -121,12 +118,13 @@ export default function InscriptionPage() {
     }
   }
 
+  // "Première fois ?" → directement au formulaire vide
   function handleFirstTime() {
     setForm(INITIAL_FORM);
-    setStep(2);
+    setStep("form");
   }
 
-  // ÉTAPE 2 — Inscription
+  // Inscription
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -160,7 +158,7 @@ export default function InscriptionPage() {
         const evt = evenements.find((ev) => ev.id === form.evenementId);
         setConfirmedEvent(evt?.titre || "l'événement");
       }
-      setStep(3);
+      setStep("success");
     } catch {
       setError("Erreur de connexion au serveur.");
     } finally {
@@ -172,7 +170,6 @@ export default function InscriptionPage() {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
-  // Classes communes inputs — thème violet
   const inputClass =
     "w-full bg-vea-bg border border-vea-border rounded-lg px-4 py-3 text-sm text-vea-white placeholder:text-vea-text-dim focus:outline-none focus:border-vea-purple/50 transition-colors";
 
@@ -185,9 +182,9 @@ export default function InscriptionPage() {
               Inscription
             </h1>
             <p className="text-lg text-vea-text-muted max-w-2xl mx-auto">
-              {step === 1 && "Vérifie si tu es déjà dans notre base."}
-              {step === 2 && "Remplis le formulaire pour t'inscrire."}
-              {step === 3 && "Tu es inscrit !"}
+              {step === "check" && "Vérifie si tu es déjà dans notre base."}
+              {step === "form" && "Remplis le formulaire pour t'inscrire."}
+              {step === "success" && "Tu es inscrit !"}
             </p>
           </ScrollReveal>
         </div>
@@ -203,9 +200,10 @@ export default function InscriptionPage() {
           )}
 
           {/* ÉTAPE 1 — Identification */}
-          {step === 1 && (
+          {step === "check" && (
             <ScrollReveal>
               <div className="card-glow p-8">
+                {/* Option A : Tu es déjà venu ? */}
                 <h2 className="text-xl font-bold text-vea-white mb-2">
                   Tu es déjà venu ?
                 </h2>
@@ -250,11 +248,12 @@ export default function InscriptionPage() {
                   </button>
                 </div>
 
+                {/* Option B : Première fois ? */}
                 <div className="mt-6 text-center">
                   <button
                     type="button"
                     onClick={handleFirstTime}
-                    className="text-sm text-vea-red hover:underline"
+                    className="text-white underline hover:text-[#E63946] transition-colors text-sm"
                   >
                     Première fois ? Inscris-toi directement
                   </button>
@@ -263,8 +262,8 @@ export default function InscriptionPage() {
             </ScrollReveal>
           )}
 
-          {/* ÉTAPE 2 — Formulaire */}
-          {step === 2 && (
+          {/* ÉTAPE 2 — Formulaire complet */}
+          {step === "form" && (
             <ScrollReveal>
               <form onSubmit={handleRegister} className="card-glow p-8">
                 <h2 className="text-xl font-bold text-vea-white mb-6">
@@ -362,7 +361,7 @@ export default function InscriptionPage() {
                 <div className="mt-4 text-center">
                   <button
                     type="button"
-                    onClick={() => { setStep(1); setError(""); }}
+                    onClick={() => { setStep("check"); setError(""); }}
                     className="text-xs text-vea-text-dim hover:text-vea-text-muted"
                   >
                     ← Retour
@@ -373,7 +372,7 @@ export default function InscriptionPage() {
           )}
 
           {/* ÉTAPE 3 — Confirmation */}
-          {step === 3 && (
+          {step === "success" && (
             <ScrollReveal>
               <div className="card-glow p-10 text-center">
                 <div className="w-16 h-16 bg-vea-red/20 rounded-full mx-auto mb-6 flex items-center justify-center animate-glow-red">

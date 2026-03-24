@@ -13,6 +13,8 @@
  *
  * Pour l'instant, seul le login admin fonctionne (V1).
  * En V2 on ajoutera l'inscription + login user classique avec la table User.
+ *
+ * REFONTE VIOLET + ROUGE — charte VEA appliquée.
  */
 
 import { useState } from "react";
@@ -59,64 +61,71 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#060d1f] flex items-center justify-center px-4">
-      <div className="card-glow p-8 w-full max-w-md rounded-2xl">
+    <div className="min-h-screen hero-bg flex items-center justify-center px-4 relative">
+      {/* Glow décoratif */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-vea-purple/5 blur-[120px] pointer-events-none" />
+
+      <div className="card-glow p-8 sm:p-10 w-full max-w-md rounded-2xl relative z-10">
         {/* Header */}
-        <h1 className="text-2xl font-black text-white mb-2">Connexion</h1>
-        <p className="text-[#7a8fa6] mb-8 text-sm">
-          Connecte-toi pour acc&eacute;der &agrave; ton espace
+        <h1 className="text-2xl font-black text-gradient-vea mb-2 text-center">
+          Connexion
+        </h1>
+        <p className="text-vea-text-muted mb-8 text-sm text-center">
+          Connecte-toi pour accéder à ton espace
         </p>
 
         {/* Formulaire */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="text-[#7a8fa6] text-xs uppercase tracking-widest mb-2 block">
+            <label className="text-vea-text-muted text-xs uppercase tracking-widest mb-2 block">
               Email
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-[#0a1628] border border-[#1e3a5f] focus:border-[#4d9fff] text-white rounded-xl px-4 py-3 outline-none transition-colors"
+              className="w-full bg-vea-bg border border-vea-border focus:border-vea-purple/50 text-white rounded-lg px-4 py-3 outline-none transition-colors text-sm placeholder-vea-text-dim"
               placeholder="ton@email.fr"
               required
             />
           </div>
 
           <div>
-            <label className="text-[#7a8fa6] text-xs uppercase tracking-widest mb-2 block">
+            <label className="text-vea-text-muted text-xs uppercase tracking-widest mb-2 block">
               Mot de passe
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-[#0a1628] border border-[#1e3a5f] focus:border-[#4d9fff] text-white rounded-xl px-4 py-3 outline-none transition-colors"
+              className="w-full bg-vea-bg border border-vea-border focus:border-vea-purple/50 text-white rounded-lg px-4 py-3 outline-none transition-colors text-sm placeholder-vea-text-dim"
               placeholder="••••••••"
               required
             />
           </div>
 
           {error && (
-            <p className="text-red-400 text-sm">{error}</p>
+            <div className="bg-vea-red/10 border border-vea-red/30 rounded-lg px-4 py-3">
+              <p className="text-vea-red text-sm">{error}</p>
+            </div>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#4d9fff] hover:bg-[#60b4ff] text-white font-bold py-3 rounded-xl transition-all duration-300 hover:shadow-[0_0_20px_rgba(77,159,255,0.4)] disabled:opacity-50"
+            className="w-full bg-vea-red hover:bg-vea-accent-hover text-white font-bold py-3.5 rounded-lg transition-all duration-300 hover:shadow-[0_0_25px_rgba(230,57,70,0.4)] disabled:opacity-50 text-sm"
           >
             {loading ? "Connexion..." : "Se connecter"}
           </button>
         </form>
 
         {/* Lien retour */}
-        <div className="mt-6 text-center">
+        <div className="mt-8 pt-6 border-t border-vea-border/50 text-center">
           <Link
             href="/"
-            className="text-[#7a8fa6] hover:text-[#4d9fff] text-sm transition-colors"
+            className="text-xs text-vea-text-dim hover:text-vea-white transition-colors"
           >
-            &larr; Retour au site
+            ← Retour au site
           </Link>
         </div>
       </div>

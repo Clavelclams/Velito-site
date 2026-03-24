@@ -98,7 +98,7 @@ export default function Navbar() {
         <div className="hidden lg:flex items-center gap-3">
           <Link
             href="/login"
-            className="text-[13px] text-vea-text-dim hover:text-vea-text-muted transition-colors font-medium"
+            className="border border-white/30 text-white text-sm font-medium px-4 py-1.5 rounded-lg hover:bg-white/10 hover:border-white/50 transition-all"
           >
             Connexion
           </Link>
@@ -185,7 +185,7 @@ export default function Navbar() {
           <Link
             href="/login"
             onClick={() => setDrawerOpen(false)}
-            className="block w-full text-center text-vea-text-dim hover:text-vea-text-muted text-sm font-medium py-2"
+            className="block w-full text-center border border-white/30 text-white text-sm font-medium py-2.5 rounded-lg hover:bg-white/10 hover:border-white/50 transition-all"
           >
             Connexion
           </Link>
