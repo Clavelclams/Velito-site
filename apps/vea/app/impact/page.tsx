@@ -24,7 +24,7 @@ const STATS: Stat[] = [
   { value: 5, suffix: "", prefix: "", label: "Quartiers couverts" },
   { value: 6, suffix: "", prefix: "", label: "Couvertures médiatiques" },
   { value: 12, suffix: "+", prefix: "", label: "Partenaires actifs" },
-  { value: 3, suffix: " ans", prefix: "", label: "D\u2019activité (2022-2026)" },
+  { value: 4, suffix: " ans", prefix: "", label: "D\u2019activité (2022-2026)" },
 ];
 
 interface TimelineEntry {

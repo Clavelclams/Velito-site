@@ -2,6 +2,7 @@
  * Page Association VEA — REFONTE VIOLET + ROUGE + MOTION
  * Hero + 3 cards (histoire/valeurs/vision) + bureau + CA + partenaires + activités
  */
+import Link from "next/link";
 import ScrollReveal from "@/components/ScrollReveal";
 import BureauSection from "@/components/BureauSection";
 
@@ -174,6 +175,53 @@ export default function AssociationPage() {
                 Un écosystème où le joueur est accompagné, les parents rassurés,
                 et les talents peuvent éclore sereinement.
               </p>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* ===== NOTRE IMPACT (aperçu) ===== */}
+      <section className="py-16 px-4 section-bg">
+        <div className="max-w-5xl mx-auto">
+          <ScrollReveal>
+            <h2 className="text-2xl font-bold text-gradient-vea mb-2 text-center">
+              Notre Impact
+            </h2>
+            <p className="text-sm text-vea-text-muted text-center mb-10">
+              Les chiffres clés de VEA depuis sa création.
+            </p>
+          </ScrollReveal>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            {[
+              { value: "100+", label: "Jeunes accompagnés" },
+              { value: "20+", label: "Événements organisés" },
+              { value: "3e", label: "Place nationale SF6" },
+              { value: "TOP 8", label: "INTERCUP 2026" },
+              { value: "12+", label: "Partenaires actifs" },
+              { value: "2022", label: "Depuis" },
+            ].map((stat, i) => (
+              <ScrollReveal key={stat.label} delay={i * 0.05}>
+                <div className="card-glow p-5 text-center">
+                  <span className="block text-2xl sm:text-3xl font-black text-gradient-vea leading-none mb-2 whitespace-nowrap">
+                    {stat.value}
+                  </span>
+                  <span className="text-[11px] text-vea-text-muted uppercase tracking-wider font-medium">
+                    {stat.label}
+                  </span>
+                </div>
+              </ScrollReveal>
+            ))}
+          </div>
+
+          <ScrollReveal delay={0.3}>
+            <div className="text-center mt-8">
+              <Link
+                href="/impact"
+                className="inline-block border border-vea-red text-vea-red font-semibold px-8 py-3 rounded-lg text-sm hover:bg-vea-red hover:text-white transition-all hover:shadow-[0_0_20px_rgba(230,57,70,0.3)]"
+              >
+                Voir notre impact complet
+              </Link>
             </div>
           </ScrollReveal>
         </div>
