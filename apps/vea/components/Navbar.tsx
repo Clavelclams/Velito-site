@@ -48,7 +48,7 @@ export default function Navbar() {
             className="w-[38px] h-[38px] object-contain"
           />
           <div className="hidden sm:block leading-tight">
-            <span className="block text-vea-white font-bold text-sm tracking-wide">
+            <span className="block text-gradient font-bold text-sm tracking-wide">
               VELITO
             </span>
             <span className="block text-vea-accent text-[10px] uppercase tracking-widest font-medium">
@@ -72,9 +72,12 @@ export default function Navbar() {
 
         {/* ===== ACTIONS DESKTOP ===== */}
         <div className="hidden lg:flex items-center gap-3">
-          <span className="text-[13px] text-vea-text-dim hover:text-vea-text-muted transition-colors cursor-pointer font-medium">
+          <Link
+            href="/login"
+            className="text-[13px] text-vea-text-dim hover:text-vea-text-muted transition-colors font-medium"
+          >
             Connexion
-          </span>
+          </Link>
           <a
             href={HELLOASSO_URL}
             target="_blank"
@@ -155,12 +158,13 @@ export default function Navbar() {
           >
             Adhérer
           </a>
-          <button
-            type="button"
+          <Link
+            href="/login"
+            onClick={() => setDrawerOpen(false)}
             className="block w-full text-center text-vea-text-dim hover:text-vea-text-muted text-sm font-medium py-2"
           >
             Connexion
-          </button>
+          </Link>
         </div>
       </div>
     </nav>

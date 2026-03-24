@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+
+  tags           UserTag[]
+  participations Participation[]
+}
+
+enum Role {
+  SUPERADMIN
+  ADMIN_VEA
+  USER
+}
+
+model Tag {
+  id    String    @id @default(cuid())
+  name  String    @unique
+  users UserTag[]
+}
+
+model UserTag {
+  userId String
+  tagId  String
+  user   User   @relation(fields: [userId], references: [id])
+  tag    Tag    @relation(fields: [tagId], references: [id])
+
+  @@id([userId, tagId])
+}
+
+model Participant {
+  id             String   @id @default(cuid())
+  prenom         String
+  nom            String
+  sexe           String
+  dateNaissance  DateTime
+  telephone      String   @unique
+  jeuPrefere     String?
+  quartier       String?
+  accepteContact Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  participations Participation[]
+}
+
+model Evenement {
+  id          String        @id @default(cuid())
+  titre       String
+  description String?
+  date        DateTime
+  lieu        String
+  type        TypeEvenement
+  actif       Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+
+  participations Participation[]
+}
+
+enum TypeEvenement {
+  TOURNOI
+  ATELIER
+  ANIMATION
+  COMPETITION
+}
+
+model Participation {
+  id            String   @id @default(cuid())
+  participantId String
+  evenementId   String
+  userId        String?
+  createdAt     DateTime @default(now())
+
+  participant Participant @relation(fields: [participantId], references: [id])
+  evenement   Evenement   @relation(fields: [evenementId], references: [id])
+  user        User?       @relation(fields: [userId], references: [id])
+
+  @@unique([participantId, evenementId])
+}

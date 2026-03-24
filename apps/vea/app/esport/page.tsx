@@ -1,40 +1,76 @@
 /**
  * Page Esport VEA
- * Rosters par jeu (EA FC, Clash Royale) + CTA rejoindre une équipe
+ * Résultats réels corrigés + fonctionnement compétitif VEA + CTA
+ *
+ * CORRECTION : Pinh et Tony Tagoe (pseudo : Chewing Gum) sont DEUX personnes différentes.
+ * Pinh = 3e place SF6 nationale, interview France Bleu Picardie.
+ * Tony Tagoe = pseudo "Chewing Gum", joueur VEA envoyé au championnat FFJV.
  */
 import Link from "next/link";
 
-interface Player {
-  pseudo: string;
-  name: string;
-  role: string;
+interface Result {
+  date: string;
+  title: string;
+  description: string;
+  badge: string;
+  source?: string;
+  emoji: string;
 }
 
-interface GameRoster {
-  game: string;
-  players: Player[];
-}
-
-const ROSTERS: GameRoster[] = [
+const RESULTS: Result[] = [
   {
-    game: "EA FC 25",
-    players: [
-      { pseudo: "Player1", name: "À confirmer", role: "Attaquant" },
-      { pseudo: "Player2", name: "À confirmer", role: "Milieu" },
-      { pseudo: "Player3", name: "À confirmer", role: "Défenseur" },
-      { pseudo: "Player4", name: "À confirmer", role: "Gardien" },
-      { pseudo: "Player5", name: "À confirmer", role: "Remplaçant" },
-    ],
+    date: "Février 2026",
+    title: "INTERCUP 2026 — TOP 8 France",
+    description:
+      "12 jeunes amiénois dont 4 jeunes filles représentent Amiens à Courbevoie, organisé par OMNE Esport. Plus grande délégation de l\u2019histoire de VEA.",
+    badge: "TOP 8 National",
+    source: "Gazette Sports, 26 fév. 2026",
+    emoji: "\u{1F3C6}",
   },
   {
-    game: "Clash Royale",
-    players: [
-      { pseudo: "Clasher1", name: "À confirmer", role: "Capitaine" },
-      { pseudo: "Clasher2", name: "À confirmer", role: "Joueur" },
-      { pseudo: "Clasher3", name: "À confirmer", role: "Joueur" },
-      { pseudo: "Clasher4", name: "À confirmer", role: "Joueur" },
-      { pseudo: "Clasher5", name: "À confirmer", role: "Remplaçant" },
-    ],
+    date: "Juin 2024",
+    title: "Championnat Fédéral SF6 — 3e France",
+    description:
+      "Pinh décroche la 3e place de France en Street Fighter 6 au championnat FFJV à Vitry Gaming, Paris. VEA envoie 4 joueurs : Mamba, Chewing Gum, NoyzBoy, Pinh. Diffusion live sur Twitch FFJV_officiel. Interview radio sur France Bleu Picardie.",
+    badge: "3e place nationale",
+    source: "Gazette Sports, 19 juin 2024",
+    emoji: "\u{1F949}",
+  },
+  {
+    date: "Novembre 2023",
+    title: "TIQE Étouvie — Événement fondateur",
+    description:
+      "Premier Tournoi Inter Quartier Esport. Salle des Provinces, Étouvie. Environ 30 jeunes. Gagnants : Lenny et Lény. Couverture presse par le Courrier Picard.",
+    badge: "Événement fondateur",
+    source: "Courrier Picard, nov. 2023",
+    emoji: "\u{1F3AE}",
+  },
+];
+
+interface HowCard {
+  emoji: string;
+  title: string;
+  description: string;
+}
+
+const HOW_IT_WORKS: HowCard[] = [
+  {
+    emoji: "\u{1F3AF}",
+    title: "Tu joues en compétitif ?",
+    description:
+      "VEA finance tes inscriptions aux tournois officiels (FFJV, France Esport, Toornament). En contrepartie : t\u2019engager dans l\u2019asso et ramener des résultats pour le contenu.",
+  },
+  {
+    emoji: "\u{1F50D}",
+    title: "On sonde, on y va",
+    description:
+      "Un tournoi sort ? On sonde les joueurs chauds. Si on est plusieurs, on part sous les couleurs VEA. C\u2019est comme ça qu\u2019on s\u2019est retrouvés à Courbevoie à 12 pour l\u2019INTERCUP.",
+  },
+  {
+    emoji: "\u{1F579}\uFE0F",
+    title: "Jeux actifs en compétition",
+    description:
+      "Rainbow Six Siege \u2014 équipe active. Street Fighter 6 \u2014 Pinh en lice internationale. EA FC, Clash Royale, Dragon Ball \u2014 tournois locaux. Rocket League \u2014 compétitions fédérales.",
   },
 ];
 
@@ -44,70 +80,112 @@ export default function EsportPage() {
       {/* ===== HERO ===== */}
       <section className="pt-20 pb-12 px-4 bg-gradient-to-b from-vea-dark to-vea-navy">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl font-black text-vea-white mb-4">
+          <h1 className="text-4xl sm:text-5xl font-black text-gradient mb-4">
             Esport &amp; Compétition
           </h1>
           <p className="text-lg text-vea-text-muted max-w-2xl mx-auto">
-            Retrouvez nos rosters officiels qui défendent les couleurs d&apos;Amiens.
+            VEA représente Amiens sur la scène nationale.
           </p>
         </div>
       </section>
 
-      {/* ===== ROSTERS ===== */}
+      {/* ===== NOS RÉSULTATS — TIMELINE ===== */}
       <section className="py-16 px-4">
-        <div className="max-w-5xl mx-auto space-y-16">
-          {ROSTERS.map((roster) => (
-            <div key={roster.game}>
-              {/* Titre du jeu avec bordure gauche bleue */}
-              <h2 className="text-xl font-bold text-vea-white mb-6 pl-4 border-l-4 border-vea-accent">
-                {roster.game}
-              </h2>
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-2xl font-bold text-vea-white mb-10 text-center">
+            Nos résultats
+          </h2>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                {roster.players.map((player, idx) => (
-                  <div
-                    key={`${roster.game}-${idx}`}
-                    className="bg-vea-card border border-vea-border rounded-xl p-5 text-center hover:border-vea-accent/30 transition-colors"
-                  >
-                    {/* Avatar placeholder */}
-                    <div className="w-14 h-14 bg-vea-navy rounded-full mx-auto mb-3 flex items-center justify-center">
-                      <span className="text-vea-text-dim text-lg font-bold">
-                        {player.pseudo[0]}
-                      </span>
-                    </div>
-                    <p className="text-sm font-bold text-vea-white">
-                      {player.pseudo}
-                    </p>
-                    <p className="text-xs text-vea-accent mt-0.5 font-medium">
-                      {player.role}
-                    </p>
-                    <p className="text-[11px] text-vea-text-dim mt-1">
-                      {player.name}
-                    </p>
+          <div className="relative">
+            {/* Ligne verticale */}
+            <div className="absolute left-6 top-0 bottom-0 w-px bg-vea-border" />
+
+            <div className="space-y-10">
+              {RESULTS.map((result) => (
+                <div key={result.title} className="relative pl-16">
+                  {/* Point sur la timeline */}
+                  <div className="absolute left-3 top-1 w-7 h-7 rounded-full bg-vea-card border-2 border-vea-accent flex items-center justify-center text-sm">
+                    {result.emoji}
                   </div>
-                ))}
-              </div>
+
+                  {/* Date */}
+                  <p className="text-xs text-vea-accent font-semibold uppercase tracking-wider mb-1">
+                    {result.date}
+                  </p>
+
+                  {/* Titre */}
+                  <h3 className="text-lg font-bold text-vea-white mb-2">
+                    {result.title}
+                  </h3>
+
+                  {/* Description */}
+                  <p className="text-sm text-vea-text-muted leading-relaxed mb-2">
+                    {result.description}
+                  </p>
+
+                  {/* Source */}
+                  {result.source && (
+                    <p className="text-[11px] text-vea-text-dim italic mb-3">
+                      Source : {result.source}
+                    </p>
+                  )}
+
+                  {/* Badge */}
+                  <span className="inline-block px-3 py-1 text-xs font-semibold text-vea-accent bg-vea-accent/10 border border-vea-accent/20 rounded-full">
+                    {result.badge}
+                  </span>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== COMMENT ÇA MARCHE ===== */}
+      <section className="py-16 px-4 bg-vea-navy/50">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-2xl font-bold text-vea-white mb-3 text-center">
+            Comment ça marche chez VEA
+          </h2>
+          <p className="text-sm text-vea-text-muted text-center mb-10 max-w-xl mx-auto">
+            Pas d&apos;équipes fixes par jeu. Voici comment on fonctionne.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {HOW_IT_WORKS.map((card) => (
+              <div
+                key={card.title}
+                className="card-glow p-7"
+              >
+                <span className="text-2xl mb-4 block">{card.emoji}</span>
+                <h3 className="text-base font-bold text-vea-white mb-2">
+                  {card.title}
+                </h3>
+                <p className="text-sm text-vea-text-muted leading-relaxed">
+                  {card.description}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* ===== CTA ===== */}
       <section className="py-20 px-4">
         <div className="max-w-3xl mx-auto text-center">
-          <div className="bg-vea-card border border-vea-border rounded-xl p-10">
+          <div className="card-glow p-10">
             <h2 className="text-2xl font-bold text-vea-white mb-4">
-              Rejoins une équipe
+              Tu joues sérieusement ?
             </h2>
             <p className="text-vea-text-muted mb-8 max-w-lg mx-auto">
-              Tu es compétitif et tu veux représenter Amiens ?
-              Contacte-nous pour intégrer un roster VEA.
+              On cherche des joueurs motivés pour représenter Amiens.
+              Peu importe ton niveau, viens nous voir.
             </p>
             <Link
-              href="/contact"
+              href="/inscription"
               className="inline-block bg-vea-accent hover:bg-vea-accent-hover text-white font-semibold px-8 py-3.5 rounded-lg transition-colors text-sm"
             >
-              Candidater
+              Nous rejoindre
             </Link>
           </div>
         </div>

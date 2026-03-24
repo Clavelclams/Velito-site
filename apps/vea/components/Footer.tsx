@@ -27,13 +27,14 @@ const SOCIALS = [
 
 export default function Footer() {
   return (
-    <footer className="w-full bg-vea-darker border-t border-vea-border/20 mt-auto">
+    <footer className="w-full bg-[#030a18] mt-auto">
+      <div className="section-separator" />
       <div className="max-w-7xl mx-auto px-4 lg:px-8 py-14">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
 
           {/* ===== COLONNE 1 : À PROPOS + RÉSEAUX ===== */}
           <div>
-            <h3 className="text-vea-accent font-bold text-lg mb-3">VEA</h3>
+            <h3 className="text-[#4d9fff] uppercase tracking-widest text-xs font-bold mb-3">VEA</h3>
             <p className="text-sm text-vea-text-muted leading-relaxed mb-5">
               Velito Esport Amiens — Association d&apos;inclusion par
               l&apos;esport. Le jeu vidéo comme moteur de lien social,
@@ -57,7 +58,7 @@ export default function Footer() {
 
           {/* ===== COLONNE 2 : NAVIGATION ===== */}
           <div>
-            <h3 className="text-vea-white font-semibold text-sm uppercase tracking-wider mb-4">
+            <h3 className="text-[#4d9fff] uppercase tracking-widest text-xs font-bold mb-4">
               Navigation
             </h3>
             <ul className="space-y-2">
@@ -76,7 +77,7 @@ export default function Footer() {
 
           {/* ===== COLONNE 3 : CONTACT ===== */}
           <div>
-            <h3 className="text-vea-white font-semibold text-sm uppercase tracking-wider mb-4">
+            <h3 className="text-[#4d9fff] uppercase tracking-widest text-xs font-bold mb-4">
               Contact
             </h3>
             <ul className="space-y-3 text-sm text-vea-text-muted">

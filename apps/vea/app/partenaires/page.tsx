@@ -1,21 +1,79 @@
 /**
  * Page Partenaires VEA
- * Grille partenaires (4 cols, 2 mobile) + CTA devenir partenaire
+ * Liste complète réelle classée en 4 catégories + CTA devenir partenaire
  */
 import Link from "next/link";
 
 interface Partner {
   name: string;
   category: string;
-  dashed?: boolean; // Card en pointillés = place libre
 }
 
-const PARTNERS: Partner[] = [
-  { name: "Ville d'Amiens", category: "Collectivité" },
-  { name: "Tech Store", category: "Matériel" },
-  { name: "Local Bank", category: "Finance" },
-  { name: "Votre Logo ici", category: "Devenez partenaire", dashed: true },
+const INSTITUTIONNELS: Partner[] = [
+  { name: "Amiens Métropole", category: "Services Jeunesse" },
+  { name: "France Esport", category: "Réseau national esport" },
+  { name: "FFJV", category: "Fédération Française de Jeu Vidéo" },
+  { name: "UFOLEP Somme", category: "Fédération sportive multisport" },
 ];
+
+const ASSOCIATIFS: Partner[] = [
+  { name: "MABB", category: "Métropole Amiénoise Basket-Ball" },
+  { name: "Jeunesse en Or", category: "Association QPV" },
+  { name: "Comité Basket Somme", category: "Comité départemental basket-ball" },
+  { name: "OMNE Esport", category: "Organisateur INTERCUP" },
+];
+
+const LOCAUX: Partner[] = [
+  { name: "EVA Amiens", category: "Partenaire gaming" },
+  { name: "GameCash", category: "Lots & récompenses tournois" },
+  { name: "WarpZone", category: "Bar gaming Amiens" },
+  { name: "Battle Kart", category: "Partenaire événementiel" },
+  { name: "Moxy Amiens", category: "Partenaire événementiel" },
+];
+
+const MEDIAS: Partner[] = [
+  { name: "Courrier Picard", category: "Presse régionale" },
+  { name: "Gazette Sports", category: "Média sportif local" },
+  { name: "France Bleu Picardie", category: "Radio régionale" },
+  { name: "NRJ Amiens", category: "Radio locale" },
+];
+
+function PartnerCard({ partner }: { partner: Partner }) {
+  return (
+    <div className="card-glow p-6 text-center">
+      <div className="w-14 h-14 bg-vea-navy rounded-lg mx-auto mb-3 flex items-center justify-center">
+        <span className="text-vea-text-dim text-lg font-bold">
+          {partner.name[0]}
+        </span>
+      </div>
+      <h3 className="text-sm font-bold text-vea-white mb-1">
+        {partner.name}
+      </h3>
+      <p className="text-xs text-vea-text-muted">{partner.category}</p>
+    </div>
+  );
+}
+
+function PartnerSection({
+  title,
+  partners,
+}: {
+  title: string;
+  partners: Partner[];
+}) {
+  return (
+    <div className="mb-12">
+      <h3 className="text-lg font-bold text-vea-white mb-6 pl-4 border-l-4 border-vea-accent">
+        {title}
+      </h3>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        {partners.map((p) => (
+          <PartnerCard key={p.name} partner={p} />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function PartenairesPage() {
   return (
@@ -23,7 +81,7 @@ export default function PartenairesPage() {
       {/* ===== HERO ===== */}
       <section className="pt-20 pb-12 px-4 bg-gradient-to-b from-vea-dark to-vea-navy">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl font-black text-vea-white mb-4">
+          <h1 className="text-4xl sm:text-5xl font-black text-gradient mb-4">
             Nos Partenaires
           </h1>
           <p className="text-lg text-vea-text-muted max-w-2xl mx-auto">
@@ -32,30 +90,25 @@ export default function PartenairesPage() {
         </div>
       </section>
 
-      {/* ===== GRILLE ===== */}
+      {/* ===== GRILLES PAR CATÉGORIE ===== */}
       <section className="py-16 px-4">
         <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            {PARTNERS.map((partner) => (
-              <div
-                key={partner.name}
-                className={`bg-vea-card rounded-xl p-8 text-center hover:border-vea-accent/30 transition-colors ${
-                  partner.dashed
-                    ? "border-2 border-dashed border-vea-border"
-                    : "border border-vea-border"
-                }`}
-              >
-                <div className="w-16 h-16 bg-vea-navy rounded-lg mx-auto mb-4 flex items-center justify-center">
-                  <span className="text-vea-text-dim text-xl font-bold">
-                    {partner.name[0]}
-                  </span>
-                </div>
-                <h3 className="text-sm font-bold text-vea-white mb-1">
-                  {partner.name}
-                </h3>
-                <p className="text-xs text-vea-text-muted">{partner.category}</p>
+          <PartnerSection title="Partenaires institutionnels" partners={INSTITUTIONNELS} />
+          <PartnerSection title="Partenaires associatifs" partners={ASSOCIATIFS} />
+          <PartnerSection title="Partenaires locaux" partners={LOCAUX} />
+          <PartnerSection title="Médias partenaires" partners={MEDIAS} />
+
+          {/* Card "Votre logo ici" */}
+          <div className="mt-8">
+            <div className="bg-vea-card border-2 border-dashed border-vea-border rounded-xl p-8 text-center max-w-xs mx-auto hover:border-vea-accent/40 transition-colors">
+              <div className="w-14 h-14 bg-vea-navy rounded-lg mx-auto mb-3 flex items-center justify-center">
+                <span className="text-vea-accent text-2xl font-bold">+</span>
               </div>
-            ))}
+              <h3 className="text-sm font-bold text-vea-white mb-1">
+                Votre logo ici
+              </h3>
+              <p className="text-xs text-vea-text-muted">Devenez partenaire</p>
+            </div>
           </div>
         </div>
       </section>
@@ -63,7 +116,7 @@ export default function PartenairesPage() {
       {/* ===== CTA ===== */}
       <section className="py-20 px-4">
         <div className="max-w-3xl mx-auto text-center">
-          <div className="bg-vea-card border border-vea-border rounded-xl p-10">
+          <div className="card-glow p-10">
             <h2 className="text-2xl font-bold text-vea-white mb-4">
               Devenir Partenaire
             </h2>
@@ -75,7 +128,7 @@ export default function PartenairesPage() {
               href="/contact"
               className="inline-block bg-vea-accent hover:bg-vea-accent-hover text-white font-semibold px-8 py-3.5 rounded-lg transition-colors text-sm"
             >
-              Télécharger le dossier de sponsoring
+              Nous contacter
             </Link>
           </div>
         </div>

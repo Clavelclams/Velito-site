@@ -56,7 +56,7 @@ export default function ContactPage() {
       {/* ===== HERO ===== */}
       <section className="pt-20 pb-12 px-4 bg-gradient-to-b from-vea-dark to-vea-navy">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl font-black text-vea-white mb-4">
+          <h1 className="text-4xl sm:text-5xl font-black text-gradient mb-4">
             Contact
           </h1>
           <p className="text-lg text-vea-text-muted max-w-2xl mx-auto">
@@ -132,7 +132,7 @@ export default function ContactPage() {
 
             {/* ===== INFOS (2/5) ===== */}
             <div className="lg:col-span-2 space-y-6">
-              <div className="bg-vea-card border border-vea-border rounded-xl p-6">
+              <div className="card-glow p-6">
                 <h3 className="text-sm font-semibold text-vea-white uppercase tracking-wider mb-4">
                   Coordonnées
                 </h3>
@@ -153,7 +153,7 @@ export default function ContactPage() {
               </div>
 
               {/* Réseaux */}
-              <div className="bg-vea-card border border-vea-border rounded-xl p-6">
+              <div className="card-glow p-6">
                 <h3 className="text-sm font-semibold text-vea-white uppercase tracking-wider mb-4">
                   Réseaux sociaux
                 </h3>
