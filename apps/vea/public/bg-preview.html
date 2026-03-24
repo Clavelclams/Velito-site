@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VEA — Background Preview</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0d0618; color: white; font-family: system-ui, -apple-system, sans-serif; }
+    h1 { text-align: center; padding: 40px 20px 10px; font-size: 2rem; background: linear-gradient(to right, #ffffff, #E63946); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .subtitle { text-align: center; color: #8b7aaa; font-size: 0.9rem; margin-bottom: 40px; }
+    .section { margin: 0 auto 60px; max-width: 1400px; padding: 0 20px; }
+    .section h2 { color: #E63946; font-size: 1.2rem; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 3px; }
+    .section p { color: #8b7aaa; font-size: 0.85rem; margin-bottom: 16px; }
+    .preview { width: 100%; aspect-ratio: 16/9; border-radius: 12px; overflow: hidden; border: 1px solid rgba(124,58,237,0.2); position: relative; }
+    .preview img { width: 100%; height: 100%; object-fit: cover; }
+    /* Preview avec texte superposé pour tester la lisibilité */
+    .preview-with-text { position: relative; }
+    .preview-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
+    .preview-overlay .badge { display: inline-block; padding: 6px 16px; border: 1px solid rgba(230,57,70,0.3); border-radius: 999px; font-size: 0.7rem; color: #E63946; letter-spacing: 2px; text-transform: uppercase; background: rgba(230,57,70,0.05); margin-bottom: 20px; }
+    .preview-overlay h3 { font-size: 2.5rem; font-weight: 900; margin-bottom: 12px; }
+    .preview-overlay h3 .v1 { background: linear-gradient(to right, #ffffff, #E63946); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .preview-overlay h3 .v2 { background: linear-gradient(to right, #E63946, #ff6b73); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .preview-overlay .desc { color: #8b7aaa; font-size: 0.9rem; max-width: 500px; line-height: 1.6; }
+    .tag { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; margin-top: 12px; }
+    .tag-hero { background: rgba(230,57,70,0.1); color: #E63946; border: 1px solid rgba(230,57,70,0.2); }
+    .tag-section { background: rgba(124,58,237,0.1); color: #a855f7; border: 1px solid rgba(124,58,237,0.2); }
+    .tag-diag { background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); }
+  </style>
+</head>
+<body>
+  <h1>VEA — Background Concepts</h1>
+  <p class="subtitle">3 options de fond pour le site VEA — palette violet + rouge</p>
+
+  <!-- OPTION 1 : Hero Pattern -->
+  <div class="section">
+    <h2>Option 1 — Hero Pattern</h2>
+    <p>Grille hexagonale tech/gaming + glows rouge et violet. Pour le hero plein écran.</p>
+    <div class="preview preview-with-text">
+      <img src="/images/bg/hero-pattern.svg" alt="Hero Pattern">
+      <div class="preview-overlay">
+        <span class="badge">Association Esport & Insertion</span>
+        <h3><span class="v1">LE JEU VIDÉO</span><br><span class="v2">COMME MOTEUR</span></h3>
+        <p class="desc">Velito Esport Amiens utilise le gaming pour créer du lien social, favoriser l'insertion et faire briller les talents locaux.</p>
+      </div>
+    </div>
+    <span class="tag tag-hero">Usage : hero section (100vh)</span>
+  </div>
+
+  <!-- OPTION 2 : Section Pattern -->
+  <div class="section">
+    <h2>Option 2 — Section Pattern</h2>
+    <p>Lignes diagonales subtiles + nodes. Pour les sections intérieures (stats, actions, etc).</p>
+    <div class="preview">
+      <img src="/images/bg/section-pattern.svg" alt="Section Pattern" style="object-fit: fill;">
+    </div>
+    <span class="tag tag-section">Usage : sections intérieures</span>
+  </div>
+
+  <!-- OPTION 3 : Diagonal Bicolor (style MABB) -->
+  <div class="section">
+    <h2>Option 3 — Diagonal Bicolor (style MABB)</h2>
+    <p>Concept identique aux pages 1-2 MABB mais violet + rouge. Diagonale nette, motifs hexagonaux dans chaque zone.</p>
+    <div class="preview preview-with-text">
+      <img src="/images/bg/diagonal-bicolor.svg" alt="Diagonal Bicolor">
+      <div class="preview-overlay" style="justify-content: flex-start; padding-top: 80px;">
+        <h3><span class="v1">VELITO ESPORT</span><br><span class="v2">AMIENS</span></h3>
+        <p class="desc">L'esport comme vecteur d'inclusion sociale dans les quartiers prioritaires.</p>
+      </div>
+    </div>
+    <span class="tag tag-diag">Usage : hero alternatif / bannière</span>
+  </div>
+</body>
+</html>

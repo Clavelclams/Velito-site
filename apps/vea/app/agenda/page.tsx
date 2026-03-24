@@ -1,5 +1,5 @@
 /**
- * Page Agenda VEA — /agenda
+ * Page Agenda VEA — REFONTE VIOLET + ROUGE + MOTION
  *
  * 👉 DYNAMIQUE : charge les événements depuis la BDD via /api/evenements?all=true
  * 👉 Plus aucun événement hardcodé — tout vient de Prisma/MySQL
@@ -10,15 +10,12 @@
  * 3. Section "Prochains événements" (date >= aujourd'hui + actif)
  * 4. Section "Nos dernières actions" (date < aujourd'hui = passés)
  * 5. State loading + état vide si BDD vide
- *
- * Le composant EventCard gère l'affichage d'un événement
- * avec couleur par type et badge "À venir" / "Passé".
  */
 "use client";
 
 import { useState, useEffect } from "react";
+import ScrollReveal from "@/components/ScrollReveal";
 
-// 👉 Type qui correspond exactement au model Prisma Evenement
 type Evenement = {
   id: string;
   titre: string;
@@ -34,7 +31,6 @@ export default function AgendaPage() {
   const [filtre, setFiltre] = useState<string>("tous");
   const [loading, setLoading] = useState(true);
 
-  // 👉 Au montage du composant, on fetch TOUS les événements (passés + futurs)
   useEffect(() => {
     fetch("/api/evenements?all=true")
       .then((r) => {
@@ -52,35 +48,31 @@ export default function AgendaPage() {
   }, []);
 
   const now = new Date();
-
-  // 👉 Sépare les événements en 2 listes :
-  // - À venir = date future + actif
-  // - Passés = date passée (peu importe actif)
   const aVenir = evenements.filter(
     (e) => new Date(e.date) >= now && e.actif
   );
   const passes = evenements.filter((e) => new Date(e.date) < now);
 
-  // 👉 Liste des filtres — correspond aux valeurs de l'enum TypeEvenement
   const filtres = ["tous", "TOURNOI", "ATELIER", "ANIMATION", "COMPETITION"];
 
-  // 👉 Applique le filtre sur une liste d'événements
   const eventsFiltres = (liste: Evenement[]) =>
     filtre === "tous" ? liste : liste.filter((e) => e.type === filtre);
 
   return (
-    <main className="min-h-screen bg-[#060d1f] pt-32 pb-20">
+    <main className="min-h-screen bg-vea-dark pt-32 pb-20">
       <div className="container mx-auto px-6">
         {/* ===== Header ===== */}
-        <div className="text-center mb-12">
-          <h1 className="text-5xl md:text-7xl font-black text-gradient uppercase mb-4">
-            Agenda &amp; Événements
-          </h1>
-          <div className="section-separator w-24 mx-auto" />
-          <p className="text-[#7a8fa6] mt-4">
-            Toutes les actions VEA depuis 2022.
-          </p>
-        </div>
+        <ScrollReveal>
+          <div className="text-center mb-12">
+            <h1 className="text-5xl md:text-7xl font-black text-gradient-vea uppercase mb-4">
+              Agenda &amp; Événements
+            </h1>
+            <div className="section-separator w-24 mx-auto" />
+            <p className="text-vea-text-muted mt-4">
+              Toutes les actions VEA depuis 2022.
+            </p>
+          </div>
+        </ScrollReveal>
 
         {/* ===== Filtres ===== */}
         <div className="flex flex-wrap gap-2 mb-12 justify-center">
@@ -90,11 +82,10 @@ export default function AgendaPage() {
               onClick={() => setFiltre(f)}
               className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                 filtre === f
-                  ? "bg-[#4d9fff] text-white"
-                  : "border border-[#1e3a5f] text-[#7a8fa6] hover:border-[#4d9fff]"
+                  ? "bg-vea-red text-white"
+                  : "border border-vea-border text-vea-text-muted hover:border-vea-red/50"
               }`}
             >
-              {/* 👉 "tous" → affiche "Tous", sinon capitalise la première lettre */}
               {f === "tous"
                 ? "Tous"
                 : f.charAt(0) + f.slice(1).toLowerCase()}
@@ -104,19 +95,23 @@ export default function AgendaPage() {
 
         {/* ===== Loading ===== */}
         {loading && (
-          <p className="text-center text-[#7a8fa6] py-12">Chargement...</p>
+          <p className="text-center text-vea-text-muted py-12">Chargement...</p>
         )}
 
         {/* ===== Prochains événements ===== */}
         {eventsFiltres(aVenir).length > 0 && (
           <section className="mb-16">
-            <h2 className="text-2xl font-black text-white mb-6 flex items-center gap-3">
-              <span className="w-3 h-3 rounded-full bg-[#4d9fff] animate-pulse inline-block" />
-              Prochains événements
-            </h2>
+            <ScrollReveal>
+              <h2 className="text-2xl font-black text-white mb-6 flex items-center gap-3">
+                <span className="w-3 h-3 rounded-full bg-vea-red animate-pulse inline-block" />
+                Prochains événements
+              </h2>
+            </ScrollReveal>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {eventsFiltres(aVenir).map((ev) => (
-                <EventCard key={ev.id} ev={ev} futur />
+              {eventsFiltres(aVenir).map((ev, i) => (
+                <ScrollReveal key={ev.id} delay={i * 0.05}>
+                  <EventCard ev={ev} futur />
+                </ScrollReveal>
               ))}
             </div>
           </section>
@@ -125,15 +120,19 @@ export default function AgendaPage() {
         {/* ===== Événements passés ===== */}
         {eventsFiltres(passes).length > 0 && (
           <section>
-            <h2 className="text-2xl font-black text-white mb-6">
-              Nos dernières actions
-            </h2>
-            <p className="text-[#7a8fa6] text-sm mb-6">
-              Tout ce que VEA a organisé ou participé depuis sa création.
-            </p>
+            <ScrollReveal>
+              <h2 className="text-2xl font-black text-white mb-6">
+                Nos dernières actions
+              </h2>
+              <p className="text-vea-text-muted text-sm mb-6">
+                Tout ce que VEA a organisé ou participé depuis sa création.
+              </p>
+            </ScrollReveal>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {eventsFiltres(passes).map((ev) => (
-                <EventCard key={ev.id} ev={ev} />
+              {eventsFiltres(passes).map((ev, i) => (
+                <ScrollReveal key={ev.id} delay={i * 0.05}>
+                  <EventCard ev={ev} />
+                </ScrollReveal>
               ))}
             </div>
           </section>
@@ -142,10 +141,10 @@ export default function AgendaPage() {
         {/* ===== État vide ===== */}
         {!loading && evenements.length === 0 && (
           <div className="text-center py-20">
-            <p className="text-[#7a8fa6] text-lg">
+            <p className="text-vea-text-muted text-lg">
               Aucun événement pour le moment.
             </p>
-            <p className="text-[#7a8fa6] text-sm mt-2">
+            <p className="text-vea-text-dim text-sm mt-2">
               Va dans le dashboard admin pour importer les événements VEA.
             </p>
           </div>
@@ -153,7 +152,7 @@ export default function AgendaPage() {
 
         {/* ===== Compteur ===== */}
         {!loading && evenements.length > 0 && (
-          <p className="text-xs text-[#4a5568] text-center mt-12">
+          <p className="text-xs text-vea-text-dim text-center mt-12">
             {eventsFiltres([...aVenir, ...passes]).length} événement
             {eventsFiltres([...aVenir, ...passes]).length > 1 ? "s" : ""}{" "}
             affiché{eventsFiltres([...aVenir, ...passes]).length > 1 ? "s" : ""}
@@ -165,13 +164,7 @@ export default function AgendaPage() {
 }
 
 /**
- * Composant EventCard
- *
- * 👉 Affiche un événement avec :
- * - Badge de type coloré (tournoi=bleu, atelier=vert, animation=violet, compétition=jaune)
- * - Badge "À venir" ou "Passé"
- * - Titre, description, date formatée en français, lieu
- * - Bouton "S'inscrire" seulement pour les événements futurs
+ * Composant EventCard — couleurs violet/rouge
  */
 function EventCard({
   ev,
@@ -182,27 +175,26 @@ function EventCard({
 }) {
   const date = new Date(ev.date);
 
-  // 👉 Couleurs différentes par type d'événement
   const typeColors: Record<string, string> = {
-    TOURNOI: "text-[#4d9fff] border-[#4d9fff]",
+    TOURNOI: "text-vea-red border-vea-red",
     ATELIER: "text-green-400 border-green-400",
-    ANIMATION: "text-purple-400 border-purple-400",
+    ANIMATION: "text-vea-purple-light border-vea-purple-light",
     COMPETITION: "text-yellow-400 border-yellow-400",
   };
 
   return (
-    <div className="card-glow p-6 rounded-2xl flex flex-col gap-4">
+    <div className="card-glow p-6 rounded-2xl flex flex-col gap-4 h-full">
       {/* Ligne du haut : badge type + badge statut */}
       <div className="flex items-center justify-between">
         <span
           className={`text-xs px-3 py-1 rounded-full border font-semibold uppercase tracking-wider ${
-            typeColors[ev.type] || "text-[#4d9fff] border-[#4d9fff]"
+            typeColors[ev.type] || "text-vea-red border-vea-red"
           }`}
         >
           {ev.type.toLowerCase()}
         </span>
         {futur ? (
-          <span className="text-xs bg-[#4d9fff]/20 text-[#4d9fff] px-3 py-1 rounded-full">
+          <span className="text-xs bg-vea-red/20 text-vea-red px-3 py-1 rounded-full">
             À venir
           </span>
         ) : (
@@ -218,15 +210,15 @@ function EventCard({
           {ev.titre}
         </h3>
         {ev.description && (
-          <p className="text-[#7a8fa6] text-sm line-clamp-2">
+          <p className="text-vea-text-muted text-sm line-clamp-2">
             {ev.description}
           </p>
         )}
       </div>
 
-      {/* Date + lieu (poussés en bas grâce à mt-auto) */}
+      {/* Date + lieu */}
       <div className="mt-auto space-y-1">
-        <p className="text-[#7a8fa6] text-sm flex items-center gap-2">
+        <p className="text-vea-text-muted text-sm flex items-center gap-2">
           <span>📅</span>
           {date.toLocaleDateString("fr-FR", {
             day: "numeric",
@@ -234,7 +226,7 @@ function EventCard({
             year: "numeric",
           })}
         </p>
-        <p className="text-[#7a8fa6] text-sm flex items-center gap-2">
+        <p className="text-vea-text-muted text-sm flex items-center gap-2">
           <span>📍</span>
           {ev.lieu}
         </p>
@@ -244,7 +236,7 @@ function EventCard({
       {futur && (
         <a
           href="/inscription"
-          className="w-full text-center bg-[#4d9fff] hover:bg-[#60b4ff] text-white font-bold py-2 rounded-xl transition-all text-sm hover:shadow-[0_0_20px_rgba(77,159,255,0.4)]"
+          className="w-full text-center bg-vea-red hover:bg-vea-accent-hover text-white font-bold py-2 rounded-xl transition-all text-sm hover:shadow-[0_0_20px_rgba(230,57,70,0.4)]"
         >
           S&apos;inscrire
         </a>

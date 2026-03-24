@@ -8,21 +8,37 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // 👉 Palette VEA — direction artistique navy/bleu
         vea: {
-          // Fonds (du plus sombre au plus clair)
-          darker: "#060e1e",     // TopBar, Footer
-          dark: "#0a1628",       // Fond principal, Navbar
-          navy: "#0d1f3c",       // Sections alternées
-          card: "#112240",       // Cards, surfaces
-          border: "#1e3a5f",     // Bordures subtiles
-          // Accents
-          accent: "#4d9fff",     // Bleu principal (boutons, titres accent)
-          "accent-hover": "#3a8fee", // Hover bouton
-          // Texte
-          white: "#FAFAFA",
-          "text-muted": "#8892a4", // Texte secondaire
-          "text-dim": "#5a6478",   // Texte très discret
+          // Fonds
+          dark: "#0d0618",
+          bg: "#120920",
+          card: "#1a0f2e",
+          "card-hover": "#231540",
+
+          // Bordures
+          border: "#2d1f4e",
+          "border-bright": "#4a2d8a",
+
+          // Couleur principale — Violet
+          purple: "#7c3aed",
+          "purple-light": "#a855f7",
+          "purple-glow": "rgba(124,58,237,0.3)",
+
+          // Couleur accent — Rouge VEA
+          red: "#E63946",
+          "red-light": "#ff4d5a",
+          "red-glow": "rgba(230,57,70,0.3)",
+
+          // Textes
+          white: "#ffffff",
+          "text-muted": "#8b7aaa",
+          "text-dim": "#5a4d73",
+
+          // Aliases rétrocompat (ancien → nouveau)
+          accent: "#E63946",
+          "accent-hover": "#d32f3f",
+          navy: "#120920",
+          darker: "#080410",
         },
         vena: {
           kaki: "#414C35",

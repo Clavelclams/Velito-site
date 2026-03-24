@@ -1,7 +1,7 @@
 /**
- * Footer — Pied de page VEA
- * Fond #060e1e. 3 colonnes : à propos + navigation + contact.
- * Liens texte pour les réseaux sociaux (pas d'icônes lucide).
+ * Footer — Pied de page VEA — REFONTE VIOLET + ROUGE
+ * Fond très sombre. 3 colonnes : à propos + navigation + contact.
+ * Titres en rouge VEA. Liens réseaux en badges.
  */
 import Link from "next/link";
 
@@ -12,7 +12,6 @@ const FOOTER_LINKS = [
   { label: "Agenda", href: "/agenda" },
   { label: "Médias", href: "/medias" },
   { label: "Partenaires", href: "/partenaires" },
-  { label: "Prestations", href: "/prestations" },
   { label: "Contact", href: "/contact" },
   { label: "Inscription", href: "/inscription" },
 ];
@@ -27,14 +26,14 @@ const SOCIALS = [
 
 export default function Footer() {
   return (
-    <footer className="w-full bg-[#030a18] mt-auto">
+    <footer className="w-full bg-[#080410] mt-auto">
       <div className="section-separator" />
       <div className="max-w-7xl mx-auto px-4 lg:px-8 py-14">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
 
           {/* ===== COLONNE 1 : À PROPOS + RÉSEAUX ===== */}
           <div>
-            <h3 className="text-[#4d9fff] uppercase tracking-widest text-xs font-bold mb-3">VEA</h3>
+            <h3 className="text-vea-red uppercase tracking-widest text-xs font-bold mb-3">VEA</h3>
             <p className="text-sm text-vea-text-muted leading-relaxed mb-5">
               Velito Esport Amiens — Association d&apos;inclusion par
               l&apos;esport. Le jeu vidéo comme moteur de lien social,
@@ -48,7 +47,7 @@ export default function Footer() {
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-3 py-1.5 rounded-lg bg-vea-card border border-vea-border/30 text-xs text-vea-text-muted hover:text-vea-accent hover:border-vea-accent/40 transition-colors"
+                  className="px-3 py-1.5 rounded-lg bg-vea-card border border-vea-border/30 text-xs text-vea-text-muted hover:text-vea-red hover:border-vea-red/40 transition-colors"
                 >
                   {name}
                 </a>
@@ -58,7 +57,7 @@ export default function Footer() {
 
           {/* ===== COLONNE 2 : NAVIGATION ===== */}
           <div>
-            <h3 className="text-[#4d9fff] uppercase tracking-widest text-xs font-bold mb-4">
+            <h3 className="text-vea-red uppercase tracking-widest text-xs font-bold mb-4">
               Navigation
             </h3>
             <ul className="space-y-2">
@@ -77,7 +76,7 @@ export default function Footer() {
 
           {/* ===== COLONNE 3 : CONTACT ===== */}
           <div>
-            <h3 className="text-[#4d9fff] uppercase tracking-widest text-xs font-bold mb-4">
+            <h3 className="text-vea-red uppercase tracking-widest text-xs font-bold mb-4">
               Contact
             </h3>
             <ul className="space-y-3 text-sm text-vea-text-muted">

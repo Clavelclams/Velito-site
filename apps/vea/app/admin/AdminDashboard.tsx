@@ -238,12 +238,12 @@ export default function AdminDashboard() {
 
   // ====== RENDU ======
   return (
-    <div className="min-h-screen bg-[#060d1f] p-4 md:p-6">
+    <div className="min-h-screen bg-vea-dark p-4 md:p-6">
       {/* ===== Header ===== */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-black text-white">Dashboard VEA</h1>
-          <p className="text-[#7a8fa6] text-sm mt-1">
+          <p className="text-vea-text-muted text-sm mt-1">
             Administration Velito Esport Amiens
           </p>
         </div>
@@ -258,7 +258,7 @@ export default function AdminDashboard() {
           </button>
           <button
             onClick={handleLogout}
-            className="border border-[#1e3a5f] text-[#7a8fa6] hover:border-red-500 hover:text-red-400 px-4 py-2 rounded-xl transition-all text-sm"
+            className="border border-vea-border text-vea-text-muted hover:border-red-500 hover:text-red-400 px-4 py-2 rounded-xl transition-all text-sm"
           >
             Déconnexion
           </button>
@@ -267,7 +267,7 @@ export default function AdminDashboard() {
 
       {/* ===== Message seed ===== */}
       {seedMessage && (
-        <div className="mb-6 p-4 rounded-xl bg-[#0a1628] border border-[#1e3a5f] text-[#7a8fa6] text-sm">
+        <div className="mb-6 p-4 rounded-xl bg-vea-bg border border-vea-border text-vea-text-muted text-sm">
           {seedMessage}
         </div>
       )}
@@ -275,34 +275,34 @@ export default function AdminDashboard() {
       {/* ===== Stats ===== */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div className="card-glow p-5 rounded-2xl text-center">
-          <div className="text-3xl font-black text-[#4d9fff]">
+          <div className="text-3xl font-black text-vea-red">
             {participants.length}
           </div>
-          <p className="text-[#7a8fa6] text-xs uppercase tracking-widest mt-2">
+          <p className="text-vea-text-muted text-xs uppercase tracking-widest mt-2">
             Participants
           </p>
         </div>
         <div className="card-glow p-5 rounded-2xl text-center">
-          <div className="text-3xl font-black text-[#4d9fff]">
+          <div className="text-3xl font-black text-vea-red">
             {aVenir.length}
           </div>
-          <p className="text-[#7a8fa6] text-xs uppercase tracking-widest mt-2">
+          <p className="text-vea-text-muted text-xs uppercase tracking-widest mt-2">
             À venir
           </p>
         </div>
         <div className="card-glow p-5 rounded-2xl text-center">
-          <div className="text-3xl font-black text-[#4d9fff]">
+          <div className="text-3xl font-black text-vea-red">
             {passes.length}
           </div>
-          <p className="text-[#7a8fa6] text-xs uppercase tracking-widest mt-2">
+          <p className="text-vea-text-muted text-xs uppercase tracking-widest mt-2">
             Passés
           </p>
         </div>
         <div className="card-glow p-5 rounded-2xl text-center">
-          <div className="text-3xl font-black text-[#4d9fff]">
+          <div className="text-3xl font-black text-vea-red">
             {evenements.length}
           </div>
-          <p className="text-[#7a8fa6] text-xs uppercase tracking-widest mt-2">
+          <p className="text-vea-text-muted text-xs uppercase tracking-widest mt-2">
             Total
           </p>
         </div>
@@ -321,8 +321,8 @@ export default function AdminDashboard() {
             onClick={() => setActiveTab(tab.key)}
             className={`px-5 py-2 rounded-xl font-semibold transition-all text-sm ${
               activeTab === tab.key
-                ? "bg-[#4d9fff] text-white"
-                : "border border-[#1e3a5f] text-[#7a8fa6] hover:border-[#4d9fff]"
+                ? "bg-vea-red text-white"
+                : "border border-vea-border text-vea-text-muted hover:border-vea-purple/50"
             }`}
           >
             {tab.label}
@@ -343,7 +343,7 @@ export default function AdminDashboard() {
             {activeTab === "avenir" && (
               <button
                 onClick={() => setShowForm(!showForm)}
-                className="bg-[#4d9fff] text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-[#60b4ff] transition-all"
+                className="bg-vea-red text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-vea-accent-hover transition-all"
               >
                 + Ajouter un événement
               </button>
@@ -362,7 +362,7 @@ export default function AdminDashboard() {
                 onChange={(e) =>
                   setNewEvent({ ...newEvent, titre: e.target.value })
                 }
-                className="col-span-1 md:col-span-2 bg-[#0a1628] border border-[#1e3a5f] text-white rounded-xl px-4 py-3 outline-none focus:border-[#4d9fff] transition-colors"
+                className="col-span-1 md:col-span-2 bg-vea-bg border border-vea-border text-white rounded-xl px-4 py-3 outline-none focus:border-vea-purple/50 transition-colors"
                 required
               />
               <input
@@ -371,7 +371,7 @@ export default function AdminDashboard() {
                 onChange={(e) =>
                   setNewEvent({ ...newEvent, lieu: e.target.value })
                 }
-                className="bg-[#0a1628] border border-[#1e3a5f] text-white rounded-xl px-4 py-3 outline-none focus:border-[#4d9fff] transition-colors"
+                className="bg-vea-bg border border-vea-border text-white rounded-xl px-4 py-3 outline-none focus:border-vea-purple/50 transition-colors"
                 required
               />
               <input
@@ -380,7 +380,7 @@ export default function AdminDashboard() {
                 onChange={(e) =>
                   setNewEvent({ ...newEvent, date: e.target.value })
                 }
-                className="bg-[#0a1628] border border-[#1e3a5f] text-white rounded-xl px-4 py-3 outline-none focus:border-[#4d9fff] transition-colors"
+                className="bg-vea-bg border border-vea-border text-white rounded-xl px-4 py-3 outline-none focus:border-vea-purple/50 transition-colors"
                 required
               />
               <select
@@ -388,7 +388,7 @@ export default function AdminDashboard() {
                 onChange={(e) =>
                   setNewEvent({ ...newEvent, type: e.target.value })
                 }
-                className="bg-[#0a1628] border border-[#1e3a5f] text-white rounded-xl px-4 py-3 outline-none focus:border-[#4d9fff] transition-colors"
+                className="bg-vea-bg border border-vea-border text-white rounded-xl px-4 py-3 outline-none focus:border-vea-purple/50 transition-colors"
               >
                 <option value="TOURNOI">Tournoi</option>
                 <option value="ATELIER">Atelier</option>
@@ -401,19 +401,19 @@ export default function AdminDashboard() {
                 onChange={(e) =>
                   setNewEvent({ ...newEvent, description: e.target.value })
                 }
-                className="bg-[#0a1628] border border-[#1e3a5f] text-white rounded-xl px-4 py-3 outline-none focus:border-[#4d9fff] transition-colors"
+                className="bg-vea-bg border border-vea-border text-white rounded-xl px-4 py-3 outline-none focus:border-vea-purple/50 transition-colors"
               />
               <div className="col-span-1 md:col-span-2 flex gap-3">
                 <button
                   type="submit"
-                  className="bg-[#4d9fff] text-white px-6 py-2 rounded-xl font-semibold hover:bg-[#60b4ff] transition-all"
+                  className="bg-vea-red text-white px-6 py-2 rounded-xl font-semibold hover:bg-vea-accent-hover transition-all"
                 >
                   Créer l&apos;événement
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="border border-[#1e3a5f] text-[#7a8fa6] px-6 py-2 rounded-xl hover:border-red-500 hover:text-red-400 transition-all"
+                  className="border border-vea-border text-vea-text-muted px-6 py-2 rounded-xl hover:border-red-500 hover:text-red-400 transition-all"
                 >
                   Annuler
                 </button>
@@ -438,7 +438,7 @@ export default function AdminDashboard() {
                   <p className="text-white font-semibold truncate">
                     {ev.titre}
                   </p>
-                  <p className="text-[#7a8fa6] text-sm">
+                  <p className="text-vea-text-muted text-sm">
                     {new Date(ev.date).toLocaleDateString("fr-FR", {
                       day: "numeric",
                       month: "long",
@@ -447,7 +447,7 @@ export default function AdminDashboard() {
                     — {ev.lieu}
                   </p>
                   {ev.description && (
-                    <p className="text-[#4a5568] text-xs mt-1 line-clamp-1">
+                    <p className="text-vea-text-muted/60 text-xs mt-1 line-clamp-1">
                       {ev.description}
                     </p>
                   )}
@@ -460,7 +460,7 @@ export default function AdminDashboard() {
                   {/* Bouton Modifier */}
                   <button
                     onClick={() => openEditModal(ev)}
-                    className="text-xs px-3 py-1.5 rounded-lg border border-[#1e3a5f] text-[#7a8fa6] hover:border-[#4d9fff] hover:text-[#4d9fff] transition-all"
+                    className="text-xs px-3 py-1.5 rounded-lg border border-vea-border text-vea-text-muted hover:border-vea-purple/50 hover:text-vea-red transition-all"
                   >
                     Modifier
                   </button>
@@ -469,7 +469,7 @@ export default function AdminDashboard() {
                   {ev.actif ? (
                     <button
                       onClick={() => handleToggleActif(ev.id, false)}
-                      className="text-xs px-3 py-1.5 rounded-lg border border-[#1e3a5f] text-[#7a8fa6] hover:border-red-500 hover:text-red-400 transition-all"
+                      className="text-xs px-3 py-1.5 rounded-lg border border-vea-border text-vea-text-muted hover:border-red-500 hover:text-red-400 transition-all"
                     >
                       Archiver
                     </button>
@@ -487,17 +487,17 @@ export default function AdminDashboard() {
 
             {/* État vide */}
             {activeTab === "avenir" && aVenir.length === 0 && (
-              <p className="text-[#7a8fa6] text-center py-8">
+              <p className="text-vea-text-muted text-center py-8">
                 Aucun événement à venir. Crée-en un ou importe les événements VEA !
               </p>
             )}
             {activeTab === "passes" && passes.length === 0 && (
-              <p className="text-[#7a8fa6] text-center py-8">
+              <p className="text-vea-text-muted text-center py-8">
                 Aucun événement passé.
               </p>
             )}
             {activeTab === "archives" && archives.length === 0 && (
-              <p className="text-[#7a8fa6] text-center py-8">
+              <p className="text-vea-text-muted text-center py-8">
                 Aucun événement archivé.
               </p>
             )}
@@ -512,7 +512,7 @@ export default function AdminDashboard() {
             <h2 className="text-white font-bold">Participants inscrits</h2>
             <button
               onClick={exportCSV}
-              className="border border-[#4d9fff] text-[#4d9fff] px-4 py-2 rounded-xl text-sm font-semibold hover:bg-[#4d9fff] hover:text-white transition-all"
+              className="border border-vea-red text-vea-red px-4 py-2 rounded-xl text-sm font-semibold hover:bg-vea-red hover:text-white transition-all"
             >
               Exporter CSV
             </button>
@@ -521,7 +521,7 @@ export default function AdminDashboard() {
           <div className="card-glow rounded-2xl overflow-x-auto">
             <table className="w-full min-w-[600px]">
               <thead>
-                <tr className="border-b border-[#1e3a5f]">
+                <tr className="border-b border-vea-border">
                   {[
                     "Prénom",
                     "Nom",
@@ -532,7 +532,7 @@ export default function AdminDashboard() {
                   ].map((h) => (
                     <th
                       key={h}
-                      className="text-left p-4 text-[#7a8fa6] text-xs uppercase tracking-widest font-semibold"
+                      className="text-left p-4 text-vea-text-muted text-xs uppercase tracking-widest font-semibold"
                     >
                       {h}
                     </th>
@@ -543,20 +543,20 @@ export default function AdminDashboard() {
                 {participants.map((p, i) => (
                   <tr
                     key={p.id}
-                    className={`border-b border-[#1e3a5f]/50 ${
-                      i % 2 === 0 ? "bg-transparent" : "bg-[#4d9fff]/5"
+                    className={`border-b border-vea-border/50 ${
+                      i % 2 === 0 ? "bg-transparent" : "bg-vea-purple/5"
                     }`}
                   >
                     <td className="p-4 text-white">{p.prenom}</td>
                     <td className="p-4 text-white">{p.nom}</td>
-                    <td className="p-4 text-[#7a8fa6]">{p.telephone}</td>
-                    <td className="p-4 text-[#7a8fa6]">
+                    <td className="p-4 text-vea-text-muted">{p.telephone}</td>
+                    <td className="p-4 text-vea-text-muted">
                       {p.jeuPrefere || "—"}
                     </td>
-                    <td className="p-4 text-[#7a8fa6]">
+                    <td className="p-4 text-vea-text-muted">
                       {p.quartier || "—"}
                     </td>
-                    <td className="p-4 text-[#7a8fa6] text-sm">
+                    <td className="p-4 text-vea-text-muted text-sm">
                       {new Date(p.createdAt).toLocaleDateString("fr-FR")}
                     </td>
                   </tr>
@@ -565,7 +565,7 @@ export default function AdminDashboard() {
                   <tr>
                     <td
                       colSpan={6}
-                      className="p-8 text-center text-[#7a8fa6]"
+                      className="p-8 text-center text-vea-text-muted"
                     >
                       Aucun participant inscrit
                     </td>
@@ -590,7 +590,7 @@ export default function AdminDashboard() {
           {/* Contenu du modal */}
           <form
             onSubmit={handleEditSave}
-            className="relative z-10 w-full max-w-lg bg-[#0d1f3c] border border-[#1e3a5f] rounded-2xl p-6 space-y-4"
+            className="relative z-10 w-full max-w-lg bg-vea-bg border border-vea-border rounded-2xl p-6 space-y-4"
           >
             <h3 className="text-white font-bold text-lg">
               Modifier l&apos;événement
@@ -602,7 +602,7 @@ export default function AdminDashboard() {
               onChange={(e) =>
                 setEditForm({ ...editForm, titre: e.target.value })
               }
-              className="w-full bg-[#0a1628] border border-[#1e3a5f] text-white rounded-xl px-4 py-3 outline-none focus:border-[#4d9fff] transition-colors"
+              className="w-full bg-vea-bg border border-vea-border text-white rounded-xl px-4 py-3 outline-none focus:border-vea-purple/50 transition-colors"
               required
             />
 
@@ -613,7 +613,7 @@ export default function AdminDashboard() {
                 onChange={(e) =>
                   setEditForm({ ...editForm, lieu: e.target.value })
                 }
-                className="bg-[#0a1628] border border-[#1e3a5f] text-white rounded-xl px-4 py-3 outline-none focus:border-[#4d9fff] transition-colors"
+                className="bg-vea-bg border border-vea-border text-white rounded-xl px-4 py-3 outline-none focus:border-vea-purple/50 transition-colors"
                 required
               />
               <input
@@ -622,7 +622,7 @@ export default function AdminDashboard() {
                 onChange={(e) =>
                   setEditForm({ ...editForm, date: e.target.value })
                 }
-                className="bg-[#0a1628] border border-[#1e3a5f] text-white rounded-xl px-4 py-3 outline-none focus:border-[#4d9fff] transition-colors"
+                className="bg-vea-bg border border-vea-border text-white rounded-xl px-4 py-3 outline-none focus:border-vea-purple/50 transition-colors"
                 required
               />
             </div>
@@ -632,7 +632,7 @@ export default function AdminDashboard() {
               onChange={(e) =>
                 setEditForm({ ...editForm, type: e.target.value })
               }
-              className="w-full bg-[#0a1628] border border-[#1e3a5f] text-white rounded-xl px-4 py-3 outline-none focus:border-[#4d9fff] transition-colors"
+              className="w-full bg-vea-bg border border-vea-border text-white rounded-xl px-4 py-3 outline-none focus:border-vea-purple/50 transition-colors"
             >
               <option value="TOURNOI">Tournoi</option>
               <option value="ATELIER">Atelier</option>
@@ -646,21 +646,21 @@ export default function AdminDashboard() {
               onChange={(e) =>
                 setEditForm({ ...editForm, description: e.target.value })
               }
-              className="w-full bg-[#0a1628] border border-[#1e3a5f] text-white rounded-xl px-4 py-3 outline-none focus:border-[#4d9fff] transition-colors"
+              className="w-full bg-vea-bg border border-vea-border text-white rounded-xl px-4 py-3 outline-none focus:border-vea-purple/50 transition-colors"
               rows={3}
             />
 
             <div className="flex gap-3 pt-2">
               <button
                 type="submit"
-                className="bg-[#4d9fff] text-white px-6 py-2 rounded-xl font-semibold hover:bg-[#60b4ff] transition-all"
+                className="bg-vea-red text-white px-6 py-2 rounded-xl font-semibold hover:bg-vea-accent-hover transition-all"
               >
                 Enregistrer
               </button>
               <button
                 type="button"
                 onClick={() => setEditEvent(null)}
-                className="border border-[#1e3a5f] text-[#7a8fa6] px-6 py-2 rounded-xl hover:border-red-500 hover:text-red-400 transition-all"
+                className="border border-vea-border text-vea-text-muted px-6 py-2 rounded-xl hover:border-red-500 hover:text-red-400 transition-all"
               >
                 Annuler
               </button>

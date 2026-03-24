@@ -1,5 +1,5 @@
 /**
- * Page Médiathèque VEA
+ * Page Médiathèque VEA — REFONTE VIOLET + ROUGE + MOTION
  * Onglets Photos / Vidéos avec placeholders.
  *
  * "use client" pour le switch d'onglets.
@@ -7,6 +7,7 @@
 "use client";
 
 import { useState } from "react";
+import ScrollReveal from "@/components/ScrollReveal";
 
 type TabValue = "photos" | "videos";
 
@@ -16,14 +17,16 @@ export default function MediasPage() {
   return (
     <>
       {/* ===== HERO ===== */}
-      <section className="pt-20 pb-12 px-4 bg-gradient-to-b from-vea-dark to-vea-navy">
+      <section className="pt-24 pb-12 px-4 hero-bg">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl font-black text-gradient mb-4">
-            Médiathèque
-          </h1>
-          <p className="text-lg text-vea-text-muted max-w-2xl mx-auto">
-            Photos et vidéos de nos événements.
-          </p>
+          <ScrollReveal>
+            <h1 className="text-4xl sm:text-5xl font-black text-gradient-vea mb-4">
+              Médiathèque
+            </h1>
+            <p className="text-lg text-vea-text-muted max-w-2xl mx-auto">
+              Photos et vidéos de nos événements.
+            </p>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -35,7 +38,7 @@ export default function MediasPage() {
             onClick={() => setTab("photos")}
             className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
               tab === "photos"
-                ? "bg-vea-accent text-white"
+                ? "bg-vea-red text-white"
                 : "bg-vea-card border border-vea-border text-vea-text-muted hover:text-vea-white"
             }`}
           >
@@ -46,7 +49,7 @@ export default function MediasPage() {
             onClick={() => setTab("videos")}
             className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
               tab === "videos"
-                ? "bg-vea-accent text-white"
+                ? "bg-vea-red text-white"
                 : "bg-vea-card border border-vea-border text-vea-text-muted hover:text-vea-white"
             }`}
           >
@@ -59,8 +62,7 @@ export default function MediasPage() {
       <section className="pb-20 px-4">
         <div className="max-w-5xl mx-auto">
           {tab === "photos" ? (
-            <>
-              {/* Grille photos placeholder */}
+            <ScrollReveal>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <div
@@ -76,10 +78,9 @@ export default function MediasPage() {
               <p className="text-center text-vea-text-dim text-sm mt-8">
                 Photos de nos événements bientôt disponibles.
               </p>
-            </>
+            </ScrollReveal>
           ) : (
-            <>
-              {/* Grille vidéos placeholder */}
+            <ScrollReveal>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {Array.from({ length: 4 }).map((_, i) => (
                   <div
@@ -87,8 +88,8 @@ export default function MediasPage() {
                     className="aspect-video card-glow flex items-center justify-center relative group cursor-pointer"
                   >
                     {/* Play button */}
-                    <div className="w-14 h-14 rounded-full bg-vea-accent/20 flex items-center justify-center group-hover:bg-vea-accent/30 transition-colors">
-                      <div className="w-0 h-0 border-l-[18px] border-l-vea-accent border-y-[11px] border-y-transparent ml-1" />
+                    <div className="w-14 h-14 rounded-full bg-vea-red/20 flex items-center justify-center group-hover:bg-vea-red/30 transition-colors">
+                      <div className="w-0 h-0 border-l-[18px] border-l-vea-red border-y-[11px] border-y-transparent ml-1" />
                     </div>
                     <span className="absolute bottom-3 left-4 text-vea-text-dim text-xs">
                       Vidéo {i + 1} — YouTube @velitoesport
@@ -99,7 +100,7 @@ export default function MediasPage() {
               <p className="text-center text-vea-text-dim text-sm mt-8">
                 Vidéos de nos événements bientôt sur YouTube.
               </p>
-            </>
+            </ScrollReveal>
           )}
         </div>
       </section>

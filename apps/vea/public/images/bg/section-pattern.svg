@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="800" viewBox="0 0 1920 800">
+  <defs>
+    <!-- Pattern hexagonal léger mais visible -->
+    <pattern id="hex-light" x="0" y="0" width="60" height="70" patternUnits="userSpaceOnUse">
+      <polygon points="30,3 55,18 55,48 30,63 5,48 5,18" fill="none" stroke="#7c3aed" stroke-width="0.6" opacity="0.12"/>
+      <circle cx="30" cy="33" r="1.5" fill="#7c3aed" opacity="0.15"/>
+      <circle cx="30" cy="3" r="1" fill="#E63946" opacity="0.1"/>
+    </pattern>
+
+    <!-- Séparateur gradient -->
+    <linearGradient id="sep-grad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#7c3aed" stop-opacity="0"/>
+      <stop offset="30%" stop-color="#7c3aed"/>
+      <stop offset="70%" stop-color="#E63946"/>
+      <stop offset="100%" stop-color="#E63946" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Fondu bords -->
+    <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0d0618" stop-opacity="0.8"/>
+      <stop offset="20%" stop-color="#0d0618" stop-opacity="0"/>
+      <stop offset="80%" stop-color="#0d0618" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#0d0618" stop-opacity="0.8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Base -->
+  <rect width="1920" height="800" fill="#0d0618"/>
+
+  <!-- Zone centrale plus claire -->
+  <ellipse cx="960" cy="400" rx="900" ry="350" fill="#120920" opacity="0.6"/>
+
+  <!-- Glow subtil -->
+  <ellipse cx="600" cy="350" rx="400" ry="300" fill="#7c3aed" opacity="0.04"/>
+  <ellipse cx="1400" cy="450" rx="350" ry="250" fill="#E63946" opacity="0.03"/>
+
+  <!-- Pattern -->
+  <rect width="1920" height="800" fill="url(#hex-light)"/>
+
+  <!-- Lignes horizontales fines -->
+  <g opacity="0.04" stroke="#7c3aed" stroke-width="0.5">
+    <line x1="200" y1="200" x2="1720" y2="200"/>
+    <line x1="200" y1="400" x2="1720" y2="400"/>
+    <line x1="200" y1="600" x2="1720" y2="600"/>
+  </g>
+
+  <!-- Séparateur haut -->
+  <line x1="300" y1="2" x2="1620" y2="2" stroke="url(#sep-grad)" stroke-width="1.5" opacity="0.2"/>
+
+  <!-- Séparateur bas -->
+  <line x1="300" y1="798" x2="1620" y2="798" stroke="url(#sep-grad)" stroke-width="1.5" opacity="0.2"/>
+
+  <!-- Fondu edges -->
+  <rect width="1920" height="800" fill="url(#fade)"/>
+</svg>

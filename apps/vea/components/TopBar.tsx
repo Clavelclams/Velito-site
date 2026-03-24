@@ -1,6 +1,6 @@
 /**
  * TopBar — Barre écosystème Velito (36px)
- * Fond #060e1e, accent bleu #4d9fff pour le module actif.
+ * REFONTE : Fond #080410, accent rouge #E63946 pour le module actif.
  * Sur mobile : affiche seulement "ÉCOSYSTÈME VELITO".
  */
 
@@ -32,7 +32,7 @@ export default function TopBar() {
               key={mod.name}
               className={`text-[11px] uppercase tracking-wider font-medium ${
                 mod.active
-                  ? "text-vea-accent"
+                  ? "text-vea-red"
                   : "text-vea-text-muted"
               }`}
             >

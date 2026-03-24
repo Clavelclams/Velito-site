@@ -1,14 +1,22 @@
 /**
  * Navbar — Navigation principale VEA
- * Fond #0a1628, sticky sous la TopBar.
- * Logo + liens + bouton Adhérer (HelloAsso) + Connexion.
- * Mobile : hamburger → drawer depuis la droite.
  *
- * "use client" car on utilise useState pour le menu mobile.
+ * 👉 REFONTE VIOLET + ROUGE :
+ *   - Fond transparent → opaque au scroll (effet glassmorphism)
+ *   - Couleurs : violet (#7c3aed) + rouge (#E63946) au lieu de bleu
+ *   - Bouton "Adhérer" rouge avec glow au hover
+ *   - Logo text en text-gradient-vea (blanc→rouge)
+ *
+ * 👉 SCROLL EFFECT :
+ *   - useState + useEffect pour détecter le scroll > 50px
+ *   - Au scroll : fond opaque + border visible + shadow
+ *   - Sans scroll : fond transparent (le hero se voit en dessous)
+ *
+ * "use client" car on utilise useState + useEffect
  */
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -33,9 +41,25 @@ const HELLOASSO_URL =
 
 export default function Navbar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  // 👉 On écoute le scroll pour changer le style de la navbar
+  useEffect(() => {
+    function handleScroll() {
+      setScrolled(window.scrollY > 50);
+    }
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-vea-dark/95 backdrop-blur-md border-b border-vea-border/20">
+    <nav
+      className={`fixed top-0 z-50 w-full transition-all duration-300 ${
+        scrolled
+          ? "bg-vea-dark/95 backdrop-blur-md border-b border-vea-border/30 shadow-lg shadow-black/20"
+          : "bg-transparent border-b border-transparent"
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 lg:px-8 h-16 flex items-center justify-between">
 
         {/* ===== LOGO ===== */}
@@ -48,10 +72,10 @@ export default function Navbar() {
             className="w-[38px] h-[38px] object-contain"
           />
           <div className="hidden sm:block leading-tight">
-            <span className="block text-gradient font-bold text-sm tracking-wide">
+            <span className="block text-gradient-vea font-bold text-sm tracking-wide">
               VELITO
             </span>
-            <span className="block text-vea-accent text-[10px] uppercase tracking-widest font-medium">
+            <span className="block text-vea-red-light text-[10px] uppercase tracking-widest font-medium">
               Esport Amiens
             </span>
           </div>
@@ -82,7 +106,7 @@ export default function Navbar() {
             href={HELLOASSO_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-vea-accent hover:bg-vea-accent-hover text-white text-[13px] font-semibold px-5 py-2 rounded-lg transition-colors"
+            className="bg-vea-red hover:bg-vea-accent-hover text-white text-[13px] font-semibold px-5 py-2 rounded-lg transition-all hover:shadow-[0_0_20px_rgba(230,57,70,0.4)]"
           >
             Adhérer
           </a>
@@ -114,7 +138,7 @@ export default function Navbar() {
 
       {/* Panneau latéral */}
       <div
-        className={`fixed top-0 right-0 z-50 h-full w-72 bg-vea-darker border-l border-vea-border/30 transform transition-transform duration-300 lg:hidden ${
+        className={`fixed top-0 right-0 z-50 h-full w-72 bg-vea-dark border-l border-vea-border/30 transform transition-transform duration-300 lg:hidden ${
           drawerOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -154,7 +178,7 @@ export default function Navbar() {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setDrawerOpen(false)}
-            className="block text-center bg-vea-accent hover:bg-vea-accent-hover text-white text-sm font-semibold px-5 py-3 rounded-lg transition-colors"
+            className="block text-center bg-vea-red hover:bg-vea-accent-hover text-white text-sm font-semibold px-5 py-3 rounded-lg transition-colors"
           >
             Adhérer
           </a>
