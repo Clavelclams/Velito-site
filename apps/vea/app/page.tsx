@@ -1,96 +1,69 @@
 /**
  * Page d'accueil VEA
- *
- * 👉 Structure :
- * 1. Hero section — titre accrocheur + boutons CTA
- * 2. Section chiffres — stats clés de l'asso
- * 3. Section aperçu événements — 3 cards placeholder
- *
- * 👉 Pas de "use client" ici : c'est un Server Component.
- * Il n'y a ni state, ni event handlers, donc pas besoin de JavaScript côté client.
- * Next.js le rend en HTML pur = plus rapide, meilleur SEO.
+ * Hero (100vh) + Stats + Nos Actions + CTA Rejoins VEA
  */
 import Link from "next/link";
 
-// 👉 Interface pour typer les stats affichées
-interface Stat {
-  value: string;
-  label: string;
-}
-
-// 👉 Les chiffres clés — modifiables facilement
-const STATS: Stat[] = [
+const STATS = [
   { value: "100+", label: "Membres" },
   { value: "20+", label: "Événements organisés" },
   { value: "3", label: "Jeux compétitifs" },
 ];
 
-// 👉 Événements placeholder — seront remplacés par des données dynamiques plus tard
-interface EventPreview {
-  title: string;
-  date: string;
-  description: string;
-}
-
-const UPCOMING_EVENTS: EventPreview[] = [
+const ACTIONS = [
   {
-    title: "Tournoi EA FC 25",
-    date: "Avril 2026",
+    title: "Tournois & Compétitions",
     description:
-      "Tournoi local ouvert à tous les niveaux. Inscription gratuite pour les membres VEA.",
+      "Organiser des compétitions esport locales accessibles à tous les niveaux, du débutant au confirmé.",
   },
   {
-    title: "Clash Royale Open",
-    date: "Mai 2026",
+    title: "Insertion & Formation",
     description:
-      "Compétition Clash Royale en partenariat avec les structures locales.",
+      "Utiliser le jeu vidéo comme tremplin vers l'emploi et la formation professionnelle.",
   },
   {
-    title: "Gaming & Insertion",
-    date: "Juin 2026",
+    title: "Réduction fracture numérique",
     description:
-      "Atelier découverte esport pour les jeunes des quartiers prioritaires.",
+      "Rendre le numérique accessible dans les quartiers prioritaires grâce au prêt de matériel et aux ateliers.",
   },
 ];
+
+const HELLOASSO_URL =
+  "https://www.helloasso.com/associations/velito-esport-amiens/adhesions/adhesion-2026";
 
 export default function HomePage() {
   return (
     <>
-      {/* ============================================= */}
-      {/* SECTION 1 : HERO                              */}
-      {/* ============================================= */}
-      <section className="relative min-h-[85vh] flex items-center justify-center px-4 overflow-hidden">
-        {/* 👉 Gradient de fond subtil : donne de la profondeur sans image */}
-        <div className="absolute inset-0 bg-gradient-to-b from-vea-black via-vea-gray/50 to-vea-black" />
-
-        {/* 👉 Cercle rouge flouté en arrière-plan — purement décoratif */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-vea-red/5 rounded-full blur-3xl" />
+      {/* ===== HERO ===== */}
+      <section className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-gradient-to-b from-vea-dark via-vea-navy to-vea-dark">
+        {/* Effets visuels discrets en arrière-plan */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-vea-accent/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] border border-vea-accent/5 rounded-full" />
 
         <div className="relative z-10 max-w-4xl mx-auto text-center">
-          {/* 👉 Badge — petit label coloré au-dessus du titre */}
-          <span className="inline-block mb-6 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-vea-red border border-vea-red/30 rounded-full bg-vea-red/5">
+          {/* Badge */}
+          <span className="inline-block mb-6 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-vea-accent border border-vea-accent/30 rounded-full bg-vea-accent/5">
             Association Esport &amp; Insertion
           </span>
 
-          {/* 👉 Titre H1 — essentiel pour le SEO (1 seul h1 par page) */}
+          {/* H1 */}
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-tight mb-6">
             <span className="text-vea-white">LE JEU VIDÉO</span>
             <br />
-            <span className="text-vea-white">COMME </span>
-            <span className="text-vea-red">MOTEUR</span>
+            <span className="text-vea-accent">COMME MOTEUR</span>
           </h1>
 
-          {/* 👉 Sous-titre : explique en une phrase ce que fait VEA */}
-          <p className="text-base sm:text-lg text-vea-white/60 max-w-2xl mx-auto mb-10 leading-relaxed">
+          {/* Sous-titre */}
+          <p className="text-base sm:text-lg text-vea-text-muted max-w-2xl mx-auto mb-10 leading-relaxed">
             Velito Esport Amiens utilise le gaming pour créer du lien social,
             favoriser l&apos;insertion et faire briller les talents locaux.
           </p>
 
-          {/* 👉 Deux boutons CTA côte à côte */}
+          {/* CTA */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
-              href="/contact"
-              className="w-full sm:w-auto bg-vea-red hover:bg-vea-red/90 text-white font-semibold px-8 py-3.5 rounded-lg transition-colors text-sm"
+              href="/inscription"
+              className="w-full sm:w-auto bg-vea-accent hover:bg-vea-accent-hover text-white font-semibold px-8 py-3.5 rounded-lg transition-colors text-sm"
             >
               Nous rejoindre
             </Link>
@@ -104,20 +77,23 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ============================================= */}
-      {/* SECTION 2 : CHIFFRES CLÉS                     */}
-      {/* ============================================= */}
-      <section className="py-16 px-4 border-t border-vea-gray-light/10">
+      {/* ===== STATS ===== */}
+      <section className="py-16 px-4 bg-vea-navy">
         <div className="max-w-5xl mx-auto">
-          {/* 👉 Grid 1 col mobile → 3 cols desktop */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-            {STATS.map((stat) => (
-              <div key={stat.label} className="text-center">
-                {/* 👉 Le chiffre en gros et en rouge pour attirer l'œil */}
-                <p className="text-4xl sm:text-5xl font-black text-vea-red mb-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-0">
+            {STATS.map((stat, i) => (
+              <div
+                key={stat.label}
+                className={`text-center py-6 ${
+                  i < STATS.length - 1
+                    ? "sm:border-r sm:border-vea-accent/20"
+                    : ""
+                }`}
+              >
+                <p className="text-4xl sm:text-5xl font-black text-vea-accent mb-2">
                   {stat.value}
                 </p>
-                <p className="text-sm text-vea-white/50 uppercase tracking-wider font-medium">
+                <p className="text-sm text-vea-text-muted uppercase tracking-wider font-medium">
                   {stat.label}
                 </p>
               </div>
@@ -126,37 +102,65 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ============================================= */}
-      {/* SECTION 3 : APERÇU ÉVÉNEMENTS                 */}
-      {/* ============================================= */}
-      <section className="py-16 px-4">
+      {/* ===== NOS ACTIONS ===== */}
+      <section className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-bold text-vea-white mb-2">
-            Prochains événements
+          <h2 className="text-2xl sm:text-3xl font-bold text-vea-white mb-3 text-center">
+            Nos Actions
           </h2>
-          <p className="text-vea-white/40 mb-10 text-sm">
-            Découvrez ce que VEA prépare pour la communauté.
+          <p className="text-vea-text-muted text-center mb-12 text-sm max-w-xl mx-auto">
+            Trois piliers pour un esport responsable et inclusif.
           </p>
 
-          {/* 👉 Grid responsive pour les cards événements */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {UPCOMING_EVENTS.map((event) => (
+            {ACTIONS.map((action) => (
               <div
-                key={event.title}
-                className="bg-vea-gray border border-vea-gray-light/20 rounded-xl p-6 hover:border-vea-red/30 transition-colors group"
+                key={action.title}
+                className="bg-vea-card border border-vea-border rounded-xl p-7 hover:border-vea-accent/40 transition-colors group"
               >
-                {/* 👉 Date en petit, en rouge */}
-                <span className="text-xs text-vea-red font-semibold uppercase tracking-wider">
-                  {event.date}
-                </span>
-                <h3 className="text-lg font-bold text-vea-white mt-2 mb-3 group-hover:text-vea-red transition-colors">
-                  {event.title}
+                {/* Icône placeholder */}
+                <div className="w-10 h-10 rounded-lg bg-vea-accent/10 flex items-center justify-center mb-4">
+                  <div className="w-4 h-4 rounded-sm bg-vea-accent/50" />
+                </div>
+                <h3 className="text-lg font-bold text-vea-white mb-2 group-hover:text-vea-accent transition-colors">
+                  {action.title}
                 </h3>
-                <p className="text-sm text-vea-white/50 leading-relaxed">
-                  {event.description}
+                <p className="text-sm text-vea-text-muted leading-relaxed">
+                  {action.description}
                 </p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== CTA REJOINS VEA ===== */}
+      <section className="py-20 px-4">
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-vea-card border border-vea-border rounded-xl p-10 text-center">
+            <h2 className="text-2xl sm:text-3xl font-bold text-vea-white mb-4">
+              Rejoins VEA
+            </h2>
+            <p className="text-vea-text-muted mb-8 max-w-lg mx-auto">
+              Participe aux événements, intègre une équipe, ou soutiens
+              le projet. Chaque profil compte.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link
+                href="/inscription"
+                className="w-full sm:w-auto bg-vea-accent hover:bg-vea-accent-hover text-white font-semibold px-8 py-3.5 rounded-lg transition-colors text-sm"
+              >
+                S&apos;inscrire à un événement
+              </Link>
+              <a
+                href={HELLOASSO_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto border border-vea-accent/40 hover:border-vea-accent text-vea-accent font-semibold px-8 py-3.5 rounded-lg transition-colors text-sm"
+              >
+                Devenir membre
+              </a>
+            </div>
           </div>
         </div>
       </section>

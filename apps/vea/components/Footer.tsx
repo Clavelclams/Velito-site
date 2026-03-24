@@ -1,43 +1,63 @@
 /**
  * Footer — Pied de page VEA
- *
- * 👉 Ce que fait ce composant :
- * Affiche le footer en bas de chaque page avec 3 colonnes :
- * - Infos VEA + description
- * - Liens rapides vers les pages principales
- * - Infos de contact
- * Sur mobile : les colonnes s'empilent verticalement.
+ * Fond #060e1e. 3 colonnes : à propos + navigation + contact.
+ * Liens texte pour les réseaux sociaux (pas d'icônes lucide).
  */
 import Link from "next/link";
 
-// 👉 Liens rapides du footer — même structure que la Navbar
 const FOOTER_LINKS = [
   { label: "Accueil", href: "/" },
   { label: "Association", href: "/association" },
   { label: "Esport", href: "/esport" },
+  { label: "Agenda", href: "/agenda" },
+  { label: "Médias", href: "/medias" },
   { label: "Partenaires", href: "/partenaires" },
+  { label: "Prestations", href: "/prestations" },
   { label: "Contact", href: "/contact" },
+  { label: "Inscription", href: "/inscription" },
+];
+
+const SOCIALS = [
+  { name: "Instagram", href: "https://instagram.com/velitoesport" },
+  { name: "Facebook", href: "https://facebook.com/velitoesport" },
+  { name: "X / Twitter", href: "https://x.com/velitoesport" },
+  { name: "TikTok", href: "https://tiktok.com/@velitoesport" },
+  { name: "LinkedIn", href: "https://linkedin.com/company/velitoesport" },
 ];
 
 export default function Footer() {
   return (
-    <footer className="w-full bg-vea-gray border-t border-vea-gray-light/30 mt-auto">
-      <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12">
-        {/* 👉 Grid responsive : 1 col mobile, 3 cols desktop */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <footer className="w-full bg-vea-darker border-t border-vea-border/20 mt-auto">
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 py-14">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
 
-          {/* ======= COLONNE 1 : À PROPOS ======= */}
+          {/* ===== COLONNE 1 : À PROPOS + RÉSEAUX ===== */}
           <div>
-            <h3 className="text-vea-red font-bold text-lg mb-3">VEA</h3>
-            <p className="text-sm text-vea-white/50 leading-relaxed">
-              Velito Esport Amiens — Association d&apos;inclusion
-              par l&apos;esport. Le jeu vidéo comme moteur de lien social.
+            <h3 className="text-vea-accent font-bold text-lg mb-3">VEA</h3>
+            <p className="text-sm text-vea-text-muted leading-relaxed mb-5">
+              Velito Esport Amiens — Association d&apos;inclusion par
+              l&apos;esport. Le jeu vidéo comme moteur de lien social,
+              d&apos;insertion et de talents locaux.
             </p>
+            {/* Liens réseaux sociaux (texte) */}
+            <div className="flex flex-wrap items-center gap-3">
+              {SOCIALS.map(({ name, href }) => (
+                <a
+                  key={name}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 rounded-lg bg-vea-card border border-vea-border/30 text-xs text-vea-text-muted hover:text-vea-accent hover:border-vea-accent/40 transition-colors"
+                >
+                  {name}
+                </a>
+              ))}
+            </div>
           </div>
 
-          {/* ======= COLONNE 2 : LIENS RAPIDES ======= */}
+          {/* ===== COLONNE 2 : NAVIGATION ===== */}
           <div>
-            <h3 className="text-vea-white font-semibold text-sm uppercase tracking-wider mb-3">
+            <h3 className="text-vea-white font-semibold text-sm uppercase tracking-wider mb-4">
               Navigation
             </h3>
             <ul className="space-y-2">
@@ -45,7 +65,7 @@ export default function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-vea-white/50 hover:text-vea-white transition-colors"
+                    className="text-sm text-vea-text-muted hover:text-vea-white transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -54,20 +74,20 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* ======= COLONNE 3 : CONTACT ======= */}
+          {/* ===== COLONNE 3 : CONTACT ===== */}
           <div>
-            <h3 className="text-vea-white font-semibold text-sm uppercase tracking-wider mb-3">
+            <h3 className="text-vea-white font-semibold text-sm uppercase tracking-wider mb-4">
               Contact
             </h3>
-            <ul className="space-y-2 text-sm text-vea-white/50">
-              <li>
-                <a href="mailto:Vea@velitoesport.com" className="hover:text-vea-white transition-colors">
-                  Vea@velitoesport.com
-                </a>
-              </li>
+            <ul className="space-y-3 text-sm text-vea-text-muted">
               <li>
                 <a href="tel:+33670364414" className="hover:text-vea-white transition-colors">
                   06 70 36 44 14
+                </a>
+              </li>
+              <li>
+                <a href="mailto:Vea@velitoesport.com" className="hover:text-vea-white transition-colors">
+                  Vea@velitoesport.com
                 </a>
               </li>
               <li>
@@ -84,10 +104,10 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* ======= BARRE DE COPYRIGHT ======= */}
-        <div className="mt-10 pt-6 border-t border-vea-gray-light/20 text-center">
-          <p className="text-xs text-vea-white/30">
-            &copy; {new Date().getFullYear()} VEA — Velito Esport Amiens. Tous droits réservés.
+        {/* ===== COPYRIGHT ===== */}
+        <div className="mt-12 pt-6 border-t border-vea-border/15 text-center">
+          <p className="text-xs text-vea-text-dim">
+            &copy; 2026 Velito Esport Amiens — Association loi 1901 — Propulsé par VENA
           </p>
         </div>
       </div>

@@ -1,21 +1,6 @@
-@import "tailwindcss";
-
-@theme {
-  /* Couleurs VEA */
-  --color-vea-red: #E63946;
-  --color-vea-black: #0A0A0A;
-  --color-vea-white: #FAFAFA;
-  --color-vea-gray: #1A1A1A;
-  --color-vea-gray-light: #2A2A2A;
-
-  /* Couleurs VENA */
-  --color-vena-kaki: #414C35;
-  --color-vena-sage: #b9e7cd;
-  --color-vena-lavender: #c3ccff;
-
-  /* Typographie */
-  --font-sans: 'Inter', system-ui, sans-serif;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 * {
   margin: 0;
@@ -24,7 +9,6 @@
 }
 
 body {
-  background-color: #0A0A0A;
+  background-color: #0a1628;
   color: #FAFAFA;
-  font-family: var(--font-sans);
 }
