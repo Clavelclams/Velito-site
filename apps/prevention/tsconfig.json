@@ -6,11 +6,7 @@
         "name": "next"
       }
     ],
-    "strictNullChecks": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "strictNullChecks": true
   },
   "include": [
     "**/*.ts",

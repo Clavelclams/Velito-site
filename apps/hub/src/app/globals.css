@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== RESET ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ===== VARIABLES CINEMA ===== */
+:root {
+  --bg-cinema: #04040e;
+  --accent-purple: #7c3aed;
+  --accent-red: #E63946;
+  --screen-border: #10111e;
+}
+
+body {
+  background-color: var(--bg-cinema);
+  color: #FAFAFA;
+  overflow-x: hidden;
+}
+
+/* ===== CURSEUR CUSTOM (desktop only) ===== */
+@media (pointer: fine) {
+  body.custom-cursor,
+  body.custom-cursor * {
+    cursor: none !important;
+  }
+}
+
+/* ===== SCROLLBAR DISCRÈTE ===== */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-cinema);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.3);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 58, 237, 0.5);
+}
+
+/* ===== ANIMATION SCROLL INDICATOR ===== */
+@keyframes scrollPulse {
+  0%, 100% { opacity: 0.3; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(6px); }
+}
+
+.scroll-indicator {
+  animation: scrollPulse 2s ease-in-out infinite;
+}
+
+/* ===== FLASH OVERLAY (choix menu) ===== */
+@keyframes flashIn {
+  0% { opacity: 0; }
+  30% { opacity: 0.2; }
+  100% { opacity: 0; }
+}
+
+.flash-overlay {
+  animation: flashIn 280ms ease-out forwards;
+}

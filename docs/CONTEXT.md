@@ -12,6 +12,7 @@ Il regroupe plusieurs entités sous une même plateforme technique.
 | VENA (Agence) | vena.velito.com | ⏳ Coming soon |
 | ARENA (Tournois) | arena.velito.com | ⏳ Coming soon |
 | Interactive (Bars/MJC) | interactive.velito.com | ⏳ Coming soon |
+| Prévention Numérique | prevention.velito.com | ⏳ Coming soon |
 
 ## Stack technique
 - **Monorepo** : Turborepo
@@ -36,7 +37,8 @@ velito-site/
 │   ├── hub/          ← Hub velito.com (priorité 2)
 │   ├── vena/         ← VENA (priorité 3)
 │   ├── arena/        ← ARENA (priorité 4)
-│   └── interactive/  ← Interactive (priorité 5)
+│   ├── interactive/  ← Interactive (priorité 5)
+│   └── prevention/   ← Prévention Numérique (priorité 6)
 ├── packages/
 │   ├── ui/           ← Composants partagés entre toutes les apps
 │   ├── eslint-config/
