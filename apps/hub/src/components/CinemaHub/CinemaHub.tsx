@@ -13,7 +13,7 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import gsap from "gsap";
+import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -123,11 +123,10 @@ export default function CinemaHub() {
       const w = canvas.offsetWidth;
       const h = canvas.offsetHeight;
       for (let i = 0; i < starCount; i++) {
-        // Teinte aléatoire : 40% blanc, 30% rose/lavande, 30% violet
         const rand = Math.random();
         let hue = 0;
-        if (rand > 0.7) hue = 280;       // violet
-        else if (rand > 0.4) hue = 340;  // rose/lavande
+        if (rand > 0.7) hue = 280;
+        else if (rand > 0.4) hue = 340;
 
         stars.push({
           x: Math.random() * w,
@@ -148,7 +147,7 @@ export default function CinemaHub() {
       const h = canvas.offsetHeight;
       ctx.clearRect(0, 0, w, h);
 
-      // Fond : radialGradient sombre
+      // Fond radialGradient
       const bgGrad = ctx.createRadialGradient(w * 0.5, h * 0.4, 0, w * 0.5, h * 0.4, w * 0.7);
       bgGrad.addColorStop(0, "#0d0218");
       bgGrad.addColorStop(1, "#04000a");
@@ -224,7 +223,6 @@ export default function CinemaHub() {
         ctx.beginPath();
         ctx.moveTo(ss.x, ss.y);
         ctx.lineTo(ss.x - ss.vx * 8, ss.y - ss.vy * 8);
-        // Traînée rosée
         ctx.strokeStyle = `rgba(255,200,230,${alpha * 0.6})`;
         ctx.lineWidth = 1.2;
         ctx.stroke();
@@ -314,7 +312,9 @@ export default function CinemaHub() {
     const screenCanvas = document.getElementById("screen-galaxy") as HTMLCanvasElement;
     if (!bgCanvas || !screenCanvas) return;
 
-    // Init les 2 canvas galaxie (fond plein écran + mini dans l'écran billboard)
+    console.log("GSAP INIT", typeof gsap, typeof ScrollTrigger);
+
+    // Init les 2 canvas galaxie
     const cleanupBg = initGalaxy(bgCanvas, 280);
     const cleanupScreen = initGalaxy(screenCanvas, 120);
 
@@ -478,7 +478,7 @@ export default function CinemaHub() {
             overflow: "hidden",
           }}
         >
-          {/* ===== CANVAS GALAXIE FOND PLEIN ÉCRAN ===== */}
+          {/* Canvas galaxie fond plein écran */}
           <canvas
             id="galaxy-bg"
             style={{
@@ -490,7 +490,7 @@ export default function CinemaHub() {
             }}
           />
 
-          {/* ===== MONDE CINÉMA (tout ce qui dézoom/rezoom) ===== */}
+          {/* ===== MONDE CINÉMA ===== */}
           <div
             id="cinema-world"
             style={{
@@ -541,7 +541,7 @@ export default function CinemaHub() {
                 }}
               />
 
-              {/* CONTENU ÉCRAN — ÉTAT 0 : Intro */}
+              {/* CONTENU ÉCRAN — Intro */}
               <div
                 id="screen-intro"
                 style={{
@@ -609,7 +609,7 @@ export default function CinemaHub() {
                 </div>
               </div>
 
-              {/* CONTENU ÉCRAN — ÉTAT 2 : Choix */}
+              {/* CONTENU ÉCRAN — Choix */}
               <div
                 id="screen-choice"
                 style={{
@@ -734,7 +734,7 @@ export default function CinemaHub() {
                 overflow: "hidden",
               }}
             >
-              {/* Fondu noir bas pour fondre les sièges dans le fond */}
+              {/* Fondu noir bas */}
               <div
                 style={{
                   position: "absolute",
@@ -765,6 +765,7 @@ export default function CinemaHub() {
                     backgroundRepeat: "repeat-x",
                     backgroundSize: "auto 100%",
                     backgroundPosition: "bottom center",
+                    mixBlendMode: "normal",
                   }}
                 />
               ))}
