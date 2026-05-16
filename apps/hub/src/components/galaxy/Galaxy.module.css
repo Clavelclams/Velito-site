@@ -1,0 +1,11 @@
+/* Module CSS du composant Galaxy.
+ *
+ * Très minimaliste : le canvas WebGL prend juste 100% du parent.
+ * Toute la beauté visuelle est dans le fragment shader, pas dans le CSS.
+ */
+
+.container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
