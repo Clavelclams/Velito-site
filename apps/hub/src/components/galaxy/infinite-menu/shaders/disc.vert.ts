@@ -1,7 +1,7 @@
 /**
  * Vertex shader InfiniteMenu — déforme les disques selon la rotation de la sphère.
  *
- * Concepts à comprendre pour défendre devant le jury :
+ * Concepts à comprendre pour défendre devant mon jury :
  *   - On utilise WebGL 2 (#version 300 es) pour pouvoir faire de l'INSTANCING :
  *     un seul appel de draw qui rend N copies du même disque, chacune avec sa
  *     propre matrice (aInstanceMatrix) qui dit où la placer sur la sphère.

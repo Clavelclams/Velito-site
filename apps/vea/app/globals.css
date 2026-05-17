@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================================
+ *  VEA — Stylesheet global (refonte 16/05/2026 — fond clair)
+ *
+ *  Ancien : palette violet sombre #0d0618 + glows neon partout.
+ *  Nouveau : fond creme clair, accent rouge VEA conserve, photos d'humains.
+ *  Reference DA : mabb.fr (sobre, aere, photos, partenaires visibles).
+ * ============================================================================ */
+
 * {
   margin: 0;
   padding: 0;
@@ -13,179 +21,166 @@ html {
 }
 
 body {
-  background-color: #0d0618;
-  color: #ffffff;
-  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #FAFAF7;
+  color: #1A1A1A;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* ===== ANIMATIONS ===== */
+/* ===== ANIMATIONS (gardees : sobres et utiles) ===== */
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes glowPulseRed {
-  0%, 100% { box-shadow: 0 0 20px rgba(230,57,70,0.3); }
-  50% { box-shadow: 0 0 40px rgba(230,57,70,0.6); }
-}
-
-@keyframes glowPulsePurple {
-  0%, 100% { box-shadow: 0 0 20px rgba(124,58,237,0.3); }
-  50% { box-shadow: 0 0 40px rgba(124,58,237,0.6); }
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
 }
-
-@keyframes shimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}
-
-@keyframes glitch {
-  0%, 100% {
-    text-shadow: 2px 0 #E63946, -2px 0 #7c3aed;
-    transform: translate(0);
-  }
-  20% {
-    text-shadow: -2px 0 #E63946, 2px 0 #7c3aed;
-    transform: translate(-2px, 1px);
-  }
-  40% {
-    text-shadow: 2px 0 #7c3aed, -2px 0 #E63946;
-    transform: translate(2px, -1px);
-  }
-  60% {
-    text-shadow: -2px 0 #7c3aed, 2px 0 #E63946;
-    transform: translate(-1px, 2px);
-  }
-  80% {
-    text-shadow: 2px 0 #E63946, -2px 0 #7c3aed;
-    transform: translate(1px, -2px);
-  }
-}
-
-/* ===== CLASSES UTILITAIRES ===== */
 
 .animate-fade-up {
   animation: fadeInUp 0.6s ease forwards;
 }
 
 .animate-float {
-  animation: float 3s ease-in-out infinite;
+  animation: float 4s ease-in-out infinite;
 }
 
-.animate-glow-red {
-  animation: glowPulseRed 2s ease-in-out infinite;
-}
-
-.animate-glow-purple {
-  animation: glowPulsePurple 2s ease-in-out infinite;
-}
-
-.text-glitch:hover {
-  animation: glitch 0.3s ease infinite;
-}
-
-/* ===== TEXT GRADIENTS ===== */
-
-/* Ancien .text-gradient — garde la compatibilité, maintenant blanc→rouge */
-.text-gradient {
-  background: linear-gradient(135deg, #ffffff 0%, #E63946 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.text-gradient-red {
-  background: linear-gradient(135deg, #E63946, #ff4d5a);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.text-gradient-purple {
-  background: linear-gradient(135deg, #a855f7, #7c3aed);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
+/* ===== TEXT UTILITIES =====
+   J'avais des text-gradient-* partout pour faire briller les titres
+   sur fond sombre. Sur fond clair, ca devient illisible. Je redirige
+   tout vers du rouge VEA plein, sobre. */
+.text-gradient,
+.text-gradient-red,
+.text-gradient-purple,
 .text-gradient-vea {
-  background: linear-gradient(135deg, #ffffff 0%, #E63946 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #E63946;
+  background: none;
+  -webkit-text-fill-color: currentColor;
 }
 
-/* ===== CARD GLOW ===== */
+/* ===== CARDS — fond blanc + bordure douce + shadow soft ===== */
 
-.card-glow {
-  background: linear-gradient(135deg,
-    rgba(26,15,46,0.9),
-    rgba(18,9,32,0.8));
-  border: 1px solid rgba(45,31,78,0.8);
-  border-radius: 16px;
-  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+.card-clean {
+  background: #FFFFFF;
+  border: 1px solid #E5E5E1;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.card-clean:hover {
+  border-color: #D4D4D0;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06),
+              0 4px 10px rgba(0, 0, 0, 0.03);
+  transform: translateY(-2px);
+}
+
+/* Alias retrocompat — ancien card-glow violet devient card propre.
+   Les pages pas encore refondues continuent a marcher visuellement. */
+.card-glow,
+.card-glow-red {
+  background: #FFFFFF;
+  border: 1px solid #E5E5E1;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   position: relative;
   overflow: hidden;
 }
 
-.card-glow::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg,
-    rgba(124,58,237,0.05), transparent);
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
-}
-
-.card-glow:hover {
-  border-color: rgba(124,58,237,0.4);
-  box-shadow: 0 0 30px rgba(124,58,237,0.15),
-              0 20px 40px rgba(0,0,0,0.5);
-  transform: translateY(-4px);
-}
-
-.card-glow:hover::before {
-  opacity: 1;
-}
-
-/* Card accent rouge */
+.card-glow:hover,
 .card-glow-red:hover {
-  border-color: rgba(230,57,70,0.4);
-  box-shadow: 0 0 30px rgba(230,57,70,0.15),
-              0 20px 40px rgba(0,0,0,0.5);
+  border-color: #D4D4D0;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06),
+              0 4px 10px rgba(0, 0, 0, 0.03);
+  transform: translateY(-2px);
 }
 
-/* ===== HERO BACKGROUND ===== */
+.card-accent-left {
+  background: #FFFFFF;
+  border: 1px solid #E5E5E1;
+  border-left: 3px solid #E63946;
+  border-radius: 8px;
+}
 
-/* Hero full-screen (homepage) — SVG pattern riche */
+/* ===== BUTTONS ===== */
+
+.btn-primary {
+  background: #E63946;
+  color: #FFFFFF;
+  font-weight: 600;
+  padding: 0.875rem 2rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.25);
+}
+
+.btn-primary:hover {
+  background: #C92D3A;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(230, 57, 70, 0.35);
+}
+
+.btn-outline {
+  background: transparent;
+  color: #1A1A1A;
+  font-weight: 600;
+  padding: 0.875rem 2rem;
+  border-radius: 8px;
+  border: 1px solid #D4D4D0;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-outline:hover {
+  border-color: #E63946;
+  color: #E63946;
+}
+
+/* ===== BADGES ===== */
+
+.badge-red,
+.badge-purple,
+.badge-blue {
+  display: inline-block;
+  background: #FEE2E4;
+  border: 1px solid rgba(230, 57, 70, 0.2);
+  color: #B91C2A;
+  padding: 0.375rem 0.875rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ===== HERO BACKGROUNDS — clair ===== */
+
 .hero-bg-full {
   background:
-    url('/images/bg/hero-pattern.svg') center/cover no-repeat,
-    linear-gradient(180deg, #0d0618 0%, #120920 50%, #0d0618 100%);
+    radial-gradient(circle at 85% 20%, rgba(230, 57, 70, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 15% 80%, rgba(230, 57, 70, 0.04) 0%, transparent 50%),
+    #FAFAF7;
 }
 
-/* Hero court (sous-pages) — gradient + SVG section subtil */
 .hero-bg {
   background:
-    url('/images/bg/section-pattern.svg') center top/cover no-repeat,
-    radial-gradient(ellipse at 20% 50%, rgba(124,58,237,0.1) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 20%, rgba(230,57,70,0.06) 0%, transparent 50%),
-    linear-gradient(180deg, #0d0618 0%, #120920 100%);
+    radial-gradient(circle at 90% 50%, rgba(230, 57, 70, 0.05) 0%, transparent 60%),
+    #F4F4F1;
 }
 
-/* Background SVG pour sections intérieures */
 .section-bg {
-  background:
-    url('/images/bg/section-pattern.svg') center/cover no-repeat,
-    linear-gradient(180deg, #0d0618 0%, #0a0412 100%);
+  background: #F4F4F1;
 }
 
 /* ===== UTILITIES ===== */
@@ -194,88 +189,218 @@ body {
   height: 1px;
   background: linear-gradient(90deg,
     transparent,
-    rgba(124,58,237,0.4),
-    rgba(230,57,70,0.2),
+    rgba(0, 0, 0, 0.08),
     transparent);
-  margin: 64px 0;
+  margin: 4rem 0;
 }
 
 .stat-number {
-  font-size: clamp(2.2rem, 6vw, 4.5rem);
-  font-weight: 900;
+  font-size: clamp(2.2rem, 6vw, 4rem);
+  font-weight: 800;
   line-height: 1;
-  background: linear-gradient(135deg, #ffffff, #E63946);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #E63946;
   white-space: nowrap;
 }
 
-/* ===== BADGES ===== */
-
-.badge-red {
-  background: rgba(230,57,70,0.15);
-  border: 1px solid rgba(230,57,70,0.4);
-  color: #ff4d5a;
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.badge-purple {
-  background: rgba(124,58,237,0.15);
-  border: 1px solid rgba(124,58,237,0.4);
-  color: #a855f7;
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-/* Compat ancien badge-blue → redirige vers badge-purple */
-.badge-blue {
-  background: rgba(124,58,237,0.15);
-  border: 1px solid rgba(124,58,237,0.4);
-  color: #a855f7;
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-/* ===== TIMELINE ===== */
-
 .timeline-dot {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: #E63946;
-  box-shadow: 0 0 15px rgba(230,57,70,0.6);
   flex-shrink: 0;
 }
 
-/* ===== HOVER 3D CARDS ===== */
-
-.card-3d {
-  transition: transform 0.3s ease;
-  transform-style: preserve-3d;
-}
-
-.card-3d:hover {
-  transform: translateY(-6px) rotateX(2deg);
-}
-
-/* ===== LIGNE ACCENT GAUCHE ===== */
-
 .border-left-red {
   border-left: 3px solid #E63946;
-  box-shadow: -4px 0 15px rgba(230,57,70,0.3);
-  padding-left: 16px;
+  padding-left: 1rem;
+}
+
+/* ===== HERO IMAGE PLACEHOLDER ===== */
+
+.hero-image-placeholder {
+  background:
+    linear-gradient(135deg,
+      rgba(230, 57, 70, 0.10) 0%,
+      rgba(230, 57, 70, 0.04) 50%,
+      rgba(230, 57, 70, 0.08) 100%),
+    #FFFFFF;
+  border: 1px solid #E5E5E1;
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-image-placeholder::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(45deg,
+      transparent,
+      transparent 20px,
+      rgba(230, 57, 70, 0.025) 20px,
+      rgba(230, 57, 70, 0.025) 21px);
+  pointer-events: none;
+}
+
+/* ===== SCROLLBAR DISCRETE ===== */
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #FAFAF7; }
+::-webkit-scrollbar-thumb { background: #D4D4D0; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #A3A3A3; }
+
+/* ===== FOCUS VISIBLE (a11y) ===== */
+
+*:focus-visible {
+  outline: 2px solid #E63946;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ============================================================================
+ *  PARTNERS MARQUEE — slider horizontal infini facon mabb.fr
+ *  Utilise par <PartnersMarquee /> dans Footer.tsx
+ * ============================================================================ */
+
+.partners-marquee {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  /* Fade gauche/droite pour eviter le pop des logos aux bords */
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 8%,
+    black 92%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 8%,
+    black 92%,
+    transparent 100%
+  );
+}
+
+.partners-marquee-track {
+  display: flex;
+  align-items: center;
+  gap: 3.5rem;
+  width: max-content;
+  /* La duree (40s ici) controle la vitesse. Plus c'est long, plus c'est doux.
+     Avec 14 logos x2 = 28 elements, 40s donne un defilement tranquille. */
+  animation: partnersMarquee 40s linear infinite;
+  will-change: transform;
+}
+
+/* Pause au hover — UX classique pour permettre de lire les logos */
+.partners-marquee:hover .partners-marquee-track {
+  animation-play-state: paused;
+}
+
+.partners-marquee-item {
+  flex-shrink: 0;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.5rem;
+}
+
+.partners-marquee-logo {
+  height: 56px !important;
+  width: auto !important;
+  object-fit: contain;
+  /* Niveau de gris au repos pour un rendu sobre, couleur restituee au hover */
+  filter: grayscale(1) opacity(0.65);
+  transition: filter 0.25s ease;
+}
+
+.partners-marquee-item:hover .partners-marquee-logo {
+  filter: grayscale(0) opacity(1);
+}
+
+@keyframes partnersMarquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* A11y — si l'utilisateur a demande moins d'animations, on ralentit 3x
+   au lieu d'arreter completement (sinon il rate la moitie des logos). */
+@media (prefers-reduced-motion: reduce) {
+  .partners-marquee-track {
+    animation-duration: 120s;
+  }
+}
+
+/* ============================================================================
+ *  PARTNERS GRID — affichage statique des 4 partenaires legitimes VEA
+ *  (decision 16/05/2026 : pas de marquee defilant pour 4 elements)
+ * ============================================================================ */
+
+.partners-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+@media (min-width: 640px) {
+  .partners-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.partners-grid-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: #FFFFFF;
+  border: 1px solid #E5E5E1;
+  border-radius: 12px;
+  min-height: 100px;
+  transition: all 0.2s ease;
+}
+
+.partners-grid-item:hover {
+  border-color: rgba(230, 57, 70, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
+}
+
+.partner-logo {
+  height: 60px !important;
+  width: auto !important;
+  object-fit: contain;
+  filter: grayscale(1) opacity(0.75);
+  transition: filter 0.25s ease;
+}
+
+.partners-grid-item:hover .partner-logo {
+  filter: grayscale(0) opacity(1);
+}
+
+/* Placeholder texte quand le PNG n'est pas encore fourni */
+.partner-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 60px;
+  padding: 0 0.5rem;
+  border: 1px dashed #D4D4D0;
+  border-radius: 8px;
+  background: #FAFAF7;
+}
+
+.partner-placeholder-label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #525252;
+  text-align: center;
+  letter-spacing: 0.02em;
 }

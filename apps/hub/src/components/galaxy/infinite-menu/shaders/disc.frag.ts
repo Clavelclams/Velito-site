@@ -3,26 +3,37 @@
  *
  * Comment marche l'atlas ?
  *   - Toutes les images des modules sont packées dans UNE seule texture.
- *   - Exemple avec 5 images : on en met 3x3 = 9 cases, on remplit les 5 premières.
+ *   - Avec 9 modules, 3x3 = 9 cases (atlasSize = 3).
  *   - L'atlas évite N bindTexture() par frame → meilleure perf GPU.
  *
- * Calcul de la cellule pour cette instance :
- *   - vInstanceId est passé par le vertex shader (variable flat).
- *   - On fait vInstanceId % uItemCount pour cycler sur les modules si l'icosaèdre
- *     a plus de sommets que de modules (12 sommets / 5 modules = répétitions).
- *   - Puis on calcule (cellX, cellY) dans la grille de l'atlas.
+ * Sélection du module pour cette instance — IMPORTANT :
+ *   - L'ancienne version utilisait `vInstanceId % uItemCount` qui produit un
+ *     pattern séquentiel répétitif et place souvent deux mêmes modules côte à
+ *     côte sur la sphère (sommets adjacents → indices consécutifs → modules
+ *     consécutifs → modulo récurrent).
+ *   - La nouvelle version utilise un mapping pré-calculé côté JS via un
+ *     algorithme de graph coloring glouton (cf. grid-engine.ts → computeItemMapping).
+ *     Garantit qu'aucun voisin sur la sphère n'a le même module (sauf cas dégénéré
+ *     mathématiquement impossible avec 9 modules).
+ *
+ * Le mapping est passé en uniform `uItemMap[64]`. 64 est la limite arbitraire
+ * supportée : on utilise actuellement 42 slots (icosaèdre subdivisé 1 fois).
+ * Si on passe à subdivide(2) → 162 sommets, il faudra augmenter MAX_ITEMS.
  *
  * Cover (image qui remplit le disque sans déformation) :
  *   - On calcule un scale qui prend le max du ratio image/container.
- *   - Le résultat : l'image est centrée et croppée si nécessaire (comme object-fit:cover).
+ *   - L'image est centrée et croppée si nécessaire (object-fit:cover).
  */
 
 export const discFragmentShader = /* glsl */ `#version 300 es
 precision highp float;
 
+#define MAX_ITEMS 64
+
 uniform sampler2D uTex;
 uniform int uItemCount;
 uniform int uAtlasSize;
+uniform int uItemMap[MAX_ITEMS];
 
 out vec4 outColor;
 
@@ -31,7 +42,7 @@ in float vAlpha;
 flat in int vInstanceId;
 
 void main() {
-    int itemIndex = vInstanceId % uItemCount;
+    int itemIndex = uItemMap[vInstanceId];
     int cellsPerRow = uAtlasSize;
     int cellX = itemIndex % cellsPerRow;
     int cellY = itemIndex / cellsPerRow;

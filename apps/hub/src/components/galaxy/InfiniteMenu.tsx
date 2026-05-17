@@ -1,21 +1,20 @@
 /**
  * Composant React InfiniteMenu — sphère 3D rotative des modules Velito.
  *
- * Toute la logique WebGL est dans infinite-menu/grid-engine.ts.
- * Ce composant gère uniquement :
- *   - Le cycle de vie de l'engine (création / destruction)
- *   - L'état React (activeItem, isMoving, showHint)
- *   - La synchronisation isVisible → engine.setPaused()
- *   - Le rendu du titre/description/bouton de l'item actif (DOM, pas WebGL)
- *   - Le hint "Glisse pour explorer" qui disparaît au premier touch
+ * Affiche autour de la sphère :
+ *  - Gauche : bloc unique (titre + résumé "Explorez X..." empilés en flex column)
+ *  - Droite : description courte du module actif
+ *  - En bas : bouton "Ouvrir ↗" + hint d'aide contextuel
  *
- * NOTE : importé via next/dynamic ssr:false depuis GalaxyHero — donc ce code
- * ne s'exécute QUE côté client. window, canvas et WebGL2 sont safe à utiliser.
+ * Hint contextuel :
+ *  - Avant interaction (hasInteracted=false) → "Clic & glisse pour explorer l'écosystème"
+ *  - Après interaction (hasInteracted=true)  → "Glisse pour découvrir un autre module"
  */
 
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import styles from "./InfiniteMenu.module.css";
 import { InfiniteGridMenu, type MenuItem } from "./infinite-menu/grid-engine";
 
@@ -34,14 +33,12 @@ export default function InfiniteMenu({
 }: InfiniteMenuProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<InfiniteGridMenu | null>(null);
+  const router = useRouter();
 
   const [activeItem, setActiveItem] = useState<MenuItem | null>(null);
   const [isMoving, setIsMoving] = useState(false);
-  const [showHint, setShowHint] = useState(true);
+  const [hasInteracted, setHasInteracted] = useState(false);
 
-  // ============================================================
-  // EFFET 1 : création/destruction de l'engine au montage.
-  // ============================================================
   useEffect(() => {
     if (!canvasRef.current || items.length === 0) return;
     const canvas = canvasRef.current;
@@ -51,9 +48,7 @@ export default function InfiniteMenu({
       if (item) setActiveItem(item);
     };
 
-    // Premier toucher : on cache le hint via callback (l'engine appelle ça
-    // depuis ArcballControl quand il détecte le premier pointerdown).
-    const handleFirstInteraction = () => setShowHint(false);
+    const handleFirstInteraction = () => setHasInteracted(true);
 
     const engine = new InfiniteGridMenu(
       canvas,
@@ -77,22 +72,23 @@ export default function InfiniteMenu({
     };
   }, [items, scale]);
 
-  // ============================================================
-  // EFFET 2 : synchronise isVisible avec l'engine (pause/reprise).
-  // ============================================================
   useEffect(() => {
     engineRef.current?.setPaused(!isVisible);
   }, [isVisible]);
 
-  // ============================================================
-  // Handler du bouton d'action (ouvre le lien du module actif).
-  // ============================================================
   const handleButtonClick = () => {
     if (!activeItem?.link) return;
     if (activeItem.link.startsWith("http")) {
       window.open(activeItem.link, "_blank", "noopener,noreferrer");
+    } else {
+      router.push(activeItem.link);
     }
   };
+
+  // Texte du hint contextuel : pré- vs post-interaction.
+  const hintText = hasInteracted
+    ? "Glisse pour découvrir un autre module"
+    : "Clic & glisse pour explorer l'écosystème";
 
   return (
     <div className={styles.container}>
@@ -103,13 +99,16 @@ export default function InfiniteMenu({
       />
       {activeItem && (
         <>
-          <h2
-            className={`${styles.faceTitle} ${
-              isMoving ? styles.faceTitleInactive : styles.faceTitleActive
+          {/* BLOC GAUCHE — titre + résumé "Explorez X..." empilés (alignés sur même left) */}
+          <div
+            className={`${styles.faceLeftBlock} ${
+              isMoving ? styles.faceLeftBlockInactive : styles.faceLeftBlockActive
             }`}
           >
-            {activeItem.title}
-          </h2>
+            <h2 className={styles.faceTitle}>{activeItem.title}</h2>
+            <p className={styles.faceSummary}>{activeItem.summary}</p>
+          </div>
+          {/* DESCRIPTION COURTE — droite, hauteur médiane */}
           <p
             className={`${styles.faceDescription} ${
               isMoving
@@ -119,6 +118,7 @@ export default function InfiniteMenu({
           >
             {activeItem.description}
           </p>
+          {/* BOUTON OUVRIR — bas centré */}
           <button
             type="button"
             onClick={handleButtonClick}
@@ -127,19 +127,19 @@ export default function InfiniteMenu({
               isMoving ? styles.actionButtonInactive : styles.actionButtonActive
             }`}
           >
+            <span className={styles.actionButtonLabel}>Ouvrir</span>
             <span aria-hidden="true" className={styles.actionButtonIcon}>
-              {/* Flèche diagonale Unicode U+2197 */}
               {"↗"}
             </span>
           </button>
         </>
       )}
-      {/* Hint visible jusqu'au premier touch — animation pulse via Tailwind. */}
+      {/* HINT — toujours visible, texte contextuel selon interaction */}
       <div
-        className={`${styles.hint} ${showHint ? styles.hintVisible : styles.hintHidden} animate-pulse`}
+        className={`${styles.hint} ${styles.hintVisible}`}
         aria-hidden="true"
       >
-        Glisse pour explorer
+        {hintText}
       </div>
     </div>
   );

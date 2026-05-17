@@ -2,7 +2,6 @@
  * Page Impact VEA — REFONTE VIOLET + ROUGE + MOTION
  * Stats clés avec CountUp + chronologie avec ScrollReveal
  *
- * CORRECTION : Pinh et Tony Tagoe sont DEUX personnes différentes.
  */
 import ScrollReveal from "@/components/ScrollReveal";
 import CountUp from "@/components/CountUp";

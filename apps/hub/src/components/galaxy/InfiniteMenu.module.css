@@ -1,16 +1,19 @@
 /* Module CSS du composant InfiniteMenu.
  *
- * Adapté du CSS React Bits original avec :
- *   - Conversion ID → classe (les CSS modules ne hashent pas les IDs)
- *   - Cursor grab/grabbing pour signaler l'interactivité
- *   - Transitions fade pour le titre/description/bouton selon l'état "active/inactive"
+ * DA cohérente avec la page /construction (cyber/terminal) :
+ *  - Bouton d'action avec gradient magenta → rouge + glow
+ *  - Police monospace (JetBrains Mono) sur le bouton + hint
+ *  - Hint d'invitation à interagir (contextuel : pre-touch vs post-touch)
  *
- * Classes :
- *   .container — wrapper relatif
- *   .canvas — le canvas WebGL plein écran
- *   .faceTitle / .faceDescription — texte affiché sur l'item actif (desktop only)
- *   .actionButton — bouton circulaire qui ouvre le lien du module
- *   .hint — texte "Glisse pour explorer" qui pulse en bas du canvas
+ * Layout des textes autour de la sphère (desktop only) :
+ *   .faceLeftBlock (gauche : titre + résumé empilés)   |   sphère 3D   |   .faceDescription (droite)
+ *
+ * faceLeftBlock est UN SEUL conteneur positionné absolument à gauche.
+ * Titre + résumé s'empilent dedans en column flex → alignement garanti
+ * (au lieu de positionner séparément chaque élément avec des unités em
+ * qui se calculent selon la font-size locale).
+ *
+ * Bouton et hint en bas centrés sous la sphère.
  */
 
 .container {
@@ -33,32 +36,48 @@
   cursor: grabbing;
 }
 
-/* ===== TITRE DU MODULE ACTIF ===== */
-.faceTitle {
+/* ===== BLOC GAUCHE — titre + résumé empilés, parfaitement alignés ===== */
+.faceLeftBlock {
   user-select: none;
   position: absolute;
-  font-weight: 900;
-  font-size: 3rem;
-  left: 1.6em;
+  left: 5rem;
   top: 50%;
-  transform: translate(20%, -50%);
-  color: #FAFAFA;
+  transform: translateY(-50%);
+  max-width: 30ch;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
   pointer-events: none;
 }
 
-.faceTitleActive {
+.faceLeftBlockActive {
   opacity: 1;
   pointer-events: auto;
-  transition: 0.5s ease;
+  transition: opacity 0.5s ease;
 }
 
-.faceTitleInactive {
-  pointer-events: none;
+.faceLeftBlockInactive {
   opacity: 0;
-  transition: 0.1s ease;
+  pointer-events: none;
+  transition: opacity 0.1s ease;
 }
 
-/* ===== DESCRIPTION DU MODULE ACTIF ===== */
+.faceTitle {
+  font-weight: 900;
+  font-size: 3rem;
+  line-height: 1;
+  color: #FAFAFA;
+  margin: 0;
+}
+
+.faceSummary {
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: rgba(250, 250, 250, 0.8);
+  margin: 0;
+}
+
+/* ===== DESCRIPTION COURTE (droite, hauteur médiane) ===== */
 .faceDescription {
   user-select: none;
   position: absolute;
@@ -68,6 +87,7 @@
   right: 1%;
   color: rgba(250, 250, 250, 0.75);
   pointer-events: none;
+  margin: 0;
 }
 
 .faceDescriptionActive {
@@ -89,22 +109,32 @@
   position: absolute;
   left: 50%;
   z-index: 10;
-  width: 60px;
-  height: 60px;
-  display: grid;
-  place-items: center;
-  background: #7c3aed;
-  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 28px;
+  background: linear-gradient(135deg, rgba(192, 38, 211, 0.25) 0%, rgba(230, 57, 70, 0.25) 100%);
+  border: 1px solid rgba(192, 38, 211, 0.5);
+  border-radius: 10px;
   cursor: pointer;
-  border: 5px solid #04040e;
+  color: #fff;
+  font-family: "JetBrains Mono", "Courier New", monospace;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 0 32px rgba(192, 38, 211, 0.3);
+  transition: opacity 0.4s ease, transform 0.4s ease, box-shadow 0.2s ease,
+    background 0.2s ease, bottom 0.4s ease;
 }
 
 .actionButtonActive {
-  bottom: 3.8em;
+  bottom: 5em;
   transform: translateX(-50%) scale(1);
   opacity: 1;
   pointer-events: auto;
-  transition: 0.5s ease;
 }
 
 .actionButtonInactive {
@@ -115,39 +145,61 @@
   transition: 0.1s ease;
 }
 
+.actionButton:hover {
+  background: linear-gradient(135deg, rgba(192, 38, 211, 0.4) 0%, rgba(230, 57, 70, 0.4) 100%);
+  box-shadow: 0 0 48px rgba(192, 38, 211, 0.5);
+}
+
+.actionButtonLabel {
+  user-select: none;
+  position: relative;
+  top: 0;
+}
+
 .actionButtonIcon {
   user-select: none;
   position: relative;
-  color: #fff;
-  top: 2px;
-  font-size: 26px;
+  display: inline-block;
+  font-size: 16px;
+  line-height: 1;
+  transform: translateY(-1px);
 }
 
-/* ===== HINT "Glisse pour explorer" ===== */
+/* ===== HINT — invitation à interagir =====
+ * 2 modes :
+ *   - Pre-touch (hasInteracted=false)  → "Clic & glisse pour explorer l'écosystème"
+ *   - Post-touch (hasInteracted=true)  → "Glisse pour découvrir un autre module"
+ *
+ * Position : sous le bouton d'action, centré.
+ */
 .hint {
   position: absolute;
-  bottom: 1.5em;
+  bottom: 1.8em;
   left: 50%;
   transform: translateX(-50%);
-  color: rgba(250, 250, 250, 0.7);
-  font-size: 0.875rem;
-  letter-spacing: 0.05em;
+  color: rgba(250, 250, 250, 0.55);
+  font-family: "JetBrains Mono", "Courier New", monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
   user-select: none;
   pointer-events: none;
+  white-space: nowrap;
   transition: opacity 0.3s ease-out;
 }
 
 .hintVisible {
-  opacity: 0.7;
+  opacity: 0.65;
 }
 
 .hintHidden {
   opacity: 0;
 }
 
-/* Masque titre + description sur mobile/tablette (originalement <1500px chez React Bits) */
+/* Masque bloc gauche + description sur mobile/tablette
+ * (la sphère prend tout l'écran, pas de place pour les textes latéraux) */
 @media (max-width: 1023px) {
-  .faceTitle,
+  .faceLeftBlock,
   .faceDescription {
     display: none;
   }

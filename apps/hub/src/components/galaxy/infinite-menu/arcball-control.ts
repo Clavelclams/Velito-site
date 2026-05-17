@@ -13,7 +13,7 @@
  *   - Les quaternions composent proprement, interpolent en ligne droite (slerp),
  *     et ne perdent jamais d'axe.
  *   - Un quaternion = (x, y, z, w) où (x,y,z) est l'axe et w lié à l'angle.
- *   - Pour le jury CDA : "quaternion = nombre à 4 dimensions qui représente une
+ *   - Pour mon jury CDA : "quaternion = nombre à 4 dimensions qui représente une
  *     rotation 3D sans souffrir des problèmes des angles d'Euler".
  *
  * Modifications par rapport à React Bits :

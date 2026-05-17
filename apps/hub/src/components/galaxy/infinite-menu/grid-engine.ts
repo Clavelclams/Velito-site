@@ -1,27 +1,13 @@
 /**
  * InfiniteGridMenu — classe principale qui orchestre la sphère 3D interactive.
  *
- * NOTE SUR LA TAILLE : ce fichier dépasse les 150 lignes max prévues par
- * instructions/04_CONVENTIONS_CODE.md. Exception assumée : init/animate/render/
- * camera/control sont entrelacés via l'état partagé this.* et les couper en
- * sous-fichiers crée des dépendances cycliques ou des classes "amies" qui
- * cassent l'encapsulation. Tout ce qui pouvait être extrait l'a été
- * (geometry, shaders, gl-utils, arcball-control).
- *
- * Responsabilités :
- *   1. Init WebGL 2 : context, program (shaders), VAOs, buffers, textures atlas
- *   2. Run loop : requestAnimationFrame qui appelle animate() puis render()
- *   3. animate() : met à jour les matrices d'instance selon la rotation arcball
- *   4. render() : un draw call par frame avec drawElementsInstanced
- *   5. Resize, snap (alignement sur l'item le plus proche), texture loading
- *
  * Modifications par rapport à React Bits :
- *   - Suppression de this.icoGeo.subdivide(1) — on garde les 12 sommets de l'icosaèdre
- *     de base, suffisant pour 5 modules (chaque module apparaît ~2-3 fois).
- *     La subdivision originale produisait 42 sommets → chaque module se répétait
- *     8 fois, ce qui aurait été visuellement confus pour un menu de 5 entrées.
- *   - Ajout d'un flag isPaused pour stopper la boucle quand le hero sort du viewport
- *     (IntersectionObserver dans GalaxyHero) → économie batterie + CPU.
+ *   - Subdivide(1) CONSERVÉ : 42 sommets, sphère dense.
+ *   - Flag isPaused pour pause hors viewport (IntersectionObserver).
+ *   - Contexte WebGL transparent (alpha:true + blending) → Galaxy visible derrière.
+ *   - Aperture FOV élargie (0.35 → 0.65) → cadrage panoramique immersif.
+ *   - GRAPH COLORING anti-répétitions adjacentes via computeItemMapping().
+ *   - MenuItem inclut désormais summary (résumé "Explorez X..." affiché côté gauche).
  */
 
 import { mat4, quat, vec2, vec3 } from "gl-matrix";
@@ -42,6 +28,7 @@ export interface MenuItem {
   link: string;
   title: string;
   description: string;
+  summary: string;
 }
 
 interface DiscLocations {
@@ -58,6 +45,7 @@ interface DiscLocations {
   uFrames: WebGLUniformLocation | null;
   uItemCount: WebGLUniformLocation | null;
   uAtlasSize: WebGLUniformLocation | null;
+  uItemMap: WebGLUniformLocation | null;
 }
 
 interface InstanceData {
@@ -65,6 +53,8 @@ interface InstanceData {
   matrices: Float32Array[];
   buffer: WebGLBuffer;
 }
+
+const MAX_ITEM_MAP_SIZE = 64;
 
 export class InfiniteGridMenu {
   TARGET_FRAME_DURATION = 1000 / 60;
@@ -107,8 +97,6 @@ export class InfiniteGridMenu {
   private discProgram!: WebGLProgram;
   private discLocations!: DiscLocations;
   private discGeo!: DiscGeometry;
-  // DiscGeometry["data"] = type du getter "data" — objet structuré avec
-  // vertices/indices/normals/uvs typés Float32Array et Uint16Array.
   private discBuffers!: DiscGeometry["data"];
   private discVAO!: WebGLVertexArrayObject;
   private icoGeo!: IcosahedronGeometry;
@@ -119,6 +107,7 @@ export class InfiniteGridMenu {
   private tex!: WebGLTexture;
   private atlasSize = 1;
   private control!: ArcballControl;
+  private itemMap!: Int32Array;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -139,10 +128,8 @@ export class InfiniteGridMenu {
     this.init(onInit);
   }
 
-  /** Met en pause / reprend la boucle d'animation (utilisé par IntersectionObserver). */
   setPaused(paused: boolean): void {
     if (this.isPaused && !paused) {
-      // Reprise : on relance la boucle avec le timestamp courant.
       this.isPaused = false;
       requestAnimationFrame((t) => this.run(t));
     } else {
@@ -175,10 +162,72 @@ export class InfiniteGridMenu {
     requestAnimationFrame((t) => this.run(t));
   }
 
+  /**
+   * Graph coloring glouton — assigne chaque sommet à un module en évitant que
+   * ses voisins immédiats aient le même module. Équilibre par usage.
+   */
+  private computeItemMapping(): Int32Array {
+    const N = this.DISC_INSTANCE_COUNT;
+    const M = Math.max(1, this.items.length);
+
+    const neighbors: Set<number>[] = Array.from({ length: N }, () => new Set<number>());
+    for (const face of this.icoGeo.faces) {
+      neighbors[face.a]!.add(face.b);
+      neighbors[face.a]!.add(face.c);
+      neighbors[face.b]!.add(face.a);
+      neighbors[face.b]!.add(face.c);
+      neighbors[face.c]!.add(face.a);
+      neighbors[face.c]!.add(face.b);
+    }
+
+    const assignment = new Int32Array(N).fill(-1);
+    const usage = new Array<number>(M).fill(0);
+
+    for (let v = 0; v < N; v++) {
+      const forbidden = new Set<number>();
+      for (const nb of neighbors[v]!) {
+        const a = assignment[nb];
+        if (a !== undefined && a >= 0) forbidden.add(a);
+      }
+
+      let bestModule = -1;
+      let bestUsage = Infinity;
+      for (let m = 0; m < M; m++) {
+        if (forbidden.has(m)) continue;
+        if (usage[m]! < bestUsage) {
+          bestModule = m;
+          bestUsage = usage[m]!;
+        }
+      }
+
+      if (bestModule === -1) {
+        bestUsage = Infinity;
+        for (let m = 0; m < M; m++) {
+          if (usage[m]! < bestUsage) {
+            bestModule = m;
+            bestUsage = usage[m]!;
+          }
+        }
+      }
+
+      assignment[v] = bestModule;
+      usage[bestModule]!++;
+    }
+
+    return assignment;
+  }
+
   private init(onInit: ((engine: InfiniteGridMenu) => void) | null): void {
-    const gl = this.canvas.getContext("webgl2", { antialias: true, alpha: false });
+    const gl = this.canvas.getContext("webgl2", {
+      antialias: true,
+      alpha: true,
+      premultipliedAlpha: false,
+    });
     if (!gl) throw new Error("WebGL 2 non supporté par ce navigateur.");
     this.gl = gl;
+
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
     this.viewportSize = vec2.fromValues(this.canvas.clientWidth, this.canvas.clientHeight);
     this.drawBufferSize = vec2.clone(this.viewportSize);
@@ -203,6 +252,7 @@ export class InfiniteGridMenu {
       uFrames: gl.getUniformLocation(this.discProgram, "uFrames"),
       uItemCount: gl.getUniformLocation(this.discProgram, "uItemCount"),
       uAtlasSize: gl.getUniformLocation(this.discProgram, "uAtlasSize"),
+      uItemMap: gl.getUniformLocation(this.discProgram, "uItemMap"),
     };
 
     this.discGeo = new DiscGeometry(56, 1);
@@ -216,11 +266,19 @@ export class InfiniteGridMenu {
       this.discBuffers.indices
     )!;
 
-    // Icosaèdre SANS subdivision — 12 sommets, suffisants pour 5 modules.
     this.icoGeo = new IcosahedronGeometry();
-    this.icoGeo.spherize(this.SPHERE_RADIUS);
+    this.icoGeo.subdivide(1).spherize(this.SPHERE_RADIUS);
     this.instancePositions = this.icoGeo.vertices.map((v) => v.position);
     this.DISC_INSTANCE_COUNT = this.icoGeo.vertices.length;
+
+    this.itemMap = this.computeItemMapping();
+
+    if (this.DISC_INSTANCE_COUNT > MAX_ITEM_MAP_SIZE) {
+      console.warn(
+        `InfiniteGridMenu: ${this.DISC_INSTANCE_COUNT} sommets > MAX_ITEM_MAP_SIZE (${MAX_ITEM_MAP_SIZE}). ` +
+          "Augmente MAX_ITEMS dans disc.frag.ts et MAX_ITEM_MAP_SIZE ici."
+      );
+    }
 
     this.initDiscInstances(this.DISC_INSTANCE_COUNT);
     this.initTexture();
@@ -345,6 +403,7 @@ export class InfiniteGridMenu {
     gl.uniform1f(this.discLocations.uFrames, this.frames);
     gl.uniform1f(this.discLocations.uScaleFactor, this.scaleFactor);
     gl.uniform1i(this.discLocations.uTex, 0);
+    gl.uniform1iv(this.discLocations.uItemMap, this.itemMap);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.tex);
     gl.bindVertexArray(this.discVAO);
@@ -365,7 +424,7 @@ export class InfiniteGridMenu {
   private updateProjectionMatrix(): void {
     const gl = this.gl;
     this.camera.aspect = (gl.canvas as HTMLCanvasElement).clientWidth / (gl.canvas as HTMLCanvasElement).clientHeight;
-    const height = this.SPHERE_RADIUS * 0.35;
+    const height = this.SPHERE_RADIUS * 0.65;
     const distance = this.camera.position[2];
     if (this.camera.aspect > 1) {
       this.camera.fov = 2 * Math.atan(height / distance);
@@ -387,7 +446,7 @@ export class InfiniteGridMenu {
     }
     if (!this.control.isPointerDown) {
       const nearestVertexIndex = this.findNearestVertexIndex();
-      const itemIndex = nearestVertexIndex % Math.max(1, this.items.length);
+      const itemIndex = this.itemMap[nearestVertexIndex] ?? 0;
       this.onActiveItemChange(itemIndex);
       const snapDirection = vec3.normalize(vec3.create(), this.getVertexWorldPosition(nearestVertexIndex));
       this.control.snapTargetDirection = snapDirection;
@@ -420,7 +479,6 @@ export class InfiniteGridMenu {
     return vec3.transformQuat(vec3.create(), nearestVertexPos, this.control.orientation);
   }
 
-  /** Nettoyage : retire les listeners du ArcballControl. */
   dispose(): void {
     this.isPaused = true;
     this.control?.dispose();

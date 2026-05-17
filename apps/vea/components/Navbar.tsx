@@ -1,18 +1,11 @@
 /**
- * Navbar — Navigation principale VEA
+ * Navbar — Navigation principale VEA (refonte 16/05/2026 — fond clair).
  *
- * 👉 REFONTE VIOLET + ROUGE :
- *   - Fond transparent → opaque au scroll (effet glassmorphism)
- *   - Couleurs : violet (#7c3aed) + rouge (#E63946) au lieu de bleu
- *   - Bouton "Adhérer" rouge avec glow au hover
- *   - Logo text en text-gradient-vea (blanc→rouge)
+ * Avant : fond violet sombre + glow rouge neon -> DA "gamer hardcore".
+ * Apres : fond blanc (legere transparence au scroll), texte fonce, accent
+ * rouge VEA pour le CTA "Adherer". Style proche de mabb.fr : sobre, pro.
  *
- * 👉 SCROLL EFFECT :
- *   - useState + useEffect pour détecter le scroll > 50px
- *   - Au scroll : fond opaque + border visible + shadow
- *   - Sans scroll : fond transparent (le hero se voit en dessous)
- *
- * "use client" car on utilise useState + useEffect
+ * "use client" car j'utilise useState + useEffect.
  */
 "use client";
 
@@ -30,10 +23,9 @@ const NAV_LINKS: NavLink[] = [
   { label: "Association", href: "/association" },
   { label: "Esport", href: "/esport" },
   { label: "Agenda", href: "/agenda" },
-  { label: "Médias", href: "/medias" },
+  { label: "Medias", href: "/medias" },
   { label: "Partenaires", href: "/partenaires" },
   { label: "Contact", href: "/contact" },
-  { label: "Inscription", href: "/inscription" },
 ];
 
 const HELLOASSO_URL =
@@ -43,10 +35,9 @@ export default function Navbar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  // 👉 On écoute le scroll pour changer le style de la navbar
   useEffect(() => {
     function handleScroll() {
-      setScrolled(window.scrollY > 50);
+      setScrolled(window.scrollY > 20);
     }
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
@@ -54,51 +45,48 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`fixed top-0 z-50 w-full transition-all duration-300 ${
+      className={`fixed top-0 z-50 w-full transition-all duration-200 ${
         scrolled
-          ? "bg-vea-dark/95 backdrop-blur-md border-b border-vea-border/30 shadow-lg shadow-black/20"
-          : "bg-transparent border-b border-transparent"
+          ? "bg-white/95 backdrop-blur-md border-b border-vea-border shadow-card-soft"
+          : "bg-white border-b border-transparent"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 lg:px-8 h-16 flex items-center justify-between">
-
-        {/* ===== LOGO ===== */}
         <Link href="/" className="flex items-center gap-3 shrink-0">
           <Image
-            src="/images/vea-logo-blanc-fond-transparent.png"
+            src="/images/vea-logo-rouge-fond-blanc.png"
             alt="Logo VEA"
-            width={38}
-            height={38}
-            className="w-[38px] h-[38px] object-contain"
+            width={40}
+            height={40}
+            className="w-10 h-10 object-contain"
+            priority
           />
           <div className="hidden sm:block leading-tight">
-            <span className="block text-gradient-vea font-bold text-sm tracking-wide">
+            <span className="block text-vea-text font-bold text-sm tracking-wide">
               VELITO
             </span>
-            <span className="block text-vea-red-light text-[10px] uppercase tracking-widest font-medium">
+            <span className="block text-vea-accent text-[10px] uppercase tracking-widest font-semibold">
               Esport Amiens
             </span>
           </div>
         </Link>
 
-        {/* ===== LIENS DESKTOP ===== */}
-        <div className="hidden lg:flex items-center gap-5">
+        <div className="hidden lg:flex items-center gap-7">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="text-[13px] text-vea-text-muted hover:text-vea-white transition-colors font-medium"
+              className="text-sm text-vea-text-muted hover:text-vea-accent transition-colors font-medium"
             >
               {link.label}
             </Link>
           ))}
         </div>
 
-        {/* ===== ACTIONS DESKTOP ===== */}
         <div className="hidden lg:flex items-center gap-3">
           <Link
             href="/login"
-            className="border border-white/30 text-white text-sm font-medium px-4 py-1.5 rounded-lg hover:bg-white/10 hover:border-white/50 transition-all"
+            className="text-sm text-vea-text-muted hover:text-vea-text font-medium px-3 py-1.5 transition-colors"
           >
             Connexion
           </Link>
@@ -106,48 +94,43 @@ export default function Navbar() {
             href={HELLOASSO_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-vea-red hover:bg-vea-accent-hover text-white text-[13px] font-semibold px-5 py-2 rounded-lg transition-all hover:shadow-[0_0_20px_rgba(230,57,70,0.4)]"
+            className="bg-vea-accent hover:bg-vea-accent-hover text-white text-sm font-semibold px-5 py-2 rounded-lg transition-all shadow-btn-accent hover:-translate-y-0.5"
           >
-            Adhérer
+            Adherer
           </a>
         </div>
 
-        {/* ===== HAMBURGER MOBILE ===== */}
         <button
           onClick={() => setDrawerOpen(true)}
-          className="lg:hidden text-vea-white p-2"
+          className="lg:hidden text-vea-text p-2"
           aria-label="Ouvrir le menu"
           type="button"
         >
           <div className="w-6 h-4 flex flex-col justify-between">
-            <span className="block h-0.5 w-full bg-vea-white" />
-            <span className="block h-0.5 w-4 bg-vea-white" />
-            <span className="block h-0.5 w-full bg-vea-white" />
+            <span className="block h-0.5 w-full bg-vea-text" />
+            <span className="block h-0.5 w-4 bg-vea-text" />
+            <span className="block h-0.5 w-full bg-vea-text" />
           </div>
         </button>
       </div>
 
-      {/* ===== DRAWER MOBILE (depuis la droite) ===== */}
-      {/* Overlay sombre */}
       {drawerOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/60 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
           onClick={() => setDrawerOpen(false)}
         />
       )}
 
-      {/* Panneau latéral */}
       <div
-        className={`fixed top-0 right-0 z-50 h-full w-72 bg-vea-dark border-l border-vea-border/30 transform transition-transform duration-300 lg:hidden ${
+        className={`fixed top-0 right-0 z-50 h-full w-72 bg-white border-l border-vea-border shadow-2xl transform transition-transform duration-200 lg:hidden ${
           drawerOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        {/* Bouton fermer */}
-        <div className="flex items-center justify-between p-4 border-b border-vea-border/20">
-          <span className="text-vea-white font-bold text-sm">Menu</span>
+        <div className="flex items-center justify-between p-4 border-b border-vea-border">
+          <span className="text-vea-text font-bold text-sm">Menu</span>
           <button
             onClick={() => setDrawerOpen(false)}
-            className="text-vea-text-muted hover:text-vea-white p-1"
+            className="text-vea-text-muted hover:text-vea-accent p-1 transition-colors"
             aria-label="Fermer le menu"
             type="button"
           >
@@ -157,35 +140,33 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Liens */}
         <div className="p-4 space-y-1">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               onClick={() => setDrawerOpen(false)}
-              className="block py-3 px-3 text-vea-text-muted hover:text-vea-white hover:bg-vea-card/50 rounded-lg transition-colors text-sm font-medium"
+              className="block py-3 px-3 text-vea-text-muted hover:text-vea-accent hover:bg-vea-surface-soft rounded-lg transition-colors text-sm font-medium"
             >
               {link.label}
             </Link>
           ))}
         </div>
 
-        {/* Actions mobile */}
-        <div className="p-4 space-y-3 border-t border-vea-border/20">
+        <div className="p-4 space-y-3 border-t border-vea-border">
           <a
             href={HELLOASSO_URL}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setDrawerOpen(false)}
-            className="block text-center bg-vea-red hover:bg-vea-accent-hover text-white text-sm font-semibold px-5 py-3 rounded-lg transition-colors"
+            className="block text-center bg-vea-accent hover:bg-vea-accent-hover text-white text-sm font-semibold px-5 py-3 rounded-lg transition-colors shadow-btn-accent"
           >
-            Adhérer
+            Adherer
           </a>
           <Link
             href="/login"
             onClick={() => setDrawerOpen(false)}
-            className="block w-full text-center border border-white/30 text-white text-sm font-medium py-2.5 rounded-lg hover:bg-white/10 hover:border-white/50 transition-all"
+            className="block w-full text-center border border-vea-border-strong text-vea-text text-sm font-medium py-2.5 rounded-lg hover:border-vea-accent hover:text-vea-accent transition-all"
           >
             Connexion
           </Link>

@@ -1,20 +1,27 @@
 /**
- * Page Agenda VEA — REFONTE VIOLET + ROUGE + MOTION
+ * Page Agenda VEA — refonte DA claire + fusion archive statique + Prisma.
  *
- * 👉 DYNAMIQUE : charge les événements depuis la BDD via /api/evenements?all=true
- * 👉 Plus aucun événement hardcodé — tout vient de Prisma/MySQL
+ * Strategie hybride (16/05/2026) :
+ *   - L'historique des evenements depuis 2023 est statique (lib/events-archive.ts).
+ *     21 events documentes via rapport reseaux sociaux + base Notion.
+ *   - Les NOUVEAUX evenements (a venir ou recents apres mise en place du dashboard)
+ *     viennent de Prisma/MySQL via /api/evenements?all=true.
+ *   - On fusionne les deux listes, dedoublonne par id, trie par date.
  *
- * Structure :
- * 1. Header avec titre + séparateur
- * 2. Filtres par type (Tous, Tournoi, Atelier, Animation, Compétition)
- * 3. Section "Prochains événements" (date >= aujourd'hui + actif)
- * 4. Section "Nos dernières actions" (date < aujourd'hui = passés)
- * 5. State loading + état vide si BDD vide
+ * Resultat : la page agenda affiche un historique riche meme si la BDD MySQL
+ * est vide. Quand le dashboard admin sera utilise, les nouveaux events s'ajoutent
+ * automatiquement.
+ *
+ * Filtres conserves : Tous / Tournoi / Atelier / Animation / Competition.
+ * DA refondue pour etre coherente avec la home (fond clair, card-clean,
+ * btn-primary, palette accent rouge).
  */
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import ScrollReveal from "@/components/ScrollReveal";
+import { EVENTS_ARCHIVE, type EventArchive } from "@/lib/events-archive";
 
 type Evenement = {
   id: string;
@@ -24,6 +31,8 @@ type Evenement = {
   lieu: string;
   type: string;
   actif: boolean;
+  /** Slug de galerie pour bouton "Voir les photos" -> /medias?event=<slug> */
+  gallerySlug?: string;
 };
 
 export default function AgendaPage() {
@@ -32,17 +41,39 @@ export default function AgendaPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Je fetch les events Prisma, puis je fusionne avec l'archive statique.
+    // Si l'API plante, je tombe en fallback sur l'archive uniquement —
+    // comme ca la page n'est jamais vide.
     fetch("/api/evenements?all=true")
       .then((r) => {
         if (!r.ok) throw new Error(`API error: ${r.status}`);
-        return r.json();
+        return r.json() as Promise<Evenement[]>;
       })
-      .then((data) => {
-        setEvenements(data);
+      .then((dataPrisma) => {
+        // Dedoublonnage par id (la BDD peut avoir des events avec id "archive-*"
+        // si Clavel a deja seede — auquel cas la BDD gagne).
+        const idsPrisma = new Set(dataPrisma.map((e) => e.id));
+        const archive: Evenement[] = (EVENTS_ARCHIVE as EventArchive[])
+          .filter((e) => !idsPrisma.has(e.id))
+          .map((e) => ({ ...e, description: e.description, gallerySlug: e.gallerySlug }));
+        const merged = [...dataPrisma, ...archive];
+        // Tri par date decroissante (plus recent en haut)
+        merged.sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+        setEvenements(merged);
         setLoading(false);
       })
       .catch((err) => {
-        console.error("[Agenda]", err);
+        console.warn("[Agenda] API Prisma indisponible — fallback archive:", err);
+        // Fallback : on affiche au moins l'archive
+        const archiveOnly: Evenement[] = (EVENTS_ARCHIVE as EventArchive[]).map(
+          (e) => ({ ...e, description: e.description, gallerySlug: e.gallerySlug })
+        );
+        archiveOnly.sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+        setEvenements(archiveOnly);
         setLoading(false);
       });
   }, []);
@@ -59,112 +90,136 @@ export default function AgendaPage() {
     filtre === "tous" ? liste : liste.filter((e) => e.type === filtre);
 
   return (
-    <main className="min-h-screen bg-vea-dark pt-32 pb-20">
-      <div className="container mx-auto px-6">
-        {/* ===== Header ===== */}
-        <ScrollReveal>
-          <div className="text-center mb-12">
-            <h1 className="text-5xl md:text-7xl font-black text-gradient-vea uppercase mb-4">
-              Agenda &amp; Événements
+    <>
+      {/* HERO */}
+      <section className="hero-bg pt-28 pb-12 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <ScrollReveal>
+            <span className="badge-red mb-4">Activites</span>
+            <h1 className="text-4xl sm:text-5xl font-black text-vea-text mb-4 mt-4">
+              Agenda &amp; <span className="text-vea-accent">Evenements</span>
             </h1>
-            <div className="section-separator w-24 mx-auto" />
-            <p className="text-vea-text-muted mt-4">
-              Toutes les actions VEA depuis 2022.
+            <p className="text-base text-vea-text-muted max-w-2xl mx-auto">
+              Toutes les actions VEA depuis 2022 — tournois, animations,
+              competitions et ateliers dans les quartiers d&apos;Amiens.
             </p>
-          </div>
-        </ScrollReveal>
-
-        {/* ===== Filtres ===== */}
-        <div className="flex flex-wrap gap-2 mb-12 justify-center">
-          {filtres.map((f) => (
-            <button
-              key={f}
-              onClick={() => setFiltre(f)}
-              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                filtre === f
-                  ? "bg-vea-red text-white"
-                  : "border border-vea-border text-vea-text-muted hover:border-vea-red/50"
-              }`}
-            >
-              {f === "tous"
-                ? "Tous"
-                : f.charAt(0) + f.slice(1).toLowerCase()}
-            </button>
-          ))}
+          </ScrollReveal>
         </div>
+      </section>
 
-        {/* ===== Loading ===== */}
-        {loading && (
-          <p className="text-center text-vea-text-muted py-12">Chargement...</p>
-        )}
+      <section className="py-12 px-4 bg-vea-bg">
+        <div className="max-w-6xl mx-auto">
 
-        {/* ===== Prochains événements ===== */}
-        {eventsFiltres(aVenir).length > 0 && (
-          <section className="mb-16">
-            <ScrollReveal>
-              <h2 className="text-2xl font-black text-white mb-6 flex items-center gap-3">
-                <span className="w-3 h-3 rounded-full bg-vea-red animate-pulse inline-block" />
-                Prochains événements
-              </h2>
-            </ScrollReveal>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {eventsFiltres(aVenir).map((ev, i) => (
-                <ScrollReveal key={ev.id} delay={i * 0.05}>
-                  <EventCard ev={ev} futur />
-                </ScrollReveal>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* ===== Événements passés ===== */}
-        {eventsFiltres(passes).length > 0 && (
-          <section>
-            <ScrollReveal>
-              <h2 className="text-2xl font-black text-white mb-6">
-                Nos dernières actions
-              </h2>
-              <p className="text-vea-text-muted text-sm mb-6">
-                Tout ce que VEA a organisé ou participé depuis sa création.
-              </p>
-            </ScrollReveal>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {eventsFiltres(passes).map((ev, i) => (
-                <ScrollReveal key={ev.id} delay={i * 0.05}>
-                  <EventCard ev={ev} />
-                </ScrollReveal>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* ===== État vide ===== */}
-        {!loading && evenements.length === 0 && (
-          <div className="text-center py-20">
-            <p className="text-vea-text-muted text-lg">
-              Aucun événement pour le moment.
-            </p>
-            <p className="text-vea-text-dim text-sm mt-2">
-              Va dans le dashboard admin pour importer les événements VEA.
-            </p>
+          {/* FILTRES */}
+          <div className="flex flex-wrap gap-2 mb-12 justify-center">
+            {filtres.map((f) => (
+              <button
+                key={f}
+                onClick={() => setFiltre(f)}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  filtre === f
+                    ? "bg-vea-accent text-white shadow-btn-accent"
+                    : "bg-white border border-vea-border text-vea-text-muted hover:border-vea-accent hover:text-vea-accent"
+                }`}
+              >
+                {f === "tous"
+                  ? "Tous"
+                  : f.charAt(0) + f.slice(1).toLowerCase()}
+              </button>
+            ))}
           </div>
-        )}
 
-        {/* ===== Compteur ===== */}
-        {!loading && evenements.length > 0 && (
-          <p className="text-xs text-vea-text-dim text-center mt-12">
-            {eventsFiltres([...aVenir, ...passes]).length} événement
-            {eventsFiltres([...aVenir, ...passes]).length > 1 ? "s" : ""}{" "}
-            affiché{eventsFiltres([...aVenir, ...passes]).length > 1 ? "s" : ""}
-          </p>
-        )}
-      </div>
-    </main>
+          {/* LOADING */}
+          {loading && (
+            <p className="text-center text-vea-text-muted py-12">Chargement...</p>
+          )}
+
+          {/* PROCHAINS EVENEMENTS */}
+          {!loading && eventsFiltres(aVenir).length > 0 && (
+            <section className="mb-16">
+              <ScrollReveal>
+                <h2 className="text-2xl font-bold text-vea-text mb-6 flex items-center gap-3">
+                  <span className="w-3 h-3 rounded-full bg-vea-accent animate-pulse inline-block" />
+                  Prochains evenements
+                </h2>
+              </ScrollReveal>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {eventsFiltres(aVenir).map((ev, i) => (
+                  <ScrollReveal key={ev.id} delay={i * 0.05}>
+                    <EventCard ev={ev} futur />
+                  </ScrollReveal>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* EVENEMENTS PASSES */}
+          {!loading && eventsFiltres(passes).length > 0 && (
+            <section>
+              <ScrollReveal>
+                <h2 className="text-2xl font-bold text-vea-text mb-2">
+                  Nos dernieres actions
+                </h2>
+                <p className="text-vea-text-muted text-sm mb-8">
+                  Tout ce que VEA a organise ou auquel l&apos;association a
+                  participe depuis sa creation.
+                </p>
+              </ScrollReveal>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {eventsFiltres(passes).map((ev, i) => (
+                  <ScrollReveal key={ev.id} delay={Math.min(i * 0.03, 0.5)}>
+                    <EventCard ev={ev} />
+                  </ScrollReveal>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* ETAT VIDE */}
+          {!loading && evenements.length === 0 && (
+            <div className="text-center py-20">
+              <p className="text-vea-text-muted text-lg">
+                Aucun evenement pour le moment.
+              </p>
+            </div>
+          )}
+
+          {/* COMPTEUR */}
+          {!loading && evenements.length > 0 && (
+            <p className="text-xs text-vea-text-dim text-center mt-12">
+              {eventsFiltres([...aVenir, ...passes]).length} evenement
+              {eventsFiltres([...aVenir, ...passes]).length > 1 ? "s" : ""}{" "}
+              affiche{eventsFiltres([...aVenir, ...passes]).length > 1 ? "s" : ""}
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-16 px-4 section-bg">
+        <div className="max-w-3xl mx-auto text-center">
+          <ScrollReveal>
+            <div className="card-clean p-10 bg-vea-accent-soft border-vea-accent/15">
+              <h2 className="text-2xl sm:text-3xl font-bold text-vea-text mb-3">
+                Tu veux participer ?
+              </h2>
+              <p className="text-vea-text-muted mb-6 max-w-lg mx-auto">
+                Inscris-toi pour recevoir les prochaines dates et rejoindre la
+                communaute VEA.
+              </p>
+              <Link href="/inscription" className="btn-primary">
+                S&apos;inscrire
+              </Link>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+    </>
   );
 }
 
 /**
- * Composant EventCard — couleurs violet/rouge
+ * Card d'un evenement — DA claire, palette accent rouge.
  */
 function EventCard({
   ev,
@@ -175,71 +230,74 @@ function EventCard({
 }) {
   const date = new Date(ev.date);
 
-  const typeColors: Record<string, string> = {
-    TOURNOI: "text-vea-red border-vea-red",
-    ATELIER: "text-green-400 border-green-400",
-    ANIMATION: "text-vea-purple-light border-vea-purple-light",
-    COMPETITION: "text-yellow-400 border-yellow-400",
-  };
+  // Couleur d'accent du badge type — toutes en rouge VEA pour la coherence,
+  // on differencie juste par opacite (les vieux types avaient des couleurs
+  // multiples ce qui creait du bruit sur fond clair).
+  const typeBadge = "text-vea-accent bg-vea-accent-soft border-vea-accent/20";
 
   return (
-    <div className="card-glow p-6 rounded-2xl flex flex-col gap-4 h-full">
-      {/* Ligne du haut : badge type + badge statut */}
+    <div className="card-clean p-6 flex flex-col gap-4 h-full">
+      {/* Ligne du haut : badge type + statut */}
       <div className="flex items-center justify-between">
         <span
-          className={`text-xs px-3 py-1 rounded-full border font-semibold uppercase tracking-wider ${
-            typeColors[ev.type] || "text-vea-red border-vea-red"
-          }`}
+          className={`text-xs px-3 py-1 rounded-full border font-semibold uppercase tracking-wider ${typeBadge}`}
         >
           {ev.type.toLowerCase()}
         </span>
         {futur ? (
-          <span className="text-xs bg-vea-red/20 text-vea-red px-3 py-1 rounded-full">
-            À venir
+          <span className="text-xs bg-vea-accent text-white px-3 py-1 rounded-full font-semibold">
+            A venir
           </span>
         ) : (
-          <span className="text-xs bg-gray-500/20 text-gray-400 px-3 py-1 rounded-full">
-            Passé
+          <span className="text-xs bg-vea-surface-soft text-vea-text-dim px-3 py-1 rounded-full">
+            Passe
           </span>
         )}
       </div>
 
       {/* Titre + description */}
       <div>
-        <h3 className="text-white font-bold text-lg leading-tight mb-1">
+        <h3 className="text-vea-text font-bold text-base leading-tight mb-2">
           {ev.titre}
         </h3>
         {ev.description && (
-          <p className="text-vea-text-muted text-sm line-clamp-2">
+          <p className="text-vea-text-muted text-sm leading-relaxed line-clamp-3">
             {ev.description}
           </p>
         )}
       </div>
 
       {/* Date + lieu */}
-      <div className="mt-auto space-y-1">
-        <p className="text-vea-text-muted text-sm flex items-center gap-2">
-          <span>📅</span>
+      <div className="mt-auto space-y-1 pt-2 border-t border-vea-border">
+        <p className="text-vea-text-muted text-xs flex items-center gap-2">
+          <span aria-hidden="true">📅</span>
           {date.toLocaleDateString("fr-FR", {
             day: "numeric",
             month: "long",
             year: "numeric",
           })}
         </p>
-        <p className="text-vea-text-muted text-sm flex items-center gap-2">
-          <span>📍</span>
+        <p className="text-vea-text-muted text-xs flex items-center gap-2">
+          <span aria-hidden="true">📍</span>
           {ev.lieu}
         </p>
       </div>
 
+      {/* Bouton "Voir les photos" si l'event a une galerie associee */}
+      {ev.gallerySlug && (
+        <Link
+          href={`/medias?event=${ev.gallerySlug}`}
+          className="btn-outline text-xs py-2"
+        >
+          Voir les photos
+        </Link>
+      )}
+
       {/* Bouton inscription — seulement pour les futurs */}
       {futur && (
-        <a
-          href="/inscription"
-          className="w-full text-center bg-vea-red hover:bg-vea-accent-hover text-white font-bold py-2 rounded-xl transition-all text-sm hover:shadow-[0_0_20px_rgba(230,57,70,0.4)]"
-        >
+        <Link href="/inscription" className="btn-primary text-xs py-2">
           S&apos;inscrire
-        </a>
+        </Link>
       )}
     </div>
   );
