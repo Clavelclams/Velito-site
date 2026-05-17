@@ -84,12 +84,14 @@ export default function Navbar() {
         </div>
 
         <div className="hidden lg:flex items-center gap-3">
+          {/* TODO: reactiver en V1.5 quand auth Supabase est prete
           <Link
             href="/login"
             className="text-sm text-vea-text-muted hover:text-vea-text font-medium px-3 py-1.5 transition-colors"
           >
             Connexion
           </Link>
+          */}
           <a
             href={HELLOASSO_URL}
             target="_blank"
@@ -163,6 +165,7 @@ export default function Navbar() {
           >
             Adherer
           </a>
+          {/* TODO: reactiver en V1.5 quand auth Supabase est prete
           <Link
             href="/login"
             onClick={() => setDrawerOpen(false)}
@@ -170,6 +173,7 @@ export default function Navbar() {
           >
             Connexion
           </Link>
+          */}
         </div>
       </div>
     </nav>
