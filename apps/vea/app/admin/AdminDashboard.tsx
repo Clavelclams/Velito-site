@@ -45,7 +45,12 @@ type Evenement = {
 // 👉 Les 4 onglets du dashboard
 type TabType = "avenir" | "passes" | "archives" | "participants";
 
-export default function AdminDashboard() {
+interface AdminDashboardProps {
+  /** Email du user Supabase connecte (passe depuis le Server Component parent). */
+  userEmail?: string;
+}
+
+export default function AdminDashboard({ userEmail }: AdminDashboardProps = {}) {
   const router = useRouter();
 
   // ====== STATE ======

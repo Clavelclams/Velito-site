@@ -20,8 +20,11 @@ import Image from "next/image";
 import ScrollReveal from "@/components/ScrollReveal";
 import CountUp from "@/components/CountUp";
 
+// 5 cards stats sur la home — toutes tiennent sur 1 ligne en desktop
+// (grid-cols-5). Detail complet dans /association#impact via ImpactCards.
 const STATS = [
-  { value: 100, suffix: "+", label: "Jeunes accompagnes" },
+  { value: 3686, suffix: " h", label: "Benevolat valorise", separator: true },
+  { value: 300, suffix: "+", label: "Jeunes accompagnes" },
   { value: 20, suffix: "+", label: "Evenements organises" },
   { value: 3, suffix: "e", label: "Place nationale 2024" },
   { value: 2022, suffix: "", label: "Annee de fondation" },
@@ -66,17 +69,16 @@ const ACTIONS = [
  */
 const TERRAINS = [
   // Centres sociaux d'Amiens (intervention recurrente)
-  { name: "Centre social Tour du Marais", secteur: "Etouvie" },
-  { name: "Centre social Elbeuf", secteur: "Saint-Just" },
-  { name: "Centre social Moxy", secteur: "Saint-Acheul" },
-  { name: "Centre social L'Albatros", secteur: "Amiens" },
-  { name: "Centre social Marcel Paul", secteur: "Amiens Nord" },
-  { name: "Centre social Salamandre", secteur: "Amiens Nord" },
-  { name: "Centre social Pierre Rollin", secteur: "Amiens Nord" },
+  { name: "Tour du Marais", secteur: "Etouvie" },
+  { name: "Elbeuf", secteur: "Saint-Just" },
+  { name: "Moxy", secteur: "Saint-Acheul" },
+  { name: "L'Albatros", secteur: "Amiens" },
+  { name: "Marcel Paul", secteur: "Amiens Nord" },
+  { name: "Salamandre", secteur: "Amiens Nord" },
+  { name: "Pierre Rollin", secteur: "Amiens Nord" },
   { name: "La Pleiade", secteur: "Pigeonnier" },
   // Structures jeunesse / culture
   { name: "Etoile du Sud", secteur: "Centre culturel" },
-  { name: "Cite Educative d'Amiens", secteur: "Nord + Etouvie" },
   // Partenaires institutionnels recurrents
   { name: "APSL 80", secteur: "Profession Sport & Loisirs (Rec en action)" },
   { name: "Jeunesse en Or", secteur: "Convention colocation" },
@@ -142,15 +144,20 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* STATS */}
+      {/* STATS — 5 cards sur 1 ligne en desktop */}
       <section className="py-16 px-4 bg-vea-bg">
         <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-6">
             {STATS.map((stat, i) => (
               <ScrollReveal key={stat.label} delay={i * 0.08}>
-                <div className="card-clean p-6 text-center">
+                <div className="card-clean p-6 text-center h-full">
                   <p className="stat-number">
-                    <CountUp end={stat.value} suffix={stat.suffix} duration={2} />
+                    <CountUp
+                      end={stat.value}
+                      suffix={stat.suffix}
+                      separator={"separator" in stat ? stat.separator : false}
+                      duration={2}
+                    />
                   </p>
                   <p className="text-xs sm:text-sm text-vea-text-dim uppercase tracking-wider font-medium mt-3">
                     {stat.label}
@@ -159,6 +166,21 @@ export default function HomePage() {
               </ScrollReveal>
             ))}
           </div>
+
+          {/* Bouton vers le detail des chiffres dans /association
+              ?expand=benevolat -> ouvre auto la 1ere card (pattern visuel
+              pour indiquer que les cards sont interactives)
+              #impact -> scroll direct vers la section ImpactCards */}
+          <ScrollReveal delay={0.4}>
+            <div className="text-center mt-10">
+              <Link
+                href="/association?expand=benevolat#impact"
+                className="btn-outline text-sm"
+              >
+                Voir le detail des chiffres →
+              </Link>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 

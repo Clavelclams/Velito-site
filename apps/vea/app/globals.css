@@ -195,7 +195,10 @@ body {
 }
 
 .stat-number {
-  font-size: clamp(2.2rem, 6vw, 4rem);
+  /* Clamp ajuste pour rentrer dans les 5 cards stats de la home en desktop
+     (~200px par card a max-w-6xl) sans casser le rendu mobile.
+     Avant : clamp(2.2rem, 6vw, 4rem) -> debordait sur "3 686 h". */
+  font-size: clamp(1.6rem, 3.5vw, 2.5rem);
   font-weight: 800;
   line-height: 1;
   color: #E63946;

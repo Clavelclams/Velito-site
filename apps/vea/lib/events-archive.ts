@@ -220,7 +220,6 @@ export const EVENTS_ARCHIVE: EventArchive[] = [
     lieu: "Amiens",
     type: "ATELIER",
     actif: false,
-    gallerySlug: "sf6-warpzone",
   },
   {
     id: "archive-2022-stage-maya-pc",
@@ -231,6 +230,74 @@ export const EVENTS_ARCHIVE: EventArchive[] = [
     lieu: "Amiens",
     type: "ATELIER",
     actif: false,
+  },
+
+  // ===== HAPPY EID (Aid al-Fitr) — partenariat Jeunesse en Or, periode mars/avril =====
+  // Dates Aid al-Fitr historiques (source : calendrier officiel) :
+  //   2022 = 02 mai | 2023 = 21 avril | 2024 = 10 avril | 2025 = 30 mars | 2026 = 20 mars
+  // Event annuel co-organise par VEA + Jeunesse en Or, animation gaming pour les jeunes
+  // du quartier dans le cadre des celebrations de l'Aid.
+  {
+    id: "archive-2026-happy-eid",
+    titre: "Happy Eid 2026 — avec Jeunesse en Or",
+    description:
+      "Edition 2026 de l'animation Happy Eid co-organisee avec Jeunesse en Or. Animation gaming pour les jeunes du quartier pour celebrer l'Aid al-Fitr.",
+    date: "2026-03-20",
+    lieu: "Amiens",
+    type: "ANIMATION",
+    actif: false,
+  },
+  {
+    id: "archive-2025-happy-eid",
+    titre: "Happy Eid 2025 — avec Jeunesse en Or",
+    description:
+      "Edition 2025 de l'animation Happy Eid co-organisee avec Jeunesse en Or pour celebrer l'Aid al-Fitr.",
+    date: "2025-03-30",
+    lieu: "Amiens",
+    type: "ANIMATION",
+    actif: false,
+  },
+  {
+    id: "archive-2024-happy-eid",
+    titre: "Happy Eid 2024 — avec Jeunesse en Or",
+    description:
+      "Edition 2024 de l'animation Happy Eid co-organisee avec Jeunesse en Or pour celebrer l'Aid al-Fitr.",
+    date: "2024-04-10",
+    lieu: "Amiens",
+    type: "ANIMATION",
+    actif: false,
+  },
+  {
+    id: "archive-2023-happy-eid",
+    titre: "Happy Eid 2023 — avec Jeunesse en Or",
+    description:
+      "Edition 2023 de l'animation Happy Eid co-organisee avec Jeunesse en Or pour celebrer l'Aid al-Fitr.",
+    date: "2023-04-21",
+    lieu: "Amiens",
+    type: "ANIMATION",
+    actif: false,
+  },
+  {
+    id: "archive-2022-happy-eid",
+    titre: "Happy Eid 2022 — avec Jeunesse en Or",
+    description:
+      "Premiere edition de l'animation Happy Eid co-organisee avec Jeunesse en Or. Installation gaming en exterieur (terrain de basket + tente), FIFA et Mario Kart sur sim de course Logitech. Public mixte jeunes du quartier.",
+    date: "2022-05-02",
+    lieu: "Amiens",
+    type: "ANIMATION",
+    actif: false,
+    gallerySlug: "happy-eid-2022",
+  },
+  {
+    id: "archive-2025-ljsdlp",
+    titre: "Les Jeunes Sont Dans La Place 2025",
+    description:
+      "Animation gaming en exterieur (tente + sim de course Logitech + Switch Mario Kart + PS5 EA FC). Public mixte jeunes du quartier. Operation de proximite ete 2025.",
+    date: "2025-07-15",
+    lieu: "Amiens",
+    type: "ANIMATION",
+    actif: false,
+    gallerySlug: "ljsdlp-2025",
   },
 
   // ===== 2023 =====

@@ -15,7 +15,8 @@
  */
 "use client";
 
-import { useState, ReactNode } from "react";
+import { useState, useEffect, ReactNode, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import CountUp from "./CountUp";
 
@@ -142,9 +143,30 @@ const CARDS: ImpactCard[] = [
   },
 ];
 
-export default function ImpactCards() {
-  // L'id de la card ouverte, ou null si tout ferme
+/**
+ * Composant interne qui lit le query param `?expand=<id>` pour pre-ouvrir
+ * une card a l'arrivee. Wrappe dans Suspense par le composant exporte.
+ */
+function ImpactCardsInner() {
+  const searchParams = useSearchParams();
+  const expandParam = searchParams.get("expand");
+
+  // L'id de la card ouverte, ou null si tout ferme.
+  // Si on arrive avec ?expand=benevolat -> on pre-ouvre cette card UNE FOIS
+  // pour signaler visuellement que les cards sont interactives. Apres un
+  // user-click manuel sur une autre card, le state suit son interaction
+  // normale (parce que ?expand n'a d'effet qu'au mount initial).
   const [openId, setOpenId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (expandParam && CARDS.some((c) => c.id === expandParam)) {
+      setOpenId(expandParam);
+    }
+    // On ne re-execute QUE quand expandParam change (donc au mount + si l'user
+    // change l'URL manuellement). Apres click sur une card, openId est
+    // controle par setOpenId direct, pas par expandParam.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expandParam]);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
@@ -218,5 +240,17 @@ export default function ImpactCards() {
         );
       })}
     </div>
+  );
+}
+
+/**
+ * Wrapper exporte avec Suspense — obligatoire pour useSearchParams() qui
+ * doit etre dans une Suspense boundary cote App Router Next.js 14+.
+ */
+export default function ImpactCards() {
+  return (
+    <Suspense fallback={null}>
+      <ImpactCardsInner />
+    </Suspense>
   );
 }

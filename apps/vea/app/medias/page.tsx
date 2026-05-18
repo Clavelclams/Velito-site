@@ -34,9 +34,16 @@ const PHOTOS: Photo[] = [
   { src: "/images/events/gallery-soiree-portrait.jpg", alt: "Portrait d'ambiance E-Night", cat: "soiree", caption: "E-Night - portrait", event: "e-night-world-cup" },
   { src: "/images/events/presse-courrier-esport-quartiers-2024.jpg", alt: "Article Courrier Picard - l'e-sport debarque dans les quartiers prioritaires", cat: "presse", caption: "Courrier Picard - E-sport quartiers prioritaires", event: "e-night-world-cup" },
 
-  // === Parc Saint-Pierre ete 2024 ===
-  { src: "/images/events/hero-parc-saint-pierre.jpg", alt: "Animation Parc Saint-Pierre 2024", cat: "terrain", caption: "Parc Saint-Pierre - ete 2024", event: "parc-saint-pierre" },
-  { src: "/images/events/presse-courrier-parc-saint-pierre-2024.jpg", alt: "Article Courrier Picard - Les jeunes s'initient aux jeux video", cat: "presse", caption: "Courrier Picard - Parc Saint-Pierre", event: "parc-saint-pierre" },
+  // === Happy Eid 2022 (avec Jeunesse en Or) — animation terrain basket ===
+  { src: "/images/events/happy-eid-2022-public-terrain-basket.jpg", alt: "Happy Eid 2022 - jeunes en maillots foot terrain basket", cat: "terrain", caption: "Happy Eid 2022 - public terrain basket", event: "happy-eid-2022" },
+
+  // === Parc Saint-Pierre ete 2024 (article presse uniquement, photo a venir) ===
+  { src: "/images/events/presse-courrier-parc-saint-pierre-2024.jpg", alt: "Article Courrier Picard - Les jeunes s'initient aux jeux video, Parc Saint-Pierre juillet 2024", cat: "presse", caption: "Courrier Picard - Parc Saint-Pierre", event: "parc-saint-pierre" },
+
+  // === Les Jeunes Sont Dans La Place 2025 (animation ete) ===
+  { src: "/images/events/ljsdlp-2025-sim-mariokart-01.jpg", alt: "Les Jeunes Sont Dans La Place 2025 - sim de course Logitech et Mario Kart Switch", cat: "terrain", caption: "LJSDLP 2025 - sim & Mario Kart", event: "ljsdlp-2025" },
+  { src: "/images/events/ljsdlp-2025-sim-mariokart-02.jpg", alt: "Les Jeunes Sont Dans La Place 2025 - jeune au volant Logitech", cat: "terrain", caption: "LJSDLP 2025 - au volant", event: "ljsdlp-2025" },
+  { src: "/images/events/ljsdlp-2025-public-ea-fc.jpg", alt: "Les Jeunes Sont Dans La Place 2025 - public EA FC PS5 sous tente", cat: "terrain", caption: "LJSDLP 2025 - public EA FC", event: "ljsdlp-2025" },
 
   // === TIQE Secteur Est - Elbeuf 2024 ===
   { src: "/images/events/tournoi-tiqe-elbeuf.jpg", alt: "TIQE secteur Est centre social Elbeuf", cat: "tournoi", caption: "TIQE Elbeuf 2024", event: "tiqe-est-elbeuf" },
@@ -82,6 +89,12 @@ const FILTERS: { label: string; value: "tous" | Photo["cat"] }[] = [
 const EVENT_LABELS: Record<string, string> = {
   "e-night-world-cup": "E-Night World Cup - 5 dec 2024",
   "parc-saint-pierre": "Parc Saint-Pierre - ete 2024",
+  "happy-eid-2022": "Happy Eid 2022 - avec Jeunesse en Or",
+  "happy-eid-2023": "Happy Eid 2023 - avec Jeunesse en Or",
+  "happy-eid-2024": "Happy Eid 2024 - avec Jeunesse en Or",
+  "happy-eid-2025": "Happy Eid 2025 - avec Jeunesse en Or",
+  "happy-eid-2026": "Happy Eid 2026 - avec Jeunesse en Or",
+  "ljsdlp-2025": "Les Jeunes Sont Dans La Place - ete 2025",
   "tiqe-est-elbeuf": "TIQE Secteur Est - Elbeuf 2024",
   "tiqe-final-corner": "TIQE Final - Le Corner juin 2024",
   "tiqe-etouvie": "Premier TIQE Etouvie - nov 2023",
@@ -207,25 +220,32 @@ function MediasContent() {
         <div
           className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={() => setLightbox(null)}
-          role="dialog"
-          aria-modal="true"
-          aria-label={lightbox.caption}
         >
           <button
             type="button"
-            onClick={() => setLightbox(null)}
-            className="absolute top-4 right-4 text-white p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              setLightbox(null);
+            }}
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white text-xl font-bold flex items-center justify-center transition"
             aria-label="Fermer"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
+            ×
           </button>
-          <div className="relative max-w-5xl max-h-[85vh] w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="relative aspect-[4/3] w-full">
-              <Image src={lightbox.src} alt={lightbox.alt} fill sizes="100vw" className="object-contain" />
-            </div>
-            <p className="text-white text-sm text-center mt-4">{lightbox.caption}</p>
+          <div
+            className="relative max-w-5xl w-full max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image
+              src={lightbox.src}
+              alt={lightbox.alt}
+              width={1600}
+              height={1200}
+              className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
+            />
+            <p className="text-center text-white text-sm mt-4">
+              {lightbox.caption}
+            </p>
           </div>
         </div>
       )}
@@ -235,7 +255,13 @@ function MediasContent() {
 
 export default function MediasPage() {
   return (
-    <Suspense fallback={<div className="pt-32 text-center text-vea-text-muted">Chargement...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen pt-28 flex items-center justify-center">
+          <p className="text-vea-text-muted text-sm">Chargement de la galerie...</p>
+        </div>
+      }
+    >
       <MediasContent />
     </Suspense>
   );

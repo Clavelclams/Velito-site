@@ -173,8 +173,8 @@ export default function AssociationPage() {
         </div>
       </section>
 
-      {/* NOTRE IMPACT — chiffres reels */}
-      <section className="py-16 px-4 bg-vea-bg">
+      {/* NOTRE IMPACT — chiffres reels (ancre #impact pour deep-linking depuis la home) */}
+      <section id="impact" className="py-16 px-4 bg-vea-bg scroll-mt-24">
         <div className="max-w-5xl mx-auto">
           <ScrollReveal>
             <div className="text-center mb-10">
