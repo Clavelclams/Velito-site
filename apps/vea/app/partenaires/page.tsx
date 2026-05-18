@@ -55,6 +55,7 @@ const TERRAINS: Terrain[] = [
 
 const ASSOCIATIFS: Partner[] = [
   { name: "MABB", category: "Metropole Amienoise Basket-Ball (membre fondateur)", url: "https://www.mabb.fr/", logo: "/images/partenaires-vea/mabb-logo.png" },
+  { name: "B2G Amiens", category: "Co-organisateur E-Night World Cup", url: "https://www.helloasso.com/associations/b2g-amiens", logo: "/images/partenaires-vea/B2G-logo.webp" },
   { name: "Jeunesse en Or", category: "Association QPV (convention colocation)", logo: "/images/partenaires-vea/JEO-logo.png" },
   { name: "Comite Basket Somme", category: "Comite departemental basket-ball" },
   { name: "OMNE Esport", category: "Organisateur INTERCUP 2026" },

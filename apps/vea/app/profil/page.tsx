@@ -30,9 +30,30 @@ interface UserBadge {
   description: string;
 }
 
-function computeUserBadges(perms: UserPermission[]): UserBadge[] {
+function computeUserBadges(
+  perms: UserPermission[],
+  participantRole: "joueur" | "benevole" | "dirigeant" | "superadmin" = "joueur"
+): UserBadge[] {
+  // Si l'user a un role dirigeant/benevole dans vea.participants, on l'ajoute
+  // en premier badge (le plus visible).
+  const roleBadges: UserBadge[] = [];
+  if (participantRole === "dirigeant") {
+    roleBadges.push({
+      label: "Dirigeant",
+      color: "red",
+      description: "Membre du bureau ou du CA de VEA.",
+    });
+  } else if (participantRole === "benevole") {
+    roleBadges.push({
+      label: "Benevole",
+      color: "blue",
+      description: "A donne du temps a VEA (animation, logistique, com').",
+    });
+  }
+
   if (perms.length === 0) {
     return [
+      ...roleBadges,
       {
         label: "Joueur",
         color: "neutral",
@@ -52,7 +73,7 @@ function computeUserBadges(perms: UserPermission[]): UserBadge[] {
     allOwnerSlugs.includes("vea") &&
     allOwnerSlugs.includes("hub_velito");
 
-  const badges: UserBadge[] = [];
+  const badges: UserBadge[] = [...roleBadges];
   if (isSuperadmin) {
     badges.push({
       label: "Superadmin",
@@ -117,7 +138,24 @@ export default async function ProfilPage() {
     .eq("user_id", user.id);
 
   const perms = (permsRaw ?? []) as unknown as UserPermission[];
-  const badges = computeUserBadges(perms);
+
+  // === Lecture du record vea.participants lie a ce user (auto-lie via trigger
+  // pour les ex-licencies Yapla) — contient role + heures benevolat ===
+  const { data: participant } = await supabase
+    .schema("vea")
+    .from("participants")
+    .select("prenom, nom, role, benevole_hours")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const benevoleHours = Number(participant?.benevole_hours ?? 0);
+  const participantRole = (participant?.role ?? "joueur") as
+    | "joueur"
+    | "benevole"
+    | "dirigeant"
+    | "superadmin";
+
+  const badges = computeUserBadges(perms, participantRole);
 
   const displayName = profile?.prenom
     ? `${profile.prenom}`
@@ -224,7 +262,7 @@ export default async function ProfilPage() {
           <h2 className="text-xl font-bold text-vea-text mb-6">
             Ta progression
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="card-clean p-6 text-center">
               <p className="text-3xl font-black text-vea-accent leading-none mb-2">
                 {totalEvents}
@@ -233,6 +271,25 @@ export default async function ProfilPage() {
                 Events participes
               </p>
             </div>
+
+            {/* Card heures benevolat — entre Events participes et Niveau.
+                Affichee pour tous mais avec mention "0 h" si pas benevole. */}
+            <div className="card-clean p-6 text-center">
+              <p className="text-3xl font-black text-vea-accent leading-none mb-2 whitespace-nowrap">
+                {benevoleHours > 0
+                  ? benevoleHours.toLocaleString("fr-FR") + " h"
+                  : "—"}
+              </p>
+              <p className="text-xs text-vea-text-dim uppercase tracking-wider font-medium">
+                Heures benevolat
+              </p>
+              {benevoleHours > 0 && (
+                <p className="text-[10px] text-vea-text-dim mt-1 italic">
+                  Cumul depuis 2022
+                </p>
+              )}
+            </div>
+
             <div className="card-clean p-6 text-center">
               <p className="text-3xl font-black text-vea-accent leading-none mb-2">
                 —
