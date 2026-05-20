@@ -17,6 +17,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import NotificationBell from "./NotificationBell";
 
 interface NavLink {
   label: string;
@@ -135,14 +136,14 @@ export default function Navbar() {
             <div className="w-32 h-8" />
           ) : user ? (
             <>
+              {/* Lien Joueurs — visible uniquement connecte. Remplace l'ancien
+                  teaser "Arena Beta" qui partait sur une page placeholder.
+                  /joueurs = annuaire reel des membres VEA opt-in is_public. */}
               <Link
-                href="/arena"
-                className="text-sm text-vea-text-muted hover:text-vea-accent transition-colors font-medium px-3 py-1.5 flex items-center gap-1.5"
+                href="/joueurs"
+                className="text-sm text-vea-text-muted hover:text-vea-accent transition-colors font-medium px-3 py-1.5"
               >
-                Arena
-                <span className="text-[9px] uppercase tracking-widest bg-vea-accent-soft border border-vea-accent/20 text-vea-accent px-1.5 py-0.5 rounded">
-                  Bientot
-                </span>
+                Joueurs
               </Link>
               <Link
                 href="/profil"
@@ -150,6 +151,7 @@ export default function Navbar() {
               >
                 Mon profil
               </Link>
+              <NotificationBell />
               <button
                 type="button"
                 onClick={handleLogout}
@@ -254,17 +256,15 @@ export default function Navbar() {
             </Link>
           ))}
 
-          {/* Arena visible mobile UNIQUEMENT si connecte */}
+          {/* Joueurs visible mobile UNIQUEMENT si connecte (remplace Arena Beta).
+              Annuaire des membres VEA opt-in is_public. */}
           {authLoaded && user && (
             <Link
-              href="/arena"
+              href="/joueurs"
               onClick={() => setDrawerOpen(false)}
-              className="flex items-center justify-between py-3 px-3 text-vea-text-muted hover:text-vea-accent hover:bg-vea-surface-soft rounded-lg transition-colors text-sm font-medium"
+              className="block py-3 px-3 text-vea-text-muted hover:text-vea-accent hover:bg-vea-surface-soft rounded-lg transition-colors text-sm font-medium"
             >
-              <span>Arena</span>
-              <span className="text-[10px] uppercase tracking-widest bg-vea-accent-soft border border-vea-accent/20 text-vea-accent px-1.5 py-0.5 rounded">
-                Bientot
-              </span>
+              Joueurs
             </Link>
           )}
         </div>

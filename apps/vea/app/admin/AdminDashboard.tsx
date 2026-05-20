@@ -18,6 +18,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 // ====== TYPES ======
 // 👉 Ces types correspondent aux models Prisma (schema.prisma)
@@ -48,28 +49,35 @@ type TabType = "avenir" | "passes" | "archives" | "participants";
 interface AdminDashboardProps {
   /** Email du user Supabase connecte (passe depuis le Server Component parent). */
   userEmail?: string;
+  /** Stats reelles depuis Supabase (vea.participants + vea.evenements).
+   *  20/05/2026 : decompose en 4 chiffres parlants au lieu d'un total trompeur.
+   *  - membresAvecCompte : user_id NOT NULL (actifs sur le site)
+   *  - preInscritsGuest : pre_inscrit = TRUE (a fusionner)
+   *  - oldVeaEnAttente : ni compte ni pre-inscrit (anciens, a faire migrer)
+   *  - eventsAVenir : events futurs non annules
+   */
+  supabaseStats?: {
+    membresAvecCompte: number;
+    preInscritsGuest: number;
+    oldVeaEnAttente: number;
+    eventsAVenir: number;
+  };
 }
 
-export default function AdminDashboard({ userEmail }: AdminDashboardProps = {}) {
+export default function AdminDashboard({
+  userEmail,
+  supabaseStats,
+}: AdminDashboardProps = {}) {
   const router = useRouter();
 
   // ====== STATE ======
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [evenements, setEvenements] = useState<Evenement[]>([]);
   const [activeTab, setActiveTab] = useState<TabType>("avenir");
-  const [showForm, setShowForm] = useState(false);
-  const [seedLoading, setSeedLoading] = useState(false);
-  const [seedMessage, setSeedMessage] = useState("");
+  // 20/05/2026 : seedLoading/seedMessage retires (bouton seed Prisma supprime).
 
-  // 👉 State pour le formulaire de création
-  const [newEvent, setNewEvent] = useState({
-    titre: "",
-    description: "",
-    date: "",
-    lieu: "",
-    type: "TOURNOI",
-    actif: true,
-  });
+  // 19/05/2026 : creation d'event deplacee vers /admin/evenements
+  // (nouveau systeme avec QR + scan + XP). Anciens states supprimes.
 
   // 👉 State pour le modal de modification
   const [editEvent, setEditEvent] = useState<Evenement | null>(null);
@@ -123,28 +131,8 @@ export default function AdminDashboard({ userEmail }: AdminDashboardProps = {}) 
     router.push("/login");
   };
 
-  // 👉 Créer un événement
-  const handleAddEvent = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const res = await fetch("/api/admin/evenements", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newEvent),
-    });
-    if (res.ok) {
-      const event = await res.json();
-      setEvenements([event, ...evenements]);
-      setShowForm(false);
-      setNewEvent({
-        titre: "",
-        description: "",
-        date: "",
-        lieu: "",
-        type: "TOURNOI",
-        actif: true,
-      });
-    }
-  };
+  // 19/05/2026 : handleAddEvent supprimee. La creation passe maintenant
+  // par /admin/evenements (vea.evenements + QR token automatique).
 
   // 👉 Archiver ou restaurer un événement (toggle actif)
   const handleToggleActif = async (id: string, actif: boolean) => {
@@ -190,29 +178,8 @@ export default function AdminDashboard({ userEmail }: AdminDashboardProps = {}) 
     }
   };
 
-  // 👉 Importer les événements historiques VEA
-  const handleSeed = async () => {
-    setSeedLoading(true);
-    setSeedMessage("");
-    try {
-      const res = await fetch("/api/admin/evenements/seed", { method: "POST" });
-      const data = await res.json();
-      if (res.ok) {
-        setSeedMessage(data.message);
-        // 👉 Recharge tous les événements après le seed
-        const evRes = await fetch("/api/evenements?all=true");
-        if (evRes.ok) {
-          const evData = await evRes.json();
-          setEvenements(evData);
-        }
-      } else {
-        setSeedMessage(data.error || "Erreur lors de l'import");
-      }
-    } catch {
-      setSeedMessage("Erreur réseau");
-    }
-    setSeedLoading(false);
-  };
+  // 20/05/2026 : handleSeed retire (events maintenant dans vea.evenements
+  // Supabase, gere via /admin/evenements page dediee).
 
   // 👉 Export CSV des participants
   const exportCSV = () => {
@@ -242,78 +209,198 @@ export default function AdminDashboard({ userEmail }: AdminDashboardProps = {}) 
   };
 
   // ====== RENDU ======
+  // 20/05/2026 : fix bug visuel - bg-vea-dark + text-white rendait le titre invisible
+  // sur le fond clair reel. Et p-4 sans pt-28 cachait le titre sous la navbar sticky.
+  // Aligne avec le style des autres pages admin (/admin/evenements, /admin/heures).
   return (
-    <div className="min-h-screen bg-vea-dark p-4 md:p-6">
+    <div className="min-h-screen bg-vea-bg pt-28 pb-20 px-4">
+      <div className="max-w-6xl mx-auto">
       {/* ===== Header ===== */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-black text-white">Dashboard VEA</h1>
+          <span className="badge-red mb-3 inline-block">Admin VEA</span>
+          <h1 className="text-3xl sm:text-4xl font-black text-vea-text">Dashboard VEA</h1>
           <p className="text-vea-text-muted text-sm mt-1">
             Administration Velito Esport Amiens
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          {/* 👉 Bouton seed — importe les événements historiques */}
-          <button
-            onClick={handleSeed}
-            disabled={seedLoading}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-50"
-          >
-            {seedLoading ? "Import..." : "Importer événements VEA"}
-          </button>
-          <button
-            onClick={handleLogout}
-            className="border border-vea-border text-vea-text-muted hover:border-red-500 hover:text-red-400 px-4 py-2 rounded-xl transition-all text-sm"
-          >
-            Déconnexion
-          </button>
-        </div>
+        {/* 20/05/2026 : bouton seed Prisma + bouton Deconnexion supprimes.
+            Le bouton Deconnexion existe deja dans la Navbar globale (en haut a droite),
+            inutile de le doubler ici. La fonction handleLogout est conservee pour
+            d'eventuels boutons de logout contextuels futurs. */}
       </div>
 
-      {/* ===== Message seed ===== */}
-      {seedMessage && (
-        <div className="mb-6 p-4 rounded-xl bg-vea-bg border border-vea-border text-vea-text-muted text-sm">
-          {seedMessage}
-        </div>
-      )}
+      {/* 20/05/2026 : message seed retire (variable seedMessage supprimee). */}
 
-      {/* ===== Stats ===== */}
+      {/* ===== Stats =====
+          20/05/2026 : 4 cards decompose pour des chiffres parlants.
+          Le total "Participants" precedent etait trompeur (mixait actifs +
+          Old VEA seedes + pre-inscrits). */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div className="card-glow p-5 rounded-2xl text-center">
           <div className="text-3xl font-black text-vea-red">
-            {participants.length}
+            {supabaseStats?.membresAvecCompte ?? 0}
           </div>
           <p className="text-vea-text-muted text-xs uppercase tracking-widest mt-2">
-            Participants
+            Membres actifs
+          </p>
+          <p className="text-[9px] text-vea-text-dim mt-1 italic">
+            Compte VEA cree
           </p>
         </div>
         <div className="card-glow p-5 rounded-2xl text-center">
           <div className="text-3xl font-black text-vea-red">
-            {aVenir.length}
+            {supabaseStats?.oldVeaEnAttente ?? 0}
           </div>
           <p className="text-vea-text-muted text-xs uppercase tracking-widest mt-2">
-            À venir
+            Old VEA
+          </p>
+          <p className="text-[9px] text-vea-text-dim mt-1 italic">
+            Anciens, a faire inscrire
           </p>
         </div>
         <div className="card-glow p-5 rounded-2xl text-center">
           <div className="text-3xl font-black text-vea-red">
-            {passes.length}
+            {supabaseStats?.preInscritsGuest ?? 0}
           </div>
           <p className="text-vea-text-muted text-xs uppercase tracking-widest mt-2">
-            Passés
+            Pre-inscrits
+          </p>
+          <p className="text-[9px] text-vea-text-dim mt-1 italic">
+            Scan guest, a fusionner
           </p>
         </div>
         <div className="card-glow p-5 rounded-2xl text-center">
           <div className="text-3xl font-black text-vea-red">
-            {evenements.length}
+            {supabaseStats?.eventsAVenir ?? aVenir.length}
           </div>
           <p className="text-vea-text-muted text-xs uppercase tracking-widest mt-2">
-            Total
+            Events à venir
+          </p>
+          <p className="text-[9px] text-vea-text-dim mt-1 italic">
+            Non annules
           </p>
         </div>
       </div>
 
-      {/* ===== Onglets ===== */}
+      {/* ===== Modules administrables (raccourcis vers pages Supabase) =====
+          20/05/2026 : nouveau hub admin avec cards cliquables. Remplace les
+          onglets Prisma qui affichaient 0 partout (donnees vides). */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        <Link
+          href="/admin/evenements"
+          className="card-clean p-5 hover:border-vea-accent transition-all"
+        >
+          <div className="text-xs uppercase tracking-widest text-vea-accent font-bold mb-1">
+            Évènements
+          </div>
+          <div className="text-lg font-bold text-vea-text mb-2">
+            Gérer les events
+          </div>
+          <p className="text-xs text-vea-text-muted leading-relaxed">
+            Créer un event avec QR scan auto. Voir les participants par event,
+            cocher / décocher les motifs (jouer / aider / regarder).
+          </p>
+        </Link>
+
+        <Link
+          href="/admin/heures"
+          className="card-clean p-5 hover:border-vea-accent transition-all"
+        >
+          <div className="text-xs uppercase tracking-widest text-vea-accent font-bold mb-1">
+            Heures / XP
+          </div>
+          <div className="text-lg font-bold text-vea-text mb-2">
+            Attribuer XP manuel
+          </div>
+          <p className="text-xs text-vea-text-muted leading-relaxed">
+            Ajouter des heures bénévolat ou de l&apos;XP à un participant
+            (action urgente, podium, bonus manuel).
+          </p>
+        </Link>
+
+        <Link
+          href="/admin/recompenses"
+          className="card-clean p-5 hover:border-vea-accent transition-all"
+        >
+          <div className="text-xs uppercase tracking-widest text-vea-accent font-bold mb-1">
+            Récompenses
+          </div>
+          <div className="text-lg font-bold text-vea-text mb-2">
+            Old VEA à relancer
+          </div>
+          <p className="text-xs text-vea-text-muted leading-relaxed">
+            Liste des anciens qui ont droit à une récompense mais n&apos;ont
+            pas (encore) créé leur compte. Relance par email en 1 clic.
+          </p>
+        </Link>
+
+        {/* 20/05/2026 : nouvelle carte Tournois online. Distinct des events terrain :
+            pas d'XP civique, mais palmares visible pour visibilite asso + dossiers de
+            subvention (joueur officiel = matiere pour les financeurs esport). */}
+        <Link
+          href="/admin/tournois"
+          className="card-clean p-5 hover:border-vea-accent transition-all"
+        >
+          <div className="text-xs uppercase tracking-widest text-vea-accent font-bold mb-1">
+            Tournois online
+          </div>
+          <div className="text-lg font-bold text-vea-text mb-2">
+            Palmarès compétitif
+          </div>
+          <p className="text-xs text-vea-text-muted leading-relaxed">
+            Ajouter un tournoi (online ou présentiel), lier les joueurs
+            représentants VEA. Badge vainqueur attribué automatiquement.
+          </p>
+        </Link>
+
+        {/* Placeholder section upload documents (Phase 2 — Maya tickets, Alban péages, AG) */}
+        <div className="card-clean p-5 border-dashed opacity-70">
+          <div className="text-xs uppercase tracking-widest text-vea-text-dim font-bold mb-1">
+            Dépôt documents
+          </div>
+          <div className="text-lg font-bold text-vea-text-muted mb-2">
+            À venir
+          </div>
+          <p className="text-xs text-vea-text-dim leading-relaxed italic">
+            Upload de tickets de dépense, justificatifs (péages, transports,
+            achats matos), rapports d&apos;AG ciblés. Notification cloche au
+            destinataire concerné. Phase 2.
+          </p>
+        </div>
+
+        {/* Placeholder rapports / réunions */}
+        <div className="card-clean p-5 border-dashed opacity-70">
+          <div className="text-xs uppercase tracking-widest text-vea-text-dim font-bold mb-1">
+            Rapports / Réunions
+          </div>
+          <div className="text-lg font-bold text-vea-text-muted mb-2">
+            À venir
+          </div>
+          <p className="text-xs text-vea-text-dim leading-relaxed italic">
+            Comptes-rendus de réunions, PV d&apos;AG, convocations
+            automatiques. Phase 2.
+          </p>
+        </div>
+
+        {/* Placeholder compta */}
+        <div className="card-clean p-5 border-dashed opacity-70">
+          <div className="text-xs uppercase tracking-widest text-vea-text-dim font-bold mb-1">
+            Compta / Trésorerie
+          </div>
+          <div className="text-lg font-bold text-vea-text-muted mb-2">
+            À venir
+          </div>
+          <p className="text-xs text-vea-text-dim leading-relaxed italic">
+            Vue d&apos;ensemble trésorerie, factures émises / reçues,
+            subventions en cours. Phase 3.
+          </p>
+        </div>
+      </div>
+
+      {/* ===== Onglets ===== (20/05/2026 : caches car Prisma vide, redirige vers /admin/evenements) */}
+      {false && (
+      <>
       <div className="flex flex-wrap gap-2 mb-6">
         {[
           { key: "avenir" as TabType, label: `À venir (${aVenir.length})` },
@@ -346,85 +433,21 @@ export default function AdminDashboard({ userEmail }: AdminDashboardProps = {}) 
               {activeTab === "archives" && "Événements archivés"}
             </h2>
             {activeTab === "avenir" && (
-              <button
-                onClick={() => setShowForm(!showForm)}
-                className="bg-vea-red text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-vea-accent-hover transition-all"
+              // ANCIEN form Prisma supprime le 19/05/2026 : il creait des events
+              // SANS QR ni token de scan. Tout passe maintenant par /admin/evenements
+              // (vea.evenements Supabase + token UUID + QR auto + scan presence + XP).
+              // Ce bouton redirige donc vers le nouveau systeme unifie.
+              <Link
+                href="/admin/evenements"
+                className="bg-vea-red text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-vea-accent-hover transition-all inline-flex items-center gap-2"
               >
                 + Ajouter un événement
-              </button>
+                <span className="text-[10px] uppercase tracking-widest opacity-80">
+                  (avec QR scan)
+                </span>
+              </Link>
             )}
           </div>
-
-          {/* Formulaire de création */}
-          {showForm && activeTab === "avenir" && (
-            <form
-              onSubmit={handleAddEvent}
-              className="card-glow p-6 rounded-2xl mb-6 grid grid-cols-1 md:grid-cols-2 gap-4"
-            >
-              <input
-                placeholder="Titre *"
-                value={newEvent.titre}
-                onChange={(e) =>
-                  setNewEvent({ ...newEvent, titre: e.target.value })
-                }
-                className="col-span-1 md:col-span-2 bg-vea-bg border border-vea-border text-white rounded-xl px-4 py-3 outline-none focus:border-vea-purple/50 transition-colors"
-                required
-              />
-              <input
-                placeholder="Lieu *"
-                value={newEvent.lieu}
-                onChange={(e) =>
-                  setNewEvent({ ...newEvent, lieu: e.target.value })
-                }
-                className="bg-vea-bg border border-vea-border text-white rounded-xl px-4 py-3 outline-none focus:border-vea-purple/50 transition-colors"
-                required
-              />
-              <input
-                type="datetime-local"
-                value={newEvent.date}
-                onChange={(e) =>
-                  setNewEvent({ ...newEvent, date: e.target.value })
-                }
-                className="bg-vea-bg border border-vea-border text-white rounded-xl px-4 py-3 outline-none focus:border-vea-purple/50 transition-colors"
-                required
-              />
-              <select
-                value={newEvent.type}
-                onChange={(e) =>
-                  setNewEvent({ ...newEvent, type: e.target.value })
-                }
-                className="bg-vea-bg border border-vea-border text-white rounded-xl px-4 py-3 outline-none focus:border-vea-purple/50 transition-colors"
-              >
-                <option value="TOURNOI">Tournoi</option>
-                <option value="ATELIER">Atelier</option>
-                <option value="ANIMATION">Animation</option>
-                <option value="COMPETITION">Compétition</option>
-              </select>
-              <textarea
-                placeholder="Description (optionnel)"
-                value={newEvent.description}
-                onChange={(e) =>
-                  setNewEvent({ ...newEvent, description: e.target.value })
-                }
-                className="bg-vea-bg border border-vea-border text-white rounded-xl px-4 py-3 outline-none focus:border-vea-purple/50 transition-colors"
-              />
-              <div className="col-span-1 md:col-span-2 flex gap-3">
-                <button
-                  type="submit"
-                  className="bg-vea-red text-white px-6 py-2 rounded-xl font-semibold hover:bg-vea-accent-hover transition-all"
-                >
-                  Créer l&apos;événement
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="border border-vea-border text-vea-text-muted px-6 py-2 rounded-xl hover:border-red-500 hover:text-red-400 transition-all"
-                >
-                  Annuler
-                </button>
-              </div>
-            </form>
-          )}
 
           {/* Liste des événements */}
           <div className="space-y-3">
@@ -581,6 +604,8 @@ export default function AdminDashboard({ userEmail }: AdminDashboardProps = {}) 
           </div>
         </div>
       )}
+      </>
+      )}{/* fin {false && (<>...</>)} : section onglets Prisma legacy cachee, remplacee par modules cards plus haut */}
 
       {/* ===== MODAL DE MODIFICATION ===== */}
       {/* 👉 Ce modal s'affiche par-dessus tout quand editEvent n'est pas null */}
@@ -673,6 +698,7 @@ export default function AdminDashboard({ userEmail }: AdminDashboardProps = {}) 
           </form>
         </div>
       )}
+      </div>{/* fin max-w-6xl mx-auto */}
     </div>
   );
 }

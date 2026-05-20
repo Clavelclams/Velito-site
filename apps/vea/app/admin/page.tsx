@@ -47,5 +47,56 @@ export default async function AdminPage() {
     );
   }
 
-  return <AdminDashboard userEmail={user.email ?? ""} />;
+  // 20/05/2026 : stats /admin decomposees pour etre plus parlantes.
+  // Avant : "Participants 101" comptait TOUT (87 Old VEA seedes sans compte
+  // + 13 NSP + 1 nouveau). Trompeur car melange les actifs et les anciens
+  // a faire migrer.
+  // Maintenant : 4 cards decompose :
+  //   - Membres avec compte (user_id NOT NULL) = les actifs sur le site
+  //   - Pre-inscrits guest (pre_inscrit = TRUE) = a fusionner plus tard
+  //   - Old VEA en attente (sans compte, pas pre-inscrit) = a faire inscrire
+  //   - Events a venir non annules
+  const nowIso = new Date().toISOString();
+
+  const [
+    { count: membresAvecCompte },
+    { count: preInscritsGuest },
+    { count: oldVeaEnAttente },
+    { count: eventsAVenirCount },
+  ] = await Promise.all([
+    supabase
+      .schema("vea")
+      .from("participants")
+      .select("*", { count: "exact", head: true })
+      .not("user_id", "is", null),
+    supabase
+      .schema("vea")
+      .from("participants")
+      .select("*", { count: "exact", head: true })
+      .eq("pre_inscrit", true),
+    supabase
+      .schema("vea")
+      .from("participants")
+      .select("*", { count: "exact", head: true })
+      .is("user_id", null)
+      .eq("pre_inscrit", false),
+    supabase
+      .schema("vea")
+      .from("evenements")
+      .select("*", { count: "exact", head: true })
+      .gte("date", nowIso)
+      .neq("statut", "annule"),
+  ]);
+
+  return (
+    <AdminDashboard
+      userEmail={user.email ?? ""}
+      supabaseStats={{
+        membresAvecCompte: membresAvecCompte ?? 0,
+        preInscritsGuest: preInscritsGuest ?? 0,
+        oldVeaEnAttente: oldVeaEnAttente ?? 0,
+        eventsAVenir: eventsAVenirCount ?? 0,
+      }}
+    />
+  );
 }

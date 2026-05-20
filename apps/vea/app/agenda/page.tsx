@@ -22,6 +22,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import ScrollReveal from "@/components/ScrollReveal";
 import { EVENTS_ARCHIVE, type EventArchive } from "@/lib/events-archive";
+import { createClient } from "@/lib/supabase/client";
 
 type Evenement = {
   id: string;
@@ -29,35 +30,83 @@ type Evenement = {
   description: string | null;
   date: string;
   lieu: string;
-  type: string;
+  type: string; // lowercase normalize (tournoi/animation/atelier/competition/autre)
   actif: boolean;
   /** Slug de galerie pour bouton "Voir les photos" -> /medias?event=<slug> */
   gallerySlug?: string;
 };
 
+/**
+ * Normalise un type d'event (archive UPPERCASE, Supabase lowercase, etc.)
+ * vers un format coherent pour les filtres.
+ */
+function normalizeType(rawType: string): string {
+  const t = (rawType ?? "").toLowerCase().trim();
+  // Supabase : 'programme' (recurrent hebdo) -> 'animation' pour l'agenda public
+  if (t === "programme") return "animation";
+  // Supabase : 'reunion' -> 'autre' (pas pertinent agenda public)
+  if (t === "reunion") return "autre";
+  // Mapping archive vers nouveau format (deja lowercase apres .toLowerCase())
+  return t;
+}
+
 export default function AgendaPage() {
   const [evenements, setEvenements] = useState<Evenement[]>([]);
-  const [filtre, setFiltre] = useState<string>("tous");
+  // Default "a_venir" : on affiche en priorite les events futurs (demande Clavel 19/05/2026)
+  const [filtre, setFiltre] = useState<string>("a_venir");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Je fetch les events Prisma, puis je fusionne avec l'archive statique.
-    // Si l'API plante, je tombe en fallback sur l'archive uniquement —
-    // comme ca la page n'est jamais vide.
-    fetch("/api/evenements?all=true")
-      .then((r) => {
-        if (!r.ok) throw new Error(`API error: ${r.status}`);
-        return r.json() as Promise<Evenement[]>;
-      })
-      .then((dataPrisma) => {
-        // Dedoublonnage par id (la BDD peut avoir des events avec id "archive-*"
-        // si Clavel a deja seede — auquel cas la BDD gagne).
-        const idsPrisma = new Set(dataPrisma.map((e) => e.id));
+    // 3 sources fusionnees :
+    //   1. /api/evenements (Prisma/MySQL, ancien systeme)
+    //   2. vea.evenements (Supabase, nouveau systeme depuis 19/05/2026)
+    //   3. lib/events-archive.ts (historique statique 2022-2026)
+    // Dedoublonnage par id, Supabase gagne en cas de conflit.
+    const supabase = createClient();
+
+    Promise.all([
+      // Source 1 : API Prisma (peut planter, on catch)
+      fetch("/api/evenements?all=true")
+        .then((r) => (r.ok ? (r.json() as Promise<Evenement[]>) : []))
+        .catch(() => [] as Evenement[]),
+      // Source 2 : Supabase vea.evenements (lecture publique via RLS)
+      supabase
+        .schema("vea")
+        .from("evenements")
+        .select("id, nom, event_slug, date, lieu, type, description, statut")
+        .order("date", { ascending: false })
+        .then(({ data }) => {
+          if (!data) return [] as Evenement[];
+          return data.map((e) => ({
+            id: e.id,
+            titre: e.nom,
+            description: e.description,
+            date: e.date,
+            lieu: e.lieu,
+            type: normalizeType(e.type),
+            actif: e.statut !== "annule",
+            gallerySlug: undefined,
+          })) as Evenement[];
+        }),
+    ])
+      .then(([prismaEvents, supabaseEvents]) => {
+        // Fusion par id : Supabase gagne sur Prisma
+        const supabaseIds = new Set(supabaseEvents.map((e) => e.id));
+        const prismaFiltered = prismaEvents
+          .filter((e) => !supabaseIds.has(e.id))
+          .map((e) => ({ ...e, type: normalizeType(e.type) }));
+
+        const allIds = new Set([...supabaseIds, ...prismaFiltered.map((e) => e.id)]);
         const archive: Evenement[] = (EVENTS_ARCHIVE as EventArchive[])
-          .filter((e) => !idsPrisma.has(e.id))
-          .map((e) => ({ ...e, description: e.description, gallerySlug: e.gallerySlug }));
-        const merged = [...dataPrisma, ...archive];
-        // Tri par date decroissante (plus recent en haut)
+          .filter((e) => !allIds.has(e.id))
+          .map((e) => ({
+            ...e,
+            description: e.description,
+            gallerySlug: e.gallerySlug,
+            type: normalizeType(e.type),
+          }));
+
+        const merged = [...supabaseEvents, ...prismaFiltered, ...archive];
         merged.sort(
           (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
         );
@@ -65,10 +114,14 @@ export default function AgendaPage() {
         setLoading(false);
       })
       .catch((err) => {
-        console.warn("[Agenda] API Prisma indisponible — fallback archive:", err);
-        // Fallback : on affiche au moins l'archive
+        console.warn("[Agenda] Erreur fusion sources — fallback archive:", err);
         const archiveOnly: Evenement[] = (EVENTS_ARCHIVE as EventArchive[]).map(
-          (e) => ({ ...e, description: e.description, gallerySlug: e.gallerySlug })
+          (e) => ({
+            ...e,
+            description: e.description,
+            gallerySlug: e.gallerySlug,
+            type: normalizeType(e.type),
+          })
         );
         archiveOnly.sort(
           (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -84,10 +137,25 @@ export default function AgendaPage() {
   );
   const passes = evenements.filter((e) => new Date(e.date) < now);
 
-  const filtres = ["tous", "TOURNOI", "ATELIER", "ANIMATION", "COMPETITION"];
+  // Filtres : "à venir" (default), tous, puis par type
+  const filtres = ["a_venir", "tous", "tournoi", "atelier", "animation", "competition", "autre"];
 
-  const eventsFiltres = (liste: Evenement[]) =>
-    filtre === "tous" ? liste : liste.filter((e) => e.type === filtre);
+  // Logique de filtrage : si "a_venir", on ne montre que les events futurs (deja gere
+  // par la section "Prochains evenements" en haut). Si "tous", tout. Sinon, par type.
+  const eventsFiltres = (liste: Evenement[]) => {
+    if (filtre === "a_venir") {
+      // On retourne uniquement les events a venir (passes ignores)
+      return liste.filter((e) => new Date(e.date) >= now && e.actif);
+    }
+    if (filtre === "tous") return liste;
+    return liste.filter((e) => e.type === filtre);
+  };
+
+  function labelFiltre(f: string): string {
+    if (f === "a_venir") return "À venir";
+    if (f === "tous") return "Tous";
+    return f.charAt(0).toUpperCase() + f.slice(1);
+  }
 
   return (
     <>
@@ -110,7 +178,7 @@ export default function AgendaPage() {
       <section className="py-12 px-4 bg-vea-bg">
         <div className="max-w-6xl mx-auto">
 
-          {/* FILTRES */}
+          {/* FILTRES — "À venir" est placé en premier (default), puis "Tous", puis types */}
           <div className="flex flex-wrap gap-2 mb-12 justify-center">
             {filtres.map((f) => (
               <button
@@ -122,9 +190,7 @@ export default function AgendaPage() {
                     : "bg-white border border-vea-border text-vea-text-muted hover:border-vea-accent hover:text-vea-accent"
                 }`}
               >
-                {f === "tous"
-                  ? "Tous"
-                  : f.charAt(0) + f.slice(1).toLowerCase()}
+                {labelFiltre(f)}
               </button>
             ))}
           </div>

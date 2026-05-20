@@ -17,6 +17,25 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import ProfileEditForm from "./ProfileEditForm";
+import ProgressionDashboard from "./ProgressionDashboard";
+import NotifToggle from "./NotifToggle";
+import BadgesSection from "./BadgesSection";
+import DotationsSection, { type DotationARéclamer } from "./DotationsSection";
+import XpBar from "@/components/XpBar";
+import type { BadgeData } from "@/components/BadgeCard";
+
+/**
+ * force-dynamic : on desactive le cache Next.js sur cette page parce que :
+ *   1. Les permissions superadmin peuvent changer entre 2 visites
+ *   2. Le profil joueur (pseudo/bio) est edite via Server Action et doit
+ *      etre relu a chaque chargement
+ *   3. /profil est strictement personnel, pas de gain a cacher
+ * Sans ca, Next.js peut servir une version stale du Server Component
+ * meme apres un revalidatePath, ce qui explique pourquoi les badges
+ * Superadmin n'apparaissaient pas apres l'execution du SQL.
+ */
+export const dynamic = "force-dynamic";
 
 interface UserPermission {
   scope: "owner" | "editor" | "viewer";
@@ -34,34 +53,41 @@ function computeUserBadges(
   perms: UserPermission[],
   participantRole: "joueur" | "benevole" | "dirigeant" | "superadmin" = "joueur"
 ): UserBadge[] {
-  // Si l'user a un role dirigeant/benevole dans vea.participants, on l'ajoute
-  // en premier badge (le plus visible).
-  const roleBadges: UserBadge[] = [];
-  if (participantRole === "dirigeant") {
-    roleBadges.push({
+  // Architecture badges cumulatifs (decision 18/05/2026) :
+  //   - "Joueur" est TOUJOURS present (la base de tout membre VEA)
+  //   - On AJOUTE par-dessus les badges specifiques selon le role BDD et les permissions
+  //   - Ex Clavel ex-licencie + superadmin BDD -> [Dirigeant, Joueur]
+  //   - Ex Anthony DUPONT dirigeant BDD sans perms -> [Dirigeant, Joueur]
+  //   - Ex Berstelien benevole BDD -> [Benevole, Joueur]
+  //   - Ex clavelndemamoussa@ avec perms owner vea+hub -> [Superadmin, Joueur]
+  //   - Ex nouveau signup sans rien -> [Joueur] seul
+  const badges: UserBadge[] = [];
+
+  // 1) Badge ROLE BDD (priorite max, le plus visible)
+  if (participantRole === "superadmin") {
+    // Cas Clavel ex-licencie Yapla : sa fiche vea.participants est marquee
+    // 'superadmin' meme s'il n'a pas de permissions applicatives sur ce compte.
+    badges.push({
+      label: "Dirigeant",
+      color: "red",
+      description: "President / fondateur de VEA.",
+    });
+  } else if (participantRole === "dirigeant") {
+    badges.push({
       label: "Dirigeant",
       color: "red",
       description: "Membre du bureau ou du CA de VEA.",
     });
   } else if (participantRole === "benevole") {
-    roleBadges.push({
+    badges.push({
       label: "Benevole",
       color: "blue",
       description: "A donne du temps a VEA (animation, logistique, com').",
     });
   }
 
-  if (perms.length === 0) {
-    return [
-      ...roleBadges,
-      {
-        label: "Joueur",
-        color: "neutral",
-        description: "Membre de la communaute VEA. Acces a ton profil et a Arena (bientot).",
-      },
-    ];
-  }
-
+  // 2) Badge PERMISSIONS APPLICATIVES (Superadmin / Admin VEA / Admin VENA)
+  // Indépendant du role BDD : on peut etre dirigeant BDD ET superadmin perms.
   const orgsByScope: Record<string, string[]> = { owner: [], editor: [], viewer: [] };
   perms.forEach((p) => {
     const slug = p.organizations?.slug ?? "?";
@@ -73,7 +99,6 @@ function computeUserBadges(
     allOwnerSlugs.includes("vea") &&
     allOwnerSlugs.includes("hub_velito");
 
-  const badges: UserBadge[] = [...roleBadges];
   if (isSuperadmin) {
     badges.push({
       label: "Superadmin",
@@ -102,13 +127,14 @@ function computeUserBadges(
     }
   }
 
-  if (badges.length === 0) {
-    badges.push({
-      label: "Joueur",
-      color: "neutral",
-      description: "Membre de la communaute VEA.",
-    });
-  }
+  // 3) Badge JOUEUR — TOUJOURS present (la base de tout membre VEA)
+  // Place en dernier pour que les roles eleves apparaissent en premier visuellement.
+  badges.push({
+    label: "Joueur",
+    color: "neutral",
+    description: "Membre de la communaute VEA. Acces a ton profil et a Arena (bientot).",
+  });
+
   return badges;
 }
 
@@ -140,15 +166,104 @@ export default async function ProfilPage() {
   const perms = (permsRaw ?? []) as unknown as UserPermission[];
 
   // === Lecture du record vea.participants lie a ce user (auto-lie via trigger
-  // pour les ex-licencies Yapla) — contient role + heures benevolat ===
+  // pour les ex-licencies Yapla) — contient role + heures benevolat + champs
+  // editables (pseudo / jeu_prefere / bio / avatar_url / is_public) ===
+  // IMPORTANT : necessite GRANT USAGE ON SCHEMA vea TO authenticated + GRANT SELECT
+  // (sans ca, RLS n'est meme pas evaluee et la query retourne erreur 42501)
   const { data: participant } = await supabase
     .schema("vea")
     .from("participants")
-    .select("prenom, nom, role, benevole_hours")
+    .select(
+      "id, prenom, nom, role, benevole_hours, benevole_hours_2026_2027, pseudo, jeu_prefere, bio, avatar_url, is_public, external_links, events_old, events_2026_2027, xp_saison_actuelle, points_vena, saison_actuelle, notif_events_active"
+    )
     .eq("user_id", user.id)
     .maybeSingle();
 
-  const benevoleHours = Number(participant?.benevole_hours ?? 0);
+  // === Lecture gamification (badges, dotations) ===
+  // Tout le catalogue des badges (pour afficher locked + unlocked)
+  const { data: allBadgesRaw } = await supabase
+    .schema("vea")
+    .from("badges")
+    .select("id, slug, nom, description, emoji, type, saison, niveau_required, rare");
+  const allBadges = (allBadgesRaw ?? []) as BadgeData[];
+
+  // Badges debloques par le user + flag affiche_sur_profil
+  // Sera vide tant que le participant n'existe pas (compte tout neuf sans fiche)
+  const { data: badgesJoueurs } = participant?.id
+    ? await supabase
+        .schema("vea")
+        .from("badges_joueurs")
+        .select("badge_id, affiche_sur_profil, badges(slug)")
+        .eq("participant_id", participant.id)
+    : { data: [] };
+
+  type BadgeJoueurRow = {
+    badge_id: string;
+    affiche_sur_profil: boolean;
+    badges: { slug: string } | null;
+  };
+  const badgesJoueursTyped = (badgesJoueurs ?? []) as unknown as BadgeJoueurRow[];
+  const unlockedSlugs = badgesJoueursTyped
+    .map((bj) => bj.badges?.slug)
+    .filter((s): s is string => Boolean(s));
+  const showcaseSlugs = badgesJoueursTyped
+    .filter((bj) => bj.affiche_sur_profil && bj.badges?.slug)
+    .map((bj) => bj.badges!.slug);
+
+  // Dotations a reclamer (pending / reclamee / livree)
+  const { data: dotationsRaw } = participant?.id
+    ? await supabase
+        .schema("vea")
+        .from("dotations_a_reclamer")
+        .select(
+          "id, statut, raison_attribution, attribue_le, reclamee_le, livree_le, dotations(nom, description, emoji, valeur_estimee_eur)"
+        )
+        .eq("participant_id", participant.id)
+        .order("attribue_le", { ascending: false })
+    : { data: [] };
+
+  type DotationRow = {
+    id: string;
+    statut: "pending" | "reclamee" | "livree" | "annulee";
+    raison_attribution: string | null;
+    attribue_le: string;
+    reclamee_le: string | null;
+    livree_le: string | null;
+    dotations: { nom: string; description: string; emoji: string; valeur_estimee_eur: number | null } | null;
+  };
+  const dotations: DotationARéclamer[] = ((dotationsRaw ?? []) as unknown as DotationRow[])
+    .filter((d) => d.dotations !== null)
+    .map((d) => ({
+      id: d.id,
+      dotation_nom: d.dotations!.nom,
+      dotation_description: d.dotations!.description,
+      dotation_emoji: d.dotations!.emoji,
+      dotation_valeur_eur: d.dotations!.valeur_estimee_eur,
+      statut: d.statut,
+      raison_attribution: d.raison_attribution,
+      attribue_le: d.attribue_le,
+      reclamee_le: d.reclamee_le,
+      livree_le: d.livree_le,
+    }));
+
+  // XP saison actuelle + nom saison pour XpBar
+  const xpTotal = Number(participant?.xp_saison_actuelle ?? 0);
+  const saisonActuelle = participant?.saison_actuelle ?? "2026/27";
+  const saisonNom = saisonActuelle === "2026/27" ? "L'Éveil" : saisonActuelle === "2027/28" ? "L'Ascension" : saisonActuelle;
+
+  const benevoleHoursTotal = Number(participant?.benevole_hours ?? 0);
+  // Heures benevolat split par saison sportive :
+  //   - benevole_hours_2026_2027 : saison en cours (sept 2026 -> juillet 2027)
+  //   - heuresBenevolatOld = total - 2026_2027 (= cumul historique avant cette saison)
+  const heuresBenevolatCurrent = Number(participant?.benevole_hours_2026_2027 ?? 0);
+  const heuresBenevolatOld = benevoleHoursTotal - heuresBenevolatCurrent;
+
+  // Events participes : separe Old VEA (avant saison 2026/2027) vs saison sportive en cours.
+  // events_old = estimation manuelle depuis Notion pour les anciens membres.
+  // events_2026_2027 = increment automatique via scan QR (Chantier 2.5 a venir).
+  const eventsOld = Number(participant?.events_old ?? 0);
+  const eventsCurrent = Number(participant?.events_2026_2027 ?? 0);
+
   const participantRole = (participant?.role ?? "joueur") as
     | "joueur"
     | "benevole"
@@ -168,9 +283,6 @@ export default async function ProfilPage() {
       (p.scope === "owner" || p.scope === "editor")
   );
 
-  const presences: never[] = [];
-  const totalEvents = presences.length;
-
   function badgeClasses(color: UserBadge["color"]) {
     if (color === "red") {
       return "bg-vea-accent text-white border-vea-accent";
@@ -184,18 +296,19 @@ export default async function ProfilPage() {
   return (
     <div className="min-h-screen bg-vea-bg pt-28 pb-20 px-4">
       <div className="max-w-5xl mx-auto">
-        {/* ===== HEADER ===== */}
+        {/* ===== HEADER =====
+            Badge "Espace membre" (categorisation page) + "Salut [Prenom]"
+            + email en mono (sobre, identifie le compte connecte)
+            + badges cumulatifs (Dirigeant + Joueur, ou Benevole + Joueur, etc.) */}
         <div className="mb-10">
           <span className="badge-red mb-4 inline-block">Espace membre</span>
-          <h1 className="text-3xl sm:text-4xl font-black text-vea-text mb-2">
+          <h1 className="text-3xl sm:text-4xl font-black text-vea-text mb-1 mt-2">
             Salut <span className="text-vea-accent">{displayName}</span>
           </h1>
-          <p className="text-sm text-vea-text-muted">
-            Connecte avec <span className="font-mono">{user.email}</span>{" "}
-            {profile?.created_at &&
-              `· Compte cree le ${new Date(profile.created_at).toLocaleDateString("fr-FR")}`}
+          <p className="text-sm text-vea-text-muted mb-4 font-mono">
+            {user.email}
           </p>
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2">
             {badges.map((b) => (
               <span
                 key={b.label}
@@ -235,104 +348,101 @@ export default async function ProfilPage() {
               </div>
             )}
 
-            {/* Bouton Arena -- visible pour tous (joueur ou admin) */}
-            <div className="card-clean p-6 opacity-90">
+            {/* Page joueur — annuaire public des membres VEA.
+                Remplace l'ancienne card "Arena Beta" qui faisait doublon avec
+                la Navbar. Arena reste un teaser ailleurs ; ici on pousse vers
+                /joueurs qui est la VRAIE page communaute. */}
+            <div className="card-clean p-6">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-base font-bold text-vea-text">
-                  {hasVeaAccess ? "Espace joueur (Arena)" : "Espace joueur"}
+                  Page joueur
                 </h3>
-                <span className="text-[10px] uppercase tracking-widest bg-vea-bg border border-vea-border text-vea-text-dim px-2 py-0.5 rounded">
-                  Bientot
+                <span className="text-[10px] uppercase tracking-widest bg-vea-accent-soft border border-vea-accent/20 text-vea-accent px-2 py-0.5 rounded font-bold">
+                  Communaute
                 </span>
               </div>
               <p className="text-sm text-vea-text-muted leading-relaxed mb-4">
-                {hasVeaAccess
-                  ? "Vue joueur : voir tes events, ta progression, tes badges. L'app Arena partagera ce compte."
-                  : "Suis ta progression, debloque des badges, retrouve tes events. Arena fera le lien entre VEA et l'app gamers."}
+                Decouvre les autres joueurs VEA : leur pseudo, leur jeu prefere
+                et leur niveau. Une section Arena y sera integree prochainement
+                pour suivre la progression de toute la communaute.
               </p>
-              <Link href="/arena" className="btn-outline text-sm">
-                Aller sur Arena
+              <Link href="/joueurs" className="btn-outline text-sm">
+                Voir les joueurs
               </Link>
             </div>
           </div>
         </section>
 
-        {/* ===== STATS ===== */}
+        {/* ===== EDITION PROFIL JOUEUR =====
+            Form pour personnaliser son profil public : pseudo, jeu favori,
+            bio, avatar URL et toggle is_public. Submit via Server Action
+            updateProfileAction qui upsert dans vea.participants. */}
         <section className="mb-12">
           <h2 className="text-xl font-bold text-vea-text mb-6">
-            Ta progression
+            Mon profil
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="card-clean p-6 text-center">
-              <p className="text-3xl font-black text-vea-accent leading-none mb-2">
-                {totalEvents}
-              </p>
-              <p className="text-xs text-vea-text-dim uppercase tracking-wider font-medium">
-                Events participes
-              </p>
-            </div>
-
-            {/* Card heures benevolat — entre Events participes et Niveau.
-                Affichee pour tous mais avec mention "0 h" si pas benevole. */}
-            <div className="card-clean p-6 text-center">
-              <p className="text-3xl font-black text-vea-accent leading-none mb-2 whitespace-nowrap">
-                {benevoleHours > 0
-                  ? benevoleHours.toLocaleString("fr-FR") + " h"
-                  : "—"}
-              </p>
-              <p className="text-xs text-vea-text-dim uppercase tracking-wider font-medium">
-                Heures benevolat
-              </p>
-              {benevoleHours > 0 && (
-                <p className="text-[10px] text-vea-text-dim mt-1 italic">
-                  Cumul depuis 2022
-                </p>
-              )}
-            </div>
-
-            <div className="card-clean p-6 text-center">
-              <p className="text-3xl font-black text-vea-accent leading-none mb-2">
-                —
-              </p>
-              <p className="text-xs text-vea-text-dim uppercase tracking-wider font-medium">
-                Niveau
-              </p>
-              <p className="text-[10px] text-vea-text-dim mt-1 italic">
-                Active avec Arena
-              </p>
-            </div>
-            <div className="card-clean p-6 text-center">
-              <p className="text-3xl font-black text-vea-accent leading-none mb-2">
-                —
-              </p>
-              <p className="text-xs text-vea-text-dim uppercase tracking-wider font-medium">
-                Badges debloques
-              </p>
-              <p className="text-[10px] text-vea-text-dim mt-1 italic">
-                Active avec Arena
-              </p>
-            </div>
-          </div>
+          <ProfileEditForm
+            initialPseudo={participant?.pseudo ?? ""}
+            initialJeuPrefere={participant?.jeu_prefere ?? ""}
+            initialBio={participant?.bio ?? ""}
+            initialAvatarUrl={participant?.avatar_url ?? ""}
+            initialIsPublic={participant?.is_public ?? false}
+            initialExternalLinks={
+              Array.isArray(participant?.external_links)
+                ? participant.external_links
+                : []
+            }
+          />
         </section>
 
-        {/* ===== PRESENCES ===== */}
-        <section>
-          <h2 className="text-xl font-bold text-vea-text mb-6">
-            Tes participations
+        {/* ===== STATS — Ta progression =====
+            Dashboard interactif avec dropdown saison (2026/27 par defaut + Old VEA).
+            4 cards qui changent par saison : Events / Heures / Niveau VEA / Niveau Arena.
+            Liste des events marquants de la saison selectionnee en dessous.
+            La section "Tes participations" precedente est integree dans ce dashboard. */}
+        <ProgressionDashboard
+          eventsOld={eventsOld}
+          eventsCurrent={eventsCurrent}
+          heuresBenevolatCurrent={heuresBenevolatCurrent}
+          heuresBenevolatOld={heuresBenevolatOld}
+          xpCurrent={xpTotal}
+        />
+
+        {/* Toggle notifs events (19/05/2026) — chaque user peut activer/desactiver
+            les notifs auto a chaque nouvel event cree par les admins. */}
+        <NotifToggle
+          initialValue={Boolean(participant?.notif_events_active)}
+        />
+
+        {/* ===== XP BAR =====
+            Barre de progression XP de la saison en cours.
+            Saison 1 "L'Eveil" = 2026/27, Saison 2 "L'Ascension" = 2027/28.
+            Formule niveau : niv N->N+1 = 50*N XP, cumul niv 10 = 2250 XP. */}
+        <section className="mb-12">
+          <h2 className="text-xl font-bold text-vea-text mb-4">
+            Saison de {saisonNom}{" "}
+            <span className="text-vea-text-dim font-normal">
+              ({saisonActuelle})
+            </span>
           </h2>
-          <div className="card-clean p-10 text-center">
-            <p className="text-vea-text-muted text-sm mb-2">
-              Tu n&apos;as pas encore participe a un event sous ce compte.
-            </p>
-            <p className="text-vea-text-dim text-xs mb-6">
-              Tes presences seront automatiquement listees ici quand tu
-              scanneras un QR code lors d&apos;un event VEA.
-            </p>
-            <Link href="/agenda" className="btn-primary">
-              Decouvrir l&apos;agenda
-            </Link>
-          </div>
+          <XpBar xpTotal={xpTotal} saisonNom={saisonNom} />
         </section>
+
+        {/* ===== DOTATIONS A RECLAMER =====
+            Visible uniquement si l'user a des recompenses en attente.
+            Les fondateurs (Old VEA) peuvent recevoir un Coffret Fondateur attribue
+            manuellement par les admins. */}
+        <DotationsSection dotations={dotations} />
+
+        {/* ===== BADGES (vitrine 3 + grille complete avec verrous) =====
+            Affiche TOUS les badges du catalogue. Les debloques sont en couleur
+            (cliquables pour vitrine), les verrouilles sont grises avec la
+            condition pour debloquer. La vitrine accepte 3 badges max. */}
+        <BadgesSection
+          allBadges={allBadges}
+          unlockedSlugs={unlockedSlugs}
+          initialShowcaseSlugs={showcaseSlugs}
+        />
       </div>
     </div>
   );

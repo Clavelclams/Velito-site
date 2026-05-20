@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import HashRecoveryRedirect from "../components/HashRecoveryRedirect";
+
+// Note : on n'utilise plus next/script (depuis Next.js 16, <Script strategy="beforeInteractive">
+// ne peut plus etre place dans <body>. Pour le JSON-LD on bascule sur un <script> standard
+// rendu par le Server Component, ce qui est leger et n'embarque pas de JS executable.
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -154,11 +157,12 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className={`${inter.className} min-h-screen flex flex-col`}>
-        {/* JSON-LD Organization — injected dans <head> via Script strategy beforeInteractive */}
-        <Script
-          id="schema-organization"
+        {/* JSON-LD Organization pour SEO Google (Knowledge Graph).
+            Recommandation officielle Next.js 16 : script JSON-LD inline dans le
+            body d'un Server Component (https://nextjs.org/docs/app/guides/json-ld).
+            type="application/ld+json" = pas executable, juste lu par les crawlers. */}
+        <script
           type="application/ld+json"
-          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(ORGANIZATION_LD),
           }}
