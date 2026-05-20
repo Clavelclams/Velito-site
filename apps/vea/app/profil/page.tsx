@@ -22,6 +22,7 @@ import ProgressionDashboard from "./ProgressionDashboard";
 import NotifToggle from "./NotifToggle";
 import BadgesSection from "./BadgesSection";
 import DotationsSection, { type DotationARéclamer } from "./DotationsSection";
+import TournoisSection from "./TournoisSection";
 import XpBar from "@/components/XpBar";
 import type { BadgeData } from "@/components/BadgeCard";
 
@@ -246,6 +247,39 @@ export default async function ProfilPage() {
       livree_le: d.livree_le,
     }));
 
+  // === Tournois online / presentiel auxquels ce user a participe ===
+  // 20/05/2026 : recupere via vea.tournoi_participants + jointure tournois.
+  // Le composant TournoisSection se masque tout seul (return null) si liste vide,
+  // donc pas besoin de gate ici. Si la fiche participant n'existe pas (compte
+  // tout neuf sans encore de fiche vea.participants), on saute la query.
+  const { data: participationsRaw } = participant?.id
+    ? await supabase
+        .schema("vea")
+        .from("tournoi_participants")
+        .select(
+          "tournoi_id, role_dans_equipe, pseudo_utilise, tournois(id, nom, jeu, date_debut, mode, format, resultat, representation_vea, cash_prize)"
+        )
+        .eq("participant_id", participant.id)
+    : { data: [] };
+
+  type TournoiParticipationRow = {
+    tournoi_id: string;
+    role_dans_equipe: string;
+    pseudo_utilise: string | null;
+    tournois: {
+      id: string;
+      nom: string;
+      jeu: string;
+      date_debut: string;
+      mode: string;
+      format: string;
+      resultat: string | null;
+      representation_vea: boolean;
+      cash_prize: number | null;
+    } | null;
+  };
+  const participations = (participationsRaw ?? []) as unknown as TournoiParticipationRow[];
+
   // XP saison actuelle + nom saison pour XpBar
   const xpTotal = Number(participant?.xp_saison_actuelle ?? 0);
   const saisonActuelle = participant?.saison_actuelle ?? "2026/27";
@@ -324,7 +358,7 @@ export default async function ProfilPage() {
 
         {/* ===== ACCES SELON ROLE ===== */}
         <section className="mb-12">
-          <h2 className="text-xl font-bold text-vea-text mb-6">Tes acces</h2>
+          <h2 className="text-xl font-bold text-vea-text mb-6">Tes accès</h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Bouton Admin VEA — visible si scope vea editor+ */}
@@ -339,11 +373,11 @@ export default async function ProfilPage() {
                   </span>
                 </div>
                 <p className="text-sm text-vea-text-muted leading-relaxed mb-4">
-                  Cree des events, gere les participants, exporte les rapports
+                  Crée des events, gère les participants, exporte les rapports
                   d&apos;impact pour les subventions.
                 </p>
                 <Link href="/admin" className="btn-primary text-sm">
-                  Acceder a /admin
+                  Accéder à /admin
                 </Link>
               </div>
             )}
@@ -358,12 +392,12 @@ export default async function ProfilPage() {
                   Page joueur
                 </h3>
                 <span className="text-[10px] uppercase tracking-widest bg-vea-accent-soft border border-vea-accent/20 text-vea-accent px-2 py-0.5 rounded font-bold">
-                  Communaute
+                  Communauté
                 </span>
               </div>
               <p className="text-sm text-vea-text-muted leading-relaxed mb-4">
-                Decouvre les autres joueurs VEA : leur pseudo, leur jeu prefere
-                et leur niveau. Une section Arena y sera integree prochainement
+                Découvre les autres joueurs VEA : leur pseudo, leur jeu préféré
+                et leur niveau. Une section Arena y sera intégrée prochainement
                 pour suivre la progression de toute la communaute.
               </p>
               <Link href="/joueurs" className="btn-outline text-sm">
@@ -433,6 +467,12 @@ export default async function ProfilPage() {
             Les fondateurs (Old VEA) peuvent recevoir un Coffret Fondateur attribue
             manuellement par les admins. */}
         <DotationsSection dotations={dotations} />
+
+        {/* ===== MES TOURNOIS =====
+            20/05/2026 : section qui liste les competitions ou ce user a represente VEA.
+            Distinct du systeme events terrain : pas d'XP civique, juste palmares.
+            Le composant se masque tout seul si participations vide. */}
+        <TournoisSection participations={participations} isAdmin={hasVeaAccess} />
 
         {/* ===== BADGES (vitrine 3 + grille complete avec verrous) =====
             Affiche TOUS les badges du catalogue. Les debloques sont en couleur

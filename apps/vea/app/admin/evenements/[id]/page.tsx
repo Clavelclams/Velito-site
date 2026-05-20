@@ -59,7 +59,7 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
 
   // QR / scan URL
   const headerStore = await headers();
-  const host = headerStore.get("host") ?? "vea.velito.com";
+  const host = headerStore.get("host") ?? "vea.velito.fr";
   const protocol = host.includes("localhost") ? "http" : "https";
   const siteOrigin = `${protocol}://${host}`;
   const scanUrl = getScanUrl(event.token, siteOrigin);

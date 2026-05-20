@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     description:
       "30+ activites depuis 2022. Tournois, ateliers, animations QPV.",
   },
-  alternates: { canonical: "https://vea.velito.com/agenda" },
+  alternates: { canonical: "https://vea.velito.fr/agenda" },
 };
 
 export default function AgendaLayout({

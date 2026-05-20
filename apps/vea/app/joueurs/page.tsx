@@ -271,7 +271,7 @@ export default async function JoueursPage() {
             <p className="text-sm text-vea-text-muted leading-relaxed">
               Quand l&apos;app{" "}
               {/* 19/05/2026 : URL dynamique via getConstructionUrl (cf lib/hub-url.ts)
-                  -> localhost:3000 en dev, velito.com en prod. */}
+                  -> localhost:3000 en dev, velito.fr en prod. */}
               <a
                 href={getConstructionUrl("arena")}
                 target="_blank"

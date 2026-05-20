@@ -1,30 +1,26 @@
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ============================================
+   VENA — Styles globaux
+   ============================================
+   Charte officielle : fond crème, accents kaki, palette pastel.
+   Inspiration : agence numérique haut de gamme, calme, lisible.
+*/
+
+:root {
+  --vena-kaki: #414C35;
+  --vena-cream: #f8f5ef;
+  --vena-text: #1a1d15;
 }
 
 html,
 body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-}
-
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+  background-color: var(--vena-cream);
+  color: var(--vena-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 a {
@@ -32,19 +28,199 @@ a {
   text-decoration: none;
 }
 
-.imgDark {
-  display: none;
+/* ============================================
+   Composants réutilisables — design system VENA
+   ============================================
+*/
+
+@layer components {
+  /* Bouton principal (kaki plein) */
+  .btn-vena-primary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-vena-kaki text-white text-sm font-bold uppercase tracking-widest hover:bg-vena-kaki-dark transition-colors;
+  }
+
+  /* Bouton secondaire (outline kaki) */
+  .btn-vena-outline {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-transparent border-2 border-vena-kaki text-vena-kaki text-sm font-bold uppercase tracking-widest hover:bg-vena-kaki hover:text-white transition-colors;
+  }
+
+  /* Card propre — fond blanc cassé, ombre douce */
+  .card-vena {
+    @apply bg-white rounded-2xl border border-vena-border shadow-card-clean;
+  }
+
+  /* Badge kaki soft (pastel sur fond crème) */
+  .badge-vena-kaki {
+    @apply inline-block text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-vena-kaki-soft text-vena-kaki;
+  }
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+/* ============================================
+   FlowingMenu — menu marquee animé au survol (page /lien)
+   Adapté de React Bits, charte VENA (kaki/crème).
+   ============================================
+*/
 
-  .imgLight {
-    display: none;
+.flowing-menu {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.flowing-menu__nav {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.flowing-menu__item {
+  flex: 1 1 0;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  /* lignes de séparation kaki translucide */
+  box-shadow: 0 -1px 0 0 rgba(65, 76, 53, 0.18);
+}
+
+.flowing-menu__link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  position: relative;
+  cursor: pointer;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  font-weight: 800;
+  color: var(--vena-kaki);
+  font-size: clamp(1.3rem, 3.5vw, 2.6rem);
+  letter-spacing: -0.01em;
+  transition: color 0.35s ease;
+}
+
+.flowing-menu__link:focus-visible {
+  outline: 2px solid var(--vena-kaki);
+  outline-offset: -4px;
+}
+
+.flowing-menu__marquee {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--vena-kaki);
+  transform: translateY(101%);
+}
+
+.flowing-menu__marquee-inner {
+  height: 100%;
+  width: 200%;
+  display: flex;
+  transform: translateY(-101%);
+}
+
+.flowing-menu__marquee-track {
+  display: flex;
+  align-items: center;
+  position: relative;
+  height: 100%;
+  width: 200%;
+  will-change: transform;
+  animation: flowing-marquee 18s linear infinite;
+}
+
+.flowing-menu__marquee span {
+  color: var(--vena-cream);
+  text-transform: uppercase;
+  font-weight: 800;
+  font-size: clamp(1.3rem, 3.5vw, 2.6rem);
+  line-height: 1;
+  padding: 0 1.2rem;
+  white-space: nowrap;
+}
+
+.flowing-menu__marquee-img {
+  width: 200px;
+  height: 7vh;
+  min-height: 2.5rem;
+  margin: 0 1.2rem;
+  border-radius: 9999px;
+  background-size: cover;
+  background-position: center;
+  background-color: var(--vena-cream);
+}
+
+@keyframes flowing-marquee {
+  from {
+    transform: translateX(0);
   }
-  .imgDark {
-    display: unset;
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* ============================================
+   Carte identité pendule (recto/verso) — page /lien
+   Version launch-safe sans dépendance 3D.
+   ============================================
+*/
+
+.lanyard-stage {
+  perspective: 1200px;
+  touch-action: none;
+}
+
+/* le câble + la carte se balancent ensemble */
+.lanyard-swing {
+  transform-origin: top center;
+  animation: lanyard-idle 5.5s ease-in-out infinite;
+  will-change: transform;
+}
+
+.lanyard-swing[data-dragging="true"] {
+  animation: none;
+}
+
+.lanyard-strap {
+  width: 14px;
+  margin: 0 auto;
+  background: linear-gradient(180deg, var(--vena-kaki), #2f3727);
+  border-radius: 0 0 4px 4px;
+}
+
+/* carte 3D flip recto/verso */
+.lanyard-card {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.lanyard-card[data-flipped="true"] {
+  transform: rotateY(180deg);
+}
+
+.lanyard-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.lanyard-face--back {
+  transform: rotateY(180deg);
+}
+
+@keyframes lanyard-idle {
+  0%,
+  100% {
+    transform: rotate(-3.5deg);
+  }
+  50% {
+    transform: rotate(3.5deg);
   }
 }

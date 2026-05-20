@@ -232,8 +232,11 @@ export default async function AdminTournoisPage() {
                           </>
                         )}
                         {t.saison && <> · saison {t.saison}</>}
-                        {t.cash_prize && Number(t.cash_prize) > 0 && (
-                          <> · {t.cash_prize}€</>
+                        {/* 20/05/2026 fix : t.cash_prize=0 (number) etait truthy
+                            dans le `&&` gauche et React rendait "0" -> "2025/260".
+                            On cast explicitement en Number et compare > 0 directement. */}
+                        {Number(t.cash_prize ?? 0) > 0 && (
+                          <> · {Number(t.cash_prize).toFixed(2)}€</>
                         )}
                       </p>
                       {t.description && (

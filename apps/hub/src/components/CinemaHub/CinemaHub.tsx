@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * CinemaHub — Expérience cinématographique scroll-driven pour velito.com
+ * CinemaHub — Expérience cinématographique scroll-driven pour velito.fr
  *
  * Mécanique reproduite depuis bassemth (incipit-studio.com) :
  * - Rangées de sièges empilées avec background-repeat: repeat-x
@@ -25,31 +25,31 @@ const CHOICES = [
     text: "Je cherche une communauté esport locale",
     badge: "VEA",
     color: "#E63946",
-    href: "https://vea.velito.com",
+    href: "https://vea.velito.fr",
   },
   {
     text: "J'ai besoin d'un site web ou service digital",
     badge: "VENA",
     color: "#00E87A",
-    href: "https://vena.velito.com",
+    href: "https://vena.velito.fr",
   },
   {
     text: "Je veux organiser ou jouer en tournoi",
     badge: "ARENA",
     color: "#c084fc",
-    href: "https://arena.velito.com",
+    href: "https://arena.velito.fr",
   },
   {
     text: "J'anime un bar, une MJC, un espace jeunes",
     badge: "INTERACTIVE",
     color: "#4ECAFF",
-    href: "https://interactive.velito.com",
+    href: "https://interactive.velito.fr",
   },
   {
     text: "Je veux agir pour la prévention numérique",
     badge: "PRÉVENTION",
     color: "#fb923c",
-    href: "https://prevention.velito.com",
+    href: "https://prevention.velito.fr",
   },
 ];
 

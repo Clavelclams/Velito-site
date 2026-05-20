@@ -247,7 +247,7 @@ export default async function AdminRecompensesPage() {
                 <div className="shrink-0 flex flex-col gap-1 items-end">
                   {p.email && (
                     <a
-                      href={`mailto:${p.email}?subject=Tes%20r%C3%A9compenses%20VEA%20t%27attendent&body=Salut%20${encodeURIComponent(p.prenom)}%2C%0A%0ATu%20as%20atteint%20le%20niveau%20${p.niveauEstime}%20gr%C3%A2ce%20%C3%A0%20ta%20pr%C3%A9sence%20historique%20chez%20VEA%20(${p.events_old ?? 0}%20events%2C%20${p.heuresOld}h%20b%C3%A9n%C3%A9volat).%0A%0ACr%C3%A9e%20ton%20compte%20sur%20https%3A%2F%2Fvea.velito.com%2Fsignup%20pour%20r%C3%A9clamer%20tes%20r%C3%A9compenses.%0A%0A--%0ALe%20bureau%20VEA`}
+                      href={`mailto:${p.email}?subject=Tes%20r%C3%A9compenses%20VEA%20t%27attendent&body=Salut%20${encodeURIComponent(p.prenom)}%2C%0A%0ATu%20as%20atteint%20le%20niveau%20${p.niveauEstime}%20gr%C3%A2ce%20%C3%A0%20ta%20pr%C3%A9sence%20historique%20chez%20VEA%20(${p.events_old ?? 0}%20events%2C%20${p.heuresOld}h%20b%C3%A9n%C3%A9volat).%0A%0ACr%C3%A9e%20ton%20compte%20sur%20https%3A%2F%2Fvea.velito.fr%2Fsignup%20pour%20r%C3%A9clamer%20tes%20r%C3%A9compenses.%0A%0A--%0ALe%20bureau%20VEA`}
                       className="text-[10px] uppercase tracking-widest font-bold px-3 py-1.5 rounded-full bg-vea-accent text-white hover:bg-vea-accent-hover transition-colors"
                     >
                       Relancer par email

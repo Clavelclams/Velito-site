@@ -4,11 +4,11 @@
  * Stack : Resend (https://resend.com) — service email transactionnel.
  * Pour activer en prod :
  *   1. Creer un compte sur resend.com
- *   2. Verifier le domaine velitoesport.com (DNS SPF/DKIM)
+ *   2. Verifier le domaine velito.fr (DNS SPF/DKIM)
  *   3. Recuperer une cle API et la mettre dans .env.local :
  *      RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxx
- *      VEA_CONTACT_TO=Vea@velitoesport.com   (ou velitoesport@gmail.com)
- *      VEA_CONTACT_FROM=contact@velitoesport.com
+ *      VEA_CONTACT_TO=contact@velito.fr
+ *      VEA_CONTACT_FROM=contact@velito.fr
  *
  * En dev sans domaine verifie : utilise "onboarding@resend.dev" comme FROM
  * et l'adresse du compte Resend comme TO uniquement.
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
   }
 
   const apiKey = process.env.RESEND_API_KEY;
-  const toEmail = process.env.VEA_CONTACT_TO ?? "Vea@velitoesport.com";
+  const toEmail = process.env.VEA_CONTACT_TO ?? "contact@velito.fr";
   const fromEmail =
     process.env.VEA_CONTACT_FROM ?? "VEA Contact <onboarding@resend.dev>";
 

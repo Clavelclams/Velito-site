@@ -7,7 +7,7 @@
  *
  * Arena n'apparait QUE pour les users connectes -- c'est un teaser interne,
  * pas pour les visiteurs anonymes. Lien actif vers /arena (page placeholder
- * "en construction" tant que arena.velito.com n'est pas deploye).
+ * "en construction" tant que arena.velito.fr n'est pas deploye).
  */
 "use client";
 
@@ -31,7 +31,7 @@ const NAV_LINKS: NavLink[] = [
   { label: "Agenda", href: "/agenda" },
   { label: "Medias", href: "/medias" },
   { label: "Partenaires", href: "/partenaires" },
-  { label: "Contact", href: "/contact" },
+  { label: "Prestations", href: "/prestations" },
 ];
 
 const HELLOASSO_URL =

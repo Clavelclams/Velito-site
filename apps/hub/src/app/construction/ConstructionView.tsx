@@ -60,7 +60,7 @@ function buildContent(mode: Mode, moduleName: string | null, slug: string | null
           moduleName === "Interactive"
             ? "Animations gaming pour bars et MJC. Le module ouvre ses portes mi-juin 2026."
             : `Le module ${displayName} sera disponible très prochainement.`,
-        terminal: `$ loading ${moduleSlug}.velito.com [████████░░] 80%`,
+        terminal: `$ loading ${moduleSlug}.velito.fr [████████░░] 80%`,
         metaLeft: `VELITO / ${moduleSlug.toUpperCase()} / STATUS: SOON`,
         metaRight: moduleName === "Interactive" ? "ETA: JUIN 2026" : "ETA: 2026",
       };
@@ -71,7 +71,7 @@ function buildContent(mode: Mode, moduleName: string | null, slug: string | null
         title: (moduleName ?? "EN CONSTRUCTION").toUpperCase(),
         subtitle:
           "Ce module n'est pas encore disponible. Notre équipe finalise son architecture.",
-        terminal: `$ initializing ${moduleSlug}.velito.com`,
+        terminal: `$ initializing ${moduleSlug}.velito.fr`,
         metaLeft: `VELITO / ${moduleSlug.toUpperCase()} / STATUS: PENDING`,
         metaRight: "ETA: 2026",
       };

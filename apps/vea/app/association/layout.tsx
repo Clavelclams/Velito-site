@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     description:
       "Asso d'inclusion par le gaming a Amiens. Histoire, valeurs, bureau, impact mesure.",
   },
-  alternates: { canonical: "https://vea.velito.com/association" },
+  alternates: { canonical: "https://vea.velito.fr/association" },
 };
 
 export default function AssociationLayout({

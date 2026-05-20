@@ -18,9 +18,9 @@ export default async function AdminEventsPage() {
   const canEdit = await hasPermission("vea", "editor");
   if (!canEdit) redirect("/admin?denied=events");
 
-  // Recupere l'origin du site pour generer les URL QR (dev = localhost, prod = vea.velito.com)
+  // Recupere l'origin du site pour generer les URL QR (dev = localhost, prod = vea.velito.fr)
   const headerStore = await headers();
-  const host = headerStore.get("host") ?? "vea.velito.com";
+  const host = headerStore.get("host") ?? "vea.velito.fr";
   const protocol = host.includes("localhost") ? "http" : "https";
   const siteOrigin = `${protocol}://${host}`;
 

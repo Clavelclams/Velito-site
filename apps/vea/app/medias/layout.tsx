@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     description:
       "Galerie + articles presse. Couverture mediatique de l'asso depuis 2022.",
   },
-  alternates: { canonical: "https://vea.velito.com/medias" },
+  alternates: { canonical: "https://vea.velito.fr/medias" },
 };
 
 export default function MediasLayout({

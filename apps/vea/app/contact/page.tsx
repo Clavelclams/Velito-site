@@ -145,7 +145,7 @@ export default function ContactPage() {
                             required
                             minLength={2}
                             className={inputClass}
-                            placeholder="Clavel"
+                            placeholder="Josué"
                           />
                         </div>
                         <div>
@@ -161,7 +161,7 @@ export default function ContactPage() {
                             required
                             minLength={2}
                             className={inputClass}
-                            placeholder="Ndema Moussa"
+                            placeholder="Clémentin"
                           />
                         </div>
                       </div>
@@ -178,7 +178,7 @@ export default function ContactPage() {
                           onChange={handleChange}
                           required
                           className={inputClass}
-                          placeholder="votre@email.com"
+                          placeholder="josue.clementin@exemple.fr"
                         />
                       </div>
 
@@ -247,8 +247,8 @@ export default function ContactPage() {
                       <span className="block text-vea-text-dim text-[11px] uppercase tracking-wider mb-1 font-medium">
                         Email
                       </span>
-                      <a href="mailto:Vea@velitoesport.com" className="text-vea-text hover:text-vea-accent transition-colors font-medium break-all">
-                        Vea@velitoesport.com
+                      <a href="mailto:contact@velito.fr" className="text-vea-text hover:text-vea-accent transition-colors font-medium break-all">
+                        contact@velito.fr
                       </a>
                     </li>
                     <li>

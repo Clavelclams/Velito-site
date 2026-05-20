@@ -6,7 +6,7 @@
  */
 import type { MetadataRoute } from "next";
 
-const SITE_URL = "https://vea.velito.com";
+const SITE_URL = "https://vea.velito.fr";
 
 export default function robots(): MetadataRoute.Robots {
   return {

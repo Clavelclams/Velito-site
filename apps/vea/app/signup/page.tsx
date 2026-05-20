@@ -211,7 +211,7 @@ export default function SignupPage() {
                   minLength={2}
                   autoComplete="given-name"
                   className={inputClass}
-                  placeholder="Clavel"
+                  placeholder="Josué"
                 />
               </div>
               <div>
@@ -230,7 +230,7 @@ export default function SignupPage() {
                   minLength={2}
                   autoComplete="family-name"
                   className={inputClass}
-                  placeholder="Ndema Moussa"
+                  placeholder="Clémentin"
                 />
               </div>
             </div>

@@ -66,6 +66,45 @@ export async function hasPermission(
 }
 
 /**
+ * Verifie l acces compta VEA. Decoupe du hasPermission hierarchique parce que
+ * 'treasurer' n est PAS dans la hierarchie owner/editor/viewer : c est un
+ * extra_scope fonctionnel parallele (cf migration vea-compta-v1.sql).
+ *
+ * Retourne true si l user est :
+ *   - owner ou editor sur vea (acces auto, ils gerent tout)
+ *   - OU a 'treasurer' dans extra_scopes sur vea (Maya, Christ, ...)
+ */
+export async function hasTreasurerAccess(): Promise<boolean> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const { data: org } = await supabase
+    .schema("shared")
+    .from("organizations")
+    .select("id")
+    .eq("slug", "vea")
+    .maybeSingle();
+  if (!org) return false;
+
+  const { data: perm } = await supabase
+    .schema("shared")
+    .from("user_permissions")
+    .select("scope, extra_scopes")
+    .eq("user_id", user.id)
+    .eq("organization_id", org.id)
+    .maybeSingle();
+
+  if (!perm) return false;
+  if (perm.scope === "owner" || perm.scope === "editor") return true;
+
+  const extra = (perm.extra_scopes ?? []) as string[];
+  return extra.includes("treasurer");
+}
+
+/**
  * Retourne le scope effectif de l user sur une org, ou null si aucune
  * permission. Utile pour afficher conditionnellement des boutons UI.
  */

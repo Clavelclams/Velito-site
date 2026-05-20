@@ -239,7 +239,7 @@ export default function ProfileEditForm({
         />
       </div>
 
-      {/* Jeu prefere */}
+      {/* Jeu préféré */}
       <div>
         <label htmlFor="jeu_prefere" className={labelClass}>
           Jeu favori

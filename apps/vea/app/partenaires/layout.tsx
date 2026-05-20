@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     description:
       "Federations, asso, collectivites, medias — tous les partenaires de Velito Esport Amiens.",
   },
-  alternates: { canonical: "https://vea.velito.com/partenaires" },
+  alternates: { canonical: "https://vea.velito.fr/partenaires" },
 };
 
 export default function PartenairesLayout({

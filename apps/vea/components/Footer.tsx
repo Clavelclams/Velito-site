@@ -98,8 +98,8 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="mailto:Vea@velitoesport.com" className="hover:text-vea-accent transition-colors">
-                  Vea@velitoesport.com
+                <a href="mailto:contact@velito.fr" className="hover:text-vea-accent transition-colors">
+                  contact@velito.fr
                 </a>
               </li>
               <li className="text-vea-text-dim">
@@ -116,7 +116,7 @@ export default function Footer() {
           <p className="text-xs text-vea-text-dim">
             &copy; 2026 Velito Esport Amiens — Association loi 1901 — Propulse par{" "}
             <a
-              href="https://vena.velito.com"
+              href="https://vena.velito.fr"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-vea-accent transition-colors"

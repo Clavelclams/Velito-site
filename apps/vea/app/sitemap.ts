@@ -11,7 +11,7 @@
 import type { MetadataRoute } from "next";
 import { EVENTS_ARCHIVE } from "@/lib/events-archive";
 
-const SITE_URL = "https://vea.velito.com";
+const SITE_URL = "https://vea.velito.fr";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();

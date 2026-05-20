@@ -1,5 +1,5 @@
 /**
- * GalaxyHero — composant orchestrateur du hero de la home velito.com.
+ * GalaxyHero — composant orchestrateur du hero de la home velito.fr.
  *
  * Responsabilités :
  *   1. Charger dynamiquement Galaxy et InfiniteMenu (ssr:false — ils utilisent window/WebGL)

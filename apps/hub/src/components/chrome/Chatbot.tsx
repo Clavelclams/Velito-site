@@ -50,7 +50,7 @@ const FAQS: QA[] = [
   {
     question: "Comment vous contacter ?",
     answer:
-      "Par email à vea@velito.com pour l'asso, ou via les sous-domaines respectifs des modules. Le formulaire de contact général arrivera avec la sortie de la page /a-propos.",
+      "Par email à contact@velito.fr pour l'asso, ou via les sous-domaines respectifs des modules. Le formulaire de contact général arrivera avec la sortie de la page /a-propos.",
   },
   {
     question: "Vous êtes basés où ?",

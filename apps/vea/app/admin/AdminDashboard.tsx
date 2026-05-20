@@ -354,48 +354,62 @@ export default function AdminDashboard({
           </p>
         </Link>
 
-        {/* Placeholder section upload documents (Phase 2 — Maya tickets, Alban péages, AG) */}
-        <div className="card-clean p-5 border-dashed opacity-70">
-          <div className="text-xs uppercase tracking-widest text-vea-text-dim font-bold mb-1">
+        {/* 20/05/2026 : Module Dépôt documents activé (Phase 2 Module 1).
+            Tickets, factures, justificatifs, péages, courriers. Notification
+            cloche automatique aux dirigeants pour validation. */}
+        <Link
+          href="/admin/documents"
+          className="card-clean p-5 hover:border-vea-accent transition-all"
+        >
+          <div className="text-xs uppercase tracking-widest text-vea-accent font-bold mb-1">
             Dépôt documents
           </div>
-          <div className="text-lg font-bold text-vea-text-muted mb-2">
-            À venir
+          <div className="text-lg font-bold text-vea-text mb-2">
+            Tickets, factures, justificatifs
           </div>
-          <p className="text-xs text-vea-text-dim leading-relaxed italic">
-            Upload de tickets de dépense, justificatifs (péages, transports,
-            achats matos), rapports d&apos;AG ciblés. Notification cloche au
-            destinataire concerné. Phase 2.
+          <p className="text-xs text-vea-text-muted leading-relaxed">
+            Upload + validation des tickets de dépense, factures, justificatifs
+            (péages, transports), courriers. Notification cloche aux dirigeants.
           </p>
-        </div>
+        </Link>
 
-        {/* Placeholder rapports / réunions */}
-        <div className="card-clean p-5 border-dashed opacity-70">
-          <div className="text-xs uppercase tracking-widest text-vea-text-dim font-bold mb-1">
+        {/* 20/05/2026 : Module Rapports active (Phase 2 Module 2).
+            Redaction Markdown des PV de CA, PV d'AG, convocations, rapports
+            d'activite. Workflow brouillon -> valide -> publie. */}
+        <Link
+          href="/admin/rapports"
+          className="card-clean p-5 hover:border-vea-accent transition-all"
+        >
+          <div className="text-xs uppercase tracking-widest text-vea-accent font-bold mb-1">
             Rapports / Réunions
           </div>
-          <div className="text-lg font-bold text-vea-text-muted mb-2">
-            À venir
+          <div className="text-lg font-bold text-vea-text mb-2">
+            PV, convocations, comptes-rendus
           </div>
-          <p className="text-xs text-vea-text-dim leading-relaxed italic">
-            Comptes-rendus de réunions, PV d&apos;AG, convocations
-            automatiques. Phase 2.
+          <p className="text-xs text-vea-text-muted leading-relaxed">
+            Rédaction Markdown des PV de CA / AG, convocations réunions,
+            rapports d&apos;activité. Workflow brouillon → validé → publié.
           </p>
-        </div>
+        </Link>
 
-        {/* Placeholder compta */}
-        <div className="card-clean p-5 border-dashed opacity-70">
-          <div className="text-xs uppercase tracking-widest text-vea-text-dim font-bold mb-1">
+        {/* 20/05/2026 : Module Compta activé (Phase 2 Module 3).
+            Accès role-based : owner/editor automatique + extra scope 'treasurer'
+            pour Maya + Christ quand ils auront leur compte. */}
+        <Link
+          href="/admin/compta"
+          className="card-clean p-5 hover:border-vea-accent transition-all"
+        >
+          <div className="text-xs uppercase tracking-widest text-vea-accent font-bold mb-1">
             Compta / Trésorerie
           </div>
-          <div className="text-lg font-bold text-vea-text-muted mb-2">
-            À venir
+          <div className="text-lg font-bold text-vea-text mb-2">
+            Dashboard trésorerie
           </div>
-          <p className="text-xs text-vea-text-dim leading-relaxed italic">
-            Vue d&apos;ensemble trésorerie, factures émises / reçues,
-            subventions en cours. Phase 3.
+          <p className="text-xs text-vea-text-muted leading-relaxed">
+            Recettes (subventions, cotisations) et dépenses (animation, matériel,
+            transport). Solde par saison + lien vers justificatifs.
           </p>
-        </div>
+        </Link>
       </div>
 
       {/* ===== Onglets ===== (20/05/2026 : caches car Prisma vide, redirige vers /admin/evenements) */}

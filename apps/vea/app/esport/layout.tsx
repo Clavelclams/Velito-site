@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     description:
       "Competition (INTERCUP, FFJV, TIQE) + Social (Budget Participatif, prevention, QPV). 12 jeunes amienois au TOP 8 France.",
   },
-  alternates: { canonical: "https://vea.velito.com/esport" },
+  alternates: { canonical: "https://vea.velito.fr/esport" },
 };
 
 export default function EsportLayout({

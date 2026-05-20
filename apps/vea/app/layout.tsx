@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import HashRecoveryRedirect from "../components/HashRecoveryRedirect";
+import ChatBot from "../components/ChatBot";
 
 // Note : on n'utilise plus next/script (depuis Next.js 16, <Script strategy="beforeInteractive">
 // ne peut plus etre place dans <body>. Pour le JSON-LD on bascule sur un <script> standard
@@ -11,7 +12,7 @@ import HashRecoveryRedirect from "../components/HashRecoveryRedirect";
 
 const inter = Inter({ subsets: ["latin"] });
 
-const SITE_URL = "https://vea.velito.com";
+const SITE_URL = "https://vea.velito.fr";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -106,7 +107,7 @@ const ORGANIZATION_LD = {
     "Association loi 1901 d'inclusion par le gaming a Amiens. Tournois esport, animations dans les quartiers prioritaires (QPV), prevention numerique, projets citoyens.",
   url: SITE_URL,
   logo: `${SITE_URL}/images/vea-logo-rouge-fond-blanc.png`,
-  email: "Vea@velitoesport.com",
+  email: "contact@velito.fr",
   telephone: "+33670364414",
   foundingDate: "2022",
   identifier: {
@@ -155,8 +156,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="fr">
-      <body className={`${inter.className} min-h-screen flex flex-col`}>
+    <html lang="fr" suppressHydrationWarning>
+      {/* 20/05/2026 : suppressHydrationWarning sur <body> pour silence le
+          Recoverable Error de Next.js 16.2 + Turbopack sur le <MetadataWrapper>
+          interne (hidden={true} client vs hidden={null} server). C'est un bug
+          connu Next.js (badge "stale" dans devtools), non-bloquant. Cette flag
+          ignore les mismatchs DIRECTS sur body et ses descendants immediats —
+          elle ne masque PAS les vrais mismatchs dans le contenu de la page. */}
+      <body
+        suppressHydrationWarning
+        className={`${inter.className} min-h-screen flex flex-col`}
+      >
         {/* JSON-LD Organization pour SEO Google (Knowledge Graph).
             Recommandation officielle Next.js 16 : script JSON-LD inline dans le
             body d'un Server Component (https://nextjs.org/docs/app/guides/json-ld).
@@ -171,6 +181,9 @@ export default function RootLayout({
         <Navbar />
         <main className="flex-1">{children}</main>
         <Footer />
+        {/* ChatBot FAQ flottant en bas à droite, présent sur toutes les pages.
+            Voir components/ChatBot.tsx pour les 9 questions/réponses. */}
+        <ChatBot />
       </body>
     </html>
   );
