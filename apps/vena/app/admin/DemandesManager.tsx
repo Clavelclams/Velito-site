@@ -35,6 +35,16 @@ const STATUT_META: Record<string, { label: string; cls: string }> = {
   archive: { label: "Archivé", cls: "bg-gray-100 text-gray-500 border-gray-200" },
 };
 
+const FALLBACK_META = {
+  label: "—",
+  cls: "bg-gray-100 text-gray-500 border-gray-200",
+};
+
+// Accès sûr : STATUT_META[clé] peut être undefined (noUncheckedIndexedAccess).
+function metaOf(s: string): { label: string; cls: string } {
+  return STATUT_META[s] ?? FALLBACK_META;
+}
+
 const FILTERS: { label: string; value: "tous" | Statut }[] = [
   { label: "Tous", value: "tous" },
   { label: "Nouveau", value: "nouveau" },
@@ -93,7 +103,7 @@ export default function DemandesManager({ demandes }: { demandes: Demande[] }) {
       ) : (
         <div className="space-y-3">
           {visibles.map((d) => {
-            const meta = STATUT_META[d.statut] ?? STATUT_META.nouveau;
+            const meta = metaOf(d.statut);
             const open = openId === d.id;
             return (
               <div
@@ -176,11 +186,11 @@ export default function DemandesManager({ demandes }: { demandes: Demande[] }) {
                             onClick={() => setStatut(d.id, s)}
                             className={`text-[11px] font-semibold px-3 py-1.5 rounded-full border transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                               d.statut === s
-                                ? STATUT_META[s].cls
+                                ? metaOf(s).cls
                                 : "bg-white border-vena-border text-vena-text-muted hover:border-vena-kaki"
                             }`}
                           >
-                            {STATUT_META[s].label}
+                            {metaOf(s).label}
                           </button>
                         )
                       )}
