@@ -36,6 +36,16 @@ interface ActionResult {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// Échappe le HTML — le contenu vient du visiteur, inséré dans des emails.
+function escapeHtml(input: string): string {
+  return input
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 export async function submitContactAction(
   input: ContactInput
 ): Promise<ActionResult> {

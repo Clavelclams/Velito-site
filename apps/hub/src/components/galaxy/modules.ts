@@ -42,7 +42,7 @@ export const modules: VelitoModule[] = [
   {
     slug: "vea",
     name: "VEA",
-    url: process.env.NEXT_PUBLIC_VEA_URL ?? "/construction?slug=vea",
+    url: process.env.NEXT_PUBLIC_VEA_URL ?? "https://vea.velito.fr",
     accent: "#E63946",
     description: "Inclusion par l'esport, Amiens",
     image: "/modules/vea.png",
@@ -54,7 +54,7 @@ export const modules: VelitoModule[] = [
   {
     slug: "services",
     name: "Services",
-    url: "/construction?slug=services",
+    url: process.env.NEXT_PUBLIC_VENA_URL ?? "https://velito.fr",
     accent: "#414C35",
     description: "Agence numérique amiénoise",
     image: "/modules/services.png",
