@@ -7,9 +7,19 @@ import { NextResponse, type NextRequest } from "next/server";
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  // Garde-fou : si l'auth n'est pas configurée, ne jamais crasher le site.
+  // On laisse passer ; la protection fine se fait dans la page /admin.
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return supabaseResponse;
+  }
+
+  try {
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {
@@ -50,4 +60,9 @@ export async function updateSession(request: NextRequest) {
   }
 
   return supabaseResponse;
+  } catch (err) {
+    // Toute erreur runtime (réseau, config) ne doit pas faire tomber le site.
+    console.error("[vena middleware] échec session Supabase:", err);
+    return supabaseResponse;
+  }
 }
