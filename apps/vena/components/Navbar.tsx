@@ -16,7 +16,7 @@ const NAV_LINKS = [
   { label: "Contact", href: "/contact" },
 ];
 
-const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL ?? "https://velito.fr";
+const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL ?? "https://hub.velito.fr";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);

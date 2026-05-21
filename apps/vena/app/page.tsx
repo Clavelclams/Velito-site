@@ -20,7 +20,7 @@
  */
 import Link from "next/link";
 
-const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL ?? "https://velito.fr";
+const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL ?? "https://hub.velito.fr";
 const VEA_URL = process.env.NEXT_PUBLIC_VEA_URL ?? "https://vea.velito.fr";
 
 interface Service {

@@ -31,7 +31,7 @@ const CHOICES = [
     text: "J'ai besoin d'un site web ou service digital",
     badge: "VENA",
     color: "#00E87A",
-    href: "https://vena.velito.fr",
+    href: "https://velito.fr",
   },
   {
     text: "Je veux organiser ou jouer en tournoi",

@@ -9,7 +9,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
-const SITE_URL = "https://vena.velito.fr";
+const SITE_URL = "https://velito.fr";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

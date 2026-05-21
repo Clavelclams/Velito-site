@@ -11,7 +11,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 
-const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL ?? "https://velito.fr";
+const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL ?? "https://hub.velito.fr";
 const VEA_URL = process.env.NEXT_PUBLIC_VEA_URL ?? "https://vea.velito.fr";
 
 export default function Footer() {
