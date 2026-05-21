@@ -97,7 +97,7 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
 
   // Agrege par participant_id : 1 row UI par participant, motifs[] cumulé
   const byParticipant = new Map<string, ParticipantRow>();
-  for (const p of (presencesRaw ?? []) as PresenceRow[]) {
+  for (const p of (presencesRaw ?? []) as unknown as PresenceRow[]) {
     if (!p.participants) continue;
     const existing = byParticipant.get(p.participant_id);
     if (existing) {

@@ -139,7 +139,7 @@ export default function ProfileEditForm({
 
   function updateLink(index: number, field: "label" | "url", value: string) {
     const updated = [...externalLinks];
-    updated[index] = { ...updated[index], [field]: value };
+    updated[index] = { ...(updated[index] ?? { label: "", url: "" }), [field]: value };
     setExternalLinks(updated);
   }
 
@@ -203,7 +203,7 @@ export default function ProfileEditForm({
             />
           ) : (
             <span className="text-vea-accent text-xl font-bold">
-              {(pseudo || "J")[0].toUpperCase()}
+              {(pseudo || "J").charAt(0).toUpperCase()}
             </span>
           )}
         </div>
@@ -292,7 +292,7 @@ export default function ProfileEditForm({
               />
             ) : (
               <span className="text-3xl font-black text-vea-accent">
-                {(pseudo || initialPseudo || "J")[0].toUpperCase()}
+                {(pseudo || initialPseudo || "J").charAt(0).toUpperCase()}
               </span>
             )}
           </div>

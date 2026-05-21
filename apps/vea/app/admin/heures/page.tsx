@@ -30,7 +30,7 @@ interface PageProps {
 export default async function AdminHeuresPage({ searchParams }: PageProps = {}) {
   // 20/05/2026 : si on arrive depuis /admin/evenements/[id] avec ?event=NOM,
   // on pre-remplit la description du form avec le contexte event entre crochets.
-  const params = await (searchParams ?? Promise.resolve({}));
+  const params = await (searchParams ?? Promise.resolve({} as { event?: string }));
   const eventContext = params.event ?? "";
   // 1. Verification permission (editor+ sur org vea)
   const canEdit = await hasPermission("vea", "editor");

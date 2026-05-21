@@ -92,7 +92,7 @@ function computeUserBadges(
   const orgsByScope: Record<string, string[]> = { owner: [], editor: [], viewer: [] };
   perms.forEach((p) => {
     const slug = p.organizations?.slug ?? "?";
-    orgsByScope[p.scope].push(slug);
+    (orgsByScope[p.scope] ??= []).push(slug);
   });
 
   const allOwnerSlugs = orgsByScope.owner ?? [];

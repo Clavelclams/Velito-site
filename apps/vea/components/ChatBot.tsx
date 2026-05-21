@@ -128,7 +128,7 @@ export default function ChatBot() {
     setSelectedIndex(null);
   }
 
-  const selectedFaq = selectedIndex !== null ? FAQ[selectedIndex] : null;
+  const selectedFaq = selectedIndex !== null ? FAQ[selectedIndex] ?? null : null;
 
   return (
     <>

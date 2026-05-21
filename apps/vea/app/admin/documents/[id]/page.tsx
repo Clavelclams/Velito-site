@@ -100,7 +100,12 @@ export default async function DocumentDetailPage({ params }: PageProps) {
   const uploader = usersMap.get(doc.uploader_id);
   const reviewer = doc.reviewer_id ? usersMap.get(doc.reviewer_id) : null;
 
-  const participant = doc.participants as { prenom: string; nom: string; est_mineur: boolean | null } | null;
+  // La jointure Supabase peut renvoyer un objet (to-one) ou un tableau selon
+  // l'inférence de type : on normalise via unknown + Array.isArray.
+  const participantRaw = doc.participants as unknown;
+  const participant = (Array.isArray(participantRaw)
+    ? participantRaw[0]
+    : participantRaw) as { prenom: string; nom: string; est_mineur: boolean | null } | null;
   const isImage = doc.mime_type.startsWith("image/");
   const isPdf = doc.mime_type === "application/pdf";
 
