@@ -410,6 +410,24 @@ export default function AdminDashboard({
             transport). Solde par saison + lien vers justificatifs.
           </p>
         </Link>
+
+        {/* 21/05/2026 : Demandes de devis (prestations VEA). Cible des notifs
+            cloche "Nouvelle demande de devis" envoyées depuis /prestations. */}
+        <Link
+          href="/admin/demandes"
+          className="card-clean p-5 hover:border-vea-accent transition-all"
+        >
+          <div className="text-xs uppercase tracking-widest text-vea-accent font-bold mb-1">
+            Demandes de devis
+          </div>
+          <div className="text-lg font-bold text-vea-text mb-2">
+            Prestations — leads entrants
+          </div>
+          <p className="text-xs text-vea-text-muted leading-relaxed">
+            Les demandes envoyées via la page Prestations (structure, pack, date,
+            budget). Réponse sous 48-72h, avec bouton « Répondre par email ».
+          </p>
+        </Link>
       </div>
 
       {/* ===== Onglets ===== (20/05/2026 : caches car Prisma vide, redirige vers /admin/evenements) */}

@@ -88,6 +88,19 @@ const PARTNERS: Partner[] = [
     name: "Gazette des Sports",
     src: "/images/partenaires-vea/Gazette-sport.png",
   },
+  // Partenaires associatifs (ajout 21/05/2026)
+  {
+    name: "OMNE Esport",
+    src: "/images/partenaires-vea/omne-esport.jpg",
+  },
+  {
+    name: "Pourquapa",
+    src: "/images/partenaires-vea/pourquapa.jpg",
+  },
+  {
+    name: "Moxy Amiens",
+    src: "/images/partenaires-vea/moxy.jpg",
+  },
 ];
 
 export default function PartnersMarquee() {

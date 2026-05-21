@@ -1,28 +1,61 @@
-import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
 /**
  * GET /api/admin/participants
  *
- * Récupère tous les participants inscrits, triés par date d'inscription (plus récent en premier).
- * Le try/catch évite un 500 sans body JSON si Prisma plante (BDD pas lancée, table manquante, etc.)
+ * Source : Supabase vea.participants (avant : Prisma/MySQL — abandonné).
+ * Renvoie tous les participants triés par date de création (récent d'abord).
+ * Réservé aux éditeurs+ VEA.
+ *
+ * Mapping vers la forme attendue par le dashboard :
+ *   telephone <- phone, jeuPrefere <- jeu_prefere, createdAt <- created_at.
+ *   quartier : non stocké en base -> null.
  */
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { hasPermission } from "@/lib/supabase/permissions";
 
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
-const prisma = globalForPrisma.prisma || new PrismaClient();
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const participants = await prisma.participant.findMany({
-      orderBy: { createdAt: "desc" },
-    });
+    const canEdit = await hasPermission("vea", "editor");
+    if (!canEdit) {
+      return NextResponse.json({ error: "Accès refusé." }, { status: 403 });
+    }
+
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .schema("vea")
+      .from("participants")
+      .select("id, prenom, nom, phone, jeu_prefere, created_at")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    type Row = {
+      id: string;
+      prenom: string | null;
+      nom: string | null;
+      phone: string | null;
+      jeu_prefere: string | null;
+      created_at: string;
+    };
+
+    const participants = ((data ?? []) as Row[]).map((p) => ({
+      id: p.id,
+      prenom: p.prenom ?? "",
+      nom: p.nom ?? "",
+      telephone: p.phone ?? "",
+      jeuPrefere: p.jeu_prefere ?? null,
+      quartier: null,
+      createdAt: p.created_at,
+    }));
+
     return NextResponse.json(participants);
   } catch (error) {
-    console.error("[API] /api/admin/participants — Erreur Prisma :", error);
+    console.error("[API] /api/admin/participants —", error);
     return NextResponse.json(
-      { error: "Impossible de récupérer les participants. Vérifie que MySQL est lancé et que la table existe." },
-      { status: 500 }
+      { error: "Impossible de récupérer les participants." },
+      { status: 500 },
     );
   }
 }

@@ -45,6 +45,16 @@ interface ActionResult {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// Échappe le HTML — le contenu vient du visiteur, on l'insère dans des emails.
+function escapeHtml(input: string): string {
+  return input
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 export async function submitDemandeDevisAction(
   input: DemandeDevisInput
 ): Promise<ActionResult> {
@@ -89,7 +99,7 @@ export async function submitDemandeDevisAction(
   // === INSERT ===
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .schema("vea")
     .from("demandes_prestation")
     .insert({
@@ -118,9 +128,7 @@ export async function submitDemandeDevisAction(
       precisions: input.precisions?.trim().slice(0, 2000) || null,
       rgpd_consent: input.rgpd_consent,
       statut: "nouveau",
-    })
-    .select("id")
-    .single();
+    });
 
   if (error) {
     // Log côté serveur pour debug (ne pas exposer le détail au visiteur)
@@ -132,15 +140,85 @@ export async function submitDemandeDevisAction(
     };
   }
 
-  // TODO V2 : envoyer email de confirmation au demandeur via Resend
-  // try {
-  //   await fetch("https://api.resend.com/emails", { ... });
-  // } catch (e) { console.warn("[Resend] confirmation email failed", e); }
+  // === Emails via Resend — best-effort : si ça échoue, la demande est déjà
+  // enregistrée + la notif cloche est partie (trigger). On ne bloque pas le user.
+  const apiKey = process.env.RESEND_API_KEY;
+  if (apiKey) {
+    const toBureau = process.env.VEA_CONTACT_TO ?? "contact@velito.fr";
+    const fromEmail =
+      process.env.VEA_CONTACT_FROM ?? "VEA <onboarding@resend.dev>";
 
-  // TODO V2 : envoyer email d'alerte à velitoesport@gmail.com via Resend
-  // try {
-  //   await fetch("https://api.resend.com/emails", { ... });
-  // } catch (e) { console.warn("[Resend] alert email failed", e); }
+    const prenom = escapeHtml(input.referent_prenom.trim());
+    const structure = escapeHtml(input.structure_nom.trim());
+    const clientEmail = input.email.trim().toLowerCase();
+    const prestations = input.prestations_demandees.map(escapeHtml).join(", ");
 
-  return { success: true, demandeId: data.id };
+    // 1) Alerte au bureau (avec reply_to = email du demandeur pour répondre direct)
+    const htmlBureau = `
+      <h2>Nouvelle demande de devis</h2>
+      <p><strong>Structure :</strong> ${structure} (${escapeHtml(input.structure_type)})</p>
+      <p><strong>Référent :</strong> ${prenom} ${escapeHtml(input.referent_nom.trim())}${
+        input.referent_fonction
+          ? " — " + escapeHtml(input.referent_fonction.trim())
+          : ""
+      }</p>
+      <p><strong>Email :</strong> <a href="mailto:${escapeHtml(clientEmail)}">${escapeHtml(clientEmail)}</a><br/>
+         <strong>Tel :</strong> ${escapeHtml(input.telephone.trim())}</p>
+      <hr/>
+      <p><strong>Prestations :</strong> ${prestations}</p>
+      <p><strong>Pack :</strong> ${escapeHtml(input.pack_envisage)} &middot; <strong>Budget :</strong> ${escapeHtml(input.budget_envisage?.trim() || "—")}</p>
+      <p><strong>Date souhaitée :</strong> ${escapeHtml(input.date_souhaitee)} &middot; <strong>Lieu :</strong> ${escapeHtml(input.lieu_ville.trim())}</p>
+      <p><strong>Participants :</strong> ${Math.floor(input.nombre_participants)} &middot; <strong>Durée :</strong> ${Math.floor(input.duree_heures)}h</p>
+      ${
+        input.precisions
+          ? `<p><strong>Précisions :</strong><br/>${escapeHtml(input.precisions.trim()).replace(/\n/g, "<br/>")}</p>`
+          : ""
+      }
+    `;
+
+    // 2) Accusé de réception au demandeur
+    const htmlClient = `
+      <p>Bonjour ${prenom},</p>
+      <p>On a bien reçu ta demande concernant <strong>${structure}</strong>. Merci !</p>
+      <p>L'équipe VEA revient vers toi sous 48 à 72h avec une proposition adaptée à ton besoin.</p>
+      <p>À très vite,<br/>— L'équipe VEA · Velito Esport Amiens</p>
+    `;
+
+    try {
+      await Promise.allSettled([
+        fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: fromEmail,
+            to: [toBureau],
+            reply_to: clientEmail,
+            subject: `[VEA Devis] ${input.structure_nom.trim()}`,
+            html: htmlBureau,
+          }),
+        }),
+        fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: fromEmail,
+            to: [clientEmail],
+            reply_to: toBureau,
+            subject: "On a bien reçu ta demande — VEA",
+            html: htmlClient,
+          }),
+        }),
+      ]);
+    } catch (e) {
+      console.warn("[Resend] envoi emails devis échoué (non bloquant) :", e);
+    }
+  }
+
+  return { success: true };
 }

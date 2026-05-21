@@ -1,59 +1,89 @@
 /**
- * API Route — Modifier un événement
  * PATCH /api/admin/evenements/[id]
  *
- * 👉 Met à jour les champs fournis dans le body JSON
- * 👉 Le spread conditionnel (...body.titre && { titre: body.titre }) permet
- *    d'envoyer seulement les champs qu'on veut modifier — les autres restent inchangés.
+ * Source : Supabase vea.evenements (avant : Prisma/MySQL — abandonné).
+ * Met à jour les champs fournis. Réservé aux éditeurs+ VEA.
  *
- * Exemples d'utilisation :
- * - Archiver un événement : PATCH avec { actif: false }
- * - Restaurer un événement : PATCH avec { actif: true }
- * - Modifier le titre : PATCH avec { titre: "Nouveau titre" }
- * - Modifier plusieurs champs à la fois : PATCH avec { titre: "...", lieu: "..." }
- *
- * ⚠️ Pas de vérification d'auth pour l'instant (V1).
- *    En V2, on ajoutera un middleware qui check le cookie admin_auth.
+ * Mapping : titre <-> nom. Le champ "actif" du dashboard est dérivé du statut :
+ *   - actif=false  -> statut = 'annule'   (archiver)
+ *   - actif=true   -> statut = 'termine' si date passée, sinon 'a_venir'
+ *   (valeurs autorisées en base : a_venir, en_cours, termine, annule)
  */
-
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { createClient } from "@/lib/supabase/server";
+import { hasPermission } from "@/lib/supabase/permissions";
 
-// 👉 Singleton Prisma pour éviter les connexions multiples en dev
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
-const prisma = globalForPrisma.prisma || new PrismaClient();
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+export const dynamic = "force-dynamic";
+
+const TYPES = ["tournoi", "animation", "programme", "reunion", "autre"];
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
+
+    const canEdit = await hasPermission("vea", "editor");
+    if (!canEdit) {
+      return NextResponse.json({ error: "Accès refusé." }, { status: 403 });
+    }
+
+    const supabase = await createClient();
     const body = await req.json();
 
-    // 👉 prisma.evenement.update() fait un UPDATE WHERE id = ... en SQL
-    // On ne met à jour QUE les champs présents dans le body
-    const evenement = await prisma.evenement.update({
-      where: { id },
-      data: {
-        ...(body.titre && { titre: body.titre }),
-        ...(body.description !== undefined && {
-          description: body.description,
-        }),
-        ...(body.date && { date: new Date(body.date) }),
-        ...(body.lieu && { lieu: body.lieu }),
-        ...(body.type && { type: body.type }),
-        ...(body.actif !== undefined && { actif: body.actif }),
-      },
-    });
+    const patch: Record<string, unknown> = {};
+    if (typeof body.titre === "string" && body.titre.trim()) patch.nom = body.titre.trim();
+    if (body.description !== undefined) patch.description = body.description || null;
+    if (body.date) patch.date = body.date;
+    if (typeof body.lieu === "string" && body.lieu.trim()) patch.lieu = body.lieu.trim();
+    if (body.type) {
+      const t = String(body.type).toLowerCase();
+      if (TYPES.includes(t)) patch.type = t;
+    }
 
-    return NextResponse.json(evenement);
+    if (body.actif !== undefined) {
+      if (body.actif === false) {
+        patch.statut = "annule";
+      } else {
+        const { data: cur } = await supabase
+          .schema("vea")
+          .from("evenements")
+          .select("date")
+          .eq("id", id)
+          .maybeSingle();
+        const todayStr = new Date().toISOString().slice(0, 10);
+        patch.statut = cur?.date && cur.date < todayStr ? "termine" : "a_venir";
+      }
+    }
+
+    const { data, error } = await supabase
+      .schema("vea")
+      .from("evenements")
+      .update(patch)
+      .eq("id", id)
+      .select("id, nom, event_slug, date, lieu, type, description, statut")
+      .single();
+
+    if (error) throw error;
+
+    return NextResponse.json({
+      id: data.id,
+      titre: data.nom,
+      nom: data.nom,
+      event_slug: data.event_slug,
+      description: data.description,
+      date: data.date,
+      lieu: data.lieu,
+      type: data.type,
+      statut: data.statut,
+      actif: data.statut !== "annule",
+    });
   } catch (error) {
-    console.error("[API] PATCH /api/admin/evenements/[id] — Erreur :", error);
+    console.error("[API] PATCH /api/admin/evenements/[id] —", error);
     return NextResponse.json(
       { error: "Impossible de modifier l'événement." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

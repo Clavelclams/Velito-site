@@ -2,47 +2,82 @@
  * API Route — Récupérer les événements
  * GET /api/evenements
  *
- * 👉 Par défaut : renvoie les événements actifs + futurs uniquement
- *    (utilisé par le formulaire d'inscription pour peupler le <select>)
+ * Source : Supabase vea.evenements (table unique depuis le 19/05/2026).
+ * (Avant : Prisma/MySQL — abandonné, cette route renvoyait 500 car plus de DB.)
  *
- * 👉 Avec ?all=true : renvoie TOUS les événements (passés + futurs, actifs ou non)
- *    (utilisé par la page Agenda qui affiche l'historique complet)
+ * - Par défaut : événements actifs ET à venir (date >= aujourd'hui)
+ *   -> utilisé par le formulaire d'inscription pour peupler le <select>.
+ * - Avec ?all=true : TOUS les événements (passés + futurs)
+ *   -> utilisé par le dashboard admin et l'agenda.
  *
- * 👉 Triés par date décroissante (les plus récents en premier)
+ * Lecture publique (RLS SELECT public sur vea.evenements). Triés date desc.
  *
- * Pourquoi ce paramètre ?
- * - Le formulaire d'inscription n'a besoin que des événements à venir et actifs
- * - L'agenda a besoin de TOUT pour afficher l'historique VEA depuis 2022
- * - Un seul endpoint, 2 comportements. Clean.
+ * Mapping : la table a `nom` ; on renvoie `titre` ET `nom` pour rester
+ * compatible avec tous les consommateurs. `actif` est dérivé du `statut`
+ * (un event « archive » ou « annule » est considéré inactif).
  */
-
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { createClient } from "@/lib/supabase/server";
 
-// 👉 Singleton Prisma — évite de créer un nouveau client à chaque hot reload en dev
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
-const prisma = globalForPrisma.prisma || new PrismaClient();
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
-    // 👉 On lit le paramètre ?all=true depuis l'URL
-    const all = req.nextUrl.searchParams.get("all");
+    const all = req.nextUrl.searchParams.get("all") === "true";
+    const supabase = await createClient();
 
-    const evenements = await prisma.evenement.findMany({
-      // 👉 Si all=true → pas de filtre (objet vide {})
-      // 👉 Sinon → seulement les actifs
-      where: all === "true" ? {} : { actif: true },
-      // 👉 Tri par date décroissante (plus récent en premier)
-      orderBy: { date: "desc" },
+    let query = supabase
+      .schema("vea")
+      .from("evenements")
+      .select("id, nom, event_slug, date, lieu, type, description, statut, capacite")
+      .order("date", { ascending: false });
+
+    if (!all) {
+      const today = new Date().toISOString().slice(0, 10);
+      query = query.gte("date", today);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    type Row = {
+      id: string;
+      nom: string;
+      event_slug: string;
+      date: string;
+      lieu: string;
+      type: string | null;
+      description: string | null;
+      statut: string | null;
+      capacite: number | null;
+    };
+
+    const evenements = ((data ?? []) as Row[]).map((e) => {
+      const actif = e.statut !== "archive" && e.statut !== "annule";
+      return {
+        id: e.id,
+        titre: e.nom,
+        nom: e.nom,
+        event_slug: e.event_slug,
+        description: e.description,
+        date: e.date,
+        lieu: e.lieu,
+        type: e.type,
+        statut: e.statut,
+        capacite: e.capacite,
+        actif,
+      };
     });
 
-    return NextResponse.json(evenements);
+    // Le form d'inscription (sans ?all) ne veut que les events actifs
+    const result = all ? evenements : evenements.filter((e) => e.actif);
+
+    return NextResponse.json(result);
   } catch (error) {
-    console.error("[API] /api/evenements — Erreur :", error);
+    console.error("[API] /api/evenements —", error);
     return NextResponse.json(
-      { error: "Impossible de récupérer les événements. Vérifie que MySQL est lancé." },
-      { status: 500 }
+      { error: "Impossible de récupérer les événements." },
+      { status: 500 },
     );
   }
 }

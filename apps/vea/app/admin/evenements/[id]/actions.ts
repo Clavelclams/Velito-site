@@ -282,3 +282,101 @@ export async function addManualParticipantAction(input: {
   revalidatePath("/profil");
   return { success: true };
 }
+
+// ============================================================================
+// 4. updateEventAction
+// ----------------------------------------------------------------------------
+// Edite un evenement a venir (date, lieu, nom, type, description, capacite)
+// SANS le supprimer/recreer. Le slug (event_slug) n'est PAS modifiable : il
+// relie les presences/scans, le changer casserait l'historique.
+//
+// Si la DATE change et que notifierChangementDate=true, on notifie les abonnes
+// (participants avec compte + notif_events_active) via la fonction SECURITY
+// DEFINER vea.notifier_changement_date_event (l'insert direct dans
+// vea.notifications serait bloque par la RLS pour un simple authenticated).
+// ============================================================================
+const EVENT_TYPES = ["tournoi", "animation", "programme", "reunion", "autre"];
+
+export async function updateEventAction(input: {
+  id: string;
+  eventSlug: string;
+  nom: string;
+  date: string; // YYYY-MM-DD
+  lieu: string;
+  type: string;
+  description?: string;
+  capacite?: number | null;
+  notifierChangementDate: boolean;
+}): Promise<ActionResult & { notifies?: number; dateChangee?: boolean }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Non connecte." };
+
+  const canEdit = await hasPermission("vea", "editor");
+  if (!canEdit) return { success: false, error: "Permission refusee." };
+
+  // Validation
+  const nom = (input.nom ?? "").trim();
+  if (nom.length < 3) return { success: false, error: "Nom requis (min 3 caracteres)." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.date)) {
+    return { success: false, error: "Date invalide (format AAAA-MM-JJ)." };
+  }
+  const lieu = (input.lieu ?? "").trim();
+  if (!lieu) return { success: false, error: "Lieu requis." };
+  if (!EVENT_TYPES.includes(input.type)) {
+    return { success: false, error: "Type invalide." };
+  }
+
+  // Etat actuel (pour detecter le changement de date)
+  const { data: current, error: curErr } = await supabase
+    .schema("vea")
+    .from("evenements")
+    .select("id, nom, date")
+    .eq("id", input.id)
+    .maybeSingle();
+  if (curErr || !current) return { success: false, error: "Evenement introuvable." };
+
+  const dateChangee = current.date !== input.date;
+
+  // Update
+  const { error: updErr } = await supabase
+    .schema("vea")
+    .from("evenements")
+    .update({
+      nom,
+      date: input.date,
+      lieu,
+      type: input.type,
+      description: input.description?.trim() || null,
+      capacite: input.capacite ?? null,
+    })
+    .eq("id", input.id);
+  if (updErr) return { success: false, error: updErr.message };
+
+  // Notification si la date a change
+  let notifies = 0;
+  if (dateChangee && input.notifierChangementDate) {
+    const fmt = (d: string) =>
+      new Date(d).toLocaleDateString("fr-FR", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+    const message = `"${nom}" change de date : ${fmt(current.date)} -> ${fmt(input.date)}.`;
+    const { data: n, error: notifErr } = await supabase
+      .schema("vea")
+      .rpc("notifier_changement_date_event", {
+        p_titre: "Date d'evenement modifiee",
+        p_message: message,
+      });
+    // Best-effort : si la notif echoue, l'edition reste valide.
+    if (!notifErr && typeof n === "number") notifies = n;
+  }
+
+  revalidatePath(`/admin/evenements/${input.eventSlug}`);
+  revalidatePath(`/admin/evenements/${input.id}`);
+  revalidatePath("/admin/evenements");
+  revalidatePath("/agenda");
+  return { success: true, notifies, dateChangee };
+}

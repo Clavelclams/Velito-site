@@ -20,26 +20,25 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { hasPermission } from "@/lib/supabase/permissions";
+import {
+  XP_BAREME,
+  computeLevel,
+  getUnlockedRewards,
+  type Reward,
+} from "@/lib/gamification";
 
 export const dynamic = "force-dynamic";
 
-// Formule "niveau estime retroactif" pour les Old VEA (qui n'ont pas
-// d'XP_saison_actuelle puisque la saison 2026/27 demarre en sept 2026).
-// Reprise de ProgressionDashboard.tsx pour coherence.
-function computeNiveauOldEstime(events: number, heures: number): number {
-  const score = events * 5 + heures * 0.5;
-  return Math.floor(score / 100) + 1;
-}
-
-// Seuils de recompenses (sync avec lib/gamification.ts REWARDS_BY_LEVEL)
-const SEUILS_RECOMPENSES = [
-  { niveau: 3, recompense: "Lot partenaire + 1 point VENA" },
-  { niveau: 5, recompense: "T-shirt VEA + Badge Guerrier + 2 points VENA" },
-  { niveau: 10, recompense: "Tenue complete + Badge Legende + 5 points VENA" },
-];
-
-function getRecompensesDues(niveau: number): { niveau: number; recompense: string }[] {
-  return SEUILS_RECOMPENSES.filter((s) => niveau >= s.niveau);
+// Niveau retroactif Old VEA — VRAI bareme (decision Clavel 21/05/2026 : fini
+// le proxy events*5 + heures*0.5). On veut que le taff accompli AVANT que VEA
+// devienne grand soit visible en vrais niveaux, et qu'on recompense l'engagement.
+//   XP = events x 10 (tournoi) + heures x 15 (benevolat), puis computeLevel().
+// Les recompenses cheres (sortie niv 12, console niv 20) sont calees haut
+// expres : meme en retroactif, seuls les enormes contributeurs les atteignent,
+// donc ca reste budgetable.
+function computeNiveauOld(events: number, heures: number): number {
+  const xp = events * XP_BAREME.tournoi + heures * XP_BAREME.benevolat_par_heure;
+  return computeLevel(xp);
 }
 
 export default async function AdminRecompensesPage() {
@@ -88,7 +87,7 @@ export default async function AdminRecompensesPage() {
   type EnrichedParticipant = ParticipantRow & {
     heuresOld: number;
     niveauEstime: number;
-    recompensesDues: { niveau: number; recompense: string }[];
+    recompensesDues: Reward[];
     aUnCompte: boolean;
   };
 
@@ -98,8 +97,8 @@ export default async function AdminRecompensesPage() {
       const heuresTotal = Number(p.benevole_hours ?? 0);
       const heuresCurrent = Number(p.benevole_hours_2026_2027 ?? 0);
       const heuresOld = Math.max(0, heuresTotal - heuresCurrent);
-      const niveauEstime = computeNiveauOldEstime(events, heuresOld);
-      const recompensesDues = getRecompensesDues(niveauEstime);
+      const niveauEstime = computeNiveauOld(events, heuresOld);
+      const recompensesDues = getUnlockedRewards(niveauEstime);
       return {
         ...p,
         heuresOld,
@@ -133,9 +132,10 @@ export default async function AdminRecompensesPage() {
           </h1>
           <p className="text-sm text-vea-text-muted leading-relaxed">
             Les anciens membres qui ont atteint un niveau récompense via leur
-            historique (events + heures bénévolat). Le niveau est estimé
-            rétroactivement avec la formule events × 5 + heures × 0.5. Ils
-            doivent créer leur compte VEA pour réclamer.
+            historique (events + heures bénévolat). Le niveau est calculé avec
+            le vrai barème (tournoi +10, bénévolat +15/h) — il reflète tout le
+            travail accumulé sur les années Old VEA, donc les niveaux sont
+            élevés. Ils doivent créer leur compte VEA pour réclamer.
           </p>
         </div>
 
@@ -235,10 +235,10 @@ export default async function AdminRecompensesPage() {
                   </p>
                   <div className="space-y-0.5">
                     {p.recompensesDues.map((r) => (
-                      <p key={r.niveau} className="text-xs text-vea-text">
-                        <span className="text-vea-accent font-semibold">Niveau {r.niveau}</span>
+                      <p key={r.level} className="text-xs text-vea-text">
+                        <span className="text-vea-accent font-semibold">Niveau {r.level}</span>
                         {" : "}
-                        {r.recompense}
+                        {r.description}
                       </p>
                     ))}
                   </div>

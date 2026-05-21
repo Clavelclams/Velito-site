@@ -18,6 +18,7 @@ const FOOTER_LINKS = [
   { label: "Agenda", href: "/agenda" },
   { label: "Medias", href: "/medias" },
   { label: "Partenaires", href: "/partenaires" },
+  { label: "Prestations", href: "/prestations" },
   { label: "Contact", href: "/contact" },
   { label: "Inscription", href: "/inscription" },
 ];
@@ -27,7 +28,7 @@ const SOCIALS = [
   { name: "Facebook", href: "https://facebook.com/velitoesport" },
   { name: "X / Twitter", href: "https://x.com/velitoesport" },
   { name: "TikTok", href: "https://tiktok.com/@velitoesport" },
-  { name: "LinkedIn", href: "https://linkedin.com/company/velitoesport" },
+  { name: "LinkedIn", href: "https://www.linkedin.com/in/velito-esport-amiens/" },
 ];
 
 export default function Footer() {

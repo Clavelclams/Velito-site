@@ -20,6 +20,7 @@ import { hasPermission } from "@/lib/supabase/permissions";
 import { getScanUrl, getQRCodeUrl } from "@/lib/qrcode";
 import ParticipantsList, { type ParticipantRow } from "./ParticipantsList";
 import AddManualParticipantForm from "./AddManualParticipantForm";
+import EditEventForm from "./EditEventForm";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +42,7 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
   let { data: event } = await supabase
     .schema("vea")
     .from("evenements")
-    .select("id, nom, event_slug, date, lieu, type, description, statut, token, scan_actif")
+    .select("id, nom, event_slug, date, lieu, type, description, statut, token, scan_actif, capacite")
     .eq("event_slug", id)
     .maybeSingle();
 
@@ -49,7 +50,7 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
     const r = await supabase
       .schema("vea")
       .from("evenements")
-      .select("id, nom, event_slug, date, lieu, type, description, statut, token, scan_actif")
+      .select("id, nom, event_slug, date, lieu, type, description, statut, token, scan_actif, capacite")
       .eq("id", id)
       .maybeSingle();
     event = r.data;
@@ -175,6 +176,20 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
             </p>
           </div>
         </div>
+
+        {/* Édition de l'événement (date, lieu, infos) */}
+        <EditEventForm
+          event={{
+            id: event.id,
+            event_slug: event.event_slug,
+            nom: event.nom,
+            date: event.date,
+            lieu: event.lieu,
+            type: event.type,
+            description: event.description,
+            capacite: (event as { capacite?: number | null }).capacite ?? null,
+          }}
+        />
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
