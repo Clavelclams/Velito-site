@@ -100,8 +100,86 @@ export async function submitContactAction(
     };
   }
 
-  // TODO V2 : Resend confirmation + alerte
-  // TODO V2 : sync Notion CRM VENA
+  // === Emails via Resend — best-effort : la demande est déjà enregistrée,
+  // on ne bloque pas le visiteur si l'envoi échoue. ===
+  const apiKey = process.env.RESEND_API_KEY;
+  if (apiKey) {
+    const toBureau = process.env.VENA_CONTACT_TO ?? "contact@velito.fr";
+    const fromEmail =
+      process.env.VENA_CONTACT_FROM ?? "VENA <onboarding@resend.dev>";
+
+    const prenom = escapeHtml(input.prenom.trim());
+    const nom = escapeHtml(input.nom.trim());
+    const clientEmail = input.email.trim().toLowerCase();
+    const structure = escapeHtml(input.structure?.trim() || "—");
+
+    // 1) Alerte au bureau (reply_to = email du demandeur)
+    const htmlBureau = `
+      <h2>Nouvelle demande de devis VENA</h2>
+      <p><strong>Demandeur :</strong> ${prenom} ${nom}${
+        input.fonction ? " — " + escapeHtml(input.fonction.trim()) : ""
+      }</p>
+      <p><strong>Structure :</strong> ${structure}</p>
+      <p><strong>Email :</strong> <a href="mailto:${escapeHtml(clientEmail)}">${escapeHtml(clientEmail)}</a><br/>
+         <strong>Tel :</strong> ${escapeHtml(input.telephone?.trim() || "—")}</p>
+      <hr/>
+      <p><strong>Service :</strong> ${escapeHtml(input.service_demande)}</p>
+      <p><strong>Budget :</strong> ${escapeHtml(input.budget_envisage?.trim() || "—")} &middot; <strong>Délai :</strong> ${escapeHtml(input.delai?.trim() || "—")}</p>
+      <p><strong>Message :</strong><br/>${escapeHtml(input.message.trim()).replace(/\n/g, "<br/>")}</p>
+      ${
+        input.source_decouverte
+          ? `<p><strong>Découvert via :</strong> ${escapeHtml(input.source_decouverte.trim())}</p>`
+          : ""
+      }
+    `;
+
+    // 2) Accusé de réception au demandeur
+    const htmlClient = `
+      <p>Bonjour ${prenom},</p>
+      <p>Merci, on a bien reçu ta demande${
+        input.structure ? ` concernant <strong>${structure}</strong>` : ""
+      }.</p>
+      <p>VENA revient vers toi sous 48 à 72h avec une proposition adaptée à ton besoin.</p>
+      <p>À très vite,<br/>— VENA · Velito Expertise Numérique Amiens</p>
+    `;
+
+    try {
+      await Promise.allSettled([
+        fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: fromEmail,
+            to: [toBureau],
+            reply_to: clientEmail,
+            subject: `[VENA Devis] ${input.prenom.trim()} ${input.nom.trim()}${
+              input.structure ? " — " + input.structure.trim() : ""
+            }`,
+            html: htmlBureau,
+          }),
+        }),
+        fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: fromEmail,
+            to: [clientEmail],
+            reply_to: toBureau,
+            subject: "On a bien reçu ta demande — VENA",
+            html: htmlClient,
+          }),
+        }),
+      ]);
+    } catch (e) {
+      console.warn("[Resend] envoi emails devis VENA échoué (non bloquant) :", e);
+    }
+  }
 
   return { success: true, demandeId: data.id };
 }

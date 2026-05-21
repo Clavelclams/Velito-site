@@ -90,6 +90,19 @@ export default function ContactForm() {
     e.preventDefault();
     setError(null);
 
+    // Validation au clic (bouton toujours cliquable → message clair si manque).
+    if (!isValid) {
+      const manques: string[] = [];
+      if (!prenom.trim()) manques.push("prénom");
+      if (!nom.trim()) manques.push("nom");
+      if (!email.includes("@")) manques.push("email valide");
+      if (!serviceDemande) manques.push("service souhaité");
+      if (message.trim().length < 10) manques.push("message (10 caractères min.)");
+      if (!rgpd) manques.push("case RGPD à cocher");
+      setError("Il manque : " + manques.join(", ") + ".");
+      return;
+    }
+
     startTransition(async () => {
       const result = await submitContactAction({
         prenom,
