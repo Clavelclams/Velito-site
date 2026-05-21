@@ -366,16 +366,14 @@ export default function ContactForm() {
 
       <button
         type="submit"
-        disabled={!isValid || isPending}
+        disabled={isPending}
         className="btn-vena-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isPending ? "Envoi en cours…" : "Envoyer ma demande"}
       </button>
-      {!isValid && (
-        <p className="text-[10px] text-vena-text-dim italic text-center">
-          Remplis tous les champs marqués d&apos;une étoile pour activer l&apos;envoi.
-        </p>
-      )}
+      <p className="text-[10px] text-vena-text-dim italic text-center">
+        Champs obligatoires : prénom, nom, email, service, message (10 car. min.) et case RGPD.
+      </p>
     </form>
   );
 }
