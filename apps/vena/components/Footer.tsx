@@ -8,6 +8,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL ?? "https://velito.fr";
@@ -24,12 +25,13 @@ export default function Footer() {
           {/* Brand */}
           <div className="md:col-span-2">
             <div className="flex items-center gap-3 mb-3">
-              <span
-                className="w-10 h-10 rounded-full bg-vena-cream text-vena-kaki flex items-center justify-center font-display font-black text-lg"
-                aria-hidden="true"
-              >
-                V
-              </span>
+              <Image
+                src="/images/vena-symbole-blanc.svg"
+                alt="VENA"
+                width={40}
+                height={40}
+                className="w-10 h-10"
+              />
               <div>
                 <p className="font-display font-black text-lg leading-tight">
                   VENA

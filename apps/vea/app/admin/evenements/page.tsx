@@ -14,7 +14,14 @@ import { getScanUrl, getQRCodeUrl } from "@/lib/qrcode";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminEventsPage() {
+export default async function AdminEventsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ passes?: string }>;
+}) {
+  const { passes } = await searchParams;
+  const showPast = passes === "1";
+
   const canEdit = await hasPermission("vea", "editor");
   if (!canEdit) redirect("/admin?denied=events");
 
@@ -28,13 +35,23 @@ export default async function AdminEventsPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?redirect=/admin/evenements");
 
-  // Liste des 20 derniers events
-  const { data: events } = await supabase
+  // Le passé/à venir se déduit de la DATE (auto, aucune action admin requise).
+  // Vue par défaut : events À VENIR (date >= aujourd'hui) non annulés, triés du
+  // plus proche au plus loin. ?passes=1 : events passés (triés du + récent).
+  // Les events passés restent visibles côté public dans l'agenda.
+  const today = new Date().toISOString().slice(0, 10);
+  let eventsQuery = supabase
     .schema("vea")
     .from("evenements")
-    .select("id, nom, event_slug, date, lieu, type, statut, token, created_at")
-    .order("date", { ascending: false })
-    .limit(20);
+    .select("id, nom, event_slug, date, lieu, type, statut, token, created_at");
+  eventsQuery = showPast
+    ? eventsQuery.lt("date", today).order("date", { ascending: false }).limit(40)
+    : eventsQuery
+        .gte("date", today)
+        .neq("statut", "annule")
+        .order("date", { ascending: true })
+        .limit(40);
+  const { data: events } = await eventsQuery;
 
   type EventRow = {
     id: string;
@@ -72,13 +89,27 @@ export default async function AdminEventsPage() {
 
         <AddEventForm siteOrigin={siteOrigin} />
 
-        {/* Liste events recents — chaque event affiche son QR + bouton download
-            (resoud le besoin "voir le QR meme apres avoir quitte la page"). */}
-        {eventsList.length > 0 && (
-          <div className="mt-12">
-            <h2 className="text-lg font-bold text-vea-text mb-4">
-              20 derniers events ({eventsList.length})
+        {/* Liste events — par défaut À VENIR (le passé sort de la vue admin et
+            reste dans l'agenda public). Bascule via ?passes=1. */}
+        <div className="mt-12">
+          <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
+            <h2 className="text-lg font-bold text-vea-text">
+              {showPast ? "Events passés" : "Events à venir"} ({eventsList.length})
             </h2>
+            <Link
+              href={showPast ? "/admin/evenements" : "/admin/evenements?passes=1"}
+              className="text-xs text-vea-accent hover:underline font-semibold"
+            >
+              {showPast ? "← Events à venir" : "Voir les events passés →"}
+            </Link>
+          </div>
+          {eventsList.length === 0 ? (
+            <p className="card-clean p-6 text-center text-sm text-vea-text-muted">
+              {showPast
+                ? "Aucun event passé."
+                : "Aucun event à venir. Crée-en un avec le formulaire ci-dessus."}
+            </p>
+          ) : (
             <div className="space-y-3">
               {eventsList.map((e) => {
                 const scanUrl = getScanUrl(e.token, siteOrigin);
@@ -156,8 +187,8 @@ export default async function AdminEventsPage() {
                 );
               })}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

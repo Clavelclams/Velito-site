@@ -7,6 +7,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 
@@ -33,12 +34,14 @@ export default function Navbar() {
           className="flex items-center gap-3 group"
           aria-label="Accueil VENA"
         >
-          <span
-            className="w-10 h-10 rounded-full bg-vena-kaki text-vena-cream flex items-center justify-center font-display font-black text-lg"
-            aria-hidden="true"
-          >
-            V
-          </span>
+          <Image
+            src="/images/vena-symbole-kaki.svg"
+            alt="VENA"
+            width={40}
+            height={40}
+            className="w-10 h-10"
+            priority
+          />
           <div className="flex flex-col leading-tight">
             <span className="font-display font-black text-vena-kaki text-base">
               VENA

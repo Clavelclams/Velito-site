@@ -16,12 +16,20 @@
 
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { hasPermission } from "@/lib/supabase/permissions";
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 const prisma = globalForPrisma.prisma || new PrismaClient();
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 export async function POST() {
+  // Sécurité : endpoint admin -> réservé aux éditeurs+ VEA (defense-in-depth,
+  // même si cette route legacy Prisma est obsolète / non branchée).
+  const canEdit = await hasPermission("vea", "editor");
+  if (!canEdit) {
+    return NextResponse.json({ error: "Accès refusé." }, { status: 403 });
+  }
+
   try {
     // 👉 Liste complète des événements VEA depuis la création
     // Chaque objet correspond exactement aux champs du model Evenement dans Prisma
