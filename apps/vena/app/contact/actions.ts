@@ -68,6 +68,11 @@ export async function submitContactAction(
     };
   }
 
+  // BLINDAGE GLOBAL : toute exception (init Supabase si env manquante, réseau,
+  // etc.) est rattrapée et renvoyée comme erreur "soft". Une Server Action qui
+  // throw provoque une page 500 complète côté visiteur (ERROR xxxx) — ce qu'on
+  // veut éviter à tout prix sur un formulaire public.
+  try {
   const supabase = await createClient();
 
   // IMPORTANT : pas de .select() après l'insert. Le visiteur est `anon`, qui a
@@ -183,4 +188,13 @@ export async function submitContactAction(
   }
 
   return { success: true };
+  } catch (e) {
+    // Filet de sécurité ultime : on ne laisse JAMAIS la Server Action throw.
+    console.error("[submitContactAction] exception non gérée :", e);
+    return {
+      success: false,
+      error:
+        "Une erreur technique est survenue. Réessaye dans quelques minutes ou écris-nous directement à contact@velito.fr.",
+    };
+  }
 }
