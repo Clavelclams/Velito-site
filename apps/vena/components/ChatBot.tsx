@@ -11,6 +11,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import SignalementForm from "@/components/SignalementForm";
 
 interface FaqItem {
   question: string;
@@ -67,6 +68,7 @@ export default function ChatBot() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [showSignalement, setShowSignalement] = useState(false);
   const panelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -99,6 +101,7 @@ export default function ChatBot() {
   function closeChat() {
     setIsOpen(false);
     setSelectedIndex(null);
+    setShowSignalement(false);
   }
 
   const selectedFaq = selectedIndex !== null ? FAQ[selectedIndex] ?? null : null;
@@ -128,6 +131,7 @@ export default function ChatBot() {
           onClick={() => {
             setIsOpen(true);
             setSelectedIndex(null);
+            setShowSignalement(false);
           }}
           aria-label="Ouvrir l'assistant FAQ VENA"
           className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-vena-kaki text-vena-cream shadow-lg hover:scale-105 transition-transform flex items-center justify-center"
@@ -191,7 +195,25 @@ export default function ChatBot() {
           </div>
 
           <div className="flex-1 overflow-y-auto p-4">
-            {selectedFaq === null ? (
+            {showSignalement ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setShowSignalement(false)}
+                  className="text-xs uppercase tracking-widest font-bold text-vena-kaki hover:underline mb-3 inline-flex items-center gap-1"
+                >
+                  ← Retour
+                </button>
+                <p className="text-sm font-black text-vena-text mb-1">
+                  Signaler un problème
+                </p>
+                <p className="text-xs text-vena-text-muted mb-4">
+                  Un bug, un truc qui marche pas, un souci sur un projet ou côté
+                  VEA ? Dis-nous tout.
+                </p>
+                <SignalementForm app="vena" loginHref="/login" />
+              </>
+            ) : selectedFaq === null ? (
               <>
                 <div className="mb-4">
                   <div className="inline-block bg-vena-cream rounded-2xl rounded-bl-sm px-4 py-3 text-sm text-vena-text max-w-[85%]">
@@ -215,6 +237,13 @@ export default function ChatBot() {
                     </button>
                   ))}
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setShowSignalement(true)}
+                  className="w-full mt-3 text-left px-4 py-3 rounded-xl border border-dashed border-vena-kaki/50 bg-vena-kaki-soft text-sm font-semibold text-vena-kaki-dark hover:opacity-90 transition-all"
+                >
+                  ⚠ Signaler un problème
+                </button>
               </>
             ) : (
               <>
