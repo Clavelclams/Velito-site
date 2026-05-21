@@ -58,7 +58,7 @@ const ASSOCIATIFS: Partner[] = [
   { name: "B2G Amiens", category: "Co-organisateur E-Night World Cup", url: "https://www.helloasso.com/associations/b2g-amiens", logo: "/images/partenaires-vea/B2G-logo.webp" },
   { name: "Jeunesse en Or", category: "Association QPV (convention colocation)", logo: "/images/partenaires-vea/JEO-logo.png" },
   { name: "Comite Basket Somme", category: "Comite departemental basket-ball" },
-  { name: "OMNE Esport", category: "Organisateur INTERCUP 2026" },
+  { name: "OMNE Esport", category: "Organisateur INTERCUP 2026", logo: "/images/partenaires-vea/omne-esport.jpg" },
   { name: "Pedagojeux", category: "Asso pedagogie jeu video", url: "https://www.pedagojeux.fr/", logo: "/images/partenaires-vea/pedagojeux.png" },
 ];
 
@@ -67,7 +67,8 @@ const LOCAUX: Partner[] = [
   { name: "GameCash", category: "Lots & recompenses tournois", url: "https://www.gamecash.fr/", logo: "/images/partenaires-vea/Game cash.png" },
   { name: "WarpZone", category: "Bar gaming Amiens", logo: "/images/partenaires-vea/Warpzone.png" },
   { name: "Battle Kart", category: "Partenaire evenementiel" },
-  { name: "Moxy Amiens", category: "Partenaire evenementiel" },
+  { name: "Moxy Amiens", category: "Hotel partenaire evenementiel", url: "https://www.instagram.com/moxyamiens/", logo: "/images/partenaires-vea/moxy.jpg" },
+  { name: "Pourqua'pa", category: "Partenaire local Amiens", url: "https://www.instagram.com/pourquapa/", logo: "/images/partenaires-vea/pourquapa.jpg" },
 ];
 
 const MEDIAS: Partner[] = [
