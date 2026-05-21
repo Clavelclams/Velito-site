@@ -11,8 +11,16 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 
-const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL ?? "https://hub.velito.fr";
-const VEA_URL = process.env.NEXT_PUBLIC_VEA_URL ?? "https://vea.velito.fr";
+// En prod, URLs forcées en dur (insensibles à une var Vercel restée en localhost).
+// Les vars d'env ne sont lues qu'en dev local.
+const HUB_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://hub.velito.fr"
+    : process.env.NEXT_PUBLIC_HUB_URL ?? "https://hub.velito.fr";
+const VEA_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://vea.velito.fr"
+    : process.env.NEXT_PUBLIC_VEA_URL ?? "https://vea.velito.fr";
 
 export default function Footer() {
   const pathname = usePathname();

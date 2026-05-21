@@ -31,6 +31,7 @@ export default function SignupPage() {
 
   const [prenom, setPrenom] = useState("");
   const [nom, setNom] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -70,6 +71,11 @@ export default function SignupPage() {
           // ou un appel /api/profile.
           prenom: prenom.trim(),
           nom: nom.trim(),
+          // Téléphone optionnel : sert UNIQUEMENT à retrouver une éventuelle
+          // fiche "pré-inscrit" (créée via scan QR sans compte) au même numéro
+          // et à y rattacher ce compte → la progression passée est récupérée.
+          // Cf. trigger shared.merge_preinscrit_by_phone (sql/vea-merge-preinscrit-phone-v1.sql).
+          phone: phone.trim().replace(/\s/g, ""),
         },
       },
     });
@@ -233,6 +239,28 @@ export default function SignupPage() {
                   placeholder="Clémentin"
                 />
               </div>
+            </div>
+
+            <div>
+              <label
+                htmlFor="phone"
+                className="block text-xs font-semibold text-vea-text-muted uppercase tracking-wider mb-1.5"
+              >
+                Téléphone <span className="text-vea-text-dim normal-case">(optionnel)</span>
+              </label>
+              <input
+                type="tel"
+                id="phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                autoComplete="tel"
+                className={inputClass}
+                placeholder="06 12 34 56 78"
+              />
+              <p className="text-[11px] text-vea-text-dim mt-1 leading-relaxed">
+                Déjà venu à un event sans compte ? Mets le numéro que tu avais
+                donné : on relie ta progression à ton compte.
+              </p>
             </div>
 
             <div>

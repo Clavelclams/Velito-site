@@ -70,7 +70,10 @@ export async function submitContactAction(
 
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  // IMPORTANT : pas de .select() après l'insert. Le visiteur est `anon`, qui a
+  // le droit d'INSERT mais PAS de SELECT (RLS). Un .select().single() ici
+  // échouerait alors que la ligne est bien insérée → faux message d'erreur.
+  const { error } = await supabase
     .schema("vena")
     .from("demandes_contact")
     .insert({
@@ -87,9 +90,7 @@ export async function submitContactAction(
       source_decouverte: input.source_decouverte?.trim() || null,
       rgpd_consent: input.rgpd_consent,
       statut: "nouveau",
-    })
-    .select("id")
-    .single();
+    });
 
   if (error) {
     console.error("[submitContactAction] error:", error);
@@ -181,5 +182,5 @@ export async function submitContactAction(
     }
   }
 
-  return { success: true, demandeId: data.id };
+  return { success: true };
 }

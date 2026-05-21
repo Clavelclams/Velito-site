@@ -17,11 +17,14 @@ import { cookies } from "next/headers";
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/admin";
+  // Défaut : /api/auth/after-login qui route intelligemment selon les droits
+  // (admin -> /admin, membre lambda -> /profil). Avant on forçait /admin, ce
+  // qui envoyait les nouveaux membres confirmés sur une page admin interdite.
+  const next = searchParams.get("next") ?? "/api/auth/after-login";
 
   if (!code) {
     return NextResponse.redirect(
-      `${origin}/admin/login?error=missing_code`
+      `${origin}/login?error=missing_code`
     );
   }
 
@@ -48,7 +51,7 @@ export async function GET(request: NextRequest) {
   if (error) {
     console.error("[/auth/callback] exchange failed:", error.message);
     return NextResponse.redirect(
-      `${origin}/admin/login?error=auth_exchange_failed`
+      `${origin}/login?error=auth_exchange_failed`
     );
   }
 

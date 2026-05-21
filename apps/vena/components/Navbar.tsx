@@ -16,7 +16,12 @@ const NAV_LINKS = [
   { label: "Contact", href: "/contact" },
 ];
 
-const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL ?? "https://hub.velito.fr";
+// En prod, URL forcée en dur (insensible à une var Vercel restée en localhost).
+// La var d'env n'est lue qu'en dev local.
+const HUB_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://hub.velito.fr"
+    : process.env.NEXT_PUBLIC_HUB_URL ?? "https://hub.velito.fr";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
