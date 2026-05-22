@@ -21,6 +21,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import SignalementForm from "@/components/SignalementForm";
 
 interface FaqItem {
   question: string;
@@ -86,6 +87,7 @@ const FAQ: FaqItem[] = [
 export default function ChatBot() {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [showSignalement, setShowSignalement] = useState(false);
   const panelRef = useRef<HTMLDivElement | null>(null);
 
   // Click en dehors -> fermer
@@ -117,11 +119,13 @@ export default function ChatBot() {
   function openChat() {
     setIsOpen(true);
     setSelectedIndex(null);
+    setShowSignalement(false);
   }
 
   function closeChat() {
     setIsOpen(false);
     setSelectedIndex(null);
+    setShowSignalement(false);
   }
 
   function backToQuestions() {
@@ -203,7 +207,25 @@ export default function ChatBot() {
 
           {/* Body */}
           <div className="flex-1 overflow-y-auto p-4">
-            {selectedFaq === null ? (
+            {showSignalement ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setShowSignalement(false)}
+                  className="text-xs uppercase tracking-widest font-bold text-vea-accent hover:underline mb-3 inline-flex items-center gap-1"
+                >
+                  ← Retour
+                </button>
+                <p className="text-sm font-black text-vea-text mb-1">
+                  Signaler un problème
+                </p>
+                <p className="text-xs text-vea-text-muted mb-4">
+                  Un bug, un truc qui marche pas, un souci sur un projet ou côté
+                  asso (staff, joueur, orga) ? Dis-nous tout.
+                </p>
+                <SignalementForm app="vea" loginHref="/signup" />
+              </>
+            ) : selectedFaq === null ? (
               <>
                 {/* Message d'accueil */}
                 <div className="mb-4">
@@ -230,6 +252,13 @@ export default function ChatBot() {
                     </button>
                   ))}
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setShowSignalement(true)}
+                  className="w-full mt-3 text-left px-4 py-3 rounded-xl border border-dashed border-vea-accent/50 bg-vea-accent-soft/50 text-sm font-semibold text-vea-accent hover:bg-vea-accent-soft transition-all"
+                >
+                  ⚠ Signaler un problème
+                </button>
               </>
             ) : (
               <>

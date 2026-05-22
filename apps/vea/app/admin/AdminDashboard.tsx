@@ -1,7 +1,7 @@
 /**
  * AdminDashboard — Composant client du dashboard admin VEA
  *
- * 👉 "use client" parce qu'il utilise useState, useEffect, fetch, et des interactions utilisateur.
+ * "use client" parce qu'il utilise useState, useEffect, fetch, et des interactions utilisateur.
  *    La page serveur (admin/page.tsx) vérifie le cookie admin_auth AVANT de rendre ce composant.
  *
  * Fonctionnalités :
@@ -21,7 +21,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 // ====== TYPES ======
-// 👉 Ces types correspondent aux models Prisma (schema.prisma)
+// Ces types correspondent aux models Prisma (schema.prisma)
 
 type Participant = {
   id: string;
@@ -43,7 +43,7 @@ type Evenement = {
   actif: boolean;
 };
 
-// 👉 Les 4 onglets du dashboard
+// Les 4 onglets du dashboard
 type TabType = "avenir" | "passes" | "archives" | "participants";
 
 interface AdminDashboardProps {
@@ -79,7 +79,7 @@ export default function AdminDashboard({
   // 19/05/2026 : creation d'event deplacee vers /admin/evenements
   // (nouveau systeme avec QR + scan + XP). Anciens states supprimes.
 
-  // 👉 State pour le modal de modification
+  // State pour le modal de modification
   const [editEvent, setEditEvent] = useState<Evenement | null>(null);
   const [editForm, setEditForm] = useState({
     titre: "",
@@ -91,7 +91,7 @@ export default function AdminDashboard({
 
   // ====== CHARGEMENT INITIAL ======
   useEffect(() => {
-    // 👉 On fetch les participants et TOUS les événements en parallèle
+    // On fetch les participants et TOUS les événements en parallèle
     fetch("/api/admin/participants")
       .then((r) => {
         if (!r.ok) throw new Error(`Participants API error: ${r.status}`);
@@ -100,7 +100,7 @@ export default function AdminDashboard({
       .then(setParticipants)
       .catch((err) => console.error("[Dashboard]", err));
 
-    // 👉 ?all=true pour avoir passés + futurs + inactifs
+    // ?all=true pour avoir passés + futurs + inactifs
     fetch("/api/evenements?all=true")
       .then((r) => {
         if (!r.ok) throw new Error(`Evenements API error: ${r.status}`);
@@ -113,15 +113,15 @@ export default function AdminDashboard({
   // ====== FILTRAGE DES ÉVÉNEMENTS ======
   const now = new Date();
 
-  // 👉 À venir = date future + actif
+  // À venir = date future + actif
   const aVenir = evenements.filter(
     (e) => new Date(e.date) >= now && e.actif
   );
-  // 👉 Passés = date passée + actif
+  // Passés = date passée + actif
   const passes = evenements.filter(
     (e) => new Date(e.date) < now && e.actif
   );
-  // 👉 Archivés = actif = false (peu importe la date)
+  // Archivés = actif = false (peu importe la date)
   const archives = evenements.filter((e) => !e.actif);
 
   // ====== ACTIONS ======
@@ -134,7 +134,7 @@ export default function AdminDashboard({
   // 19/05/2026 : handleAddEvent supprimee. La creation passe maintenant
   // par /admin/evenements (vea.evenements + QR token automatique).
 
-  // 👉 Archiver ou restaurer un événement (toggle actif)
+  // Archiver ou restaurer un événement (toggle actif)
   const handleToggleActif = async (id: string, actif: boolean) => {
     const res = await fetch(`/api/admin/evenements/${id}`, {
       method: "PATCH",
@@ -143,25 +143,25 @@ export default function AdminDashboard({
     });
     if (res.ok) {
       const updated = await res.json();
-      // 👉 On remplace l'événement modifié dans la liste sans recharger
+      // On remplace l'événement modifié dans la liste sans recharger
       setEvenements(evenements.map((e) => (e.id === id ? updated : e)));
     }
   };
 
-  // 👉 Ouvrir le modal de modification avec les données pré-remplies
+  // Ouvrir le modal de modification avec les données pré-remplies
   const openEditModal = (ev: Evenement) => {
     setEditEvent(ev);
     setEditForm({
       titre: ev.titre,
       description: ev.description || "",
-      // 👉 Convertit la date ISO en format datetime-local pour l'input
+      // Convertit la date ISO en format datetime-local pour l'input
       date: new Date(ev.date).toISOString().slice(0, 16),
       lieu: ev.lieu,
       type: ev.type,
     });
   };
 
-  // 👉 Sauvegarder les modifications
+  // Sauvegarder les modifications
   const handleEditSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editEvent) return;
@@ -181,7 +181,7 @@ export default function AdminDashboard({
   // 20/05/2026 : handleSeed retire (events maintenant dans vea.evenements
   // Supabase, gere via /admin/evenements page dediee).
 
-  // 👉 Export CSV des participants
+  // Export CSV des participants
   const exportCSV = () => {
     const headers = [
       "Prénom",
@@ -236,57 +236,96 @@ export default function AdminDashboard({
           20/05/2026 : 4 cards decompose pour des chiffres parlants.
           Le total "Participants" precedent etait trompeur (mixait actifs +
           Old VEA seedes + pre-inscrits). */}
+      {/* 22/05/2026 : les 4 stat cards sont cliquables et menent chacune vers
+          la liste / page correspondante. */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="card-glow p-5 rounded-2xl text-center">
+        <Link href="/admin/bilan#membres" className="card-glow p-5 rounded-2xl text-center group">
           <div className="text-3xl font-black text-vea-red">
             {supabaseStats?.membresAvecCompte ?? 0}
           </div>
           <p className="text-vea-text-muted text-xs uppercase tracking-widest mt-2">
             Membres actifs
           </p>
-          <p className="text-[9px] text-vea-text-dim mt-1 italic">
-            Compte VEA cree
-          </p>
-        </div>
-        <div className="card-glow p-5 rounded-2xl text-center">
+          <p className="text-[9px] text-vea-text-dim mt-1 italic">Compte VEA cree</p>
+          <span className="text-[10px] font-semibold text-vea-accent opacity-0 group-hover:opacity-100 transition-opacity">
+            Voir la liste &rarr;
+          </span>
+        </Link>
+        <Link href="/admin/recompenses" className="card-glow p-5 rounded-2xl text-center group">
           <div className="text-3xl font-black text-vea-red">
             {supabaseStats?.oldVeaEnAttente ?? 0}
           </div>
           <p className="text-vea-text-muted text-xs uppercase tracking-widest mt-2">
             Old VEA
           </p>
-          <p className="text-[9px] text-vea-text-dim mt-1 italic">
-            Anciens, a faire inscrire
-          </p>
-        </div>
-        <div className="card-glow p-5 rounded-2xl text-center">
+          <p className="text-[9px] text-vea-text-dim mt-1 italic">Anciens, a faire inscrire</p>
+          <span className="text-[10px] font-semibold text-vea-accent opacity-0 group-hover:opacity-100 transition-opacity">
+            Relancer &rarr;
+          </span>
+        </Link>
+        <Link href="/admin/bilan#preinscrits" className="card-glow p-5 rounded-2xl text-center group">
           <div className="text-3xl font-black text-vea-red">
             {supabaseStats?.preInscritsGuest ?? 0}
           </div>
           <p className="text-vea-text-muted text-xs uppercase tracking-widest mt-2">
             Pre-inscrits
           </p>
-          <p className="text-[9px] text-vea-text-dim mt-1 italic">
-            Scan guest, a fusionner
-          </p>
-        </div>
-        <div className="card-glow p-5 rounded-2xl text-center">
+          <p className="text-[9px] text-vea-text-dim mt-1 italic">Scan guest, a fusionner</p>
+          <span className="text-[10px] font-semibold text-vea-accent opacity-0 group-hover:opacity-100 transition-opacity">
+            Voir la liste &rarr;
+          </span>
+        </Link>
+        <Link href="/admin/evenements" className="card-glow p-5 rounded-2xl text-center group">
           <div className="text-3xl font-black text-vea-red">
             {supabaseStats?.eventsAVenir ?? aVenir.length}
           </div>
           <p className="text-vea-text-muted text-xs uppercase tracking-widest mt-2">
             Events à venir
           </p>
-          <p className="text-[9px] text-vea-text-dim mt-1 italic">
-            Non annules
-          </p>
-        </div>
+          <p className="text-[9px] text-vea-text-dim mt-1 italic">Non annules</p>
+          <span className="text-[10px] font-semibold text-vea-accent opacity-0 group-hover:opacity-100 transition-opacity">
+            Gérer &rarr;
+          </span>
+        </Link>
       </div>
 
       {/* ===== Modules administrables (raccourcis vers pages Supabase) =====
           20/05/2026 : nouveau hub admin avec cards cliquables. Remplace les
           onglets Prisma qui affichaient 0 partout (donnees vides). */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        {/* 22/05/2026 : Bilan & Suivi (graphiques) + Espace President (roadmap). */}
+        <Link
+          href="/admin/bilan"
+          className="card-clean p-5 hover:border-vea-accent transition-all"
+        >
+          <div className="text-xs uppercase tracking-widest text-vea-accent font-bold mb-1">
+            Bilan &amp; Suivi
+          </div>
+          <div className="text-lg font-bold text-vea-text mb-2">
+            Vue d&apos;ensemble chiffrée
+          </div>
+          <p className="text-xs text-vea-text-muted leading-relaxed">
+            Répartition par sexe, niveau et statut, participation aux events.
+            Matière directe pour les dossiers de subvention et le pilotage.
+          </p>
+        </Link>
+
+        <Link
+          href="/admin/president"
+          className="card-clean p-5 transition-all border-l-4 border-l-vea-accent bg-vea-accent-soft/30 hover:border-vea-accent"
+        >
+          <div className="text-xs uppercase tracking-widest text-vea-accent font-bold mb-1">
+            Espace Président
+          </div>
+          <div className="text-lg font-bold text-vea-text mb-2">
+            Stratégie &amp; roadmap
+          </div>
+          <p className="text-xs text-vea-text-muted leading-relaxed">
+            Réservé aux présidents. Projets de l&apos;année, roadmap sur 3 ans,
+            fil rouge financier de l&apos;association.
+          </p>
+        </Link>
+
         <Link
           href="/admin/evenements"
           className="card-clean p-5 hover:border-vea-accent transition-all"
@@ -640,7 +679,7 @@ export default function AdminDashboard({
       )}{/* fin {false && (<>...</>)} : section onglets Prisma legacy cachee, remplacee par modules cards plus haut */}
 
       {/* ===== MODAL DE MODIFICATION ===== */}
-      {/* 👉 Ce modal s'affiche par-dessus tout quand editEvent n'est pas null */}
+      {/* Ce modal s'affiche par-dessus tout quand editEvent n'est pas null */}
       {editEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Overlay sombre — clic dessus ferme le modal */}

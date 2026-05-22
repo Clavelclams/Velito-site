@@ -2,7 +2,7 @@
  * API Route — Logout
  * POST /api/auth/logout
  *
- * 👉 Ce que fait cette route :
+ * Ce que fait cette route :
  * 1. Supprime le cookie "user_session" (utilisateurs classiques)
  * 2. Supprime le cookie "admin_auth" (admins)
  * 3. Retourne { success: true }
@@ -19,10 +19,10 @@ import { clearSessionCookie } from "@/lib/auth";
 export async function POST() {
   const response = NextResponse.json({ success: true });
 
-  // 👉 Supprime le cookie user
+  // Supprime le cookie user
   clearSessionCookie(response);
 
-  // 👉 Supprime aussi le cookie admin (au cas où)
+  // Supprime aussi le cookie admin (au cas où)
   response.cookies.set("admin_auth", "", {
     httpOnly: true,
     sameSite: "lax",

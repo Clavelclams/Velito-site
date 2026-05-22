@@ -24,6 +24,26 @@ interface Photo {
 }
 
 const PHOTOS: Photo[] = [
+  // === Encore plus de photos (postable, mai 2026) — floutees / scenes ===
+  { src: "/images/events/med-soiree-rollup.jpg", alt: "Soiree event - roll-up VEA (visages floutes)", cat: "soiree", caption: "Soiree - roll-up VEA" },
+  { src: "/images/events/med-soiree-rires.jpg", alt: "Soiree event - rires entre joueurs (visages floutes)", cat: "soiree", caption: "Soiree - rires" },
+  { src: "/images/events/med-soiree-trois.jpg", alt: "Soiree event - trois joueurs aux manettes (visages floutes)", cat: "soiree", caption: "Soiree - aux manettes" },
+  { src: "/images/events/med-soiree-mixite.jpg", alt: "Soiree event - groupe mixite (visages floutes)", cat: "soiree", caption: "Soiree - mixite" },
+  { src: "/images/events/med-tiqe-vainqueurs.jpg", alt: "TIQE Final - vainqueurs avec PS5 (visages floutes)", cat: "tournoi", caption: "TIQE - vainqueurs PS5", event: "tiqe-final-corner" },
+  { src: "/images/events/med-atelier-vr.jpg", alt: "Atelier VR decouverte enfants (visages floutes)", cat: "atelier", caption: "Atelier VR - decouverte" },
+  { src: "/images/events/med-atelier-jv.jpg", alt: "Atelier jeux video enfants (visages floutes)", cat: "atelier", caption: "Atelier jeux video" },
+  { src: "/images/events/med-switch-canape.jpg", alt: "Animation centre social - Switch sur canape", cat: "terrain", caption: "Centre social - Switch" },
+  { src: "/images/events/med-nba-mur.jpg", alt: "Animation centre social - NBA 2K mur vert", cat: "terrain", caption: "Centre social - NBA 2K" },
+  { src: "/images/events/med-just-dance.jpg", alt: "Just Dance jeunes filles (visages floutes)", cat: "soiree", caption: "Just Dance" },
+  // === Nouvelles photos (postable, mai 2026) — de dos / visages floutes (RGPD) ===
+  { src: "/images/events/new-cs-sim-logitech.jpg", alt: "Animation centre social - sim de course Logitech, joueur de dos", cat: "terrain", caption: "Centre social - sim de course" },
+  { src: "/images/events/new-tiqe-corner-floute.jpg", alt: "TIQE Final Le Corner - public (visages floutes)", cat: "tournoi", caption: "TIQE Final - public", event: "tiqe-final-corner" },
+  { src: "/images/events/new-tiqe-elbeuf-floute.jpg", alt: "TIQE Secteur Est Elbeuf (visages floutes)", cat: "tournoi", caption: "TIQE Elbeuf", event: "tiqe-est-elbeuf" },
+  { src: "/images/events/new-rocket-laptop-floute.jpg", alt: "Joueur Rocket League sur laptop (visage floute)", cat: "tournoi", caption: "Rocket League - laptop" },
+  { src: "/images/events/new-sf6-warpzone-floute.jpg", alt: "Tournoi Street Fighter 6 au Warpzone (visages floutes)", cat: "tournoi", caption: "SF6 Warpzone", event: "sf6-warpzone" },
+  { src: "/images/events/new-tiqe-sud-floute.jpg", alt: "TIQE Sud Table du Marais (visages floutes)", cat: "tournoi", caption: "TIQE Sud - Table du Marais", event: "tiqe-sud" },
+  { src: "/images/events/new-just-dance-floute.jpg", alt: "Animation Just Dance (visages floutes)", cat: "soiree", caption: "Just Dance - animation" },
+  { src: "/images/events/new-gymnase-grdf-floute.jpg", alt: "Animation gymnase partenariat GRDF (visages floutes)", cat: "terrain", caption: "Gymnase - partenariat GRDF" },
   // === E-Night World Cup 5 dec 2024 ===
   { src: "/images/events/hero-event-animation.jpg", alt: "E-Night World Cup - animation micro et PS5", cat: "soiree", caption: "E-Night - animation", event: "e-night-world-cup" },
   { src: "/images/events/gallery-soiree-rollup-vea.jpg", alt: "Roll-up VEA lors de la E-Night World Cup", cat: "soiree", caption: "E-Night - roll-up VEA", event: "e-night-world-cup" },
@@ -145,7 +165,7 @@ function MediasContent() {
         <div className="max-w-6xl mx-auto">
 
           {eventFilter && EVENT_LABELS[eventFilter] && (
-            <div className="card-clean bg-vea-accent-soft border-vea-accent/15 p-4 mb-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="bg-vea-accent-soft border-l-4 border-l-vea-accent rounded-r-xl p-4 mb-8 flex flex-col sm:flex-row items-center justify-between gap-3">
               <p className="text-sm text-vea-text">
                 <span className="font-semibold">Galerie filtree :</span>{" "}
                 <span className="text-vea-accent">{EVENT_LABELS[eventFilter]}</span>
@@ -165,7 +185,7 @@ function MediasContent() {
                   className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                     filtre === f.value
                       ? "bg-vea-accent text-white shadow-btn-accent"
-                      : "bg-white border border-vea-border text-vea-text-muted hover:border-vea-accent hover:text-vea-accent"
+                      : "bg-vea-surface-soft border border-vea-border text-vea-text-muted hover:border-vea-accent hover:text-vea-accent"
                   }`}
                 >
                   {f.label}
@@ -180,7 +200,7 @@ function MediasContent() {
                 <button
                   type="button"
                   onClick={() => setLightbox(p)}
-                  className="card-clean relative aspect-[4/3] w-full overflow-hidden group block focus:outline-none focus:ring-2 focus:ring-vea-accent"
+                  className="relative aspect-[4/3] w-full overflow-hidden rounded-xl ring-1 ring-vea-border group block focus:outline-none focus:ring-2 focus:ring-vea-accent transition-shadow hover:ring-vea-accent/40"
                   aria-label={`Agrandir : ${p.caption}`}
                 >
                   <Image

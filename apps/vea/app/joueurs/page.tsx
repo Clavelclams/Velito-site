@@ -191,7 +191,22 @@ export default async function JoueursPage() {
         {/* LISTE JOUEURS */}
         {players.length === 0 ? (
           <div className="card-clean p-10 text-center max-w-2xl mx-auto">
-            <span className="text-4xl mb-4 block">🎮</span>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-10 h-10 mx-auto mb-4 text-vea-accent"
+            >
+              <line x1="6" y1="11" x2="10" y2="11" />
+              <line x1="8" y1="9" x2="8" y2="13" />
+              <line x1="15" y1="12" x2="15.01" y2="12" />
+              <line x1="18" y1="10" x2="18.01" y2="10" />
+              <rect x="2" y="6" width="20" height="12" rx="2" />
+            </svg>
             <h2 className="text-xl font-bold text-vea-text mb-2">
               Aucun profil public pour le moment
             </h2>

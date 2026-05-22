@@ -3,11 +3,14 @@
 @tailwind utilities;
 
 /* ============================================================================
- *  VEA — Stylesheet global (refonte 16/05/2026 — fond clair)
+ *  VEA — Stylesheet global (refonte 22/05/2026 — fond rosé éditorial)
  *
- *  Ancien : palette violet sombre #0d0618 + glows neon partout.
- *  Nouveau : fond creme clair, accent rouge VEA conserve, photos d'humains.
- *  Reference DA : mabb.fr (sobre, aere, photos, partenaires visibles).
+ *  Historique : violet sombre -> creme clair (16/05) -> rosé subtil (22/05).
+ *  Le creme #FAFAF7 rendait gris/froid et "template IA". On passe sur un blanc
+ *  casse legerement rosé (#FBF5F4) qui rechauffe la page et harmonise avec
+ *  l'accent rouge #E63946. Titres en police d'affichage (Space Grotesk).
+ *  Sur les pages marketing (.editorial), plus de cards blanches flottantes :
+ *  mise en page éditoriale (filets, colonnes, grande typo).
  * ============================================================================ */
 
 * {
@@ -21,11 +24,24 @@ html {
 }
 
 body {
-  background-color: #FAFAF7;
+  background-color: #FBF5F4;
   color: #1A1A1A;
-  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  font-family: var(--font-inter), "Inter", system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== TITRES — police d'affichage à caractère =====
+   Space Grotesk (charge via next/font, variable --font-display) sur tous les
+   gros titres. Inter reste le corps de texte. Tracking serre pour l'impact.
+   Les composants qui veulent forcer Inter peuvent utiliser .font-body. */
+h1, h2, .font-display {
+  font-family: var(--font-display), "Space Grotesk", "Inter", sans-serif;
+  letter-spacing: -0.025em;
+}
+.font-body {
+  font-family: var(--font-inter), "Inter", system-ui, sans-serif !important;
+  letter-spacing: normal;
 }
 
 /* ===== ANIMATIONS (gardees : sobres et utiles) ===== */
@@ -61,20 +77,22 @@ body {
   -webkit-text-fill-color: currentColor;
 }
 
-/* ===== CARDS — fond blanc + bordure douce + shadow soft ===== */
+/* ===== CARDS — fond blanc + bordure douce + shadow soft =====
+   Conservees telles quelles sur agenda / joueurs / prestations / profil /
+   admin. Seule la bordure passe en teinte chaude pour coller au fond rosé. */
 
 .card-clean {
   background: #FFFFFF;
-  border: 1px solid #E5E5E1;
+  border: 1px solid #ECDFDE;
   border-radius: 12px;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgba(60, 20, 20, 0.04);
 }
 
 .card-clean:hover {
-  border-color: #D4D4D0;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06),
-              0 4px 10px rgba(0, 0, 0, 0.03);
+  border-color: #DECECD;
+  box-shadow: 0 10px 25px rgba(60, 20, 20, 0.06),
+              0 4px 10px rgba(60, 20, 20, 0.03);
   transform: translateY(-2px);
 }
 
@@ -83,28 +101,81 @@ body {
 .card-glow,
 .card-glow-red {
   background: #FFFFFF;
-  border: 1px solid #E5E5E1;
+  border: 1px solid #ECDFDE;
   border-radius: 12px;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgba(60, 20, 20, 0.04);
   position: relative;
   overflow: hidden;
 }
 
 .card-glow:hover,
 .card-glow-red:hover {
-  border-color: #D4D4D0;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06),
-              0 4px 10px rgba(0, 0, 0, 0.03);
+  border-color: #DECECD;
+  box-shadow: 0 10px 25px rgba(60, 20, 20, 0.06),
+              0 4px 10px rgba(60, 20, 20, 0.03);
   transform: translateY(-2px);
 }
 
 .card-accent-left {
   background: #FFFFFF;
-  border: 1px solid #E5E5E1;
+  border: 1px solid #ECDFDE;
   border-left: 3px solid #E63946;
   border-radius: 8px;
 }
+
+/* ============================================================================
+ *  ÉDITORIAL — boites de mise en page pour les pages marketing (.editorial)
+ *  Remplace les "cards blanches" generiques par des blocs structures qui
+ *  respirent : pas d'ombre flottante, filet chaud, fond rosé tres leger.
+ *  Utilises sur association / esport / impact / contact / medias / partenaires.
+ * ============================================================================ */
+
+/* Bloc de contenu sobre, sans le look "carte SaaS" */
+.panel {
+  background: transparent;
+  border: 1px solid #ECDFDE;
+  border-radius: 16px;
+  transition: border-color 0.25s ease, background 0.25s ease;
+}
+.panel:hover {
+  border-color: rgba(230, 57, 70, 0.35);
+}
+
+/* Bloc avec un filet a gauche — pour les listes / faits / valeurs.
+   DA 22/05 (v2) : filet NEUTRE chaud, pas rouge. Le rouge reste reserve a la
+   ponctuation (numeros, mots-cles, boutons). Trop de traits rouges = generique. */
+.panel-accent {
+  border-left: 2px solid #DECECD;
+  padding-left: 1.25rem;
+}
+
+/* Grand chiffre / fait fort facon "rapport institutionnel".
+   Couleur NON imposee ici -> controlee par une classe utilitaire au cas par
+   cas (text-vea-accent pour un vrai KPI, text-vea-text-dim pour un index). */
+.editorial-figure {
+  font-family: var(--font-display), "Space Grotesk", sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+}
+
+/* Sur-titre / kicker editorial (au-dessus d'un titre de section) */
+.kicker {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #E63946;
+}
+
+/* Filet horizontal fin pour separer des blocs sans card */
+.rule-y {
+  border-top: 1px solid #ECDFDE;
+  border-bottom: 1px solid #ECDFDE;
+}
+.rule-top { border-top: 1px solid #ECDFDE; }
 
 /* ===== BUTTONS ===== */
 
@@ -168,19 +239,19 @@ body {
 
 .hero-bg-full {
   background:
-    radial-gradient(circle at 85% 20%, rgba(230, 57, 70, 0.06) 0%, transparent 50%),
-    radial-gradient(circle at 15% 80%, rgba(230, 57, 70, 0.04) 0%, transparent 50%),
-    #FAFAF7;
+    radial-gradient(circle at 85% 20%, rgba(230, 57, 70, 0.07) 0%, transparent 50%),
+    radial-gradient(circle at 15% 80%, rgba(230, 57, 70, 0.05) 0%, transparent 50%),
+    #FBF5F4;
 }
 
 .hero-bg {
   background:
-    radial-gradient(circle at 90% 50%, rgba(230, 57, 70, 0.05) 0%, transparent 60%),
-    #F4F4F1;
+    radial-gradient(circle at 90% 50%, rgba(230, 57, 70, 0.06) 0%, transparent 60%),
+    #F6ECEB;
 }
 
 .section-bg {
-  background: #F4F4F1;
+  background: #F6ECEB;
 }
 
 /* ===== UTILITIES ===== */
@@ -227,7 +298,7 @@ body {
       rgba(230, 57, 70, 0.04) 50%,
       rgba(230, 57, 70, 0.08) 100%),
     #FFFFFF;
-  border: 1px solid #E5E5E1;
+  border: 1px solid #ECDFDE;
   border-radius: 16px;
   position: relative;
   overflow: hidden;
@@ -249,9 +320,9 @@ body {
 /* ===== SCROLLBAR DISCRETE ===== */
 
 ::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: #FAFAF7; }
-::-webkit-scrollbar-thumb { background: #D4D4D0; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #A3A3A3; }
+::-webkit-scrollbar-track { background: #FBF5F4; }
+::-webkit-scrollbar-thumb { background: #DECECD; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #C9B6B5; }
 
 /* ===== FOCUS VISIBLE (a11y) ===== */
 
@@ -363,7 +434,7 @@ body {
   justify-content: center;
   padding: 1rem;
   background: #FFFFFF;
-  border: 1px solid #E5E5E1;
+  border: 1px solid #ECDFDE;
   border-radius: 12px;
   min-height: 100px;
   transition: all 0.2s ease;
@@ -395,9 +466,9 @@ body {
   width: 100%;
   height: 60px;
   padding: 0 0.5rem;
-  border: 1px dashed #D4D4D0;
+  border: 1px dashed #DECECD;
   border-radius: 8px;
-  background: #FAFAF7;
+  background: #F6ECEB;
 }
 
 .partner-placeholder-label {
@@ -406,4 +477,25 @@ body {
   color: #525252;
   text-align: center;
   letter-spacing: 0.02em;
+}
+
+/* ===== MARQUEE — bandeau de photos qui defile (hero "monde de photos") =====
+   2 rangees en sens opposes. Le track contient 2 copies de la liste -> on
+   translate de -50% pour une boucle sans couture. Pause au survol + respect
+   de prefers-reduced-motion. */
+.marquee-row { width: 100%; overflow: hidden; }
+.marquee-track { display: flex; width: max-content; will-change: transform; }
+@keyframes vea-marquee-left {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@keyframes vea-marquee-right {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
+}
+.marquee-left  { animation: vea-marquee-left 55s linear infinite; }
+.marquee-right { animation: vea-marquee-right 55s linear infinite; }
+.marquee-row:hover .marquee-track { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .marquee-left, .marquee-right { animation: none; }
 }

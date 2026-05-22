@@ -1,14 +1,14 @@
 /**
  * ScrollReveal — Composant d'animation au scroll
  *
- * 👉 Utilise framer-motion pour animer les éléments quand ils entrent dans le viewport.
- * 👉 Props :
+ * Utilise framer-motion pour animer les éléments quand ils entrent dans le viewport.
+ * Props :
  *   - children : le contenu à animer
  *   - delay : délai avant l'animation (en secondes, défaut 0)
  *   - direction : depuis quelle direction l'élément arrive ('up' | 'left' | 'right', défaut 'up')
  *   - className : classes CSS supplémentaires
  *
- * 👉 "use client" obligatoire car framer-motion utilise des hooks React (useRef, etc.)
+ * "use client" obligatoire car framer-motion utilise des hooks React (useRef, etc.)
  */
 "use client";
 
@@ -30,12 +30,12 @@ export default function ScrollReveal({
 }: ScrollRevealProps) {
   const ref = useRef<HTMLDivElement>(null);
 
-  // 👉 useInView détecte quand l'élément entre dans le viewport
+  // useInView détecte quand l'élément entre dans le viewport
   // once: true = l'animation ne se joue qu'une fois (pas de replay au re-scroll)
   // margin: "-80px" = déclenche l'animation un peu avant que l'élément soit visible
   const isInView = useInView(ref, { once: true, margin: "-80px" });
 
-  // 👉 On calcule le décalage initial selon la direction
+  // On calcule le décalage initial selon la direction
   const initialOffset = {
     up: { x: 0, y: 40 },
     left: { x: -40, y: 0 },

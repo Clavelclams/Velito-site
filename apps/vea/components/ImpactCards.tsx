@@ -5,8 +5,7 @@
  *   - Click sur une card -> deroule la card en place (div explicative dedans)
  *   - Accordeon : une seule card ouverte a la fois
  *   - Mots-cles highlight (em + couleur rouge VEA) dans les explications
- *   - Card visible = sobre (chiffre + label + chevron, pas d'emoji)
- *   - Emoji affiche en prefixe du detail uniquement (quand la card est ouverte)
+ *   - Card visible = sobre (chiffre + label + chevron)
  *   - CountUp anime 0 -> valeur cible quand la section entre dans le viewport,
  *     sauf pour FDVA (texte fixe, pas de chiffre)
  *   - Responsive : 1 colonne mobile, 2 tablette, 5 desktop
@@ -22,7 +21,6 @@ import CountUp from "./CountUp";
 
 interface ImpactCard {
   id: string;
-  emoji: string;
   /**
    * Si defini -> on affiche un CountUp anime de 0 a count.end.
    * Si null -> on affiche staticValue en texte fixe (cas FDVA).
@@ -37,7 +35,6 @@ interface ImpactCard {
 const CARDS: ImpactCard[] = [
   {
     id: "benevolat",
-    emoji: "⏱️",
     count: { end: 3686, suffix: " h", separator: true },
     label: "de benevolat valorise",
     detail: (
@@ -60,7 +57,6 @@ const CARDS: ImpactCard[] = [
   },
   {
     id: "activites",
-    emoji: "📋",
     count: { end: 30, suffix: "+" },
     label: "activites documentees",
     detail: (
@@ -81,7 +77,6 @@ const CARDS: ImpactCard[] = [
   },
   {
     id: "qpv",
-    emoji: "📍",
     count: { end: 4 },
     label: "quartiers QPV couverts",
     detail: (
@@ -102,7 +97,6 @@ const CARDS: ImpactCard[] = [
   },
   {
     id: "jeunes",
-    emoji: "🎮",
     count: { end: 300, suffix: "+" },
     label: "jeunes touches",
     detail: (
@@ -123,7 +117,6 @@ const CARDS: ImpactCard[] = [
   },
   {
     id: "fdva",
-    emoji: "🏛️",
     count: null,
     staticValue: "FDVA",
     label: "soutenue depuis 2024",
@@ -175,8 +168,8 @@ function ImpactCardsInner() {
         return (
           <div
             key={card.id}
-            className={`card-clean transition-all duration-300 ${
-              isOpen ? "lg:col-span-5 sm:col-span-2" : ""
+            className={`panel transition-all duration-300 ${
+              isOpen ? "lg:col-span-5 sm:col-span-2 border-vea-accent/40" : ""
             }`}
           >
             <button
@@ -226,12 +219,6 @@ function ImpactCardsInner() {
             >
               <div className="px-5 pb-5 pt-3 border-t border-vea-border mt-2">
                 <p className="text-sm text-vea-text-muted leading-relaxed">
-                  <span
-                    aria-hidden="true"
-                    className="text-lg mr-2 align-[-2px]"
-                  >
-                    {card.emoji}
-                  </span>
                   {card.detail}
                 </p>
               </div>

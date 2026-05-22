@@ -2,9 +2,9 @@
  * API Route — Login admin
  * POST /api/admin/login
  *
- * 👉 Compare email + mot de passe avec les variables d'environnement
- * 👉 Si correct → set un cookie "admin_auth" et renvoie success
- * 👉 C'est une auth TRÈS basique (V1). En V2 on passera sur un vrai système
+ * Compare email + mot de passe avec les variables d'environnement
+ * Si correct → set un cookie "admin_auth" et renvoie success
+ * C'est une auth TRÈS basique (V1). En V2 on passera sur un vrai système
  *    avec JWT, bcrypt, et la table User du schema Prisma.
  *
  * ⚠️ En prod, JAMAIS stocker un mot de passe en clair dans le .env.
@@ -34,12 +34,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 👉 On crée la réponse et on set le cookie
+    // On crée la réponse et on set le cookie
     const response = NextResponse.json({ success: true });
 
-    // 👉 httpOnly = le cookie n'est pas accessible en JavaScript côté client
-    // 👉 sameSite: "lax" = protection CSRF basique
-    // 👉 maxAge = durée de vie en secondes (ici 24h)
+    // httpOnly = le cookie n'est pas accessible en JavaScript côté client
+    // sameSite: "lax" = protection CSRF basique
+    // maxAge = durée de vie en secondes (ici 24h)
     response.cookies.set("admin_auth", "authenticated", {
       httpOnly: true,
       sameSite: "lax",

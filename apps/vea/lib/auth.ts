@@ -1,7 +1,7 @@
 /**
  * Auth Utilities — Fonctions partagées pour l'authentification
  *
- * 👉 Ce fichier centralise :
+ * Ce fichier centralise :
  * - Le nom du cookie de session
  * - La durée de session
  * - La création/lecture/suppression du cookie
@@ -15,17 +15,17 @@ import { cookies } from "next/headers";
 
 // ===== CONSTANTES =====
 
-// 👉 Nom du cookie pour les users classiques (différent de "admin_auth" pour les admins)
+// Nom du cookie pour les users classiques (différent de "admin_auth" pour les admins)
 export const USER_COOKIE_NAME = "user_session";
 
-// 👉 Durée de session : 7 jours en secondes
+// Durée de session : 7 jours en secondes
 // 60 secondes × 60 minutes × 24 heures × 7 jours = 604800 secondes
 export const SESSION_MAX_AGE = 60 * 60 * 24 * 7;
 
 // ===== FONCTIONS =====
 
 /**
- * 👉 Ajoute le cookie de session sur une réponse NextResponse
+ * Ajoute le cookie de session sur une réponse NextResponse
  *
  * @param response - La réponse HTTP sur laquelle on pose le cookie
  * @param userId - L'ID de l'utilisateur (stocké dans le cookie)
@@ -48,7 +48,7 @@ export function setSessionCookie(response: NextResponse, userId: string) {
 }
 
 /**
- * 👉 Lit le cookie de session depuis la requête entrante
+ * Lit le cookie de session depuis la requête entrante
  * Retourne l'userId ou null si pas de cookie
  */
 export async function getSessionUserId(): Promise<string | null> {
@@ -58,7 +58,7 @@ export async function getSessionUserId(): Promise<string | null> {
 }
 
 /**
- * 👉 Supprime le cookie de session (logout)
+ * Supprime le cookie de session (logout)
  * On met maxAge: 0 → le navigateur supprime le cookie immédiatement
  */
 export function clearSessionCookie(response: NextResponse) {

@@ -105,7 +105,7 @@ export default function PrestationsClient() {
         {/* Encadré institutionnel */}
         <div className="card-clean p-6 mb-4 border-l-4 border-l-vea-accent bg-vea-accent-soft/30 max-w-4xl mx-auto">
           <h3 className="text-base font-bold text-vea-text mb-2">
-            🤝 Partenariats publics et collectivités
+            Partenariats publics et collectivités
           </h3>
           <p className="text-sm text-vea-text-muted leading-relaxed">
             Velito Esport Amiens est référencée dans la grille tarifaire
@@ -121,7 +121,7 @@ export default function PrestationsClient() {
         {/* Encadré info tarifs */}
         <div className="card-clean p-4 max-w-4xl mx-auto bg-vea-bg">
           <h3 className="text-xs font-bold text-vea-text-dim uppercase tracking-widest mb-1">
-            ℹ️ Information tarifs
+            Information tarifs
           </h3>
           <p className="text-xs text-vea-text-muted leading-relaxed italic">
             Les tarifs indiqués sont indicatifs. Ils peuvent être adaptés selon

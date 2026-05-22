@@ -54,7 +54,7 @@ function MemberCard({ member, size = "normal" }: { member: Member; size?: "norma
   const nameSize = size === "small" ? "text-xs" : "text-sm";
 
   return (
-    <div className={`card-clean ${padding} text-center`}>
+    <div className={`panel ${padding} text-center`}>
       <div className={`${avatarSize} bg-vea-accent-soft border border-vea-accent/15 rounded-full mx-auto mb-3 flex items-center justify-center`}>
         <span className={`text-vea-accent ${initialsSize} font-bold`}>{initials}</span>
       </div>

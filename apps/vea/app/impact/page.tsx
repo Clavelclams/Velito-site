@@ -94,16 +94,14 @@ export default function ImpactPage() {
         </div>
       </section>
 
-      {/* ===== STATS CLÉS ===== */}
+      {/* ===== STATS CLÉS — grille editoriale, filets fins, grands chiffres ===== */}
       <section className="py-16 px-4">
         <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 border-t border-l border-vea-border">
             {STATS.map((stat, i) => (
               <ScrollReveal key={stat.label} delay={i * 0.05}>
-                <div className="card-glow p-5 text-center relative group">
-                  {/* Glow subtil au hover */}
-                  <div className="absolute inset-0 bg-vea-red/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
-                  <p className="text-2xl sm:text-3xl font-black text-gradient-red mb-1 relative z-10">
+                <div className="border-b border-r border-vea-border p-6 text-center h-full transition-colors hover:bg-vea-surface-soft">
+                  <p className="editorial-figure text-3xl sm:text-4xl text-vea-accent mb-2">
                     <CountUp
                       end={stat.value}
                       suffix={stat.suffix}
@@ -111,7 +109,7 @@ export default function ImpactPage() {
                       duration={1.5}
                     />
                   </p>
-                  <p className="text-[10px] sm:text-xs text-vea-text-muted uppercase tracking-wider font-medium relative z-10 leading-tight">
+                  <p className="text-[10px] sm:text-xs text-vea-text-muted uppercase tracking-wider font-medium leading-tight">
                     {stat.label}
                   </p>
                 </div>

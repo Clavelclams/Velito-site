@@ -24,10 +24,10 @@ import BureauSection from "@/components/BureauSection";
 import ImpactCards from "@/components/ImpactCards";
 
 const VALUES = [
-  { icon: "🏆", label: "Excellence & Performance" },
-  { icon: "🤝", label: "Inclusion & Solidarite" },
-  { icon: "📚", label: "Education & Prevention" },
-  { icon: "💡", label: "Innovation Sociale" },
+  { label: "Excellence & Performance" },
+  { label: "Inclusion & Solidarite" },
+  { label: "Education & Prevention" },
+  { label: "Innovation Sociale" },
 ];
 
 const METHODE = [
@@ -121,8 +121,11 @@ export default function AssociationPage() {
               <h2 className="text-lg font-bold text-vea-accent mb-3">Nos Valeurs</h2>
               <ul className="space-y-2">
                 {VALUES.map((v) => (
-                  <li key={v.label} className="flex items-center gap-2 text-sm text-vea-text-muted">
-                    <span>{v.icon}</span>
+                  <li key={v.label} className="flex items-center gap-2.5 text-sm text-vea-text-muted">
+                    <span
+                      aria-hidden="true"
+                      className="w-1.5 h-1.5 rounded-full bg-vea-accent flex-shrink-0"
+                    />
                     <span>{v.label}</span>
                   </li>
                 ))}

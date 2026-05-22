@@ -1,38 +1,50 @@
 /**
- * /admin VENA — Dashboard des demandes de devis.
+ * /admin/signalements VENA — Lecture/traitement des signalements (bug-reports).
  *
- * Server Component. Accès : permission "vena" editor+ (sinon redirect /login).
- * Liste toutes les demandes_contact (récentes d'abord) + stats rapides.
- * Le composant client DemandesManager gère le filtre statut + la mise à jour.
+ * Server Component. Accès : permission "vena" editor+ (= admin Velito).
+ * Liste shared.signalements (toutes apps), génère des URLs signées pour les
+ * pièces jointes (bucket privé), puis le composant client gère filtre + statut.
  */
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { hasPermission } from "@/lib/supabase/permissions";
-import DemandesManager, { type Demande } from "./DemandesManager";
+import SignalementsManager, { type Signalement } from "./SignalementsManager";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminVenaPage() {
+export default async function AdminSignalementsPage() {
   const canRead = await hasPermission("vena", "editor");
-  if (!canRead) redirect("/login?redirect=/admin");
+  if (!canRead) redirect("/login?redirect=/admin/signalements");
 
   const supabase = await createClient();
   const { data } = await supabase
-    .schema("vena")
-    .from("demandes_contact")
+    .schema("shared")
+    .from("signalements")
     .select(
-      "id, prenom, nom, email, telephone, structure, fonction, service_demande, budget_envisage, delai, message, source_decouverte, statut, created_at"
+      "id, created_at, email, app, categorie, projet, description, attachment_path, statut"
     )
     .order("created_at", { ascending: false });
 
-  const demandes = (data ?? []) as Demande[];
+  const rows = (data ?? []) as Signalement[];
+
+  // URLs signées pour les pièces jointes (bucket privé, valables 1h).
+  await Promise.all(
+    rows.map(async (r) => {
+      if (r.attachment_path) {
+        const { data: signed } = await supabase.storage
+          .from("signalements")
+          .createSignedUrl(r.attachment_path, 3600);
+        r.attachmentUrl = signed?.signedUrl ?? undefined;
+      }
+    })
+  );
 
   const stats = {
-    total: demandes.length,
-    nouveau: demandes.filter((d) => d.statut === "nouveau").length,
-    en_cours: demandes.filter((d) => d.statut === "en_cours").length,
-    traite: demandes.filter((d) => d.statut === "traite").length,
+    total: rows.length,
+    nouveau: rows.filter((r) => r.statut === "nouveau").length,
+    en_cours: rows.filter((r) => r.statut === "en_cours").length,
+    traite: rows.filter((r) => r.statut === "traite").length,
   };
 
   return (
@@ -41,26 +53,18 @@ export default async function AdminVenaPage() {
         <div className="flex items-center justify-between gap-3 flex-wrap mb-8">
           <div>
             <h1 className="text-2xl sm:text-3xl font-display font-black text-vena-kaki">
-              Demandes de devis
+              Signalements
             </h1>
             <p className="text-sm text-vena-text-muted mt-1">
-              Les demandes envoyées via le formulaire contact VENA.
+              Les bugs et soucis remontés via les chatbots (VENA, VEA, hub…).
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/admin/signalements"
-              className="text-xs font-bold text-vena-kaki border border-vena-kaki/40 rounded-full px-3 py-1.5 hover:bg-vena-kaki-soft transition-colors"
-            >
-              Signalements
-            </Link>
-            <Link
-              href="/"
-              className="text-xs text-vena-text-dim hover:text-vena-kaki transition-colors"
-            >
-              ← Retour au site
-            </Link>
-          </div>
+          <Link
+            href="/admin"
+            className="text-xs text-vena-text-dim hover:text-vena-kaki transition-colors"
+          >
+            ← Retour admin
+          </Link>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
@@ -82,7 +86,7 @@ export default async function AdminVenaPage() {
           ))}
         </div>
 
-        <DemandesManager demandes={demandes} />
+        <SignalementsManager signalements={rows} />
       </div>
     </div>
   );

@@ -1,27 +1,57 @@
 /**
- * Page d'accueil VEA — REFONTE FOND CLAIR (16/05/2026).
+ * Page d'accueil VEA — refonte 22/05/2026.
  *
- * Inspiration : mabb.fr (sobre, photo humaine au hero, stats lisibles,
- * piliers en cards, partenaires en bas) + france-esports.org.
+ * Objectif : une home qui convertit, claire et institutionnelle (audience =
+ * mairie, partenaires, prospects), tout en gardant l'energie esport. DA fond
+ * clair, accent rouge, photos humaines.
  *
  * Sections :
- *   1. HERO — texte gauche + photo placeholder droite
- *   2. STATS — 4 cards blanches simples avec chiffre rouge VEA
- *   3. NOS ACTIONS — 4 piliers en cards claires
- *   4. NOS TERRAINS — structures ou je suis prestataire (centres sociaux,
- *      structures jeunesse, partenaires QPV). Source : rapport reseaux
- *      sociaux + debrief 12/05 + base Notion VEA Bilan Activites.
- *   5. CTA — bandeau accent rouge soft pour finir
+ *   1. HERO — texte gauche + photo droite + ligne de confiance
+ *   2. STATS — 5 chiffres cles
+ *   3. NOS ACTIONS — 4 piliers en cards avec photos
+ *   4. RECONNAISSANCE — presse + resultats nationaux + soutien public.
+ *      Remplace l'ancienne section "Nos terrains" (doublon avec /partenaires).
+ *   5. CTA — bandeau accent rouge soft
  *
  * Server Component par defaut. ScrollReveal et CountUp sont "use client".
  */
 import Link from "next/link";
-import Image from "next/image";
 import ScrollReveal from "@/components/ScrollReveal";
 import CountUp from "@/components/CountUp";
 
-// 5 cards stats sur la home — toutes tiennent sur 1 ligne en desktop
-// (grid-cols-5). Detail complet dans /association#impact via ImpactCards.
+// 5 cards stats sur la home — toutes tiennent sur 1 ligne en desktop.
+// Detail complet dans /association#impact via ImpactCards.
+const HERO_PHOTOS = [
+  "/images/events/pilier-tournoi-public.jpg",
+  "/images/events/mq-ffjv-dos.jpg",
+  "/images/events/new-sf6-warpzone-floute.jpg",
+  "/images/events/mq-sim-course-dos.jpg",
+  "/images/events/mq-floral-rollup.jpg",
+  "/images/events/mq-ljsdlp-public.jpg",
+  "/images/events/mq-gt7-sim.jpg",
+  "/images/events/new-tiqe-corner-floute.jpg",
+  "/images/events/mq-mariokart-salle.jpg",
+  "/images/events/mq-fifa-canape.jpg",
+  "/images/events/mq-floral-sim.jpg",
+  "/images/events/pilier-prevention.jpg",
+];
+
+// 2e rangee du bandeau : AUTRES photos esport (differentes de la 1re rangee).
+const HERO_PHOTOS_2 = [
+  "/images/events/sf6-warpzone-2024.jpg",
+  "/images/events/tiqe-final-corner-2024.jpg",
+  "/images/events/tiqe-vainqueurs-ps5-2024.jpg",
+  "/images/events/ljsdlp-2025-sim-mariokart-01.jpg",
+  "/images/events/new-tiqe-elbeuf-floute.jpg",
+  "/images/events/gallery-soiree-rollup-vea.jpg",
+  "/images/events/new-rocket-laptop-floute.jpg",
+  "/images/events/ljsdlp-2025-public-ea-fc.jpg",
+  "/images/events/new-tiqe-sud-floute.jpg",
+  "/images/events/gallery-soiree-trois-joueurs.jpg",
+  "/images/events/happy-eid-2022-public-terrain-basket.jpg",
+  "/images/events/new-gymnase-grdf-floute.jpg",
+];
+
 const STATS = [
   { value: 3686, suffix: " h", label: "Benevolat valorise", separator: true },
   { value: 300, suffix: "+", label: "Jeunes accompagnes" },
@@ -32,56 +62,29 @@ const STATS = [
 
 const ACTIONS = [
   {
-    title: "Tournois & Competitions",
+    title: "Tournois & compétitions",
     description:
-      "Organiser des competitions esport locales accessibles a tous les niveaux, du debutant au confirme.",
-    icon: "🏆",
+      "Organiser des compétitions esport locales accessibles à tous les niveaux, du débutant au confirmé.",
+    image: "/images/events/pilier-tournoi-public.jpg",
   },
   {
-    title: "Insertion & Formation",
+    title: "Insertion & formation",
     description:
-      "Utiliser le jeu video comme tremplin vers l'emploi et la formation professionnelle.",
-    icon: "🎯",
+      "Utiliser le jeu vidéo comme tremplin vers l'emploi et la formation professionnelle.",
+    image: "/images/events/atelier-jeux-video.jpg",
   },
   {
-    title: "Reduction fracture numerique",
+    title: "Réduction de la fracture numérique",
     description:
-      "Rendre le numerique accessible dans les quartiers prioritaires grace au pret de materiel et aux ateliers.",
-    icon: "💻",
+      "Rendre le numérique accessible dans les quartiers prioritaires grâce au prêt de matériel et aux ateliers.",
+    image: "/images/events/pilier-pc-rgb.jpg",
   },
   {
-    title: "Prevention numerique",
+    title: "Prévention numérique",
     description:
-      "Sensibiliser les jeunes et les familles aux risques lies aux ecrans, aux jeux d'argent et a l'addiction.",
-    icon: "🛡️",
+      "Sensibiliser les jeunes et les familles aux risques liés aux écrans, aux jeux d'argent et à l'addiction.",
+    image: "/images/events/pilier-prevention.jpg",
   },
-];
-
-/**
- * Mes terrains d'intervention — structures aupres desquelles VEA intervient
- * en tant que prestataire ou partenaire recurrent. Documentes via la base
- * Notion "VEA Bilan Activites" + rapport reseaux sociaux 2023-2026 + debrief
- * strategique 12/05/2026.
- *
- * Choix editorial : je ne nomme pas les dispositifs ("Rec en action", "TIQE")
- * mais directement les LIEUX physiques ou les jeunes m'attendent. C'est plus
- * concret pour un visiteur qui ne connait pas les dispositifs administratifs.
- */
-const TERRAINS = [
-  // Centres sociaux d'Amiens (intervention recurrente)
-  { name: "Tour du Marais", secteur: "Etouvie" },
-  { name: "Elbeuf", secteur: "Saint-Just" },
-  { name: "Moxy", secteur: "Saint-Acheul" },
-  { name: "L'Albatros", secteur: "Amiens" },
-  { name: "Marcel Paul", secteur: "Amiens Nord" },
-  { name: "Salamandre", secteur: "Amiens Nord" },
-  { name: "Pierre Rollin", secteur: "Amiens Nord" },
-  { name: "La Pleiade", secteur: "Pigeonnier" },
-  // Structures jeunesse / culture
-  { name: "Etoile du Sud", secteur: "Centre culturel" },
-  // Partenaires institutionnels recurrents
-  { name: "APSL 80", secteur: "Profession Sport & Loisirs (Rec en action)" },
-  { name: "Jeunesse en Or", secteur: "Convention colocation" },
 ];
 
 const HELLOASSO_URL =
@@ -90,94 +93,214 @@ const HELLOASSO_URL =
 export default function HomePage() {
   return (
     <>
-      {/* HERO */}
-      <section className="hero-bg-full pt-24 pb-16 lg:pt-32 lg:pb-24 px-4">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <ScrollReveal delay={0.05}>
-              <span className="badge-red mb-6">
-                Association Esport &amp; Inclusion
-              </span>
-            </ScrollReveal>
+      {/* HERO — titre une ligne + bandeau "monde de photos" qui defile + liens.
+          DA editoriale : pas de carte, pas de gros boutons (liens texte). */}
+      <section className="hero-bg-full pt-28 lg:pt-32 pb-20 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 mb-10">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-[1.05] tracking-tight text-vea-text max-w-4xl">
+            L&apos;<span className="text-vea-accent">e</span>sport, un{" "}
+            <span className="text-vea-accent">monde</span> qui rassemble
+          </h1>
+          <p className="text-sm italic text-vea-text-muted mt-4">
+            Association loi 1901 · Soutenue par le FDVA · 300+ jeunes
+            accompagnés
+          </p>
+        </div>
 
-            <ScrollReveal delay={0.1}>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-tight mb-6 text-vea-text">
-                Le jeu video
-                <br />
-                <span className="text-vea-accent">comme moteur</span>
-              </h1>
-            </ScrollReveal>
-
-            <ScrollReveal delay={0.2}>
-              <p className="text-base sm:text-lg text-vea-text-muted max-w-xl mb-10 leading-relaxed">
-                Velito Esport Amiens utilise le gaming pour creer du lien
-                social, favoriser l&apos;insertion et faire briller les
-                talents locaux. Une association d&apos;inclusion ancree
-                dans les quartiers d&apos;Amiens depuis 2022.
-              </p>
-            </ScrollReveal>
-
-            <ScrollReveal delay={0.3}>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                <Link href="/inscription" className="btn-primary">
-                  Nous rejoindre
-                </Link>
-                <Link href="/association" className="btn-outline">
-                  Decouvrir nos actions
-                </Link>
-              </div>
-            </ScrollReveal>
-          </div>
-
-          <ScrollReveal delay={0.2}>
-            <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden border border-vea-border shadow-card-soft">
-              <Image
-                src="/images/events/hero-event-animation.jpg"
-                alt="Animation VEA — soiree evenement avec micro et PS5, ambiance gaming convivial pour les jeunes d'Amiens"
-                fill
-                sizes="(min-width: 1024px) 50vw, 100vw"
-                className="object-cover"
-                priority
-              />
+        {/* Le "monde" de photos : 2 rangees qui defilent en sens opposes */}
+        <div className="space-y-3 sm:space-y-4">
+          <div className="marquee-row">
+            <div className="marquee-track marquee-left">
+              {[...HERO_PHOTOS, ...HERO_PHOTOS].map((src, i) => (
+                <img
+                  key={`a${i}`}
+                  src={src}
+                  alt=""
+                  loading="lazy"
+                  className="h-40 sm:h-48 w-56 sm:w-72 mr-3 sm:mr-4 rounded-xl object-cover grayscale hover:grayscale-0 transition-all duration-500 flex-shrink-0"
+                />
+              ))}
             </div>
-          </ScrollReveal>
+          </div>
+          <div className="marquee-row">
+            <div className="marquee-track marquee-right">
+              {[...HERO_PHOTOS_2, ...HERO_PHOTOS_2].map((src, i) => (
+                <img
+                  key={`b${i}`}
+                  src={src}
+                  alt=""
+                  loading="lazy"
+                  className="h-40 sm:h-48 w-56 sm:w-72 mr-3 sm:mr-4 rounded-xl object-cover grayscale hover:grayscale-0 transition-all duration-500 flex-shrink-0"
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Descriptif court + liens (pas de gros boutons) */}
+        <div className="max-w-7xl mx-auto px-4 mt-10">
+          <p className="text-base sm:text-lg text-vea-text-muted max-w-2xl leading-relaxed">
+            Velito Esport Amiens transforme le gaming en levier concret
+            d&apos;inclusion : lien social, insertion et talents qui émergent
+            dans les quartiers prioritaires d&apos;Amiens, depuis 2022.
+          </p>
+          <div className="flex flex-wrap items-center gap-x-8 gap-y-3 mt-5">
+            <Link
+              href="/inscription"
+              className="group inline-flex items-center gap-1.5 text-sm font-bold text-vea-accent"
+            >
+              Nous rejoindre
+              <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">
+                &rarr;
+              </span>
+            </Link>
+            <Link
+              href="/association"
+              className="group inline-flex items-center gap-1.5 text-sm font-bold text-vea-text hover:text-vea-accent transition-colors"
+            >
+              Decouvrir nos actions
+              <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">
+                &rarr;
+              </span>
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* STATS — 5 cards sur 1 ligne en desktop */}
+      {/* STATS — barre editoriale a plat : filets haut/bas, pas de cards (DA VEA) */}
       <section className="py-16 px-4 bg-vea-bg">
         <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-4 gap-y-10 border-y border-vea-border py-12">
             {STATS.map((stat, i) => (
-              <ScrollReveal key={stat.label} delay={i * 0.08}>
-                <div className="card-clean p-6 text-center h-full">
-                  <p className="stat-number">
-                    <CountUp
-                      end={stat.value}
-                      suffix={stat.suffix}
-                      separator={"separator" in stat ? stat.separator : false}
-                      duration={2}
-                    />
-                  </p>
-                  <p className="text-xs sm:text-sm text-vea-text-dim uppercase tracking-wider font-medium mt-3">
-                    {stat.label}
-                  </p>
-                </div>
+              <ScrollReveal
+                key={stat.label}
+                delay={i * 0.08}
+                className="text-center px-2"
+              >
+                <p className="stat-number">
+                  <CountUp
+                    end={stat.value}
+                    suffix={stat.suffix}
+                    separator={"separator" in stat ? stat.separator : false}
+                    duration={2}
+                  />
+                </p>
+                <p className="text-xs sm:text-sm text-vea-text-dim uppercase tracking-wider font-medium mt-2">
+                  {stat.label}
+                </p>
               </ScrollReveal>
             ))}
           </div>
 
-          {/* Bouton vers le detail des chiffres dans /association
-              ?expand=benevolat -> ouvre auto la 1ere card (pattern visuel
-              pour indiquer que les cards sont interactives)
-              #impact -> scroll direct vers la section ImpactCards */}
           <ScrollReveal delay={0.4}>
             <div className="text-center mt-10">
               <Link
                 href="/association?expand=benevolat#impact"
                 className="btn-outline text-sm"
               >
-                Voir le detail des chiffres →
+                Voir le detail des chiffres &rarr;
+              </Link>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* RECONNAISSANCE — bande editoriale (pas de cards : anti-generique).
+          Barre presse en strip + 2 faits forts en grande typo separes par un
+          trait vertical. Plus institutionnel qu'une grille de cartes blanches. */}
+      <section className="py-20 lg:py-28 px-4 hero-bg">
+        <div className="max-w-6xl mx-auto">
+          <ScrollReveal>
+            <div className="max-w-2xl mb-14">
+              <span className="badge-red mb-4">Reconnaissance</span>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-vea-text leading-tight">
+                Une asso prise au{" "}
+                <span className="text-vea-accent">sérieux</span>
+              </h2>
+            </div>
+          </ScrollReveal>
+
+          {/* Barre presse : noms medias en strip, sans card */}
+          <ScrollReveal delay={0.1}>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-10 py-6 border-y border-vea-border mb-14">
+              <span className="text-[11px] uppercase tracking-[0.2em] font-bold text-vea-text-dim shrink-0">
+                Ils parlent de nous
+              </span>
+              <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+                {[
+                  {
+                    name: "Gazette Sports",
+                    url: "https://gazettesports.fr/?s=velito+esport",
+                  },
+                  {
+                    name: "Courrier Picard",
+                    url: "https://www.courrier-picard.fr/archives/recherche?word=velito+esport&sort=date+desc&datefilter=lastyear",
+                  },
+                  {
+                    name: "France Bleu Picardie",
+                    url: "https://www.ici.fr/emissions/place-aux-jeunes/l-esport-ce-n-est-pas-que-pour-les-jeunes-7732041",
+                  },
+                ].map((media) => (
+                  <a
+                    key={media.name}
+                    href={media.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-lg sm:text-xl font-bold text-vea-text/60 hover:text-vea-accent transition-colors"
+                  >
+                    {media.name}
+                  </a>
+                ))}
+              </div>
+            </div>
+          </ScrollReveal>
+
+          {/* 2 faits forts, typographie large, separes par un trait — pas de cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-0">
+            <ScrollReveal delay={0.15}>
+              <div className="md:pr-14">
+                <p className="text-xs uppercase tracking-[0.2em] text-vea-accent font-bold mb-4">
+                  Sur les scènes nationales
+                </p>
+                <p className="text-2xl sm:text-3xl font-black text-vea-text leading-tight">
+                  3<sup>e</sup> de France en Street Fighter 6
+                </p>
+                <p className="text-lg font-bold text-vea-text-muted mt-1 mb-4">
+                  TOP 8 — INTERCUP 2026, Courbevoie
+                </p>
+                <p className="text-sm text-vea-text-muted leading-relaxed">
+                  La plus grande délégation amiénoise, dont 4 joueuses, sur une
+                  compétition nationale.
+                </p>
+              </div>
+            </ScrollReveal>
+
+            <ScrollReveal delay={0.2}>
+              <div className="md:pl-14 md:border-l border-vea-border">
+                <p className="text-xs uppercase tracking-[0.2em] text-vea-accent font-bold mb-4">
+                  Soutien public
+                </p>
+                <p className="text-2xl sm:text-3xl font-black text-vea-text leading-tight">
+                  Financée par le FDVA depuis 2024
+                </p>
+                <p className="text-lg font-bold text-vea-text-muted mt-1 mb-4">
+                  Référencée grille Mairie d&apos;Amiens
+                </p>
+                <p className="text-sm text-vea-text-muted leading-relaxed">
+                  Reconnaissance d&apos;utilité sociale et ancrage territorial
+                  validés.
+                </p>
+              </div>
+            </ScrollReveal>
+          </div>
+
+          <ScrollReveal delay={0.25}>
+            <div className="mt-14">
+              <Link
+                href="/esport"
+                className="text-sm font-bold text-vea-accent hover:underline inline-flex items-center gap-1"
+              >
+                Voir nos resultats et la presse &rarr;
               </Link>
             </div>
           </ScrollReveal>
@@ -185,7 +308,7 @@ export default function HomePage() {
       </section>
 
       {/* NOS ACTIONS */}
-      <section className="section-bg py-20 px-4">
+      <section className="hero-bg py-20 px-4">
         <div className="max-w-6xl mx-auto">
           <ScrollReveal>
             <div className="text-center mb-12">
@@ -200,96 +323,65 @@ export default function HomePage() {
             </div>
           </ScrollReveal>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {ACTIONS.map((action, i) => (
-              <ScrollReveal key={action.title} delay={i * 0.08}>
-                <div className="card-clean p-6 h-full group">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 bg-vea-accent-soft border border-vea-accent/15">
-                    <span className="text-xl">{action.icon}</span>
-                  </div>
-                  <h3 className="text-lg font-bold text-vea-text mb-2 group-hover:text-vea-accent transition-colors">
-                    {action.title}
-                  </h3>
-                  <p className="text-sm text-vea-text-muted leading-relaxed">
-                    {action.description}
-                  </p>
+              <ScrollReveal key={action.title} delay={i * 0.08} className="group">
+                <div className="relative h-44 w-full overflow-hidden rounded-xl bg-vea-bg mb-4">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={action.image}
+                    alt={action.title}
+                    loading="lazy"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
                 </div>
+                {/* Numero editorial sobre (plus de pastille rouge sur la photo) :
+                    chiffre gris + filet, coherent avec le reste du site. */}
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="editorial-figure text-base text-vea-text-dim tabular-nums">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span aria-hidden="true" className="h-px flex-1 bg-vea-border group-hover:bg-vea-accent/40 transition-colors" />
+                </div>
+                <h3 className="text-lg font-bold text-vea-text mb-1.5 group-hover:text-vea-accent transition-colors">
+                  {action.title}
+                </h3>
+                <p className="text-sm text-vea-text-muted leading-relaxed">
+                  {action.description}
+                </p>
               </ScrollReveal>
             ))}
           </div>
         </div>
       </section>
 
-      {/* NOS TERRAINS D'INTERVENTION */}
-      <section className="py-20 px-4 bg-vea-bg">
-        <div className="max-w-6xl mx-auto">
+      {/* CTA final — bande rosé doux harmonisee avec le site (plus de gros
+          aplat rouge qui jure). Le rouge reste sur le mot-cle et le bouton. */}
+      <section className="bg-vea-accent-soft py-24 px-4">
+        <div className="max-w-4xl mx-auto text-center">
           <ScrollReveal>
-            <div className="text-center mb-12">
-              <span className="badge-red mb-4">Sur le terrain</span>
-              <h2 className="text-3xl sm:text-4xl font-bold text-vea-text mb-3">
-                Nos terrains d&apos;intervention
-              </h2>
-              <p className="text-vea-text-muted text-sm max-w-xl mx-auto">
-                Structures aupres desquelles VEA intervient en tant que
-                prestataire ou partenaire recurrent, dans les quartiers
-                prioritaires d&apos;Amiens et au-dela.
-              </p>
-            </div>
-          </ScrollReveal>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {TERRAINS.map((t, i) => (
-              <ScrollReveal key={t.name} delay={i * 0.04}>
-                <div className="card-accent-left p-4 h-full">
-                  <h3 className="text-sm font-bold text-vea-text leading-tight">
-                    {t.name}
-                  </h3>
-                  <p className="text-xs text-vea-text-dim mt-1">
-                    {t.secteur}
-                  </p>
-                </div>
-              </ScrollReveal>
-            ))}
-          </div>
-
-          <ScrollReveal>
-            <p className="text-xs text-vea-text-dim text-center mt-8">
-              Liste non exhaustive — voir{" "}
-              <Link href="/agenda" className="text-vea-accent hover:underline">
-                l&apos;agenda complet
-              </Link>{" "}
-              pour l&apos;historique detaille de toutes nos actions.
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-[0.95] tracking-tight mb-5 text-vea-text">
+              Rejoins l&apos;aventure <span className="text-vea-accent">VEA</span>
+            </h2>
+            <p className="text-vea-text-muted text-base sm:text-lg max-w-xl mx-auto leading-relaxed mb-9">
+              Joueur, bénévole, partenaire ou simple curieux — il y a une place
+              pour chacun. Le terrain commence ici.
             </p>
-          </ScrollReveal>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-20 px-4 section-bg">
-        <div className="max-w-4xl mx-auto">
-          <ScrollReveal>
-            <div className="card-clean p-10 sm:p-14 text-center bg-vea-accent-soft border-vea-accent/15">
-              <h2 className="text-3xl sm:text-4xl font-bold text-vea-text mb-4">
-                Rejoins <span className="text-vea-accent">VEA</span>
-              </h2>
-              <p className="text-vea-text-muted mb-8 max-w-lg mx-auto leading-relaxed">
-                Participe aux evenements, integre une equipe, ou soutiens le
-                projet. Chaque profil compte — joueur, benevole, partenaire,
-                curieux.
-              </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                <Link href="/inscription" className="btn-primary">
-                  S&apos;inscrire a un evenement
-                </Link>
-                <a
-                  href={HELLOASSO_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-outline"
-                >
-                  Devenir membre
-                </a>
-              </div>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
+              <Link href="/inscription" className="btn-primary">
+                S&apos;inscrire à un événement
+              </Link>
+              <a
+                href={HELLOASSO_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex items-center gap-1.5 text-sm font-bold text-vea-accent border-b border-vea-accent/40 pb-0.5 hover:border-vea-accent transition-colors"
+              >
+                Devenir membre
+                <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">
+                  ↗
+                </span>
+              </a>
             </div>
           </ScrollReveal>
         </div>
