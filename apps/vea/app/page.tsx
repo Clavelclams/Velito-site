@@ -375,12 +375,9 @@ export default function HomePage() {
                 href={HELLOASSO_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center gap-1.5 text-sm font-bold text-vea-accent border-b border-vea-accent/40 pb-0.5 hover:border-vea-accent transition-colors"
+                className="btn-outline"
               >
                 Devenir membre
-                <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">
-                  ↗
-                </span>
               </a>
             </div>
           </ScrollReveal>
