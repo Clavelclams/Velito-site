@@ -100,7 +100,7 @@ function PartnerCard({ partner }: { partner: Partner }) {
   // DA 22/05 : plus de "carte blanche". Cellule sobre facon mur de partenaires
   // institutionnel — logo en niveaux de gris qui revient en couleur au survol.
   return (
-    <div className="group flex flex-col items-center text-center px-3 py-6 rounded-2xl transition-colors hover:bg-vea-surface-soft">
+    <div className="group flex flex-col items-center text-center px-3 py-6">
       <div className="h-16 w-full mb-4 flex items-center justify-center">
         {partner.logo ? (
           // Logo officiel partenaire (object-contain pour eviter deformation)

@@ -96,22 +96,23 @@ export default function AssociationPage() {
         </div>
       </section>
 
-      {/* HISTOIRE / VALEURS / VISION — blocs editoriaux, pas de cards blanches */}
+      {/* HISTOIRE / VALEURS / VISION — editorial, titres rouges, aucun trait
+          separateur (rendait generique en se repetant). Respiration + typo. */}
       <section className="py-20 px-4 bg-vea-bg">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-12">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-x-14 gap-y-12">
           <ScrollReveal delay={0}>
-            <div className="panel-accent h-full">
-              <h2 className="text-lg font-black text-vea-text mb-3">{PILIERS[0].k}</h2>
+            <div className="h-full">
+              <h2 className="font-display text-xl font-bold text-vea-accent mb-4">{PILIERS[0].k}</h2>
               <p className="text-sm text-vea-text-muted leading-relaxed">{PILIERS[0].body}</p>
             </div>
           </ScrollReveal>
 
           <ScrollReveal delay={0.08}>
-            <div className="panel-accent h-full">
-              <h2 className="text-lg font-black text-vea-text mb-3">Nos valeurs</h2>
-              <ul className="space-y-2.5">
+            <div className="h-full">
+              <h2 className="font-display text-xl font-bold text-vea-accent mb-4">Nos valeurs</h2>
+              <ul className="space-y-3">
                 {VALUES.map((v) => (
-                  <li key={v} className="flex items-center gap-2.5 text-sm text-vea-text-muted">
+                  <li key={v} className="flex items-center gap-3 text-sm text-vea-text">
                     <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-vea-accent flex-shrink-0" />
                     <span>{v}</span>
                   </li>
@@ -121,8 +122,8 @@ export default function AssociationPage() {
           </ScrollReveal>
 
           <ScrollReveal delay={0.16}>
-            <div className="panel-accent h-full">
-              <h2 className="text-lg font-black text-vea-text mb-3">{PILIERS[1].k}</h2>
+            <div className="h-full">
+              <h2 className="font-display text-xl font-bold text-vea-accent mb-4">{PILIERS[1].k}</h2>
               <p className="text-sm text-vea-text-muted leading-relaxed">{PILIERS[1].body}</p>
             </div>
           </ScrollReveal>
@@ -144,14 +145,20 @@ export default function AssociationPage() {
               </p>
             </div>
           </ScrollReveal>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-x-10 gap-y-12">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-x-14 gap-y-12">
             {METHODE.map((m, i) => (
               <ScrollReveal key={m.title} delay={i * 0.08}>
-                <div className="panel-accent h-full">
-                  <span className="editorial-figure text-3xl text-vea-text-dim block mb-3">
-                    0{i + 1}
-                  </span>
-                  <h3 className="text-base font-black text-vea-text mb-3 leading-tight">{m.title}</h3>
+                <div className="h-full">
+                  {/* Gros numero estompe en filigrane + titre = rythme editorial,
+                      pas de trait separateur. */}
+                  <div className="flex items-baseline gap-3 mb-3">
+                    <span className="editorial-figure text-5xl text-vea-accent/20 leading-none select-none">
+                      0{i + 1}
+                    </span>
+                    <h3 className="font-display text-lg font-bold text-vea-text leading-tight">
+                      {m.title}
+                    </h3>
+                  </div>
                   <p className="text-sm text-vea-text-muted leading-relaxed">{m.body}</p>
                 </div>
               </ScrollReveal>
@@ -189,64 +196,90 @@ export default function AssociationPage() {
       {/* BUREAU + CA + Maya */}
       <BureauSection />
 
-      {/* EQUIPE OPERATIONNELLE — lignes editoriales */}
+      {/* EQUIPE OPERATIONNELLE — split : equipe a gauche, photo a droite */}
       <section className="py-16 px-4 hero-bg">
-        <div className="max-w-4xl mx-auto">
-          <ScrollReveal>
-            <div className="mb-8 text-center">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+          {/* Gauche : titre + liste */}
+          <div>
+            <ScrollReveal>
               <span className="kicker mb-3 block">Sur le terrain</span>
-              <h2 className="text-2xl sm:text-3xl font-black text-vea-text">
+              <h2 className="text-2xl sm:text-3xl font-black text-vea-text mb-2">
                 Equipe <span className="text-vea-accent">operationnelle</span>
               </h2>
-            </div>
-          </ScrollReveal>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-8 max-w-2xl mx-auto">
-            {EQUIPE_OPERATIONNELLE.map((member, i) => {
-              const initials = member.name.split(" ").map((w) => w[0]).slice(0, 2).join("");
-              return (
+              <p className="text-sm text-vea-text-muted mb-8">
+                Ceux qui font vivre VEA sur le terrain au quotidien.
+              </p>
+            </ScrollReveal>
+            <div className="space-y-7">
+              {EQUIPE_OPERATIONNELLE.map((member, i) => (
                 <ScrollReveal key={member.name} delay={i * 0.1}>
-                  <div className="panel-accent h-full">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="text-vea-accent text-sm font-black tracking-wide">{initials}</span>
-                      <h3 className="text-sm font-black text-vea-text">{member.name}</h3>
-                    </div>
-                    <p className="text-xs text-vea-accent font-semibold">{member.role}</p>
+                  <div className="border-l-2 border-vea-border-strong pl-5">
+                    <h3 className="text-base font-bold text-vea-text">{member.name}</h3>
+                    <p className="text-sm text-vea-accent font-semibold mt-0.5">{member.role}</p>
                     {member.pseudo && (
-                      <p className="text-[11px] text-vea-text-dim mt-1">Pseudo : {member.pseudo}</p>
+                      <p className="text-xs text-vea-text-dim mt-1">Pseudo : {member.pseudo}</p>
                     )}
                     {member.agency && (
                       <a
                         href={member.agency.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-block mt-2 text-[11px] text-vea-text-muted hover:text-vea-accent transition-colors"
+                        className="inline-block mt-1 text-xs text-vea-text-muted hover:text-vea-accent transition-colors"
                       >
                         {member.agency.name} ↗
                       </a>
                     )}
                   </div>
                 </ScrollReveal>
-              );
-            })}
+              ))}
+            </div>
           </div>
+
+          {/* Droite : emplacement photo equipe (a remplacer par la vraie photo
+              quand elle sera dispo : <Image src=... fill className="object-cover" />) */}
+          <ScrollReveal delay={0.15} direction="right">
+            <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden border border-vea-border bg-vea-surface-soft flex items-center justify-center">
+              <div className="text-center px-6">
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-10 h-10 mx-auto mb-3 text-vea-text-dim/40"
+                >
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+                <p className="text-sm font-medium text-vea-text-dim">
+                  Photo de l&apos;equipe a venir
+                </p>
+                <p className="text-xs text-vea-text-dim/70 mt-1">Bientot en ligne</p>
+              </div>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 
-      {/* MEMBRES PARTENAIRES — liste editoriale */}
+      {/* MEMBRES PARTENAIRES — liste editoriale alignee a gauche (pas centree) */}
       <section className="py-16 px-4 section-bg">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <ScrollReveal>
-            <div className="mb-8 text-center">
+            <div className="mb-8 max-w-2xl">
               <span className="kicker mb-3 block">Ecosysteme</span>
               <h2 className="text-2xl sm:text-3xl font-black text-vea-text">
                 Membres <span className="text-vea-accent">partenaires</span>
               </h2>
             </div>
           </ScrollReveal>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-10 gap-y-8 max-w-3xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-10 gap-y-8">
             {PARTNER_ORGS.map((org, i) => (
               <ScrollReveal key={org.name} delay={i * 0.1}>
-                <div className="panel-accent h-full">
+                <div className="border-t border-vea-border-strong pt-4">
                   <h3 className="text-base font-black text-vea-text">{org.name}</h3>
                   <p className="text-xs text-vea-text-muted mt-1">{org.role}</p>
                 </div>

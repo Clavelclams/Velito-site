@@ -48,15 +48,20 @@ const MEMBRE_JEUNE: Member = {
 
 function MemberCard({ member, size = "normal" }: { member: Member; size?: "normal" | "small" }) {
   const initials = member.name.split(" ").map((w) => w[0]).slice(0, 2).join("");
-  const padding = size === "small" ? "p-4" : "p-6";
-  const avatarSize = size === "small" ? "w-10 h-10" : "w-14 h-14";
-  const initialsSize = size === "small" ? "text-xs" : "text-sm";
+  // DA 22/05 (v2) : plus de boite/bordure. Grille "people" sobre — l'avatar
+  // circulaire structure, halo + leger zoom au survol. Plus humain qu'une card.
+  const avatarSize = size === "small" ? "w-14 h-14" : "w-20 h-20";
+  const initialsSize = size === "small" ? "text-sm" : "text-lg";
   const nameSize = size === "small" ? "text-xs" : "text-sm";
 
   return (
-    <div className={`panel ${padding} text-center`}>
-      <div className={`${avatarSize} bg-vea-accent-soft border border-vea-accent/15 rounded-full mx-auto mb-3 flex items-center justify-center`}>
-        <span className={`text-vea-accent ${initialsSize} font-bold`}>{initials}</span>
+    <div className="group text-center">
+      <div
+        className={`${avatarSize} bg-vea-accent-soft ring-1 ring-vea-accent/20 rounded-full mx-auto mb-3 flex items-center justify-center transition-all duration-200 group-hover:scale-105 group-hover:ring-vea-accent/50`}
+      >
+        <span className={`font-display text-vea-accent ${initialsSize} font-bold tracking-tight`}>
+          {initials}
+        </span>
       </div>
       <h3 className={`${nameSize} font-bold text-vea-text leading-tight`}>{member.name}</h3>
       <p className="text-xs text-vea-accent mt-1 font-medium">{member.role}</p>

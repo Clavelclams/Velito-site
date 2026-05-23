@@ -431,13 +431,15 @@ export default function EsportPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {HOW_IT_WORKS.map((card, i) => (
                   <ScrollReveal key={card.title} delay={i * 0.1}>
-                    <div className="h-full border-t border-vea-border-strong pt-5">
-                      <span className="editorial-figure text-4xl text-vea-text-dim block mb-4">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      <h3 className="text-base font-bold text-vea-text mb-2">
-                        {card.title}
-                      </h3>
+                    <div className="h-full">
+                      <div className="flex items-baseline gap-3 mb-3">
+                        <span className="editorial-figure text-5xl text-vea-accent/20 leading-none select-none">
+                          {String(i + 1).padStart(2, "0")}
+                        </span>
+                        <h3 className="font-display text-lg font-bold text-vea-accent leading-tight">
+                          {card.title}
+                        </h3>
+                      </div>
                       <p className="text-sm text-vea-text-muted leading-relaxed">
                         {card.description}
                       </p>
@@ -455,10 +457,10 @@ export default function EsportPage() {
         <>
           {/* INTRO SOCIAL */}
           <section className="py-16 px-4 bg-vea-bg">
-            <div className="max-w-3xl mx-auto text-center">
+            <div className="max-w-3xl mx-auto">
               <ScrollReveal>
-                <span className="badge-red mb-4">Pourquoi le social</span>
-                <h2 className="text-2xl sm:text-3xl font-bold text-vea-text mt-4 mb-6">
+                <span className="kicker mb-3 block">Pourquoi le social</span>
+                <h2 className="font-display text-3xl sm:text-4xl font-black text-vea-text leading-tight mb-6">
                   Le gaming comme{" "}
                   <span className="text-vea-accent">levier d&apos;inclusion</span>
                 </h2>
@@ -484,36 +486,31 @@ export default function EsportPage() {
           <section className="py-16 px-4 section-bg">
             <div className="max-w-5xl mx-auto">
               <ScrollReveal>
-                <div className="text-center mb-10">
-                  <span className="badge-red mb-4">Nos actions</span>
-                  <h2 className="text-2xl sm:text-3xl font-bold text-vea-text mt-4 mb-3">
+                <div className="mb-12 max-w-2xl">
+                  <span className="kicker mb-3 block">Nos actions</span>
+                  <h2 className="font-display text-3xl sm:text-4xl font-black text-vea-text leading-tight">
                     Ce que VEA fait <span className="text-vea-accent">vraiment</span>
                   </h2>
                 </div>
               </ScrollReveal>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Plus de boites ni d'emojis : entrees editoriales, la date rouge
+                  sert d'ancre visuelle. */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-10">
                 {SOCIAL_PROJECTS.map((p, i) => (
                   <ScrollReveal key={p.title} delay={i * 0.07}>
-                    <div className="panel p-6 h-full">
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-vea-accent-soft border border-vea-accent/15 flex-shrink-0">
-                          <span className="text-xl">{p.emoji}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[11px] text-vea-accent font-semibold uppercase tracking-wider mb-1">
-                            {p.date}
-                          </p>
-                          <h3 className="text-base font-bold text-vea-text mb-2 leading-snug">
-                            {p.title}
-                          </h3>
-                        </div>
-                      </div>
-                      <p className="text-sm text-vea-text-muted leading-relaxed mt-3">
+                    <div className="h-full">
+                      <p className="text-[11px] text-vea-accent font-bold uppercase tracking-[0.15em] mb-1.5">
+                        {p.date}
+                      </p>
+                      <h3 className="font-display text-lg font-bold text-vea-text mb-2 leading-snug">
+                        {p.title}
+                      </h3>
+                      <p className="text-sm text-vea-text-muted leading-relaxed">
                         {p.description}
                       </p>
                       {p.highlight && (
-                        <p className="text-sm font-bold text-vea-accent mt-3 border-t border-vea-border pt-3">
+                        <p className="text-sm font-bold text-vea-accent mt-3">
                           {p.highlightUrl ? (
                             <a
                               href={p.highlightUrl}
@@ -548,47 +545,50 @@ export default function EsportPage() {
           <section className="py-16 px-4 bg-vea-bg">
             <div className="max-w-3xl mx-auto">
               <ScrollReveal>
-                <div className="bg-vea-accent-soft border-l-4 border-l-vea-accent rounded-r-2xl p-8 sm:p-10">
-                  <span className="text-[11px] text-vea-accent font-semibold uppercase tracking-wider">
-                    Recit
-                  </span>
-                  <h2 className="text-2xl sm:text-3xl font-bold text-vea-text mt-2 mb-4">
+                <div>
+                  <span className="kicker mb-3 block">Recit</span>
+                  <h2 className="font-display text-2xl sm:text-3xl font-black text-vea-text leading-tight mb-6 max-w-2xl">
                     Comment on est passe d&apos;une console au{" "}
                     <span className="text-vea-accent">Budget Participatif</span>
                   </h2>
-                  <p className="text-vea-text-muted leading-relaxed mb-3">
-                    Lors d&apos;une intervention VEA dans le quartier Sud
-                    d&apos;Amiens, Chloe BOULOT (Democratie locale, Amiens
-                    Metropole) est venue presenter le Budget Participatif aux
-                    jeunes presents.
-                  </p>
-                  <p className="text-vea-text-muted leading-relaxed mb-3">
-                    Un <strong className="text-vea-text">jeune mineur</strong>{" "}
-                    a voulu deposer un projet : la Fontaine Salamandre SLM.
-                    Comme il etait mineur, il ne pouvait pas etre porteur
-                    officiel. Clavel NDEMA MOUSSA (president VEA) a{" "}
-                    <strong className="text-vea-text">porte le projet</strong>{" "}
-                    a sa place, en gardant le jeune comme initiateur.
-                  </p>
-                  <p className="text-vea-text-muted leading-relaxed mb-4">
-                    Le projet a <strong className="text-vea-text">gagne</strong>.
-                  </p>
-                  <p className="text-lg font-black text-vea-accent">
-                    <a
-                      href="https://jeparticipe.amiens.fr/project/copy-of-budget-participatif-2024/collect/depots-des-idees/proposals/fontaine-slm"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:underline inline-flex items-baseline gap-1"
-                      title="Voir la page projet officielle Amiens Metropole"
-                    >
-                      9 900 € attribues a la Ville pour amenager la Fontaine
-                      Salamandre.
-                      <span aria-hidden="true" className="text-xs ml-1">
-                        ↗
-                      </span>
-                    </a>
-                  </p>
-                  <p className="text-xs text-vea-text-dim italic mt-4">
+                  <div className="space-y-3 text-vea-text-muted leading-relaxed max-w-2xl">
+                    <p>
+                      Lors d&apos;une intervention VEA dans le quartier Sud
+                      d&apos;Amiens, Chloe BOULOT (Democratie locale, Amiens
+                      Metropole) est venue presenter le Budget Participatif aux
+                      jeunes presents.
+                    </p>
+                    <p>
+                      Un <strong className="text-vea-text">jeune mineur</strong>{" "}
+                      a voulu deposer un projet : la Fontaine Salamandre SLM.
+                      Comme il etait mineur, il ne pouvait pas etre porteur
+                      officiel. Clavel NDEMA MOUSSA (president VEA) a{" "}
+                      <strong className="text-vea-text">porte le projet</strong>{" "}
+                      a sa place, en gardant le jeune comme initiateur.
+                    </p>
+                    <p>
+                      Le projet a <strong className="text-vea-text">gagne</strong>.
+                    </p>
+                  </div>
+
+                  {/* Le chiffre sorti en grand = punch editorial, pas de boite rose */}
+                  <a
+                    href="https://jeparticipe.amiens.fr/project/copy-of-budget-participatif-2024/collect/depots-des-idees/proposals/fontaine-slm"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Voir la page projet officielle Amiens Metropole"
+                    className="group block mt-8 pt-6 border-t border-vea-border-strong max-w-md"
+                  >
+                    <span className="editorial-figure block text-4xl sm:text-5xl text-vea-accent leading-none">
+                      9 900 €
+                    </span>
+                    <span className="block text-sm text-vea-text-muted mt-3 group-hover:text-vea-text transition-colors">
+                      attribues a la Ville pour amenager la Fontaine Salamandre
+                      <span aria-hidden="true" className="text-vea-accent ml-1">↗</span>
+                    </span>
+                  </a>
+
+                  <p className="text-xs text-vea-text-dim italic mt-6 max-w-2xl">
                     RDV de lancement : 6 fevrier 2026, parking rue Marcel Paul.
                     Suivi : Direction de proximite EST — Henri MONTIGNY.
                   </p>
@@ -601,19 +601,19 @@ export default function EsportPage() {
           <section className="py-16 px-4 section-bg">
             <div className="max-w-5xl mx-auto">
               <ScrollReveal>
-                <div className="text-center mb-10">
-                  <h2 className="text-2xl sm:text-3xl font-bold text-vea-text mb-3">
+                <div className="mb-10 max-w-2xl">
+                  <h2 className="font-display text-2xl sm:text-3xl font-black text-vea-text">
                     Avec qui on travaille{" "}
                     <span className="text-vea-accent">sur le social</span>
                   </h2>
                 </div>
               </ScrollReveal>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-6">
                 {SOCIAL_PARTNERS.map((p, i) => (
                   <ScrollReveal key={p.name} delay={i * 0.04}>
                     <div className="panel-accent py-1">
-                      <h3 className="text-sm font-bold text-vea-text">
+                      <h3 className="text-sm font-bold text-vea-accent">
                         {p.name}
                       </h3>
                       <p className="text-xs text-vea-text-muted mt-1">

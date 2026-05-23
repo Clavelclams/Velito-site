@@ -56,14 +56,14 @@ export default function Footer() {
               l&apos;esport. Le jeu video comme moteur de lien social,
               d&apos;insertion et de talents locaux.
             </p>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               {SOCIALS.map(({ name, href }) => (
                 <a
                   key={name}
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-3 py-1.5 rounded-md bg-white border border-vea-border text-xs text-vea-text-muted hover:text-vea-accent hover:border-vea-accent/40 transition-colors"
+                  className="text-sm text-vea-text-muted hover:text-vea-accent transition-colors"
                 >
                   {name}
                 </a>
