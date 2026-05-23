@@ -16,7 +16,7 @@
  */
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import ScrollReveal from "@/components/ScrollReveal";
 
@@ -226,18 +226,24 @@ const SOCIAL_PROJECTS: SocialProject[] = [
 ];
 
 interface SocialPartner {
-  name: string;
+  /** Nom rendu en JSX : mot-cle en rouge (text-vea-accent), reste en noir. */
+  name: ReactNode;
   role: string;
 }
 
+// Petit helper pour le mot mis en rouge dans un nom de partenaire.
+const Hl = ({ children }: { children: ReactNode }) => (
+  <span className="text-vea-accent">{children}</span>
+);
+
 const SOCIAL_PARTNERS: SocialPartner[] = [
-  { name: "Jeunesse en Or", role: "Convention colocation, animations Happy Eid" },
-  { name: "MABB", role: "Membre fondateur, partage de locaux + PC reconditionnes" },
-  { name: "Amiens Metropole (Direction Proximite EST)", role: "Henri MONTIGNY — accompagnement Budget Participatif" },
-  { name: "Centres sociaux QPV", role: "Tour du Marais, Marcel Paul, Pierre Rollin, Salamandre, L'Albatros..." },
-  { name: "APSL 80 (Profession Sport & Loisirs)", role: "Dispositif Rec en action" },
-  { name: "UFOLEP Somme", role: "Federation sportive multisport, animations cohesion" },
-  { name: "Pedagojeux", role: "Ressources pedagogie jeu video" },
+  { name: <>Jeunesse en <Hl>Or</Hl></>, role: "Convention colocation, animations Happy Eid" },
+  { name: <>MABB</>, role: "Membre fondateur, partage de locaux + PC reconditionnes" },
+  { name: <>Amiens <Hl>Metropole</Hl> (Direction Proximite EST)</>, role: "Henri MONTIGNY — accompagnement Budget Participatif" },
+  { name: <>Centres sociaux <Hl>QPV</Hl></>, role: "Tour du Marais, Marcel Paul, Pierre Rollin, Salamandre, L'Albatros..." },
+  { name: <>APSL <Hl>80</Hl> (Profession Sport &amp; Loisirs)</>, role: "Dispositif Rec en action" },
+  { name: <>UFOLEP <Hl>Somme</Hl></>, role: "Federation sportive multisport, animations cohesion" },
+  { name: <>Pedago<Hl>jeux</Hl></>, role: "Ressources pedagogie jeu video" },
 ];
 
 // ============================================================================
@@ -245,7 +251,9 @@ const SOCIAL_PARTNERS: SocialPartner[] = [
 // ============================================================================
 
 export default function EsportPage() {
-  const [tab, setTab] = useState<Tab>("competition");
+  // Onglet "social" par defaut (demande Clavel 23/05) : VEA est d'abord une
+  // asso d'inclusion, on met le social en avant a l'arrivee.
+  const [tab, setTab] = useState<Tab>("social");
 
   return (
     <>
@@ -611,9 +619,9 @@ export default function EsportPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-6">
                 {SOCIAL_PARTNERS.map((p, i) => (
-                  <ScrollReveal key={p.name} delay={i * 0.04}>
+                  <ScrollReveal key={i} delay={i * 0.04}>
                     <div className="panel-accent py-1">
-                      <h3 className="text-sm font-bold text-vea-accent">
+                      <h3 className="text-sm font-bold text-vea-text">
                         {p.name}
                       </h3>
                       <p className="text-xs text-vea-text-muted mt-1">

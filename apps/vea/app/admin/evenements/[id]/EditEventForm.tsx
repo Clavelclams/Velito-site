@@ -27,6 +27,7 @@ interface EditEventFormProps {
     event_slug: string;
     nom: string;
     date: string; // YYYY-MM-DD (ou ISO)
+    heure?: string | null; // HH:MM (colonne `heure`)
     lieu: string;
     type: string;
     description: string | null;
@@ -40,6 +41,7 @@ export default function EditEventForm({ event }: EditEventFormProps) {
   const initialDate = (event.date ?? "").slice(0, 10); // garde AAAA-MM-JJ
   const [nom, setNom] = useState(event.nom ?? "");
   const [date, setDate] = useState(initialDate);
+  const [heure, setHeure] = useState(event.heure ?? "");
   const [lieu, setLieu] = useState(event.lieu ?? "");
   const [type, setType] = useState(event.type ?? "animation");
   const [description, setDescription] = useState(event.description ?? "");
@@ -64,6 +66,7 @@ export default function EditEventForm({ event }: EditEventFormProps) {
         eventSlug: event.event_slug,
         nom,
         date,
+        heure: heure || null,
         lieu,
         type,
         description,
@@ -109,10 +112,14 @@ export default function EditEventForm({ event }: EditEventFormProps) {
             <input id="ev-nom" value={nom} onChange={(e) => setNom(e.target.value.slice(0, 200))} required className={inputClass} />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label htmlFor="ev-date" className={labelClass}>Date *</label>
               <input type="date" id="ev-date" value={date} onChange={(e) => setDate(e.target.value)} required className={inputClass} />
+            </div>
+            <div>
+              <label htmlFor="ev-heure" className={labelClass}>Heure</label>
+              <input type="time" id="ev-heure" value={heure} onChange={(e) => setHeure(e.target.value)} className={inputClass} />
             </div>
             <div>
               <label htmlFor="ev-lieu" className={labelClass}>Lieu *</label>

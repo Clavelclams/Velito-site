@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
     let query = supabase
       .schema("vea")
       .from("evenements")
-      .select("id, nom, event_slug, date, lieu, type, description, statut, capacite")
+      .select("id, nom, event_slug, date, heure, lieu, type, description, statut, capacite")
       .order("date", { ascending: false });
 
     if (!all) {
@@ -45,6 +45,7 @@ export async function GET(req: NextRequest) {
       nom: string;
       event_slug: string;
       date: string;
+      heure: string | null;
       lieu: string;
       type: string | null;
       description: string | null;
@@ -61,6 +62,7 @@ export async function GET(req: NextRequest) {
         event_slug: e.event_slug,
         description: e.description,
         date: e.date,
+        heure: e.heure,
         lieu: e.lieu,
         type: e.type,
         statut: e.statut,

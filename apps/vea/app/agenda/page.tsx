@@ -32,6 +32,8 @@ type Evenement = {
   lieu: string;
   type: string; // lowercase normalize (tournoi/animation/atelier/competition/autre)
   actif: boolean;
+  /** Heure de l'event (texte "14:00"), optionnelle — affichee si presente. */
+  heure?: string | null;
   /** Slug de galerie pour bouton "Voir les photos" -> /medias?event=<slug> */
   gallerySlug?: string;
 };
@@ -131,11 +133,16 @@ export default function AgendaPage() {
       });
   }, []);
 
-  const now = new Date();
+  // On compare au DEBUT de la journee, pas a l'instant present : un event du
+  // jour reste "a venir/d'actu" toute sa journee et ne bascule en "passe"
+  // qu'une fois le jour termine (correction 23/05 : avant, il passait en
+  // passe des minuit car la date etait stockee a 00h00).
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
   const aVenir = evenements.filter(
-    (e) => new Date(e.date) >= now && e.actif
+    (e) => new Date(e.date) >= startOfToday && e.actif
   );
-  const passes = evenements.filter((e) => new Date(e.date) < now);
+  const passes = evenements.filter((e) => new Date(e.date) < startOfToday);
 
   // Filtres : "à venir" (default), tous, puis par type
   const filtres = ["a_venir", "tous", "tournoi", "atelier", "animation", "competition", "autre"];
@@ -145,7 +152,7 @@ export default function AgendaPage() {
   const eventsFiltres = (liste: Evenement[]) => {
     if (filtre === "a_venir") {
       // On retourne uniquement les events a venir (passes ignores)
-      return liste.filter((e) => new Date(e.date) >= now && e.actif);
+      return liste.filter((e) => new Date(e.date) >= startOfToday && e.actif);
     }
     if (filtre === "tous") return liste;
     return liste.filter((e) => e.type === filtre);
@@ -346,7 +353,15 @@ function EventCard({
             day: "numeric",
             month: "long",
             year: "numeric",
+            timeZone: "UTC",
           })}
+          {/* Heure : affichee uniquement si une vraie heure est renseignee via
+              la colonne `heure` (texte type "14:00"). La colonne `date` etant de
+              type date (sans heure), on n'affiche jamais d'heure derivee d'elle
+              (sinon artefact de fuseau "02:00"). */}
+          {ev.heure && (
+            <span className="text-vea-text-dim">{" · "}{ev.heure}</span>
+          )}
         </p>
         <p className="text-vea-text-muted text-xs flex items-center gap-2">
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 text-vea-accent flex-shrink-0">

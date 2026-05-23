@@ -24,6 +24,7 @@ export interface CreateEventInput {
   nom: string;
   event_slug: string; // utilise pour relier presences (cle existante)
   date: string; // format YYYY-MM-DD
+  heure?: string; // format HH:MM (optionnel) — colonne `heure` text
   lieu: string;
   description?: string;
   type: "tournoi" | "animation" | "programme" | "reunion" | "autre";
@@ -66,6 +67,7 @@ export async function createEventAction(
       nom,
       event_slug,
       date: input.date,
+      heure: input.heure?.trim() || null,
       lieu,
       description: input.description?.trim() || null,
       type: input.type,

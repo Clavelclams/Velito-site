@@ -24,6 +24,7 @@ export default function AddEventForm({ siteOrigin }: { siteOrigin: string }) {
   const [nom, setNom] = useState("");
   const [slug, setSlug] = useState("");
   const [date, setDate] = useState("");
+  const [heure, setHeure] = useState("");
   const [lieu, setLieu] = useState("Amiens");
   const [type, setType] = useState<EventType>("tournoi");
   const [description, setDescription] = useState("");
@@ -58,6 +59,7 @@ export default function AddEventForm({ siteOrigin }: { siteOrigin: string }) {
         nom,
         event_slug: slug,
         date,
+        heure: heure || undefined,
         lieu,
         description: description || undefined,
         type,
@@ -116,6 +118,7 @@ export default function AddEventForm({ siteOrigin }: { siteOrigin: string }) {
               setNom("");
               setSlug("");
               setDate("");
+              setHeure("");
               setDescription("");
               setCapacite("");
             }}
@@ -155,13 +158,21 @@ export default function AddEventForm({ siteOrigin }: { siteOrigin: string }) {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label htmlFor="date" className={labelClass}>Date *</label>
           <input
             type="date" id="date" value={date}
             onChange={(e) => setDate(e.target.value)}
             required className={inputClass}
+          />
+        </div>
+        <div>
+          <label htmlFor="heure" className={labelClass}>Heure</label>
+          <input
+            type="time" id="heure" value={heure}
+            onChange={(e) => setHeure(e.target.value)}
+            className={inputClass}
           />
         </div>
         <div>

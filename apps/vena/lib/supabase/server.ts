@@ -13,9 +13,27 @@ import { cookies } from "next/headers";
 export async function createClient() {
   const cookieStore = await cookies();
 
+  // Fix 23/05 : sur Vercel, une variable NEXT_PUBLIC_* marquee "Sensitive" n'est
+  // PAS injectee au build -> elle arrive vide au runtime, et Supabase plante
+  // ("Your project's URL and Key are required..."). On lit donc EN PRIORITE des
+  // variables SERVEUR classiques (SUPABASE_URL / SUPABASE_ANON_KEY) qui, elles,
+  // sont lues au runtime par la fonction (meme en Sensitive). Fallback sur les
+  // NEXT_PUBLIC_* pour le dev local (.env.local) ou elles fonctionnent.
+  const supabaseUrl =
+    process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey =
+    process.env.SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error(
+      "Config Supabase manquante : definis SUPABASE_URL et SUPABASE_ANON_KEY " +
+        "(ou NEXT_PUBLIC_SUPABASE_URL / _ANON_KEY) dans l'environnement Vercel."
+    );
+  }
+
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {

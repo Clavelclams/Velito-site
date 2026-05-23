@@ -42,7 +42,7 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
   let { data: event } = await supabase
     .schema("vea")
     .from("evenements")
-    .select("id, nom, event_slug, date, lieu, type, description, statut, token, scan_actif, capacite")
+    .select("id, nom, event_slug, date, heure, lieu, type, description, statut, token, scan_actif, capacite")
     .eq("event_slug", id)
     .maybeSingle();
 
@@ -50,7 +50,7 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
     const r = await supabase
       .schema("vea")
       .from("evenements")
-      .select("id, nom, event_slug, date, lieu, type, description, statut, token, scan_actif, capacite")
+      .select("id, nom, event_slug, date, heure, lieu, type, description, statut, token, scan_actif, capacite")
       .eq("id", id)
       .maybeSingle();
     event = r.data;
@@ -184,6 +184,7 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
             event_slug: event.event_slug,
             nom: event.nom,
             date: event.date,
+            heure: (event as { heure?: string | null }).heure ?? null,
             lieu: event.lieu,
             type: event.type,
             description: event.description,

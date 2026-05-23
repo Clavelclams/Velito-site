@@ -302,6 +302,7 @@ export async function updateEventAction(input: {
   eventSlug: string;
   nom: string;
   date: string; // YYYY-MM-DD
+  heure?: string | null; // HH:MM (colonne `heure`), optionnel
   lieu: string;
   type: string;
   description?: string;
@@ -345,6 +346,7 @@ export async function updateEventAction(input: {
     .update({
       nom,
       date: input.date,
+      heure: input.heure?.trim() || null,
       lieu,
       type: input.type,
       description: input.description?.trim() || null,
