@@ -36,6 +36,9 @@ type Evenement = {
   heure?: string | null;
   /** Slug de galerie pour bouton "Voir les photos" -> /medias?event=<slug> */
   gallerySlug?: string;
+  /** Slug de l'event (Supabase) -> bouton "S'inscrire" -> /inscription?event=<slug>
+   *  (previsionnel "monde attendu"). Absent pour archive/Prisma. */
+  eventSlug?: string;
 };
 
 /**
@@ -88,6 +91,7 @@ export default function AgendaPage() {
             type: normalizeType(e.type),
             actif: e.statut !== "annule",
             gallerySlug: undefined,
+            eventSlug: e.event_slug,
           })) as Evenement[];
         }),
     ])
@@ -384,7 +388,10 @@ function EventCard({
 
       {/* Bouton inscription — seulement pour les futurs */}
       {futur && (
-        <Link href="/inscription" className="btn-primary text-xs py-2">
+        <Link
+          href={ev.eventSlug ? `/inscription?event=${ev.eventSlug}` : "/signup"}
+          className="btn-primary text-xs py-2"
+        >
           S&apos;inscrire
         </Link>
       )}

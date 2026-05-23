@@ -125,6 +125,19 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
     `${a.nom}${a.prenom}`.localeCompare(`${b.nom}${b.prenom}`)
   );
 
+  // Previsionnel "monde attendu" (table vea.preinscriptions_event).
+  // Tolerant : si la table n'existe pas encore (migration non lancee), data=null -> 0.
+  const { data: preRaw } = await supabase
+    .schema("vea")
+    .from("preinscriptions_event")
+    .select(`participant_id, participants:participant_id ( prenom, nom )`)
+    .eq("event_slug", event.event_slug);
+  type PreRow = { participant_id: string; participants: { prenom: string; nom: string } | null };
+  const preinscrits = ((preRaw ?? []) as unknown as PreRow[])
+    .map((r) => (r.participants ? `${r.participants.prenom} ${r.participants.nom}` : null))
+    .filter((x): x is string => !!x);
+  const mondeAttendu = preinscrits.length;
+
   const dateStr = new Date(event.date).toLocaleDateString("fr-FR", {
     weekday: "long", day: "numeric", month: "long", year: "numeric",
   });
@@ -205,6 +218,21 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
             Dont {stats.preInscrits} pre-inscrit{stats.preInscrits > 1 ? "s" : ""} (sans compte VEA — merge auto par nom+prenom+tel).
           </p>
         )}
+
+        {/* Monde attendu (previsionnel depuis l'agenda) */}
+        <div className="card-clean p-5 mb-6">
+          <div className="flex items-center justify-between gap-3 flex-wrap mb-2">
+            <h3 className="text-sm font-bold text-vea-text">Monde attendu (previsionnel)</h3>
+            <span className="text-2xl font-black text-vea-accent">{mondeAttendu}</span>
+          </div>
+          <p className="text-xs text-vea-text-muted leading-relaxed">
+            Personnes qui ont cliqu&eacute; &laquo;&nbsp;Je serai pr&eacute;sent&nbsp;&raquo; depuis l&apos;agenda.
+            Indicatif, sans XP &mdash; la pr&eacute;sence r&eacute;elle se valide au scan le jour J.
+          </p>
+          {preinscrits.length > 0 && (
+            <p className="text-xs text-vea-text-dim mt-3 leading-relaxed">{preinscrits.join(", ")}</p>
+          )}
+        </div>
 
         {/* Raccourci action exceptionnelle / urgence benevole (20/05/2026) */}
         <div className="card-clean p-4 mb-6 border border-vea-accent/20 bg-vea-accent-soft/30">
