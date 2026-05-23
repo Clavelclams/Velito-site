@@ -22,31 +22,34 @@ const config: Config = {
     extend: {
       colors: {
         vea: {
-          bg: "#FAFAF7",
-          surface: "#FFFFFF",
-          "surface-soft": "#F4F4F1",
-          border: "#E5E5E1",
-          "border-strong": "#D4D4D0",
+          // Refonte DA 22/05/2026 : neutres gris-creme -> rosé tres subtil et chaud.
+          // L'accent rouge #E63946 est conservé. Le rose harmonise avec le rouge
+          // (même famille chaude) sans crier -> rendu institutionnel + chaleureux.
+          bg: "#FBF5F4",            // fond principal : blanc casse legerement rose
+          surface: "#FFFFFF",       // cartes conservees (agenda/joueurs/prestations/profil)
+          "surface-soft": "#F6ECEB", // sections alternees : rose un cran plus profond
+          border: "#ECDFDE",        // bordure douce, teintee chaud
+          "border-strong": "#DECECD",
           text: "#1A1A1A",
           "text-muted": "#525252",
-          "text-dim": "#737373",
+          "text-dim": "#6E6A69",     // legerement chaud pour coller au fond rose
           accent: "#E63946",
           "accent-hover": "#C92D3A",
-          "accent-soft": "#FEE2E4",
+          "accent-soft": "#FCE7E7",  // pastille accent, teintee rose
           "accent-dim": "#B91C2A",
-          dark: "#FAFAF7",
+          dark: "#FBF5F4",
           card: "#FFFFFF",
-          "card-hover": "#F4F4F1",
+          "card-hover": "#F6ECEB",
           white: "#1A1A1A",
-          navy: "#FAFAF7",
-          darker: "#F4F4F1",
+          navy: "#FBF5F4",
+          darker: "#F6ECEB",
           red: "#E63946",
           "red-light": "#EF4D5A",
           "red-glow": "rgba(230,57,70,0.15)",
           purple: "#E63946",
           "purple-light": "#EF4D5A",
           "purple-glow": "rgba(230,57,70,0.15)",
-          "border-bright": "#D4D4D0",
+          "border-bright": "#DECECD",
         },
         vena: {
           kaki: "#414C35",
@@ -60,7 +63,10 @@ const config: Config = {
         "btn-accent": "0 4px 12px rgba(230,57,70,0.25)",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: ["var(--font-inter)", "Inter", "system-ui", "sans-serif"],
+        // Police d'affichage à caractère pour les gros titres (anti "template IA").
+        // Chargée via next/font dans layout.tsx (variable --font-display).
+        display: ["var(--font-display)", "Space Grotesk", "Inter", "sans-serif"],
       },
     },
   },

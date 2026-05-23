@@ -1,22 +1,13 @@
 /**
- * Page Association VEA — refonte DA claire (17/05/2026 v2).
+ * Page Association VEA — refonte DA editoriale (22/05/2026 v3).
  *
- * Chantier 1 — enrichissement contenu :
- *   - Vraies stats impact (3 686 h benevoles, 43 800 € classe 8, 30+ activites,
- *     5 quartiers QPV, FDVA depuis 2024) — source : debrief 12/05/2026 + Notion.
- *   - Section "Notre methode" en 3 paragraphes (esport outil pas fin,
- *     QPV chaque semaine pas one-shot, competition + education se completent).
- *   - Bureau 11 membres incluant Maya GOMBERT (membre jeune engagee).
+ * Alignee sur la DA de l'accueil : plus de cards blanches flottantes.
+ * Blocs editoriaux (.panel-accent, filet chaud), sur-titres .kicker,
+ * alternance de fonds (hero-bg rose / bg-vea-bg / section-bg / accent-soft),
+ * gros titres font-black, le rouge reserve a la ponctuation.
  *
- * Sections :
- *   1. Hero "Qui sommes-nous ?"
- *   2. 3 cards (histoire / valeurs / vision)
- *   3. Notre methode (3 paragraphes)
- *   4. Notre impact (chiffres reels)
- *   5. Bureau executif + CA + Maya (via BureauSection)
- *   6. Equipe operationnelle
- *   7. Membres partenaires
- *   8. CTA rejoindre
+ * Sections : Hero / Histoire-Valeurs-Vision / Methode / Impact /
+ * Bureau (BureauSection) / Equipe operationnelle / Membres partenaires / CTA.
  */
 import Link from "next/link";
 import ScrollReveal from "@/components/ScrollReveal";
@@ -24,10 +15,10 @@ import BureauSection from "@/components/BureauSection";
 import ImpactCards from "@/components/ImpactCards";
 
 const VALUES = [
-  { label: "Excellence & Performance" },
-  { label: "Inclusion & Solidarite" },
-  { label: "Education & Prevention" },
-  { label: "Innovation Sociale" },
+  "Excellence & Performance",
+  "Inclusion & Solidarite",
+  "Education & Prevention",
+  "Innovation Sociale",
 ];
 
 const METHODE = [
@@ -52,7 +43,6 @@ interface OperationalMember {
   name: string;
   role: string;
   pseudo?: string;
-  description?: string;
   agency?: { name: string; href: string };
 }
 
@@ -70,104 +60,98 @@ const EQUIPE_OPERATIONNELLE: OperationalMember[] = [
   },
 ];
 
-interface PartnerOrg {
-  name: string;
-  role: string;
-}
-
-const PARTNER_ORGS: PartnerOrg[] = [
+const PARTNER_ORGS = [
   { name: "VENA", role: "Prestataire numerique" },
   { name: "MABB", role: "Pole animation et logistique" },
   { name: "Jeunesse en Or", role: "Pole educatif" },
 ];
 
+const PILIERS = [
+  {
+    k: "Notre Histoire",
+    body:
+      "Fondee en novembre 2022 a Amiens (RNA W802018363), VEA structure la pratique du jeu video amateur. Tres vite, l'esport est devenu un outil d'inclusion, d'education et de mixite sociale dans les quartiers prioritaires.",
+  },
+  {
+    k: "Notre Vision",
+    body:
+      "Faire d'Amiens une place forte de l'esport responsable. Un ecosysteme ou le joueur est accompagne, les parents rassures, et les talents peuvent eclore sereinement.",
+  },
+] as const;
 
 export default function AssociationPage() {
   return (
     <>
-      {/* HERO */}
-      <section className="hero-bg pt-28 pb-12 px-4">
+      {/* HERO — pas de ScrollReveal au-dessus de la ligne de flottaison */}
+      <section className="hero-bg pt-28 pb-14 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <ScrollReveal>
-            <span className="badge-red mb-4">Qui sommes-nous</span>
-            <h1 className="text-4xl sm:text-5xl font-black text-vea-text mb-4 mt-4">
-              L&apos;<span className="text-vea-accent">Association</span>
-            </h1>
-            <p className="text-base text-vea-text-muted max-w-2xl mx-auto">
-              Velito Esport Amiens — association loi 1901 fondee en 2022, dediee a
-              l&apos;inclusion par l&apos;esport dans les quartiers prioritaires d&apos;Amiens.
-            </p>
-          </ScrollReveal>
+          <span className="kicker mb-4 block">Qui sommes-nous</span>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-vea-text leading-[1.05] tracking-tight mb-5">
+            L&apos;<span className="text-vea-accent">association</span>
+          </h1>
+          <p className="text-base sm:text-lg text-vea-text-muted max-w-2xl mx-auto leading-relaxed">
+            Velito Esport Amiens — association loi 1901 fondee en 2022, dediee a
+            l&apos;inclusion par l&apos;esport dans les quartiers prioritaires d&apos;Amiens.
+          </p>
         </div>
       </section>
 
-      {/* 3 CARDS — Histoire / Valeurs / Vision */}
-      <section className="py-16 px-4 bg-vea-bg">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* HISTOIRE / VALEURS / VISION — blocs editoriaux, pas de cards blanches */}
+      <section className="py-20 px-4 bg-vea-bg">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-12">
           <ScrollReveal delay={0}>
-            <div className="card-clean p-7 h-full">
-              <h2 className="text-lg font-bold text-vea-accent mb-3">Notre Histoire</h2>
-              <p className="text-sm text-vea-text-muted leading-relaxed">
-                Fondee en novembre 2022 a Amiens (RNA : W802018363), VEA structure la
-                pratique du jeu video amateur. Rapidement, l&apos;esport est devenu un
-                outil d&apos;inclusion, d&apos;education et de mixite sociale dans les
-                quartiers prioritaires.
-              </p>
+            <div className="panel-accent h-full">
+              <h2 className="text-lg font-black text-vea-text mb-3">{PILIERS[0].k}</h2>
+              <p className="text-sm text-vea-text-muted leading-relaxed">{PILIERS[0].body}</p>
             </div>
           </ScrollReveal>
 
-          <ScrollReveal delay={0.1}>
-            <div className="card-clean p-7 h-full">
-              <h2 className="text-lg font-bold text-vea-accent mb-3">Nos Valeurs</h2>
-              <ul className="space-y-2">
+          <ScrollReveal delay={0.08}>
+            <div className="panel-accent h-full">
+              <h2 className="text-lg font-black text-vea-text mb-3">Nos valeurs</h2>
+              <ul className="space-y-2.5">
                 {VALUES.map((v) => (
-                  <li key={v.label} className="flex items-center gap-2.5 text-sm text-vea-text-muted">
-                    <span
-                      aria-hidden="true"
-                      className="w-1.5 h-1.5 rounded-full bg-vea-accent flex-shrink-0"
-                    />
-                    <span>{v.label}</span>
+                  <li key={v} className="flex items-center gap-2.5 text-sm text-vea-text-muted">
+                    <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-vea-accent flex-shrink-0" />
+                    <span>{v}</span>
                   </li>
                 ))}
               </ul>
             </div>
           </ScrollReveal>
 
-          <ScrollReveal delay={0.2}>
-            <div className="card-clean p-7 h-full">
-              <h2 className="text-lg font-bold text-vea-accent mb-3">Notre Vision</h2>
-              <p className="text-sm text-vea-text-muted leading-relaxed">
-                Faire d&apos;Amiens une place forte de l&apos;esport responsable. Un
-                ecosysteme ou le joueur est accompagne, les parents rassures, et les
-                talents peuvent eclore sereinement.
-              </p>
+          <ScrollReveal delay={0.16}>
+            <div className="panel-accent h-full">
+              <h2 className="text-lg font-black text-vea-text mb-3">{PILIERS[1].k}</h2>
+              <p className="text-sm text-vea-text-muted leading-relaxed">{PILIERS[1].body}</p>
             </div>
           </ScrollReveal>
         </div>
       </section>
 
-      {/* NOTRE METHODE */}
-      <section className="py-16 px-4 section-bg">
+      {/* METHODE — blocs numerotes editoriaux */}
+      <section className="py-20 px-4 section-bg">
         <div className="max-w-5xl mx-auto">
           <ScrollReveal>
-            <div className="text-center mb-10">
-              <span className="badge-red mb-4">Notre approche</span>
-              <h2 className="text-2xl sm:text-3xl font-bold text-vea-text mt-4 mb-2">
+            <div className="mb-12 max-w-2xl">
+              <span className="kicker mb-3 block">Notre approche</span>
+              <h2 className="text-3xl sm:text-4xl font-black text-vea-text leading-tight mb-3">
                 Notre <span className="text-vea-accent">methode</span>
               </h2>
-              <p className="text-sm text-vea-text-muted max-w-2xl mx-auto">
+              <p className="text-sm sm:text-base text-vea-text-muted leading-relaxed">
                 Ce qui distingue VEA des autres structures esport : une approche
                 construite sur la duree, pas sur l&apos;evenementiel.
               </p>
             </div>
           </ScrollReveal>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-x-10 gap-y-12">
             {METHODE.map((m, i) => (
               <ScrollReveal key={m.title} delay={i * 0.08}>
-                <div className="card-clean p-6 h-full border-l-4 border-vea-accent">
-                  <h3 className="text-base font-bold text-vea-text mb-3 leading-tight">
-                    {m.title}
-                  </h3>
+                <div className="panel-accent h-full">
+                  <span className="editorial-figure text-3xl text-vea-text-dim block mb-3">
+                    0{i + 1}
+                  </span>
+                  <h3 className="text-base font-black text-vea-text mb-3 leading-tight">{m.title}</h3>
                   <p className="text-sm text-vea-text-muted leading-relaxed">{m.body}</p>
                 </div>
               </ScrollReveal>
@@ -176,16 +160,16 @@ export default function AssociationPage() {
         </div>
       </section>
 
-      {/* NOTRE IMPACT — chiffres reels (ancre #impact pour deep-linking depuis la home) */}
-      <section id="impact" className="py-16 px-4 bg-vea-bg scroll-mt-24">
+      {/* IMPACT — chiffres reels (ancre #impact) */}
+      <section id="impact" className="py-20 px-4 bg-vea-bg scroll-mt-24">
         <div className="max-w-5xl mx-auto">
           <ScrollReveal>
-            <div className="text-center mb-10">
-              <span className="badge-red mb-4">Notre Impact</span>
-              <h2 className="text-2xl sm:text-3xl font-bold text-vea-text mt-4 mb-2">
+            <div className="mb-10 max-w-2xl">
+              <span className="kicker mb-3 block">Notre impact</span>
+              <h2 className="text-3xl sm:text-4xl font-black text-vea-text leading-tight mb-3">
                 Les <span className="text-vea-accent">chiffres reels</span>
               </h2>
-              <p className="text-sm text-vea-text-muted max-w-xl mx-auto">
+              <p className="text-sm text-vea-text-muted leading-relaxed">
                 Donnees consolidees sur 3 saisons (2022-2025) + saison 2025/2026 en cours.
                 Source : base d&apos;activites VEA, debrief strategique mai 2026.
               </p>
@@ -193,10 +177,10 @@ export default function AssociationPage() {
           </ScrollReveal>
           <ImpactCards />
           <ScrollReveal>
-            <p className="text-xs text-vea-text-dim text-center mt-8 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-xs text-vea-text-dim mt-8 max-w-2xl leading-relaxed">
               Le benevolat valorise correspond a la classe 8 du Plan Comptable Associatif
-              (PCA). Sur 3 saisons, le travail benevole represente plus que le budget
-              total de l&apos;association — co-financement par engagement collectif quantifie.
+              (PCA). Sur 3 saisons, le travail benevole represente plus que le budget total
+              de l&apos;association — co-financement par engagement collectif quantifie.
             </p>
           </ScrollReveal>
         </div>
@@ -205,30 +189,28 @@ export default function AssociationPage() {
       {/* BUREAU + CA + Maya */}
       <BureauSection />
 
-      {/* EQUIPE OPERATIONNELLE */}
-      <section className="py-12 px-4">
+      {/* EQUIPE OPERATIONNELLE — lignes editoriales */}
+      <section className="py-16 px-4 hero-bg">
         <div className="max-w-4xl mx-auto">
           <ScrollReveal>
-            <div className="text-center mb-8">
-              <h2 className="text-xl sm:text-2xl font-bold text-vea-text mb-2">
-                Equipe <span className="text-vea-accent">Operationnelle</span>
+            <div className="mb-8 text-center">
+              <span className="kicker mb-3 block">Sur le terrain</span>
+              <h2 className="text-2xl sm:text-3xl font-black text-vea-text">
+                Equipe <span className="text-vea-accent">operationnelle</span>
               </h2>
-              <p className="text-sm text-vea-text-muted">
-                Ceux qui font vivre VEA sur le terrain au quotidien.
-              </p>
             </div>
           </ScrollReveal>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-8 max-w-2xl mx-auto">
             {EQUIPE_OPERATIONNELLE.map((member, i) => {
               const initials = member.name.split(" ").map((w) => w[0]).slice(0, 2).join("");
               return (
                 <ScrollReveal key={member.name} delay={i * 0.1}>
-                  <div className="card-clean p-6 text-center">
-                    <div className="w-14 h-14 bg-vea-accent-soft border border-vea-accent/15 rounded-full mx-auto mb-3 flex items-center justify-center">
-                      <span className="text-vea-accent text-sm font-bold">{initials}</span>
+                  <div className="panel-accent h-full">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-vea-accent text-sm font-black tracking-wide">{initials}</span>
+                      <h3 className="text-sm font-black text-vea-text">{member.name}</h3>
                     </div>
-                    <h3 className="text-sm font-bold text-vea-text">{member.name}</h3>
-                    <p className="text-xs text-vea-accent mt-1 font-medium">{member.role}</p>
+                    <p className="text-xs text-vea-accent font-semibold">{member.role}</p>
                     {member.pseudo && (
                       <p className="text-[11px] text-vea-text-dim mt-1">Pseudo : {member.pseudo}</p>
                     )}
@@ -250,22 +232,22 @@ export default function AssociationPage() {
         </div>
       </section>
 
-      {/* MEMBRES PARTENAIRES */}
-      <section className="py-12 px-4 bg-vea-bg">
+      {/* MEMBRES PARTENAIRES — liste editoriale */}
+      <section className="py-16 px-4 section-bg">
         <div className="max-w-4xl mx-auto">
           <ScrollReveal>
-            <h2 className="text-xl sm:text-2xl font-bold text-vea-text mb-6 text-center">
-              Membres <span className="text-vea-accent">Partenaires</span>
-            </h2>
+            <div className="mb-8 text-center">
+              <span className="kicker mb-3 block">Ecosysteme</span>
+              <h2 className="text-2xl sm:text-3xl font-black text-vea-text">
+                Membres <span className="text-vea-accent">partenaires</span>
+              </h2>
+            </div>
           </ScrollReveal>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-10 gap-y-8 max-w-3xl mx-auto">
             {PARTNER_ORGS.map((org, i) => (
               <ScrollReveal key={org.name} delay={i * 0.1}>
-                <div className="card-clean p-5 text-center">
-                  <div className="w-12 h-12 bg-vea-accent-soft rounded-full mx-auto mb-3 flex items-center justify-center">
-                    <span className="text-vea-accent text-sm font-bold">{org.name[0]}</span>
-                  </div>
-                  <h3 className="text-sm font-bold text-vea-text">{org.name}</h3>
+                <div className="panel-accent h-full">
+                  <h3 className="text-base font-black text-vea-text">{org.name}</h3>
                   <p className="text-xs text-vea-text-muted mt-1">{org.role}</p>
                 </div>
               </ScrollReveal>
@@ -274,19 +256,17 @@ export default function AssociationPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-16 px-4 section-bg">
+      {/* CTA — bandeau plein, pas de card blanche */}
+      <section className="bg-vea-accent-soft py-24 px-4">
         <div className="max-w-3xl mx-auto text-center">
           <ScrollReveal>
-            <div className="card-clean p-10 bg-vea-accent-soft border-vea-accent/15">
-              <h2 className="text-2xl sm:text-3xl font-bold text-vea-text mb-4">
-                Envie de nous <span className="text-vea-accent">rejoindre</span> ?
-              </h2>
-              <p className="text-sm text-vea-text-muted mb-6 max-w-lg mx-auto">
-                Joueur, benevole, partenaire, curieux — il y a une place pour chacun.
-              </p>
-              <Link href="/inscription" className="btn-primary">S&apos;inscrire</Link>
-            </div>
+            <h2 className="text-4xl sm:text-5xl font-black text-vea-text leading-[0.95] tracking-tight mb-5">
+              Envie de nous <span className="text-vea-accent">rejoindre</span> ?
+            </h2>
+            <p className="text-base text-vea-text-muted mb-8 max-w-lg mx-auto leading-relaxed">
+              Joueur, benevole, partenaire, curieux — il y a une place pour chacun.
+            </p>
+            <Link href="/inscription" className="btn-primary">S&apos;inscrire</Link>
           </ScrollReveal>
         </div>
       </section>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -10,7 +10,21 @@ import ChatBot from "../components/ChatBot";
 // ne peut plus etre place dans <body>. Pour le JSON-LD on bascule sur un <script> standard
 // rendu par le Server Component, ce qui est leger et n'embarque pas de JS executable.
 
-const inter = Inter({ subsets: ["latin"] });
+// Corps de texte : Inter (lisible, neutre), exposé en variable CSS.
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+// Titres : Space Grotesk — police d'affichage à caractère (anti "template IA"),
+// moderne et crédible pour un public institutionnel sans perdre l'énergie esport.
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-display",
+  display: "swap",
+});
 
 const SITE_URL = "https://vea.velito.fr";
 
@@ -165,7 +179,7 @@ export default function RootLayout({
           elle ne masque PAS les vrais mismatchs dans le contenu de la page. */}
       <body
         suppressHydrationWarning
-        className={`${inter.className} min-h-screen flex flex-col`}
+        className={`${inter.variable} ${spaceGrotesk.variable} font-sans min-h-screen flex flex-col`}
       >
         {/* JSON-LD Organization pour SEO Google (Knowledge Graph).
             Recommandation officielle Next.js 16 : script JSON-LD inline dans le

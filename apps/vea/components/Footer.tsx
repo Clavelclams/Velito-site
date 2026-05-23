@@ -2,7 +2,7 @@
  * Footer — Pied de page VEA (refonte 16/05/2026 — fond clair).
  *
  * Avant : fond #080410 presque noir + titres rouges.
- * Apres : fond surface-soft (#F4F4F1), 3 colonnes + zone "partenaires"
+ * Apres : fond surface-soft (#F4F4F1), 4 colonnes + zone "partenaires"
  * en marquee infini facon mabb.fr — preuve sociale dynamique.
  *
  * Pas d'adresse postale du siege (consigne du 16/05) — juste "Etouvie,
@@ -10,6 +10,7 @@
  */
 import Link from "next/link";
 import PartnersMarquee from "./PartnersMarquee";
+import VenaMark from "./VenaMark";
 
 const FOOTER_LINKS = [
   { label: "Accueil", href: "/" },
@@ -44,8 +45,8 @@ export default function Footer() {
           <PartnersMarquee />
         </div>
 
-        {/* ===== 3 COLONNES PRINCIPALES ===== */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+        {/* ===== COLONNES PRINCIPALES ===== */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           <div>
             <h3 className="text-vea-accent uppercase tracking-widest text-xs font-bold mb-3">
               VEA
@@ -111,6 +112,25 @@ export default function Footer() {
               </li>
             </ul>
           </div>
+
+          <div>
+            <h3 className="text-vea-accent uppercase tracking-widest text-xs font-bold mb-4">
+              Ecosysteme
+            </h3>
+            <a
+              href="https://velito.fr"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-vea-text-muted hover:text-vea-accent transition-colors"
+            >
+              <VenaMark className="w-6 h-6 shrink-0" />
+              <span className="font-semibold">VENA — velito.fr</span>
+            </a>
+            <p className="text-xs text-vea-text-dim leading-relaxed mt-3">
+              Site developpe et maintenu par Velito Expertise Numerique Amiens,
+              l&apos;agence qui fait vivre l&apos;ecosysteme Velito.
+            </p>
+          </div>
         </div>
 
         <div className="mt-12 pt-6 border-t border-vea-border text-center">
@@ -120,7 +140,7 @@ export default function Footer() {
               href="https://velito.fr"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-vea-accent transition-colors"
+              className="hover:text-vea-accent transition-colors font-semibold"
             >
               VENA
             </a>

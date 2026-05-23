@@ -107,7 +107,7 @@ export default function ContactPage() {
             {/* ===== FORMULAIRE (3/5) ===== */}
             <div className="lg:col-span-3">
               <ScrollReveal>
-                <div className="card-clean p-6 sm:p-8">
+                <div className="panel p-6 sm:p-8">
                   {status === "success" ? (
                     <div className="text-center py-8">
                       <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-vea-accent-soft border border-vea-accent/20 flex items-center justify-center">
@@ -228,9 +228,9 @@ export default function ContactPage() {
             </div>
 
             {/* ===== INFOS (2/5) ===== */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-10">
               <ScrollReveal delay={0.1}>
-                <div className="card-clean p-6">
+                <div className="panel-accent">
                   <h3 className="text-vea-accent uppercase tracking-widest text-xs font-bold mb-4">
                     Coordonnees
                   </h3>
@@ -275,7 +275,7 @@ export default function ContactPage() {
               </ScrollReveal>
 
               <ScrollReveal delay={0.2}>
-                <div className="card-clean p-6">
+                <div className="panel-accent">
                   <h3 className="text-vea-accent uppercase tracking-widest text-xs font-bold mb-4">
                     Reseaux sociaux
                   </h3>

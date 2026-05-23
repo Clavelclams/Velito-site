@@ -3,6 +3,8 @@
  *
  * Affiché sur /admin/demandes/[id]. Éditeurs+ uniquement (vérifié côté action).
  * "Archiver" = soft delete (statut 'annule'), pas de suppression dure.
+ * Les appels d'action sont encadrés par try/catch : une erreur s'affiche
+ * proprement (message rouge) au lieu de faire planter l'écran.
  */
 "use client";
 
@@ -37,13 +39,17 @@ export default function DemandeManager({ id, statut, notesInternes }: DemandeMan
     setMsg(null);
     setError(null);
     startTransition(async () => {
-      const r = await updateDemandeAction({ id, statut: currentStatut, notes_internes: notes });
-      if (!r.success) {
-        setError(r.error ?? "Erreur");
-        return;
+      try {
+        const r = await updateDemandeAction({ id, statut: currentStatut, notes_internes: notes });
+        if (!r.success) {
+          setError(r.error ?? "Erreur");
+          return;
+        }
+        setMsg("Enregistré.");
+        router.refresh();
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Erreur inattendue lors de l'enregistrement.");
       }
-      setMsg("Enregistré.");
-      router.refresh();
     });
   }
 
@@ -54,12 +60,16 @@ export default function DemandeManager({ id, statut, notesInternes }: DemandeMan
     setMsg(null);
     setError(null);
     startTransition(async () => {
-      const r = await archiveDemandeAction(id);
-      if (!r.success) {
-        setError(r.error ?? "Erreur");
-        return;
+      try {
+        const r = await archiveDemandeAction(id);
+        if (!r.success) {
+          setError(r.error ?? "Erreur");
+          return;
+        }
+        router.push("/admin/demandes");
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Erreur inattendue lors de l'archivage.");
       }
-      router.push("/admin/demandes");
     });
   }
 

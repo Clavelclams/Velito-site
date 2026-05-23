@@ -351,10 +351,10 @@ export default function EsportPage() {
                 </div>
               </ScrollReveal>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-8">
                 {PRESS.map((article, i) => (
                   <ScrollReveal key={article.title} delay={i * 0.08}>
-                    <div className="card-accent-left p-5 h-full">
+                    <div className="panel-accent py-1 h-full">
                       <p className="text-[11px] text-vea-accent font-semibold uppercase tracking-wider mb-1">
                         {article.media} &middot; {article.date}
                       </p>
@@ -387,7 +387,7 @@ export default function EsportPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {TOURNAMENTS.map((t, i) => (
                   <ScrollReveal key={t.title} delay={i * 0.06}>
-                    <div className="card-clean p-5 h-full">
+                    <div className="panel p-5 h-full">
                       <p className="text-[11px] text-vea-accent font-semibold uppercase tracking-wider mb-2">
                         {t.date}
                       </p>
@@ -431,10 +431,10 @@ export default function EsportPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {HOW_IT_WORKS.map((card, i) => (
                   <ScrollReveal key={card.title} delay={i * 0.1}>
-                    <div className="card-clean p-7 h-full">
-                      <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 bg-vea-accent-soft border border-vea-accent/15">
-                        <span className="text-xl">{card.emoji}</span>
-                      </div>
+                    <div className="h-full border-t border-vea-border-strong pt-5">
+                      <span className="editorial-figure text-4xl text-vea-text-dim block mb-4">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
                       <h3 className="text-base font-bold text-vea-text mb-2">
                         {card.title}
                       </h3>
@@ -495,7 +495,7 @@ export default function EsportPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {SOCIAL_PROJECTS.map((p, i) => (
                   <ScrollReveal key={p.title} delay={i * 0.07}>
-                    <div className="card-clean p-6 h-full">
+                    <div className="panel p-6 h-full">
                       <div className="flex items-start gap-4">
                         <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-vea-accent-soft border border-vea-accent/15 flex-shrink-0">
                           <span className="text-xl">{p.emoji}</span>
@@ -548,7 +548,7 @@ export default function EsportPage() {
           <section className="py-16 px-4 bg-vea-bg">
             <div className="max-w-3xl mx-auto">
               <ScrollReveal>
-                <div className="card-clean p-8 sm:p-10 border-l-4 border-l-vea-accent">
+                <div className="bg-vea-accent-soft border-l-4 border-l-vea-accent rounded-r-2xl p-8 sm:p-10">
                   <span className="text-[11px] text-vea-accent font-semibold uppercase tracking-wider">
                     Recit
                   </span>
@@ -612,7 +612,7 @@ export default function EsportPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {SOCIAL_PARTNERS.map((p, i) => (
                   <ScrollReveal key={p.name} delay={i * 0.04}>
-                    <div className="card-accent-left p-4">
+                    <div className="panel-accent py-1">
                       <h3 className="text-sm font-bold text-vea-text">
                         {p.name}
                       </h3>
@@ -644,26 +644,31 @@ export default function EsportPage() {
       <section className="py-16 px-4 bg-vea-bg">
         <div className="max-w-3xl mx-auto text-center">
           <ScrollReveal>
-            <div className="card-clean p-10 bg-vea-accent-soft border-vea-accent/15">
-              <h2 className="text-2xl sm:text-3xl font-bold text-vea-text mb-4">
-                {tab === "competition" ? (
-                  <>
-                    Tu joues{" "}
-                    <span className="text-vea-accent">serieusement</span> ?
-                  </>
-                ) : (
-                  <>
-                    Envie de{" "}
-                    <span className="text-vea-accent">t&apos;engager</span> ?
-                  </>
-                )}
-              </h2>
-              <p className="text-vea-text-muted mb-6 max-w-lg mx-auto">
-                {tab === "competition"
-                  ? "On cherche des joueurs motives pour representer Amiens. Peu importe ton niveau, viens nous voir."
-                  : "Animation, prevention, depot de projet citoyen — VEA cherche toujours des benevoles et des jeunes engages."}
-              </p>
-              <Link href="/inscription" className="btn-primary">
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 border-t-2 border-vea-accent pt-10">
+              <div className="max-w-xl">
+                <span className="kicker mb-3">
+                  {tab === "competition" ? "Competition" : "Engagement"}
+                </span>
+                <h2 className="text-3xl sm:text-4xl font-bold text-vea-text leading-tight mt-2">
+                  {tab === "competition" ? (
+                    <>
+                      Tu joues{" "}
+                      <span className="text-vea-accent">serieusement</span> ?
+                    </>
+                  ) : (
+                    <>
+                      Envie de{" "}
+                      <span className="text-vea-accent">t&apos;engager</span> ?
+                    </>
+                  )}
+                </h2>
+                <p className="text-vea-text-muted mt-4">
+                  {tab === "competition"
+                    ? "On cherche des joueurs motives pour representer Amiens. Peu importe ton niveau, viens nous voir."
+                    : "Animation, prevention, depot de projet citoyen — VEA cherche toujours des benevoles et des jeunes engages."}
+                </p>
+              </div>
+              <Link href="/inscription" className="btn-primary shrink-0">
                 Nous rejoindre
               </Link>
             </div>

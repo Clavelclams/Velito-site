@@ -6,6 +6,8 @@
  *   On ne supprime JAMAIS la ligne (RGPD / traçabilité).
  *
  * Réservé éditeurs+ VEA. RLS UPDATE déjà en place (is_vea_editor()).
+ * Tout est encadré par try/catch : une erreur renvoie { success:false, error }
+ * (jamais d'exception non gérée qui ferait planter l'écran admin).
  *
  * Statuts autorisés (CHECK en base) :
  *   nouveau, en_cours, devis_envoye, accepte, refuse, annule
@@ -35,34 +37,43 @@ export async function updateDemandeAction(input: {
   statut?: string;
   notes_internes?: string;
 }): Promise<Result> {
-  const canEdit = await hasPermission("vea", "editor");
-  if (!canEdit) return { success: false, error: "Permission refusée." };
+  try {
+    const canEdit = await hasPermission("vea", "editor");
+    if (!canEdit) return { success: false, error: "Permission refusée." };
 
-  const supabase = await createClient();
-
-  const patch: Record<string, unknown> = {};
-  if (input.statut !== undefined) {
-    if (!STATUTS_DEMANDE.includes(input.statut as (typeof STATUTS_DEMANDE)[number])) {
-      return { success: false, error: "Statut invalide." };
+    const patch: Record<string, unknown> = {};
+    if (input.statut !== undefined) {
+      if (!STATUTS_DEMANDE.includes(input.statut as (typeof STATUTS_DEMANDE)[number])) {
+        return { success: false, error: "Statut invalide." };
+      }
+      patch.statut = input.statut;
     }
-    patch.statut = input.statut;
+    if (input.notes_internes !== undefined) {
+      patch.notes_internes = input.notes_internes.trim() || null;
+    }
+    if (Object.keys(patch).length === 0) return { success: true };
+
+    // On touche updated_at a chaque modification (suivi commercial).
+    patch.updated_at = new Date().toISOString();
+
+    const supabase = await createClient();
+    const { error } = await supabase
+      .schema("vea")
+      .from("demandes_prestation")
+      .update(patch)
+      .eq("id", input.id);
+
+    if (error) return { success: false, error: error.message };
+
+    revalidatePath(`/admin/demandes/${input.id}`);
+    revalidatePath("/admin/demandes");
+    return { success: true };
+  } catch (e) {
+    return {
+      success: false,
+      error: e instanceof Error ? e.message : "Erreur serveur inattendue.",
+    };
   }
-  if (input.notes_internes !== undefined) {
-    patch.notes_internes = input.notes_internes.trim() || null;
-  }
-  if (Object.keys(patch).length === 0) return { success: true };
-
-  const { error } = await supabase
-    .schema("vea")
-    .from("demandes_prestation")
-    .update(patch)
-    .eq("id", input.id);
-
-  if (error) return { success: false, error: error.message };
-
-  revalidatePath(`/admin/demandes/${input.id}`);
-  revalidatePath("/admin/demandes");
-  return { success: true };
 }
 
 /** "Supprimer" = archiver (soft delete via statut 'annule'). */

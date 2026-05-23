@@ -97,25 +97,25 @@ function PartnerCard({ partner }: { partner: Partner }) {
     <span>{partner.name}</span>
   );
 
+  // DA 22/05 : plus de "carte blanche". Cellule sobre facon mur de partenaires
+  // institutionnel — logo en niveaux de gris qui revient en couleur au survol.
   return (
-    <div className="card-clean p-5 text-center">
-      <div className="w-16 h-16 mx-auto mb-3 flex items-center justify-center">
+    <div className="group flex flex-col items-center text-center px-3 py-6 rounded-2xl transition-colors hover:bg-vea-surface-soft">
+      <div className="h-16 w-full mb-4 flex items-center justify-center">
         {partner.logo ? (
           // Logo officiel partenaire (object-contain pour eviter deformation)
           <Image
             src={partner.logo}
             alt={`Logo ${partner.name}`}
-            width={64}
+            width={72}
             height={64}
-            className="w-full h-full object-contain"
+            className="max-h-16 w-auto object-contain grayscale opacity-70 transition-all duration-300 group-hover:grayscale-0 group-hover:opacity-100"
           />
         ) : (
-          // Fallback : pastille avec lettre initiale
-          <div className="w-12 h-12 bg-vea-accent-soft border border-vea-accent/15 rounded-lg flex items-center justify-center">
-            <span className="text-vea-accent text-lg font-bold">
-              {partner.name[0]}
-            </span>
-          </div>
+          // Fallback : monogramme typographique (pas de boite)
+          <span className="font-display text-3xl font-bold text-vea-border-strong transition-colors group-hover:text-vea-accent">
+            {partner.name[0]}
+          </span>
         )}
       </div>
       <h3 className="text-sm font-bold text-vea-text mb-1">{NameNode}</h3>
@@ -128,8 +128,8 @@ function PartnerCard({ partner }: { partner: Partner }) {
 
 function TerrainCard({ terrain }: { terrain: Terrain }) {
   return (
-    <div className="card-accent-left p-4 h-full">
-      <h3 className="text-sm font-bold text-vea-text leading-tight">
+    <div className="panel-accent py-3 h-full transition-colors hover:border-l-vea-border-strong">
+      <h3 className="text-sm font-bold text-vea-accent leading-tight">
         {terrain.name}
       </h3>
       <p className="text-xs text-vea-text-dim mt-1">{terrain.type}</p>
@@ -210,19 +210,22 @@ export default function PartenairesPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-16 px-4 section-bg">
-        <div className="max-w-3xl mx-auto text-center">
+      {/* CTA — bloc editorial accent (plus de carte blanche centree) */}
+      <section className="py-20 px-4 section-bg">
+        <div className="max-w-5xl mx-auto">
           <ScrollReveal>
-            <div className="card-clean p-10 bg-vea-accent-soft border-vea-accent/15">
-              <h2 className="text-2xl sm:text-3xl font-bold text-vea-text mb-4">
-                Devenir <span className="text-vea-accent">partenaire</span>
-              </h2>
-              <p className="text-vea-text-muted mb-6 max-w-lg mx-auto">
-                Vous souhaitez soutenir VEA, organiser un evenement commun, ou
-                rejoindre notre reseau ? On est tres ouverts a la discussion.
-              </p>
-              <Link href="/contact" className="btn-primary">
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 border-t-2 border-vea-accent pt-10">
+              <div className="max-w-xl">
+                <span className="kicker mb-3">Rejoindre l&apos;ecosysteme</span>
+                <h2 className="text-3xl sm:text-4xl font-bold text-vea-text leading-tight mt-2">
+                  Devenir <span className="text-vea-accent">partenaire</span>
+                </h2>
+                <p className="text-vea-text-muted mt-4">
+                  Vous souhaitez soutenir VEA, organiser un evenement commun, ou
+                  rejoindre notre reseau ? On est tres ouverts a la discussion.
+                </p>
+              </div>
+              <Link href="/contact" className="btn-primary shrink-0">
                 Nous contacter
               </Link>
             </div>
