@@ -23,6 +23,7 @@ import Link from "next/link";
 import ScrollReveal from "@/components/ScrollReveal";
 import { EVENTS_ARCHIVE, type EventArchive } from "@/lib/events-archive";
 import { createClient } from "@/lib/supabase/client";
+import { GALLERY_EVENT_SLUGS } from "@/lib/galleries";
 
 type Evenement = {
   id: string;
@@ -57,10 +58,6 @@ function normalizeType(rawType: string): string {
   // Mapping archive vers nouveau format (deja lowercase apres .toLowerCase())
   return t;
 }
-
-// Slugs d'events Supabase qui ont une galerie photos dans /medias.
-// On n'affiche "Voir les photos" que pour ceux-la (sinon galerie vide).
-const GALLERY_EVENT_SLUGS = new Set<string>(["ljsdlp-2026"]);
 
 export default function AgendaPage() {
   const [evenements, setEvenements] = useState<Evenement[]>([]);

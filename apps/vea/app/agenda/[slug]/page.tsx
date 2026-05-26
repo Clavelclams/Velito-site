@@ -14,6 +14,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { hasGallery } from "@/lib/galleries";
 
 export const dynamic = "force-dynamic";
 
@@ -188,6 +189,11 @@ export default async function BilanPublicPage({ params }: PageProps) {
             <Link href="/agenda" className="btn-outline text-sm py-2">
               ← Tous nos evenements
             </Link>
+            {hasGallery(ev.event_slug) && (
+              <Link href={`/medias?event=${ev.event_slug}`} className="btn-outline text-sm py-2">
+                Voir les photos
+              </Link>
+            )}
             <Link href="/inscription" className="btn-primary text-sm py-2">
               Rejoindre VEA
             </Link>
