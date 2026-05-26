@@ -24,6 +24,12 @@ interface Photo {
 }
 
 const PHOTOS: Photo[] = [
+  // === Les Jeunes Sont Dans La Place 2026 (samedi 23 mai, parc Amiens) — de dos / floutees ===
+  { src: "/images/events/ljsdlp-2026-stand-velito-floute.jpg", alt: "Les Jeunes Sont Dans La Place 2026 - stand Velito Esport sous tente (visages floutes)", cat: "terrain", caption: "LJSDLP 2026 - stand Velito", event: "ljsdlp-2026" },
+  { src: "/images/events/ljsdlp-2026-fifa-affiche-dos.jpg", alt: "Les Jeunes Sont Dans La Place 2026 - duo FIFA de dos avec l'affiche de l'evenement", cat: "terrain", caption: "LJSDLP 2026 - FIFA", event: "ljsdlp-2026" },
+  { src: "/images/events/ljsdlp-2026-seoul-market-dos.jpg", alt: "Les Jeunes Sont Dans La Place 2026 - joueurs de dos devant les ecrans", cat: "terrain", caption: "LJSDLP 2026 - en partie", event: "ljsdlp-2026" },
+  { src: "/images/events/ljsdlp-2026-sim-course-dos.jpg", alt: "Les Jeunes Sont Dans La Place 2026 - joueur au volant sim course (de dos)", cat: "terrain", caption: "LJSDLP 2026 - sim course", event: "ljsdlp-2026" },
+  { src: "/images/events/ljsdlp-2026-fifa-groupe-dos.jpg", alt: "Les Jeunes Sont Dans La Place 2026 - groupe autour d'une partie FIFA", cat: "terrain", caption: "LJSDLP 2026 - partie FIFA", event: "ljsdlp-2026" },
   // === Encore plus de photos (postable, mai 2026) — floutees / scenes ===
   { src: "/images/events/med-soiree-rollup.jpg", alt: "Soiree event - roll-up VEA (visages floutes)", cat: "soiree", caption: "Soiree - roll-up VEA" },
   { src: "/images/events/med-soiree-rires.jpg", alt: "Soiree event - rires entre joueurs (visages floutes)", cat: "soiree", caption: "Soiree - rires" },
@@ -114,6 +120,7 @@ const EVENT_LABELS: Record<string, string> = {
   "happy-eid-2024": "Happy Eid 2024 - avec Jeunesse en Or",
   "happy-eid-2025": "Happy Eid 2025 - avec Jeunesse en Or",
   "happy-eid-2026": "Happy Eid 2026 - avec Jeunesse en Or",
+  "ljsdlp-2026": "Les Jeunes Sont Dans La Place - 23 mai 2026 (parc, Amiens)",
   "ljsdlp-2025": "Les Jeunes Sont Dans La Place - ete 2025",
   "tiqe-est-elbeuf": "TIQE Secteur Est - Elbeuf 2024",
   "tiqe-final-corner": "TIQE Final - Le Corner juin 2024",

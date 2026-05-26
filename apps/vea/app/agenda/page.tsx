@@ -58,6 +58,10 @@ function normalizeType(rawType: string): string {
   return t;
 }
 
+// Slugs d'events Supabase qui ont une galerie photos dans /medias.
+// On n'affiche "Voir les photos" que pour ceux-la (sinon galerie vide).
+const GALLERY_EVENT_SLUGS = new Set<string>(["ljsdlp-2026"]);
+
 export default function AgendaPage() {
   const [evenements, setEvenements] = useState<Evenement[]>([]);
   // Default "a_venir" : on affiche en priorite les events futurs (demande Clavel 19/05/2026)
@@ -93,7 +97,7 @@ export default function AgendaPage() {
             lieu: e.lieu,
             type: normalizeType(e.type),
             actif: e.statut !== "annule",
-            gallerySlug: undefined,
+            gallerySlug: GALLERY_EVENT_SLUGS.has(e.event_slug) ? e.event_slug : undefined,
             eventSlug: e.event_slug,
             bilanPublic: (e as { bilan_public?: boolean }).bilan_public ?? false,
           })) as Evenement[];
