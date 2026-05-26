@@ -382,3 +382,76 @@ export async function updateEventAction(input: {
   revalidatePath("/agenda");
   return { success: true, notifies, dateChangee };
 }
+
+// ============================================================================
+// 5. updateBilanAction
+// ----------------------------------------------------------------------------
+// Edite le BILAN PUBLIC d'un event (chiffres editoriaux saisis a la main +
+// visibilite par metrique + interrupteur global "bilan public").
+//
+// Ces chiffres NE viennent PAS des presences/scan : c'est un bilan que l'admin
+// remplit (ex : 50 personnes sur le stand meme si toutes n'ont pas scanne).
+// La page publique /agenda/[slug] ne lit QUE les events bilan_public = true et
+// n'affiche que les metriques cochees. Aucun nom n'est jamais expose.
+//
+// Les nombres sont nullable (champ vide -> NULL = "non renseigne", != 0).
+// ============================================================================
+function parseNb(v: number | null | undefined): number | null {
+  if (v === null || v === undefined) return null;
+  const n = Math.round(Number(v));
+  if (!Number.isFinite(n) || n < 0) return null;
+  return Math.min(n, 1_000_000); // garde-fou anti-valeur absurde
+}
+
+export async function updateBilanAction(input: {
+  id: string;
+  eventSlug: string;
+  bilanPublic: boolean;
+  recap?: string | null;
+  nbTotal?: number | null;
+  nbFilles?: number | null;
+  nbGarcons?: number | null;
+  nbJoueurs?: number | null;
+  nbSpectateurs?: number | null;
+  nbBenevoles?: number | null;
+  showTotal: boolean;
+  showGenre: boolean;
+  showJoueurs: boolean;
+  showSpectateurs: boolean;
+  showBenevoles: boolean;
+}): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Non connecte." };
+
+  const canEdit = await hasPermission("vea", "editor");
+  if (!canEdit) return { success: false, error: "Permission refusee." };
+
+  const { error } = await supabase
+    .schema("vea")
+    .from("evenements")
+    .update({
+      bilan_public: input.bilanPublic,
+      bilan_recap: input.recap?.trim() || null,
+      bilan_nb_total: parseNb(input.nbTotal),
+      bilan_nb_filles: parseNb(input.nbFilles),
+      bilan_nb_garcons: parseNb(input.nbGarcons),
+      bilan_nb_joueurs: parseNb(input.nbJoueurs),
+      bilan_nb_spectateurs: parseNb(input.nbSpectateurs),
+      bilan_nb_benevoles: parseNb(input.nbBenevoles),
+      bilan_show_total: input.showTotal,
+      bilan_show_genre: input.showGenre,
+      bilan_show_joueurs: input.showJoueurs,
+      bilan_show_spectateurs: input.showSpectateurs,
+      bilan_show_benevoles: input.showBenevoles,
+    })
+    .eq("id", input.id);
+
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath(`/admin/evenements/${input.eventSlug}`);
+  revalidatePath(`/admin/evenements/${input.id}`);
+  revalidatePath(`/agenda/${input.eventSlug}`);
+  revalidatePath("/agenda");
+  return { success: true };
+}

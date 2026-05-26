@@ -23,6 +23,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { JEUX, JEUX_MAX } from "@/lib/jeux";
 
 export interface UpdateProfileResult {
   success: boolean;
@@ -41,6 +42,8 @@ export interface UpdateProfileInput {
   avatar_url: string;
   is_public: boolean;
   external_links: ExternalLinkInput[];
+  jeux_competition: string[];
+  dispo_competition: boolean;
 }
 
 export async function updateProfileAction(
@@ -91,6 +94,12 @@ export async function updateProfileAction(
     external_links.push({ label, url });
   }
 
+  // jeux_competition : max JEUX_MAX, uniquement des valeurs de la liste fixe
+  // (filtre fiable cote admin). dispo_competition : opt-in pur boolean.
+  const rawJeux = Array.isArray(input.jeux_competition) ? input.jeux_competition : [];
+  const jeux_competition = [...new Set(rawJeux.filter((j) => JEUX.includes(j)))].slice(0, JEUX_MAX);
+  const dispo_competition = Boolean(input.dispo_competition);
+
   // 3) Verifier si une fiche participant existe deja pour ce user_id
   const { data: existing } = await supabase
     .schema("vea")
@@ -112,6 +121,8 @@ export async function updateProfileAction(
         avatar_url: avatar_url || null,
         is_public,
         external_links,
+        jeux_competition,
+        dispo_competition,
       })
       .eq("user_id", user.id);
 
@@ -151,6 +162,8 @@ export async function updateProfileAction(
         bio: bio || null,
         avatar_url: avatar_url || null,
         is_public,
+        jeux_competition,
+        dispo_competition,
       });
 
     if (insertError) {

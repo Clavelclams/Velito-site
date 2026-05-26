@@ -175,7 +175,7 @@ export default async function ProfilPage() {
     .schema("vea")
     .from("participants")
     .select(
-      "id, prenom, nom, role, benevole_hours, benevole_hours_2026_2027, pseudo, jeu_prefere, bio, avatar_url, is_public, external_links, events_old, events_2026_2027, xp_saison_actuelle, points_vena, saison_actuelle, notif_events_active"
+      "id, prenom, nom, role, benevole_hours, benevole_hours_2026_2027, pseudo, jeu_prefere, bio, avatar_url, is_public, external_links, events_old, events_2026_2027, xp_saison_actuelle, points_vena, saison_actuelle, notif_events_active, jeux_competition, dispo_competition"
     )
     .eq("user_id", user.id)
     .maybeSingle();
@@ -426,6 +426,12 @@ export default async function ProfilPage() {
                 ? participant.external_links
                 : []
             }
+            initialJeuxCompetition={
+              Array.isArray(participant?.jeux_competition)
+                ? (participant.jeux_competition as string[])
+                : []
+            }
+            initialDispoCompetition={participant?.dispo_competition ?? false}
           />
         </section>
 

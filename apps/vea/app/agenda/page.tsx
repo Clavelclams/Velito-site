@@ -39,6 +39,9 @@ type Evenement = {
   /** Slug de l'event (Supabase) -> bouton "S'inscrire" -> /inscription?event=<slug>
    *  (previsionnel "monde attendu"). Absent pour archive/Prisma. */
   eventSlug?: string;
+  /** Bilan public publie par l'admin -> bouton "Voir le bilan" sur les events
+   *  passes -> /agenda/<slug>. Seuls les events Supabase peuvent en avoir un. */
+  bilanPublic?: boolean;
 };
 
 /**
@@ -78,7 +81,7 @@ export default function AgendaPage() {
       supabase
         .schema("vea")
         .from("evenements")
-        .select("id, nom, event_slug, date, lieu, type, description, statut")
+        .select("id, nom, event_slug, date, lieu, type, description, statut, bilan_public")
         .order("date", { ascending: false })
         .then(({ data }) => {
           if (!data) return [] as Evenement[];
@@ -92,6 +95,7 @@ export default function AgendaPage() {
             actif: e.statut !== "annule",
             gallerySlug: undefined,
             eventSlug: e.event_slug,
+            bilanPublic: (e as { bilan_public?: boolean }).bilan_public ?? false,
           })) as Evenement[];
         }),
     ])
@@ -383,6 +387,16 @@ function EventCard({
           className="btn-outline text-xs py-2"
         >
           Voir les photos
+        </Link>
+      )}
+
+      {/* Bouton "Voir le bilan" — events passes avec bilan public publie */}
+      {!futur && ev.eventSlug && ev.bilanPublic && (
+        <Link
+          href={`/agenda/${ev.eventSlug}`}
+          className="btn-primary text-xs py-2"
+        >
+          Voir le bilan
         </Link>
       )}
 

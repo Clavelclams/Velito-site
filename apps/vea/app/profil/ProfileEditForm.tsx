@@ -20,6 +20,7 @@
 import { useState, useTransition, useRef } from "react";
 import { updateProfileAction } from "./actions";
 import { createClient } from "@/lib/supabase/client";
+import { JEUX, JEUX_MAX } from "@/lib/jeux";
 
 export interface ExternalLink {
   label: string;
@@ -37,6 +38,8 @@ interface ProfileEditFormProps {
   initialAvatarUrl: string;
   initialIsPublic: boolean;
   initialExternalLinks: ExternalLink[];
+  initialJeuxCompetition: string[];
+  initialDispoCompetition: boolean;
 }
 
 // Presets pour helper les users (boutons rapides "Ajouter Discord", "Twitch", etc.)
@@ -49,6 +52,8 @@ export default function ProfileEditForm({
   initialAvatarUrl,
   initialIsPublic,
   initialExternalLinks,
+  initialJeuxCompetition,
+  initialDispoCompetition,
 }: ProfileEditFormProps) {
   const [pseudo, setPseudo] = useState(initialPseudo);
   const [jeuPrefere, setJeuPrefere] = useState(initialJeuPrefere);
@@ -56,6 +61,10 @@ export default function ProfileEditForm({
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
   const [isPublic, setIsPublic] = useState(initialIsPublic);
   const [externalLinks, setExternalLinks] = useState<ExternalLink[]>(initialExternalLinks);
+  const [jeuxCompetition, setJeuxCompetition] = useState<string[]>(initialJeuxCompetition);
+  const [dispoCompetition, setDispoCompetition] = useState(initialDispoCompetition);
+  const [jeuxSearch, setJeuxSearch] = useState("");
+  const [showCompetInfo, setShowCompetInfo] = useState(false);
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -165,6 +174,8 @@ export default function ProfileEditForm({
         avatar_url: avatarUrl,
         is_public: isPublic,
         external_links: cleanLinks,
+        jeux_competition: jeuxCompetition,
+        dispo_competition: dispoCompetition,
       });
 
       if (result.success) {
@@ -407,6 +418,85 @@ export default function ProfileEditForm({
             </button>
           </div>
         )}
+      </div>
+
+      {/* Competitions — opt-in + jeux ou je suis bon (max 5) */}
+      <div className="border-t border-vea-border pt-5">
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className={labelClass + " mb-0"}>Etre appele pour les competitions</span>
+          <button
+            type="button"
+            onClick={() => setShowCompetInfo((v) => !v)}
+            className="w-4 h-4 rounded-full border border-vea-border text-[10px] text-vea-text-muted hover:border-vea-accent hover:text-vea-accent leading-none"
+            aria-label="A quoi ca sert ?"
+          >
+            ?
+          </button>
+        </div>
+        {showCompetInfo && (
+          <p className="text-[11px] text-vea-text-muted leading-relaxed mb-3 bg-vea-accent-soft/40 border border-vea-accent/15 rounded-lg px-3 py-2">
+            Quand VEA monte une competition (ex : INTERCUP sur Mario Kart et FC), on
+            a besoin de savoir qui joue a quoi pour proposer aux bonnes personnes de
+            representer le club. Coche les jeux ou tu te debrouilles bien : si tu
+            actives le contact, on pourra t&apos;appeler quand une compet correspond.
+            Tes choix ne sont vus que par le bureau.
+          </p>
+        )}
+
+        <label className="flex items-start gap-3 cursor-pointer mb-3">
+          <input
+            type="checkbox"
+            checked={dispoCompetition}
+            onChange={(e) => setDispoCompetition(e.target.checked)}
+            className="mt-1 w-4 h-4 accent-vea-accent cursor-pointer"
+          />
+          <span className="text-sm text-vea-text">
+            Je souhaite etre contacte pour les competitions VEA.
+          </span>
+        </label>
+
+        {jeuxCompetition.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-2">
+            {jeuxCompetition.map((j) => (
+              <button
+                key={j}
+                type="button"
+                onClick={() => setJeuxCompetition(jeuxCompetition.filter((x) => x !== j))}
+                className="text-xs px-3 py-1.5 rounded-full bg-vea-accent text-white font-semibold"
+              >
+                {j} ×
+              </button>
+            ))}
+          </div>
+        )}
+        <p className="text-[11px] text-vea-text-dim mb-2">
+          {jeuxCompetition.length}/{JEUX_MAX} jeux selectionnes — clique pour ajouter / retirer.
+        </p>
+
+        <input
+          type="text"
+          value={jeuxSearch}
+          onChange={(e) => setJeuxSearch(e.target.value)}
+          className={inputClass}
+          placeholder="Rechercher un jeu..."
+        />
+        <div className="flex flex-wrap gap-2 mt-2">
+          {JEUX.filter(
+            (j) =>
+              j.toLowerCase().includes(jeuxSearch.toLowerCase()) &&
+              !jeuxCompetition.includes(j)
+          ).map((j) => (
+            <button
+              key={j}
+              type="button"
+              disabled={jeuxCompetition.length >= JEUX_MAX}
+              onClick={() => setJeuxCompetition([...jeuxCompetition, j])}
+              className="text-xs px-3 py-1.5 border border-vea-border rounded-full text-vea-text-muted hover:border-vea-accent hover:text-vea-accent disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              + {j}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Toggle public */}

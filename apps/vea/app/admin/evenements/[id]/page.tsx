@@ -21,6 +21,7 @@ import { getScanUrl, getQRCodeUrl } from "@/lib/qrcode";
 import ParticipantsList, { type ParticipantRow } from "./ParticipantsList";
 import AddManualParticipantForm from "./AddManualParticipantForm";
 import EditEventForm from "./EditEventForm";
+import BilanEventForm from "./BilanEventForm";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +43,7 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
   let { data: event } = await supabase
     .schema("vea")
     .from("evenements")
-    .select("id, nom, event_slug, date, heure, lieu, type, description, statut, token, scan_actif, capacite")
+    .select("id, nom, event_slug, date, heure, lieu, type, description, statut, token, scan_actif, capacite, bilan_public, bilan_recap, bilan_nb_total, bilan_nb_filles, bilan_nb_garcons, bilan_nb_joueurs, bilan_nb_spectateurs, bilan_nb_benevoles, bilan_show_total, bilan_show_genre, bilan_show_joueurs, bilan_show_spectateurs, bilan_show_benevoles")
     .eq("event_slug", id)
     .maybeSingle();
 
@@ -50,7 +51,7 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
     const r = await supabase
       .schema("vea")
       .from("evenements")
-      .select("id, nom, event_slug, date, heure, lieu, type, description, statut, token, scan_actif, capacite")
+      .select("id, nom, event_slug, date, heure, lieu, type, description, statut, token, scan_actif, capacite, bilan_public, bilan_recap, bilan_nb_total, bilan_nb_filles, bilan_nb_garcons, bilan_nb_joueurs, bilan_nb_spectateurs, bilan_nb_benevoles, bilan_show_total, bilan_show_genre, bilan_show_joueurs, bilan_show_spectateurs, bilan_show_benevoles")
       .eq("id", id)
       .maybeSingle();
     event = r.data;
@@ -150,6 +151,9 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
     spectateurs: participants.filter((p) => p.motifs.includes("regarder")).length,
     multi: participants.filter((p) => p.motifs.length > 1).length,
     preInscrits: participants.filter((p) => p.pre_inscrit).length,
+    filles: participants.filter((p) => p.sexe === "F").length,
+    garcons: participants.filter((p) => p.sexe === "M").length,
+    sexeNR: participants.filter((p) => !p.sexe || p.sexe === "X").length,
   };
 
   return (
@@ -205,6 +209,27 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
           }}
         />
 
+        {/* Bilan public (chiffres editoriaux + visibilite) */}
+        <BilanEventForm
+          event={{
+            id: event.id,
+            event_slug: event.event_slug,
+            bilan_public: (event as { bilan_public?: boolean }).bilan_public ?? false,
+            bilan_recap: (event as { bilan_recap?: string | null }).bilan_recap ?? null,
+            bilan_nb_total: (event as { bilan_nb_total?: number | null }).bilan_nb_total ?? null,
+            bilan_nb_filles: (event as { bilan_nb_filles?: number | null }).bilan_nb_filles ?? null,
+            bilan_nb_garcons: (event as { bilan_nb_garcons?: number | null }).bilan_nb_garcons ?? null,
+            bilan_nb_joueurs: (event as { bilan_nb_joueurs?: number | null }).bilan_nb_joueurs ?? null,
+            bilan_nb_spectateurs: (event as { bilan_nb_spectateurs?: number | null }).bilan_nb_spectateurs ?? null,
+            bilan_nb_benevoles: (event as { bilan_nb_benevoles?: number | null }).bilan_nb_benevoles ?? null,
+            bilan_show_total: (event as { bilan_show_total?: boolean }).bilan_show_total ?? true,
+            bilan_show_genre: (event as { bilan_show_genre?: boolean }).bilan_show_genre ?? true,
+            bilan_show_joueurs: (event as { bilan_show_joueurs?: boolean }).bilan_show_joueurs ?? true,
+            bilan_show_spectateurs: (event as { bilan_show_spectateurs?: boolean }).bilan_show_spectateurs ?? true,
+            bilan_show_benevoles: (event as { bilan_show_benevoles?: boolean }).bilan_show_benevoles ?? false,
+          }}
+        />
+
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
           <StatBox label="Total" value={stats.total} />
@@ -212,6 +237,28 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
           <StatBox label="Benevoles" value={stats.aidants} />
           <StatBox label="Spectateurs" value={stats.spectateurs} />
           <StatBox label="Multi-roles" value={stats.multi} />
+        </div>
+
+        {/* Mixite auto — calculee depuis le sexe des fiches (pre-inscription ou compte) */}
+        <div className="card-clean p-4 mb-6">
+          <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
+            <h3 className="text-sm font-bold text-vea-text">Mixite filles / garcons (auto)</h3>
+            <span className="text-xs font-semibold text-vea-accent">
+              {stats.filles + stats.garcons > 0
+                ? `${Math.round((stats.filles / (stats.filles + stats.garcons)) * 100)}% filles / ${100 - Math.round((stats.filles / (stats.filles + stats.garcons)) * 100)}% garcons`
+                : "Aucun sexe renseigne"}
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <StatBox label="Filles" value={stats.filles} />
+            <StatBox label="Garcons" value={stats.garcons} />
+            <StatBox label="Sexe non renseigne" value={stats.sexeNR} />
+          </div>
+          {stats.sexeNR > 0 && (
+            <p className="text-[11px] text-vea-text-dim mt-3 italic">
+              {stats.sexeNR} fiche{stats.sexeNR > 1 ? "s" : ""} sans sexe renseigne : le ratio ne porte que sur les {stats.filles + stats.garcons} fiches ou le sexe est connu. Complete-les via /admin/bilan.
+            </p>
+          )}
         </div>
         {stats.preInscrits > 0 && (
           <p className="text-[11px] text-vea-text-dim mb-6 italic">
