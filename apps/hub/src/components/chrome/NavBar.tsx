@@ -1,11 +1,15 @@
 /**
  * NavBar — barre de navigation principale du hub Velito.
  *
- * Desktop (md+) : logo à gauche · recherche au centre · "Se connecter" +
- * "S'inscrire" à droite. Conteneur à 70% (15% vide de chaque côté).
+ * Desktop (md+) : logo à gauche · recherche au centre · actions à droite.
+ * Mobile (< md) : logo CENTRÉ · hamburger à droite.
  *
- * Mobile (< md) : logo CENTRÉ · hamburger à droite. Le hamburger déroule un
- * panneau contenant la recherche + les actions (Se connecter / S'inscrire).
+ * Auth :
+ *   - si `userEmail` est fourni  → "Mon compte" + bouton "Se déconnecter" (server action)
+ *   - sinon                       → "Se connecter" + "S'inscrire"
+ *
+ * Le composant reste Client (search, mobile menu). L'état d'auth est injecté
+ * en prop par NavBarSlot (Server Component) qui lit le cookie session.
  *
  * Le header est pointer-events-none (laisse passer les clics vers la Galaxy
  * en dessous) ; seuls les éléments interactifs ont pointer-events-auto.
@@ -13,58 +17,94 @@
 
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { signOutAction } from "@/app/login/actions";
+import SearchPanel from "./SearchPanel";
 
-export default function NavBar() {
-  const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
+interface NavBarProps {
+  /** Email de l'utilisateur connecté, ou null s'il est anonyme. */
+  userEmail?: string | null;
+}
+
+export default function NavBar({ userEmail = null }: NavBarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const handleSubmit = useCallback(
-    (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      const q = searchQuery.trim();
-      setMobileOpen(false);
-      router.push(
-        `/construction?slug=search${q ? `&q=${encodeURIComponent(q)}` : ""}`
-      );
-    },
-    [router, searchQuery]
+  const isAuthed = Boolean(userEmail);
+
+  // Actions desktop (à droite) — diffèrent selon état d'auth
+  const desktopActions = isAuthed ? (
+    <>
+      <Link
+        href="/account"
+        className="text-white/80 hover:text-white text-sm px-3 py-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-white/40"
+        title={userEmail ?? undefined}
+      >
+        Mon compte
+      </Link>
+      <form action={signOutAction}>
+        <button
+          type="submit"
+          className="bg-white text-[#04040e] text-sm px-4 py-2 rounded-full font-medium hover:bg-white/90 transition-colors focus:outline-none focus:ring-2 focus:ring-white/60"
+        >
+          Se déconnecter
+        </button>
+      </form>
+    </>
+  ) : (
+    <>
+      <Link
+        href="/login"
+        className="text-white/80 hover:text-white text-sm px-3 py-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-white/40"
+      >
+        Se connecter
+      </Link>
+      <Link
+        href="/construction?slug=signup"
+        className="bg-white text-[#04040e] text-sm px-4 py-2 rounded-full font-medium hover:bg-white/90 transition-colors focus:outline-none focus:ring-2 focus:ring-white/60"
+      >
+        S&apos;inscrire
+      </Link>
+    </>
   );
 
-  const searchInput = (
-    <div className="relative">
-      <span
-        aria-hidden="true"
-        className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60"
+  // Actions mobile (panneau déroulant) — même logique
+  const mobileActions = isAuthed ? (
+    <>
+      <Link
+        href="/account"
+        onClick={() => setMobileOpen(false)}
+        className="block w-full text-center text-white/90 border border-white/20 rounded-full px-4 py-2.5 text-sm hover:bg-white/10 transition-colors"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+        Mon compte
+      </Link>
+      <form action={signOutAction}>
+        <button
+          type="submit"
+          className="block w-full text-center bg-white text-[#04040e] rounded-full px-4 py-2.5 text-sm font-medium hover:bg-white/90 transition-colors"
         >
-          <circle cx="11" cy="11" r="7" />
-          <path d="m21 21-4.3-4.3" />
-        </svg>
-      </span>
-      <input
-        type="search"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder="Rechercher dans Velito…"
-        aria-label="Rechercher"
-        className="w-full pl-10 pr-4 py-2 bg-white/5 backdrop-blur-md border border-white/15 rounded-full text-white placeholder-white/50 text-sm focus:outline-none focus:border-white/40 focus:bg-white/10 transition-colors"
-      />
-    </div>
+          Se déconnecter
+        </button>
+      </form>
+    </>
+  ) : (
+    <>
+      <Link
+        href="/login"
+        onClick={() => setMobileOpen(false)}
+        className="block w-full text-center text-white/90 border border-white/20 rounded-full px-4 py-2.5 text-sm hover:bg-white/10 transition-colors"
+      >
+        Se connecter
+      </Link>
+      <Link
+        href="/construction?slug=signup"
+        onClick={() => setMobileOpen(false)}
+        className="block w-full text-center bg-white text-[#04040e] rounded-full px-4 py-2.5 text-sm font-medium hover:bg-white/90 transition-colors"
+      >
+        S&apos;inscrire
+      </Link>
+    </>
   );
 
   return (
@@ -90,30 +130,18 @@ export default function NavBar() {
           />
         </Link>
 
-        {/* --- DESKTOP : recherche --- */}
-        <form
-          onSubmit={handleSubmit}
+        {/* --- DESKTOP : recherche globale --- */}
+        <div
           role="search"
           aria-label="Rechercher dans l'écosystème Velito"
           className="hidden md:block pointer-events-auto flex-1 max-w-xl mx-auto"
         >
-          {searchInput}
-        </form>
+          <SearchPanel />
+        </div>
 
         {/* --- DESKTOP : actions --- */}
         <div className="hidden md:flex pointer-events-auto items-center gap-2 shrink-0">
-          <Link
-            href="/construction?slug=login"
-            className="text-white/80 hover:text-white text-sm px-3 py-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-white/40"
-          >
-            Se connecter
-          </Link>
-          <Link
-            href="/construction?slug=signup"
-            className="bg-white text-[#04040e] text-sm px-4 py-2 rounded-full font-medium hover:bg-white/90 transition-colors focus:outline-none focus:ring-2 focus:ring-white/60"
-          >
-            S&apos;inscrire
-          </Link>
+          {desktopActions}
         </div>
 
         {/* --- MOBILE : spacer + logo centré + hamburger --- */}
@@ -161,27 +189,10 @@ export default function NavBar() {
       {/* ===== Menu déroulant mobile ===== */}
       {mobileOpen && (
         <div className="md:hidden pointer-events-auto mx-4 mt-1 rounded-2xl border border-white/15 bg-[#04040e]/95 backdrop-blur-md p-4 space-y-3 shadow-xl">
-          <form
-            onSubmit={handleSubmit}
-            role="search"
-            aria-label="Rechercher dans l'écosystème Velito"
-          >
-            {searchInput}
-          </form>
-          <Link
-            href="/construction?slug=login"
-            onClick={() => setMobileOpen(false)}
-            className="block w-full text-center text-white/90 border border-white/20 rounded-full px-4 py-2.5 text-sm hover:bg-white/10 transition-colors"
-          >
-            Se connecter
-          </Link>
-          <Link
-            href="/construction?slug=signup"
-            onClick={() => setMobileOpen(false)}
-            className="block w-full text-center bg-white text-[#04040e] rounded-full px-4 py-2.5 text-sm font-medium hover:bg-white/90 transition-colors"
-          >
-            S&apos;inscrire
-          </Link>
+          <div role="search" aria-label="Rechercher dans l'écosystème Velito">
+            <SearchPanel />
+          </div>
+          {mobileActions}
         </div>
       )}
     </header>

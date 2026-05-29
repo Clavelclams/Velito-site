@@ -14,7 +14,7 @@
 
 import type { Metadata } from "next";
 import "./globals.css";
-import NavBar from "@/components/chrome/NavBar";
+import NavBarSlot from "@/components/chrome/NavBarSlot";
 import Chatbot from "@/components/chrome/Chatbot";
 
 export const metadata: Metadata = {
@@ -43,7 +43,7 @@ export default function RootLayout({
         />
       </head>
       <body className="font-exo min-h-screen">
-        <NavBar />
+        <NavBarSlot />
         {children}
         <Chatbot />
       </body>

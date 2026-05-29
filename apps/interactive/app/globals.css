@@ -1,13 +1,14 @@
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/*
+ * Velito Interactive — base de style.
+ * Fond sombre par défaut (l'app est faite pour une TV et des manettes mobiles).
+ * --tenant-accent : couleur surchargeable par établissement (multi-tenant).
+ */
+:root {
+  --tenant-accent: #8b5cf6; /* violet néon par défaut */
 }
 
 html,
@@ -17,34 +18,20 @@ body {
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
+  @apply bg-ink text-white antialiased;
+  min-height: 100vh;
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.imgDark {
-  display: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+@layer components {
+  .neon-title {
+    @apply font-display font-black tracking-tight;
+    text-shadow: 0 0 24px rgba(139, 92, 246, 0.45);
   }
-
-  .imgLight {
-    display: none;
+  .card-ink {
+    @apply rounded-2xl border border-white/10 bg-ink-700/60 backdrop-blur;
   }
-  .imgDark {
-    display: unset;
+  .btn-tenant {
+    @apply inline-flex items-center justify-center rounded-xl px-5 py-3 font-semibold text-ink transition active:scale-95;
+    background: var(--tenant-accent);
   }
 }
