@@ -6,11 +6,14 @@
 
 import { useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { signInAction } from "./actions";
 
 export default function LoginForm() {
   const params = useSearchParams();
   const returnTo = params.get("return") ?? "/";
+  // ?reset=ok : flag posé par /reset-password après succès → toast "mdp mis à jour"
+  const resetSuccess = params.get("reset") === "ok";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,6 +38,11 @@ export default function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {resetSuccess && (
+        <div role="status" className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+          Mot de passe mis à jour. Tu peux te connecter avec ton nouveau mot de passe.
+        </div>
+      )}
       <div>
         <label htmlFor="email" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">
           Email
@@ -51,9 +59,17 @@ export default function LoginForm() {
         />
       </div>
       <div>
-        <label htmlFor="password" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">
-          Mot de passe
-        </label>
+        <div className="mb-1.5 flex items-baseline justify-between">
+          <label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-white/60">
+            Mot de passe
+          </label>
+          <Link
+            href="/forgot-password"
+            className="text-[11px] text-white/50 underline-offset-2 transition-colors hover:text-white hover:underline"
+          >
+            Oublié ?
+          </Link>
+        </div>
         <input
           id="password"
           type="password"

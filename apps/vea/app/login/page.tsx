@@ -22,6 +22,12 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const redirectParam = searchParams.get("redirect");
 
+  // ⚠️ ARCHI : VEA = asso loi 1901 INDÉPENDANTE de l'écosystème VENA (Hub /
+  // Arena / Interactive / Prévention). Donc le reset password VEA NE doit PAS
+  // pointer vers hub.velito.fr — il doit rester sur vea.velito.fr (page locale).
+  // Cf. docs/SSO_ARCHITECTURE.md §10 (séparation VEA).
+  const forgotPasswordUrl = "/auth/forgot-password";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -95,12 +101,20 @@ function LoginForm() {
           </div>
 
           <div>
-            <label
-              htmlFor="password"
-              className="block text-xs font-semibold text-vea-text-muted uppercase tracking-wider mb-1.5"
-            >
-              Mot de passe
-            </label>
+            <div className="flex items-baseline justify-between mb-1.5">
+              <label
+                htmlFor="password"
+                className="block text-xs font-semibold text-vea-text-muted uppercase tracking-wider"
+              >
+                Mot de passe
+              </label>
+              <Link
+                href={forgotPasswordUrl}
+                className="text-[11px] text-vea-text-dim hover:text-vea-accent transition-colors underline-offset-2 hover:underline"
+              >
+                Oublié ?
+              </Link>
+            </div>
             <input
               type="password"
               id="password"

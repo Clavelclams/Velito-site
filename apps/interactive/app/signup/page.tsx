@@ -57,16 +57,26 @@ export default function SignUpPage() {
         {/* Form classique email + mot de passe */}
         <SignUpForm />
 
-        {/* Lien vers /login pour les users existants */}
-        <p className="mt-6 text-center text-xs text-white/50">
-          Déjà un compte ?{" "}
-          <Link
-            href={hubUrl ? `${hubUrl}/login?return=${encodeURIComponent("/dashboard")}` : "/dashboard"}
-            className="text-tenant underline-offset-4 hover:underline"
-          >
-            Se connecter
-          </Link>
-        </p>
+        {/* Liens vers /login et /forgot-password (sur le hub central) */}
+        <div className="mt-6 space-y-1.5 text-center text-xs text-white/50">
+          <p>
+            Déjà un compte ?{" "}
+            <Link
+              href={hubUrl ? `${hubUrl}/login?return=${encodeURIComponent("/dashboard")}` : "/dashboard"}
+              className="text-tenant underline-offset-4 hover:underline"
+            >
+              Se connecter
+            </Link>
+          </p>
+          <p>
+            <Link
+              href={hubUrl ? `${hubUrl}/forgot-password` : "#"}
+              className="text-white/60 underline-offset-4 hover:text-white hover:underline"
+            >
+              Mot de passe oublié ?
+            </Link>
+          </p>
+        </div>
       </div>
     </main>
   );

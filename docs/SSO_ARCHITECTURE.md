@@ -171,6 +171,69 @@ Points à mettre en avant en oral :
 
 ---
 
+## 7 bis. ⚠️ Séparation VEA (asso) ↔ écosystème VENA (SASU)
+
+### Décision archi
+**VEA n'est PAS dans le SSO.** Le cookie `.velito.fr` est posé uniquement par
+le Hub et lu uniquement par les apps de l'écosystème **VENA** :
+- ✅ Hub Velito (l'IdP)
+- ✅ VENA (velito.fr)
+- ✅ Interactive (interactive.velito.fr)
+- ✅ Arena (arena.velito.fr) — quand elle sera live
+- ✅ Prévention (prevention.velito.fr) — quand elle sera live
+
+**Pas VEA** (vea.velito.fr). VEA garde sa propre authentification 100% locale.
+
+### Pourquoi cette séparation
+
+| | VEA | VENA + apps |
+|---|---|---|
+| Forme juridique | Association loi 1901 | SASU (entreprise privée Clavel) |
+| Membres | Adhérents asso, dirigeants élus AG | Clients / staff VENA |
+| Surface de risque | Données mineurs QPV, RGPD strict | Données B2B classiques |
+| Modèle économique | Subventions + cotisations | Prestations + SaaS |
+
+Mélanger les sessions = mélanger les périmètres juridiques. Un user qui se logge
+côté VENA Services pour acheter une prestation ne doit PAS se retrouver loggé
+côté admin VEA. Et inversement, un adhérent VEA ne doit pas être identifié
+implicitement comme prospect VENA.
+
+### Implémentation
+
+**Côté VEA** :
+- ❌ N'ajoute PAS `COOKIE_DOMAIN=.velito.fr` dans les env Vercel
+- ✅ Le cookie de session reste sur `vea.velito.fr` uniquement
+- ✅ A ses propres pages `/login`, `/signup`, `/auth/forgot-password`, `/auth/reset-password`
+- ✅ Pas de bouton "Continuer avec VENA" ni `<ContinueWithVena />`
+
+**Côté écosystème VENA** :
+- ✅ `COOKIE_DOMAIN=.velito.fr` sur Hub + Interactive + futures apps
+- ✅ Reset password centralisé sur Hub (`hub.velito.fr/forgot-password`)
+- ✅ Bouton `<ContinueWithVena />` (popup OAuth à terme)
+
+### Liens cross-app (autorisés)
+Navigation visuelle OK entre les deux périmètres :
+- VEA peut linker vers Arena (tournois esport) parce que VEA fait de l'esport
+- VEA peut linker vers Prévention (sensibilisation numérique) parce que c'est sa mission
+- Hub peut linker vers VEA dans la galaxie des modules
+
+**Mais** : ces liens sont des `<a href>` simples, pas des bridges d'auth. L'user
+qui clique se retrouve **anonyme** côté destination s'il ne s'y est pas logué.
+
+### Base de données partagée — précision importante
+Note : VEA et VENA partagent **le même projet Supabase** (`velito-hub`).
+Donc `auth.users` est commune. Un user existe une seule fois en DB. Le
+cloisonnement se fait au niveau **applicatif** :
+- Le cookie de session VEA ne sort jamais de `vea.velito.fr`
+- Le cookie de session VENA est valable sur `.velito.fr`
+- Donc même si l'user est dans `auth.users`, il n'est pas reconnu cross-app
+  tant qu'il ne se relogue pas sur le périmètre cible
+
+Si un jour on veut une isolation totale au niveau données : il faudra migrer
+VEA vers son propre projet Supabase. Pas urgent.
+
+---
+
 ## 8. Limites connues / dette technique
 
 - **Pas de logout cross-subdomain "instantané"** : si tu te déconnectes sur le
