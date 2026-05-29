@@ -20,7 +20,7 @@ import { ContinueWithVena } from "@repo/ui/continue-with-vena";
 export const metadata = {
   title: "Créer un compte — Velito Interactive",
   description:
-    "Crée ton compte animateur Velito Interactive. Un seul compte pour toutes les apps de l'écosystème.",
+    "Crée ton compte pour lancer des sessions de jeux interactifs dans ton bar ou MJC. Un seul compte pour toutes les apps Velito.",
 };
 
 export default function SignUpPage() {
@@ -29,16 +29,18 @@ export default function SignUpPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center px-6 py-12">
       <div className="w-full">
-        {/* En-tête */}
+        {/* En-tête — on évite le terme B2B "Espace animateur" sur la page signup
+            publique. L'user qui arrive ici est en train de s'inscrire, pas de
+            consulter son espace. Texte accueillant. */}
         <header className="text-center">
           <p className="text-xs uppercase tracking-[0.3em] text-white/40">
-            Espace animateur
+            Rejoins l&apos;aventure
           </p>
           <h1 className="neon-title mt-3 text-3xl md:text-4xl">
             Crée ton compte
           </h1>
           <p className="mt-3 text-sm text-white/60">
-            Un seul compte pour toutes les apps Velito (Hub, VEA, Interactive…).
+            Un seul compte pour toutes les apps Velito (Hub, Interactive, Arena…).
           </p>
         </header>
 

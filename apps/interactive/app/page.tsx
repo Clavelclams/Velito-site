@@ -97,11 +97,18 @@ export default function InteractiveHome() {
             >
               Tarifs
             </a>
+            {/*
+              CTA principal de la navbar : "Jouer" plutôt que "Espace animateur"
+              (terme B2B qui peut freiner les visiteurs qui découvrent). Le lien
+              mène vers /dashboard qui est auth-gated : un visiteur non loggé
+              sera invité à créer un compte (DashboardLoggedOut → ContinueWithVena),
+              un user loggé verra son tableau de bord staff direct.
+            */}
             <Link
               href="/dashboard"
               className="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold text-white/90 transition hover:bg-white/5"
             >
-              Espace animateur
+              Jouer
             </Link>
           </nav>
         </div>
