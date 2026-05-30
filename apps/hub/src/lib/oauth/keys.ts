@@ -11,7 +11,7 @@
  * peut les cacher 5 minutes. Si on rotate, on attend que le cache expire OU
  * on redéploie.
  */
-import { importPKCS8, importJWK, type KeyLike } from "jose";
+import { importPKCS8, importJWK, type JWK, type KeyLike } from "jose";
 import { getServiceClient } from "@/lib/supabase/service";
 
 export interface JwksRow {
@@ -128,8 +128,8 @@ export async function getVerificationKey(kid: string): Promise<KeyLike | null> {
 
   if (error || !data) return null;
 
-  return await importJWK(
-    data.public_jwk as Record<string, unknown>,
-    data.alg as string
-  ) as KeyLike;
+  // Cast en JWK : côté DB on stocke jsonb (arbitraire), mais à ce point on sait
+  // qu'on a une clé publique valide (sinon /jwks.json l'aurait pas exposée).
+  // jose.importJWK exige `kty: string` au minimum.
+  return (await importJWK(data.public_jwk as unknown as JWK, data.alg)) as KeyLike;
 }

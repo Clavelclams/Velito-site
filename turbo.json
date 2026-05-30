@@ -5,7 +5,36 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [".next/**", "!.next/cache/**"],
+      "env": [
+        "NODE_ENV",
+        "VERCEL",
+        "VERCEL_ENV",
+        "VERCEL_URL",
+        "NEXT_PUBLIC_SITE_URL",
+        "NEXT_PUBLIC_HUB_URL",
+        "NEXT_PUBLIC_VEA_URL",
+        "NEXT_PUBLIC_VENA_URL",
+        "NEXT_PUBLIC_INTERACTIVE_URL",
+        "NEXT_PUBLIC_ARENA_URL",
+        "NEXT_PUBLIC_PREVENTION_URL",
+        "SUPABASE_URL",
+        "NEXT_PUBLIC_SUPABASE_URL",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "DATABASE_URL",
+        "OAUTH_ISSUER",
+        "RESEND_API_KEY",
+        "HUB_CONTACT_TO",
+        "HUB_CONTACT_FROM",
+        "VEA_CONTACT_TO",
+        "VEA_CONTACT_FROM",
+        "VENA_CONTACT_TO",
+        "VENA_CONTACT_FROM",
+        "INTERACTIVE_CONTACT_TO",
+        "INTERACTIVE_CONTACT_FROM",
+        "CRON_SECRET"
+      ]
     },
     "lint": {
       "dependsOn": ["^lint"]

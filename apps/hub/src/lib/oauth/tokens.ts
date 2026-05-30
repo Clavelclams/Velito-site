@@ -19,7 +19,12 @@ import { SignJWT } from "jose";
 import { getServiceClient } from "@/lib/supabase/service";
 import { getSigningKey } from "./keys";
 
-interface TokenPayload {
+/**
+ * Claims à intégrer dans access_token + id_token.
+ * Exporté pour que les call-sites (Route Handlers, server actions) puissent
+ * référencer ce shape sans re-déclarer.
+ */
+export interface TokenPayload {
   userId: string;
   clientId: string;
   scope: string[];
@@ -29,7 +34,13 @@ interface TokenPayload {
   picture?: string | null;
 }
 
-interface GeneratedTokens {
+/**
+ * Response shape OAuth-spec compliant pour /oauth/token (RFC 6749 §5.1).
+ * Exporté car le Route Handler POST retourne ce type via NextResponse.json,
+ * et TypeScript a besoin de pouvoir nommer le type dans les déclarations
+ * publiques de la bundle Next.
+ */
+export interface GeneratedTokens {
   access_token: string;
   id_token?: string;
   refresh_token: string;

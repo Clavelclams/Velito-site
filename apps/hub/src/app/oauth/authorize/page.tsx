@@ -9,7 +9,8 @@
  *   3. Si user pas loggé → on redirige vers /login?return=<authorize URL complète>
  *   4. Si user loggé + first-party → on génère un code et redirige vers
  *      redirect_uri?code=...&state=...
- *   5. Si user loggé + tiers-party → consent screen (Phase 4, pas encore implémentée)
+ *   5. Si user loggé + tiers-party sans consent valide → redirect /oauth/consent
+ *      (Phase 4 implémentée — voir lignes 171-197 + apps/hub/src/app/oauth/consent/)
  *
  * Sécurité — points clés :
  *  - `redirect_uri` doit être dans la whitelist EXACTE du client (pas de glob)
@@ -182,7 +183,7 @@ export default async function AuthorizePage({
       .eq("client_id", client.client_id)
       .maybeSingle();
 
-    const grantedScopes = (existingConsent?.scope as string[] | undefined) ?? [];
+    const grantedScopes = existingConsent?.scope ?? [];
     const allRequestedAlreadyGranted = scopes.every((s) => grantedScopes.includes(s));
 
     if (!existingConsent || !allRequestedAlreadyGranted) {
@@ -207,7 +208,7 @@ export default async function AuthorizePage({
       user_id: user.id,
       redirect_uri: params.redirect_uri,
       scope: scopes,
-      code_challenge: params.code_challenge,
+      code_challenge: params.code_challenge!,
       code_challenge_method: "S256",
       nonce: params.nonce ?? null,
     })

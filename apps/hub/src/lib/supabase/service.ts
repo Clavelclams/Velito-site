@@ -19,15 +19,26 @@
  * Usage : uniquement dans les Route Handlers et Server Components des endpoints
  * OAuth (lib/oauth/*, app/oauth/*, app/.well-known/*).
  */
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-
-let cachedClient: ReturnType<typeof createSupabaseClient> | null = null;
+import {
+  createClient as createSupabaseClient,
+  type SupabaseClient,
+} from "@supabase/supabase-js";
+import type { Database } from "./database.types";
 
 /**
- * Retourne un client Supabase configuré avec service_role.
+ * Type alias : SupabaseClient typé avec NOTRE Database, schema "shared" par défaut.
+ * Pour le jury : ça permet à TS d'inférer le shape de chaque row dès qu'on appelle
+ * .from("oauth_clients") — plus besoin d'annoter chaque .maybeSingle<T>().
+ */
+type ServiceClient = SupabaseClient<Database, "shared">;
+
+let cachedClient: ServiceClient | null = null;
+
+/**
+ * Retourne un client Supabase configuré avec service_role + Database type.
  * Cache le client pour éviter de re-créer à chaque call (perf).
  */
-export function getServiceClient() {
+export function getServiceClient(): ServiceClient {
   if (cachedClient) return cachedClient;
 
   const supabaseUrl =
@@ -45,15 +56,19 @@ export function getServiceClient() {
     );
   }
 
-  cachedClient = createSupabaseClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      // Pas de session côté server : on est en mode admin, pas de user.
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-    // Toutes les opérations sur le schéma `shared` (pas public).
-    db: { schema: "shared" },
-  });
+  cachedClient = createSupabaseClient<Database, "shared">(
+    supabaseUrl,
+    serviceRoleKey,
+    {
+      auth: {
+        // Pas de session côté server : on est en mode admin, pas de user.
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+      // Toutes les opérations sur le schéma `shared` (pas public).
+      db: { schema: "shared" },
+    }
+  );
 
   return cachedClient;
 }
