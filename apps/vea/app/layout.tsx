@@ -151,7 +151,7 @@ const ORGANIZATION_LD = {
     "https://facebook.com/velitoesport",
     "https://x.com/velitoesport",
     "https://tiktok.com/@velitoesport",
-    "https://linkedin.com/company/velitoesport",
+    "https://www.linkedin.com/in/velito-esport-amiens/",
   ],
   knowsAbout: [
     "Esport",

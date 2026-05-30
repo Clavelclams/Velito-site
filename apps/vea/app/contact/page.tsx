@@ -29,7 +29,7 @@ const SOCIALS = [
   { name: "Facebook", handle: "@velitoesport", href: "https://facebook.com/velitoesport" },
   { name: "X", handle: "@velitoesport", href: "https://x.com/velitoesport" },
   { name: "TikTok", handle: "@velitoesport", href: "https://tiktok.com/@velitoesport" },
-  { name: "LinkedIn", handle: "Velito Esport", href: "https://linkedin.com/company/velitoesport" },
+  { name: "LinkedIn", handle: "Velito Esport Amiens", href: "https://www.linkedin.com/in/velito-esport-amiens/" },
 ];
 
 export default function ContactPage() {

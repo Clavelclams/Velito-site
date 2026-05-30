@@ -86,12 +86,12 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Écosystème Velito */}
+          {/* Écosystème Velito + Réseaux sociaux */}
           <div>
             <p className="text-xs font-black uppercase tracking-widest mb-3 opacity-90">
               Écosystème Velito
             </p>
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-2 text-sm mb-5">
               <li>
                 <a
                   href={HUB_URL}
@@ -110,6 +110,38 @@ export default function Footer() {
                   className="opacity-80 hover:opacity-100 hover:underline"
                 >
                   Velito Esport Amiens
+                </a>
+              </li>
+            </ul>
+
+            <p className="text-xs font-black uppercase tracking-widest mb-3 opacity-90">
+              Suivre VENA
+            </p>
+            <ul className="space-y-2 text-sm">
+              {/*
+                LinkedIn = profil perso de Clavel pour l'instant (pas encore de
+                page entreprise VENA). À switcher sur la page entreprise quand
+                elle sera créée.
+              */}
+              <li>
+                <a
+                  href="https://www.linkedin.com/in/ndema-moussa/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="opacity-80 hover:opacity-100 hover:underline"
+                >
+                  LinkedIn
+                </a>
+              </li>
+              {/* Instagram VENA agence (@vena.amiensnumerique). */}
+              <li>
+                <a
+                  href="https://www.instagram.com/vena.amiensnumerique/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="opacity-80 hover:opacity-100 hover:underline"
+                >
+                  Instagram
                 </a>
               </li>
             </ul>
