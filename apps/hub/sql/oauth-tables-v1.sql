@@ -140,7 +140,20 @@ ALTER TABLE shared.oauth_refresh_tokens        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE shared.oauth_consents              ENABLE ROW LEVEL SECURITY;
 ALTER TABLE shared.oauth_jwks                  ENABLE ROW LEVEL SECURITY;
 
--- Pas de GRANT à anon/authenticated. Seul service_role (super-user implicit) y a accès.
+-- Pas de GRANT à anon/authenticated. Seul service_role y a accès.
+-- ATTENTION : service_role bypass RLS MAIS il faut quand même qu'il ait USAGE
+-- sur le schéma custom + accès aux tables. Notre migration shared-identity-v1
+-- n'avait granté ces droits qu'à anon + authenticated. On les ajoute ici pour
+-- que les endpoints OAuth (qui passent par service_role) puissent lire/écrire.
+GRANT USAGE ON SCHEMA shared TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA shared TO service_role;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA shared TO service_role;
+-- Privilèges par défaut : toute future table dans `shared` sera auto-accessible
+-- à service_role (évite de devoir re-grant à chaque migration future).
+ALTER DEFAULT PRIVILEGES IN SCHEMA shared
+  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA shared
+  GRANT USAGE, SELECT ON SEQUENCES TO service_role;
 
 -- ============================================================================
 -- 7. Helper cleanup — purge périodique des tokens expirés
