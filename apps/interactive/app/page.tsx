@@ -1,5 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
+import UserMenuSlot from "./components/UserMenuSlot";
 
 /**
  * Velito Interactive — Landing publique de CONVERSION (prospects bars/MJC).
@@ -110,6 +112,14 @@ export default function InteractiveHome() {
             >
               Jouer
             </Link>
+            {/*
+              UserMenu : si connecté → avatar + dropdown (Mon compte / Déconnexion).
+              Si anonyme → "Continuer avec VENA".
+              Suspense fallback minimal pour pas bloquer le render du header.
+            */}
+            <Suspense fallback={<div className="h-9 w-32" aria-hidden="true" />}>
+              <UserMenuSlot />
+            </Suspense>
           </nav>
         </div>
       </header>
