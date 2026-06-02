@@ -25,21 +25,21 @@ import { signOutAction } from "@/app/login/actions";
  * Sert à 2 usages : afficher les "activées" (intersection avec memberships) et lister
  * les "à découvrir" (différence).
  *
- * URLs : alignées sur la source de vérité `apps/hub/src/components/galaxy/modules.ts`.
+ * URLs : tous les sous-domaines sont en prod (au moins placeholder).
  *  - hub        → "/" (on est déjà sur le hub)
- *  - vea        → vea.velito.fr (prod live)
+ *  - vea        → vea.velito.fr (prod live, site complet)
  *  - vena       → velito.fr (racine du domaine, PAS un sous-domaine — la SASU "porte" Velito)
- *  - arena      → /construction (sous-domaine pas encore prod)
- *  - interactive→ /construction (sous-domaine pas encore prod)
- *  - prevention → /construction (sous-domaine pas encore prod)
+ *  - interactive→ interactive.velito.fr (prod live, landing + dashboard)
+ *  - arena      → arena.velito.fr (placeholder "bientôt disponible")
+ *  - prevention → prevention.velito.fr (placeholder "coming soon")
  */
 const APPS: { key: string; label: string; description: string; href: string }[] = [
   { key: "hub", label: "Hub Velito", description: "Point d'entrée de l'écosystème.", href: "/" },
   { key: "vea", label: "VEA", description: "Velito Esport Amiens (association).", href: "https://vea.velito.fr" },
   { key: "vena", label: "VENA", description: "Velito Expertise Numérique Amiens (agence).", href: "https://velito.fr" },
-  { key: "interactive", label: "Interactive", description: "Jeux interactifs pour bars & lieux.", href: "/construction?slug=interactive" },
-  { key: "arena", label: "Arena", description: "Tournois & compétitions esport.", href: "/construction?slug=arena" },
-  { key: "prevention", label: "Prévention", description: "Sensibilisation & ateliers numériques.", href: "/construction?slug=prevention" },
+  { key: "interactive", label: "Interactive", description: "Jeux interactifs pour bars & lieux.", href: "https://interactive.velito.fr" },
+  { key: "arena", label: "Arena", description: "Tournois & compétitions esport.", href: "https://arena.velito.fr" },
+  { key: "prevention", label: "Prévention", description: "Sensibilisation & ateliers numériques.", href: "https://prevention.velito.fr" },
 ];
 
 export const dynamic = "force-dynamic";
