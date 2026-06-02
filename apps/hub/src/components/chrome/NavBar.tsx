@@ -61,7 +61,7 @@ export default function NavBar({ userEmail = null }: NavBarProps) {
         Se connecter
       </Link>
       <Link
-        href="/construction?slug=signup"
+        href="/signup"
         className="bg-white text-[#04040e] text-sm px-4 py-2 rounded-full font-medium hover:bg-white/90 transition-colors focus:outline-none focus:ring-2 focus:ring-white/60"
       >
         S&apos;inscrire
@@ -98,7 +98,7 @@ export default function NavBar({ userEmail = null }: NavBarProps) {
         Se connecter
       </Link>
       <Link
-        href="/construction?slug=signup"
+        href="/signup"
         onClick={() => setMobileOpen(false)}
         className="block w-full text-center bg-white text-[#04040e] rounded-full px-4 py-2.5 text-sm font-medium hover:bg-white/90 transition-colors"
       >
