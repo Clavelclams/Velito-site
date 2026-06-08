@@ -94,9 +94,21 @@ export default async function PlayController({
   }
 
   // ═══════════ OK — affiche le picker avatar + form pseudo ═══════════
+  const gameType = (
+    sessionRow.game_type === "quiz" ||
+    sessionRow.game_type === "petit_bac" ||
+    sessionRow.game_type === "blind_test"
+      ? sessionRow.game_type
+      : null
+  );
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-6 py-12">
-      <PlayJoinForm sessionId={sessionRow.id} code={sessionRow.code} />
+      <PlayJoinForm
+        sessionId={sessionRow.id}
+        code={sessionRow.code}
+        gameType={gameType}
+      />
     </main>
   );
 }

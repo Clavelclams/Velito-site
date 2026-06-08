@@ -160,23 +160,46 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
 
 /** Durée par défaut d'une question (en secondes). */
 export const QUESTION_TIME_LIMIT_SEC = 20;
+/** Durée d'affichage du reveal avant question suivante. */
+export const REVEAL_DURATION_SEC = 5;
 
 /**
- * Calcule le score d'une réponse en fonction du temps écoulé.
- * Plus tu réponds vite, plus tu gagnes — incite à ne pas attendre les autres.
+ * Calcule le score d'une réponse — combine 3 facteurs :
+ *  1. Correctness : 0 si faux, sinon base score
+ *  2. Vitesse temps : plus tu réponds vite, plus le score est haut (200→800)
+ *  3. Ordre d'arrivée : bonus pour le 1er qui répond bien (+200), malus pour le dernier (-100)
  *
- * @param correct  Si la réponse est juste (sinon 0).
- * @param elapsedMs  Temps écoulé entre l'affichage de la question et la réponse.
- * @param timeLimitSec  Limite de temps (par défaut 20s).
+ * @param correct       Si la réponse est juste
+ * @param elapsedMs     Temps écoulé entre la question et la réponse
+ * @param rank          Ordre d'arrivée (1 = premier, totalPlayers = dernier)
+ * @param totalPlayers  Nombre total de joueurs ayant répondu juste
+ * @param timeLimitSec  Limite de temps (par défaut 20s)
  */
 export function calculateScore(
   correct: boolean,
   elapsedMs: number,
+  rank: number = 1,
+  totalPlayers: number = 1,
   timeLimitSec: number = QUESTION_TIME_LIMIT_SEC
 ): number {
   if (!correct) return 0;
+
+  // Score de base = 200, score max temps = 800 → fourchette 200→1000
   const timeLimitMs = timeLimitSec * 1000;
-  const ratio = Math.max(0, Math.min(1, 1 - elapsedMs / timeLimitMs));
-  // Entre 200 (réponse au dernier moment) et 1000 (réponse instantanée)
-  return Math.round(200 + 800 * ratio);
+  const timeRatio = Math.max(0, Math.min(1, 1 - elapsedMs / timeLimitMs));
+  const baseScore = 200 + Math.round(800 * timeRatio);
+
+  // Bonus 1er qui répond juste (+200), malus dernier (-100), interpolation au milieu
+  let positionBonus = 0;
+  if (totalPlayers >= 2) {
+    if (rank === 1) positionBonus = 200;
+    else if (rank === totalPlayers) positionBonus = -100;
+    else {
+      // Interpolation linéaire pour les positions intermédiaires
+      const positionRatio = (rank - 1) / (totalPlayers - 1);
+      positionBonus = Math.round(200 - positionRatio * 300);
+    }
+  }
+
+  return Math.max(0, baseScore + positionBonus);
 }

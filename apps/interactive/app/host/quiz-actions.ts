@@ -20,6 +20,7 @@ import { createClient } from "@/lib/supabase/server";
 import {
   QUIZ_QUESTIONS,
   QUESTION_TIME_LIMIT_SEC,
+  REVEAL_DURATION_SEC,
   calculateScore,
 } from "@/lib/games/quiz-questions";
 
@@ -32,7 +33,11 @@ interface SessionState {
   phase: "choose_game" | "question" | "reveal" | "final";
   questionIndex: number;
   questionStartedAt?: string;
+  /** Timestamp ISO du début de la phase reveal (utilisé pour l'auto-next). */
+  revealStartedAt?: string;
   timeLimitSec?: number;
+  /** Durée du reveal en secondes (auto-next quand expiré). */
+  revealDurationSec?: number;
 }
 
 /**
@@ -107,20 +112,23 @@ export async function revealAnswerAction(sessionId: string): Promise<ActionResul
     ? new Date(state.questionStartedAt).getTime()
     : Date.now();
 
-  // 2. Récupère toutes les réponses de cette question
+  // 2. Récupère toutes les réponses de cette question, triées par temps de réponse
+  // → permet de connaître le rang (1er, 2e, ..., dernier) pour le bonus/malus
   const { data: answers, error: ansErr } = await supabase
     .schema("interactive" as never)
     .from("player_answers")
     .select("id, player_id, answer, answered_at")
     .eq("session_id", sessionId)
-    .eq("question_index", state.questionIndex);
+    .eq("question_index", state.questionIndex)
+    .order("answered_at", { ascending: true });
 
   if (ansErr) {
     console.error("[revealAnswerAction] answers fetch error:", ansErr.message);
     return { success: false, error: "Erreur lecture réponses." };
   }
 
-  // 3. Calcul des scores pour chaque réponse + UPDATE
+  // 3. Calcul des scores : on filtre les bonnes réponses pour ranker entre elles,
+  //    puis on traite les fausses séparément (score 0).
   const rows = (answers ?? []) as Array<{
     id: string;
     player_id: string;
@@ -128,23 +136,34 @@ export async function revealAnswerAction(sessionId: string): Promise<ActionResul
     answered_at: string;
   }>;
 
+  const correctAnswers = rows.filter((a) => a.answer === question.correct);
+  const totalCorrect = correctAnswers.length;
+
   for (const a of rows) {
     const isCorrect = a.answer === question.correct;
     const elapsedMs = new Date(a.answered_at).getTime() - questionStartedAt;
-    const points = calculateScore(isCorrect, elapsedMs, state.timeLimitSec);
+
+    // Pour les bonnes réponses : rank = position dans correctAnswers (déjà triées)
+    let points = 0;
+    if (isCorrect) {
+      const rank = correctAnswers.findIndex((c) => c.id === a.id) + 1;
+      points = calculateScore(
+        isCorrect,
+        elapsedMs,
+        rank,
+        totalCorrect,
+        state.timeLimitSec
+      );
+    }
 
     await supabase
       .schema("interactive" as never)
       .from("player_answers")
-      .update({
-        is_correct: isCorrect,
-        points,
-      } as never)
+      .update({ is_correct: isCorrect, points } as never)
       .eq("id", a.id);
 
-    // Met à jour le score cumulatif du joueur si bonne réponse
-    if (isCorrect && points > 0) {
-      // On récupère le score actuel puis on additionne
+    // Met à jour le score cumulatif du joueur
+    if (points !== 0) {
       const { data: playerData } = await supabase
         .schema("interactive" as never)
         .from("session_players")
@@ -157,15 +176,17 @@ export async function revealAnswerAction(sessionId: string): Promise<ActionResul
       await supabase
         .schema("interactive" as never)
         .from("session_players")
-        .update({ score: currentScore + points } as never)
+        .update({ score: Math.max(0, currentScore + points) } as never)
         .eq("id", a.player_id);
     }
   }
 
-  // 4. UPDATE session : passe en phase 'reveal'
+  // 4. UPDATE session : passe en phase 'reveal' avec un timer auto pour next
   const newState: SessionState = {
     ...state,
     phase: "reveal",
+    revealStartedAt: new Date().toISOString(),
+    revealDurationSec: REVEAL_DURATION_SEC,
   };
   const { error: updateErr } = await supabase
     .schema("interactive" as never)

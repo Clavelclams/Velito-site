@@ -21,16 +21,21 @@ import { createClient } from "@/lib/supabase/client";
 import {
   QUIZ_QUESTIONS,
   type QuizQuestion,
+  QUESTION_TIME_LIMIT_SEC,
+  REVEAL_DURATION_SEC,
 } from "@/lib/games/quiz-questions";
 
 interface SessionState {
   phase: "choose_game" | "question" | "reveal" | "final";
   questionIndex: number;
   questionStartedAt?: string;
+  revealStartedAt?: string;
   timeLimitSec?: number;
+  revealDurationSec?: number;
 }
 
 interface MyAnswer {
+  id: string;
   question_index: number;
   answer: string;
   is_correct: boolean;
@@ -55,6 +60,30 @@ export default function PlayQuizGame({
   const [myScore, setMyScore] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
+
+  // Compteur côté joueur : question OU reveal selon la phase
+  useEffect(() => {
+    if (!state) return;
+    let startedAt: number | null = null;
+    let limit = 0;
+    if (state.phase === "question" && state.questionStartedAt) {
+      startedAt = new Date(state.questionStartedAt).getTime();
+      limit = state.timeLimitSec ?? QUESTION_TIME_LIMIT_SEC;
+    } else if (state.phase === "reveal" && state.revealStartedAt) {
+      startedAt = new Date(state.revealStartedAt).getTime();
+      limit = state.revealDurationSec ?? REVEAL_DURATION_SEC;
+    } else {
+      setSecondsLeft(null);
+      return;
+    }
+    const start = startedAt;
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - start;
+      setSecondsLeft(Math.max(0, Math.round((limit * 1000 - elapsed) / 1000)));
+    }, 200);
+    return () => clearInterval(interval);
+  }, [state]);
 
   // ─── Subscribe Realtime sur tout (session + answers + score) ───
   useEffect(() => {
@@ -71,7 +100,7 @@ export default function PlayQuizGame({
         supabase
           .schema("interactive" as never)
           .from("player_answers")
-          .select("question_index, answer, is_correct, points")
+          .select("id, question_index, answer, is_correct, points")
           .eq("player_id", playerId),
         supabase
           .schema("interactive" as never)
@@ -148,30 +177,42 @@ export default function PlayQuizGame({
     return myAnswers.find((a) => a.question_index === state.questionIndex) ?? null;
   }, [state, myAnswers]);
 
-  async function handleSubmitAnswer(choice: "A" | "B" | "C" | "D") {
-    if (!state || submitting || myAnswerForCurrent) return;
+  /**
+   * Toggle/change la réponse cochée.
+   *
+   * Mécanique :
+   *  - 1er clic = INSERT (answered_at = NOW figé pour le scoring vitesse)
+   *  - clics suivants = UPDATE seulement du champ 'answer'
+   *  - le joueur peut changer tant que la phase est 'question' (la RLS bloque
+   *    automatiquement les UPDATE après le reveal)
+   *  - validation finale = au timer 0 côté host, qui scorera la dernière sélection
+   *
+   * Optimistic update : on bascule l'UI immédiatement avant le retour serveur.
+   */
+  async function handleSelectAnswer(choice: "A" | "B" | "C" | "D") {
+    if (!state || submitting || state.phase !== "question") return;
+
+    // Si déjà la même réponse cochée → no-op
+    if (myAnswerForCurrent?.answer === choice) return;
+
     setSubmitting(true);
     setErrorMsg(null);
 
     const supabase = createClient();
-    const { error } = await supabase
-      .schema("interactive" as never)
-      .from("player_answers")
-      .insert({
-        session_id: sessionId,
-        player_id: playerId,
-        question_index: state.questionIndex,
-        answer: choice,
-      } as never);
+    const existing = myAnswerForCurrent;
 
-    if (error) {
-      console.error("[PlayQuizGame] insert answer error:", error.message);
-      setErrorMsg("Impossible d'envoyer ta réponse.");
+    // Optimistic update : on bascule l'UI immédiatement
+    if (existing) {
+      setMyAnswers((prev) =>
+        prev.map((a) =>
+          a.question_index === state.questionIndex ? { ...a, answer: choice } : a
+        )
+      );
     } else {
-      // Refresh local pour bloquer les boutons (optimistic update)
       setMyAnswers((prev) => [
         ...prev,
         {
+          id: "optimistic",
           question_index: state.questionIndex,
           answer: choice,
           is_correct: false,
@@ -179,6 +220,59 @@ export default function PlayQuizGame({
         },
       ]);
     }
+
+    if (existing && existing.id !== "optimistic") {
+      // Changement d'avis → UPDATE
+      const { error } = await supabase
+        .schema("interactive" as never)
+        .from("player_answers")
+        .update({ answer: choice } as never)
+        .eq("id", existing.id);
+
+      if (error) {
+        console.error("[PlayQuizGame] update answer error:", error.message);
+        setErrorMsg("Impossible de changer ta réponse.");
+        // Rollback optimistic
+        setMyAnswers((prev) =>
+          prev.map((a) =>
+            a.id === existing.id ? { ...a, answer: existing.answer } : a
+          )
+        );
+      }
+    } else {
+      // Premier clic → INSERT
+      const { data, error } = await supabase
+        .schema("interactive" as never)
+        .from("player_answers")
+        .insert({
+          session_id: sessionId,
+          player_id: playerId,
+          question_index: state.questionIndex,
+          answer: choice,
+        } as never)
+        .select("id")
+        .single();
+
+      if (error) {
+        console.error("[PlayQuizGame] insert answer error:", error.message);
+        setErrorMsg("Impossible d'envoyer ta réponse.");
+        // Rollback : retire la ligne optimiste
+        setMyAnswers((prev) =>
+          prev.filter((a) => a.question_index !== state.questionIndex)
+        );
+      } else {
+        // Remplace l'id optimistic par le vrai id
+        const realId = (data as { id: string }).id;
+        setMyAnswers((prev) =>
+          prev.map((a) =>
+            a.id === "optimistic" && a.question_index === state.questionIndex
+              ? { ...a, id: realId }
+              : a
+          )
+        );
+      }
+    }
+
     setSubmitting(false);
   }
 
@@ -282,9 +376,15 @@ export default function PlayQuizGame({
           {myScore.toLocaleString("fr-FR")}
         </p>
 
-        <p className="mt-6 text-[11px] italic text-white/40">
-          En attente de la question suivante…
-        </p>
+        {secondsLeft !== null ? (
+          <p className="mt-6 text-xs uppercase tracking-widest text-amber-300">
+            Suivant dans {secondsLeft}s
+          </p>
+        ) : (
+          <p className="mt-6 text-[11px] italic text-white/40">
+            En attente de la question suivante…
+          </p>
+        )}
       </div>
     );
   }
@@ -292,46 +392,138 @@ export default function PlayQuizGame({
   // ═══════════════════ QUESTION — 4 boutons OU "en attente" si déjà voté ═══════════════════
   return (
     <div className="w-full max-w-sm">
-      <p className="text-center text-xs uppercase tracking-[0.3em] text-white/40">
-        Question {state.questionIndex + 1} / {QUIZ_QUESTIONS.length}
-      </p>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs uppercase tracking-[0.3em] text-white/40">
+          Question {state.questionIndex + 1} / {QUIZ_QUESTIONS.length}
+        </p>
+        {secondsLeft !== null && (
+          <span
+            className={
+              "rounded-full border px-3 py-1 font-display text-sm font-black tabular-nums " +
+              (secondsLeft <= 5
+                ? "border-red-400/60 bg-red-500/15 text-red-200"
+                : "border-white/15 bg-white/[0.04] text-white")
+            }
+          >
+            {secondsLeft}s
+          </span>
+        )}
+      </div>
 
       <h1 className="mt-4 text-center text-xl font-bold leading-tight text-white sm:text-2xl">
         {currentQuestion.question}
       </h1>
 
-      {/* Si déjà répondu → écran "en attente" */}
-      {myAnswerForCurrent ? (
-        <div className="card-ink mt-8 p-6 text-center">
-          <p className="text-5xl">⏳</p>
-          <p className="mt-3 text-sm text-white/70">
-            Ta réponse <span className="font-bold text-white">{myAnswerForCurrent.answer}</span>{" "}
-            est envoyée.
-          </p>
-          <p className="mt-1 text-xs text-white/40">
-            En attente des autres joueurs et du host…
-          </p>
-        </div>
-      ) : (
-        <div className="mt-6 grid grid-cols-1 gap-3">
-          {(["A", "B", "C", "D"] as const).map((letter) => (
+      {/* 4 boutons toujours actifs — le joueur peut changer d'avis */}
+      <div className="mt-6 grid grid-cols-1 gap-3">
+        {(["A", "B", "C", "D"] as const).map((letter) => {
+          const isSelected = myAnswerForCurrent?.answer === letter;
+          return (
             <button
               key={letter}
               type="button"
-              onClick={() => handleSubmitAnswer(letter)}
+              onClick={() => handleSelectAnswer(letter)}
               disabled={submitting}
-              className="flex items-center gap-4 rounded-2xl border border-white/15 bg-white/[0.04] p-4 text-left transition hover:border-tenant hover:bg-tenant/10 disabled:opacity-50"
+              className={
+                "flex items-center gap-4 rounded-2xl border p-4 text-left transition disabled:opacity-50 " +
+                (isSelected
+                  ? "border-tenant bg-tenant/20 ring-2 ring-tenant shadow-[0_0_24px_-8px_var(--tenant)]"
+                  : "border-white/15 bg-white/[0.04] hover:border-tenant/60 hover:bg-tenant/10")
+              }
             >
-              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-tenant/20 font-display text-2xl font-black text-tenant">
+              <span
+                className={
+                  "grid h-12 w-12 shrink-0 place-items-center rounded-xl font-display text-2xl font-black transition " +
+                  (isSelected
+                    ? "bg-tenant text-[#04040e]"
+                    : "bg-tenant/20 text-tenant")
+                }
+              >
                 {letter}
               </span>
               <span className="flex-1 text-sm font-medium text-white">
                 {currentQuestion.choices[letter]}
               </span>
+              {isSelected && <span className="text-xl">✓</span>}
             </button>
-          ))}
-        </div>
+          );
+        })}
+      </div>
+
+      {/* Indicateur de statut sous les boutons */}
+      <p className="mt-4 text-center text-xs text-white/50">
+        {myAnswerForCurrent
+          ? `Réponse provisoire : ${myAnswerForCurrent.answer} · tu peux encore changer`
+          : "Coche ta réponse — validation auto au décompte 0"}
+      </p>
+
+      {errorMsg && (
+        <p className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-center text-xs text-red-200">
+          {errorMsg}
+        </p>
       )}
+    </div>
+  );
+}
+          <span
+            className={
+              "rounded-full border px-3 py-1 font-display text-sm font-black tabular-nums " +
+              (secondsLeft <= 5
+                ? "border-red-400/60 bg-red-500/15 text-red-200"
+                : "border-white/15 bg-white/[0.04] text-white")
+            }
+          >
+            {secondsLeft}s
+          </span>
+        )}
+      </div>
+
+      <h1 className="mt-4 text-center text-xl font-bold leading-tight text-white sm:text-2xl">
+        {currentQuestion.question}
+      </h1>
+
+      {/* 4 boutons toujours actifs — le joueur peut changer d'avis */}
+      <div className="mt-6 grid grid-cols-1 gap-3">
+        {(["A", "B", "C", "D"] as const).map((letter) => {
+          const isSelected = myAnswerForCurrent?.answer === letter;
+          return (
+            <button
+              key={letter}
+              type="button"
+              onClick={() => handleSelectAnswer(letter)}
+              disabled={submitting}
+              className={
+                "flex items-center gap-4 rounded-2xl border p-4 text-left transition disabled:opacity-50 " +
+                (isSelected
+                  ? "border-tenant bg-tenant/20 ring-2 ring-tenant shadow-[0_0_24px_-8px_var(--tenant)]"
+                  : "border-white/15 bg-white/[0.04] hover:border-tenant/60 hover:bg-tenant/10")
+              }
+            >
+              <span
+                className={
+                  "grid h-12 w-12 shrink-0 place-items-center rounded-xl font-display text-2xl font-black transition " +
+                  (isSelected
+                    ? "bg-tenant text-[#04040e]"
+                    : "bg-tenant/20 text-tenant")
+                }
+              >
+                {letter}
+              </span>
+              <span className="flex-1 text-sm font-medium text-white">
+                {currentQuestion.choices[letter]}
+              </span>
+              {isSelected && <span className="text-xl">✓</span>}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Indicateur de statut sous les boutons */}
+      <p className="mt-4 text-center text-xs text-white/50">
+        {myAnswerForCurrent
+          ? `Réponse provisoire : ${myAnswerForCurrent.answer} · tu peux encore changer`
+          : "Coche ta réponse — validation auto au décompte 0"}
+      </p>
 
       {errorMsg && (
         <p className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-center text-xs text-red-200">

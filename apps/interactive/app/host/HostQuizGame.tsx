@@ -12,17 +12,19 @@
  */
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar } from "@repo/ui/avatar";
 import { ScoreboardRow } from "@repo/ui/scoreboard-row";
 import { WinnerCelebration } from "@repo/ui/winner-celebration";
 import { parseAvatarConfig } from "@repo/ui/avatar-data";
 import { createClient } from "@/lib/supabase/client";
+import { playSfx, AUDIO } from "@/lib/audio";
 import {
   QUIZ_QUESTIONS,
   type QuizQuestion,
   QUESTION_TIME_LIMIT_SEC,
+  REVEAL_DURATION_SEC,
 } from "@/lib/games/quiz-questions";
 import {
   revealAnswerAction,
@@ -34,7 +36,9 @@ interface SessionState {
   phase: "choose_game" | "question" | "reveal" | "final";
   questionIndex: number;
   questionStartedAt?: string;
+  revealStartedAt?: string;
   timeLimitSec?: number;
+  revealDurationSec?: number;
 }
 
 interface SessionPlayer {
@@ -72,6 +76,11 @@ export default function HostQuizGame({
   const [actionPending, setActionPending] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
 
+  // Mémoire des SFX déjà joués pour ne pas spammer.
+  // Garde la phase précédente pour détecter les transitions.
+  const prevPhaseRef = useRef<string | null>(null);
+  const prevAnswersCountRef = useRef(0);
+
   // ─── 1. Charge joueurs + réponses + subscribe Realtime ───
   useEffect(() => {
     const supabase = createClient();
@@ -104,7 +113,13 @@ export default function HostQuizGame({
         }))
       );
 
-      setAnswers((aData ?? []) as PlayerAnswer[]);
+      const newAnswers = (aData ?? []) as PlayerAnswer[];
+      // SFX click quand un nouveau player_answer arrive
+      if (newAnswers.length > prevAnswersCountRef.current) {
+        playSfx(AUDIO.clickAnswer, 0.4);
+      }
+      prevAnswersCountRef.current = newAnswers.length;
+      setAnswers(newAnswers);
     }
 
     load();
@@ -155,7 +170,33 @@ export default function HostQuizGame({
     };
   }, [sessionId]);
 
-  // ─── 2. Timer countdown ───
+  // ─── SFX au changement de phase ───
+  // reveal → joue 'reveal' (annonce bonne réponse) + 'wrong' s'il y a des erreurs
+  // final  → joue 'final-victory'
+  // question (après reveal) → joue 'transition' (whoosh)
+  useEffect(() => {
+    const prev = prevPhaseRef.current;
+    const curr = state.phase;
+    if (prev === curr) return;
+
+    if (curr === "reveal" && prev === "question") {
+      playSfx(AUDIO.revealExplain, 0.5);
+      // Si au moins une mauvaise réponse, on superpose un "buzz" léger
+      const wrongCount = answers.filter(
+        (a) => a.question_index === state.questionIndex && !a.is_correct
+      ).length;
+      if (wrongCount > 0) {
+        setTimeout(() => playSfx(AUDIO.wrongAnswer, 0.3), 400);
+      }
+    } else if (curr === "question" && prev === "reveal") {
+      playSfx(AUDIO.transition, 0.4);
+    } else if (curr === "final") {
+      playSfx(AUDIO.finalVictory, 0.6);
+    }
+    prevPhaseRef.current = curr;
+  }, [state.phase, state.questionIndex, answers]);
+
+  // ─── 2a. Timer countdown question + auto-reveal à 0 ───
   useEffect(() => {
     if (state.phase !== "question" || !state.questionStartedAt) {
       setSecondsLeft(null);
@@ -163,13 +204,39 @@ export default function HostQuizGame({
     }
     const startedAt = new Date(state.questionStartedAt).getTime();
     const limit = state.timeLimitSec ?? QUESTION_TIME_LIMIT_SEC;
+    let revealTriggered = false;
     const interval = setInterval(() => {
       const elapsed = Date.now() - startedAt;
       const remaining = Math.max(0, Math.round((limit * 1000 - elapsed) / 1000));
       setSecondsLeft(remaining);
+      // Auto-reveal quand le timer atteint 0 (host n'a pas cliqué avant)
+      if (remaining === 0 && !revealTriggered && !actionPending) {
+        revealTriggered = true;
+        revealAnswerAction(sessionId).catch(console.error);
+      }
     }, 200);
     return () => clearInterval(interval);
-  }, [state.phase, state.questionStartedAt, state.timeLimitSec]);
+  }, [state.phase, state.questionStartedAt, state.timeLimitSec, sessionId, actionPending]);
+
+  // ─── 2b. Timer countdown reveal + auto-next à 0 ───
+  useEffect(() => {
+    if (state.phase !== "reveal" || !state.revealStartedAt) {
+      return;
+    }
+    const startedAt = new Date(state.revealStartedAt).getTime();
+    const limit = state.revealDurationSec ?? REVEAL_DURATION_SEC;
+    let nextTriggered = false;
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - startedAt;
+      const remaining = Math.max(0, Math.round((limit * 1000 - elapsed) / 1000));
+      setSecondsLeft(remaining);
+      if (remaining === 0 && !nextTriggered && !actionPending) {
+        nextTriggered = true;
+        nextQuestionAction(sessionId).catch(console.error);
+      }
+    }, 200);
+    return () => clearInterval(interval);
+  }, [state.phase, state.revealStartedAt, state.revealDurationSec, sessionId, actionPending]);
 
   // ─── Helpers ───
   const currentQuestion: QuizQuestion | null = useMemo(() => {
@@ -295,11 +362,14 @@ export default function HostQuizGame({
               </p>
             )}
           </div>
-          {state.phase === "question" && secondsLeft !== null && (
+          {/* Timer countdown — visible en phase question ET reveal */}
+          {secondsLeft !== null && (state.phase === "question" || state.phase === "reveal") && (
             <div
               className={
                 "rounded-2xl border px-6 py-3 text-center transition " +
-                (secondsLeft <= 5
+                (state.phase === "reveal"
+                  ? "border-amber-400/60 bg-amber-500/15 text-amber-200"
+                  : secondsLeft <= 5
                   ? "border-red-500/60 bg-red-500/15 text-red-200"
                   : "border-white/15 bg-white/[0.03] text-white")
               }
@@ -308,7 +378,7 @@ export default function HostQuizGame({
                 {secondsLeft}
               </p>
               <p className="text-[10px] uppercase tracking-widest text-white/50">
-                secondes
+                {state.phase === "reveal" ? "suivant dans" : "secondes"}
               </p>
             </div>
           )}
@@ -359,11 +429,11 @@ export default function HostQuizGame({
           })}
         </div>
 
-        {/* Compteur "X/Y ont répondu" pendant la question */}
+        {/* Compteur "X/Y ont coché" pendant la question */}
         {state.phase === "question" && (
           <p className="mt-8 text-center text-sm text-white/60">
             <span className="font-bold text-tenant">{answeredCount}</span> /{" "}
-            {players.length} ont répondu
+            {players.length} ont coché une réponse
           </p>
         )}
 

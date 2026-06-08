@@ -32,7 +32,15 @@ interface CreateSessionResult {
   code?: string;
 }
 
-export async function createSessionAction(): Promise<CreateSessionResult> {
+/**
+ * Crée une session, avec possibilité de pré-sélectionner un type de jeu.
+ *
+ * @param gameType  Optionnel — si fourni, la session est créée avec
+ *                  game_type déjà set. Sinon, le host choisira au lobby.
+ */
+export async function createSessionAction(
+  gameType?: "quiz" | "petit_bac" | "blind_test" | null
+): Promise<CreateSessionResult> {
   const supabase = await createClient();
 
   // 1. Vérif auth user
@@ -59,15 +67,18 @@ export async function createSessionAction(): Promise<CreateSessionResult> {
 
     const code = String(codeData);
 
-    // 3. Insérer la session
+    // 3. Insérer la session (avec game_type si fourni)
+    const insertPayload: Record<string, unknown> = {
+      code,
+      host_user_id: user.id,
+      status: "lobby",
+    };
+    if (gameType) insertPayload.game_type = gameType;
+
     const { data: session, error: insertError } = await supabase
       .schema("interactive" as never)
       .from("sessions")
-      .insert({
-        code,
-        host_user_id: user.id,
-        status: "lobby",
-      } as never)
+      .insert(insertPayload as never)
       .select("id, code")
       .single();
 
@@ -119,6 +130,7 @@ export async function startSessionAction(sessionId: string): Promise<void> {
     .eq("id", sessionId);
 }
 
+
 /**
  * Redirige vers la page de la TV avec une nouvelle session.
  * Utilisé par le bouton "Lancer une session" sur /dashboard.
@@ -126,7 +138,23 @@ export async function startSessionAction(sessionId: string): Promise<void> {
 export async function createSessionAndRedirectAction(): Promise<void> {
   const result = await createSessionAction();
   if (!result.success || !result.code) {
-    // Pour l'instant on redirige avec un flag erreur ; à améliorer
+    redirect("/dashboard?error=session_create");
+  }
+  redirect(`/host?code=${result.code}`);
+}
+
+/**
+ * Variante avec game_type — utilisée par les cards du catalogue de jeux.
+ */
+export async function createSessionWithGameAction(formData: FormData): Promise<void> {
+  const gameTypeRaw = formData.get("game_type");
+  const gameType = (
+    gameTypeRaw === "quiz" || gameTypeRaw === "petit_bac" || gameTypeRaw === "blind_test"
+      ? gameTypeRaw
+      : null
+  );
+  const result = await createSessionAction(gameType);
+  if (!result.success || !result.code) {
     redirect("/dashboard?error=session_create");
   }
   redirect(`/host?code=${result.code}`);

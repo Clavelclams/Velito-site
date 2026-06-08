@@ -25,6 +25,8 @@ import { type AvatarConfig, parseAvatarConfig } from "@repo/ui/avatar-data";
 import { createClient } from "@/lib/supabase/client";
 import { endSessionAction } from "./actions";
 import { startQuizAction } from "./quiz-actions";
+import { startPetitBacAction } from "./petitbac-actions";
+import { useBackgroundMusic, playSfx, AUDIO } from "@/lib/audio";
 
 interface SessionPlayer {
   id: string;
@@ -39,6 +41,8 @@ interface HostLobbyProps {
   code: string;
   status: string;
   playBaseUrl: string;
+  /** Type de jeu pré-sélectionné depuis la galerie. Null = pas encore choisi. */
+  gameType?: "quiz" | "petit_bac" | "blind_test" | null;
 }
 
 export default function HostLobby({
@@ -46,6 +50,7 @@ export default function HostLobby({
   code,
   status: initialStatus,
   playBaseUrl,
+  gameType,
 }: HostLobbyProps) {
   const router = useRouter();
   const [players, setPlayers] = useState<SessionPlayer[]>([]);
@@ -55,6 +60,12 @@ export default function HostLobby({
 
   const joinUrl = `${playBaseUrl}/play/${code}`;
   const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
+
+  // Musique de fond du lobby — transition cards → game
+  const { muted: musicMuted, toggleMute: toggleMusic } = useBackgroundMusic(
+    AUDIO.lobbyMusic,
+    0.22
+  );
 
   // 1. Générer le QR code (chargement dynamique pour pas alourdir le bundle initial)
   useEffect(() => {
@@ -130,6 +141,8 @@ export default function HostLobby({
             };
             setPlayers((prev) => {
               if (prev.some((p) => p.id === r.id)) return prev;
+              // SFX "nouveau joueur" — son discord-like
+              playSfx(AUDIO.playerJoin, 0.4);
               return [
                 ...prev,
                 {
@@ -183,9 +196,13 @@ export default function HostLobby({
       return;
     }
     setActionPending(true);
-    // MVP : on lance directement un Quiz (sans choix de jeu).
-    // Plus tard : on affichera un sélecteur de jeu (Quiz/Blind Test/Petit Bac/Géo).
-    await startQuizAction(sessionId);
+    // Route selon le game_type pré-sélectionné depuis la galerie /dashboard.
+    // Si non set (cas legacy), on tombe sur Quiz par défaut.
+    if (gameType === "petit_bac") {
+      await startPetitBacAction(sessionId);
+    } else {
+      await startQuizAction(sessionId);
+    }
     setActionPending(false);
   }
 
@@ -201,6 +218,17 @@ export default function HostLobby({
     <main className="relative flex min-h-screen flex-col items-center overflow-hidden px-8 py-12">
       <div className="pointer-events-none absolute inset-0 bg-grid-ink [background-size:48px_48px] opacity-50" />
       <div className="pointer-events-none absolute bottom-0 left-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-neon-violet/25 blur-3xl" />
+
+      {/* Bouton mute musique (fixed) */}
+      <button
+        type="button"
+        onClick={toggleMusic}
+        className="fixed bottom-6 right-6 z-50 rounded-full border border-white/15 bg-ink/80 px-3 py-2 text-lg backdrop-blur-sm transition hover:bg-white/[0.06]"
+        title={musicMuted ? "Activer la musique" : "Couper la musique"}
+        aria-label={musicMuted ? "Activer la musique" : "Couper la musique"}
+      >
+        {musicMuted ? "🔇" : "🔊"}
+      </button>
 
       {/* ─── Header : titre + QR + code ─── */}
       <div className="relative grid w-full max-w-6xl grid-cols-1 items-center gap-12 lg:grid-cols-2">
@@ -296,15 +324,12 @@ export default function HostLobby({
             type="button"
             onClick={handleEnd}
             disabled={actionPending}
-            className="rounded-xl border border-white/20 px-5 py-3 font-medium text-white/80 transition hover:bg-white/5"
+            className="rounded-xl border border-white/20 px-5 py-3 text-sm font-medium text-white/70 transition hover:bg-white/[0.05]"
           >
             Annuler la session
           </button>
         </div>
       )}
-
-      {/* status='playing' / 'ended' → la page parent rendra HostQuizGame
-          au lieu de HostLobby. Pas d'affichage ici. */}
     </main>
   );
 }

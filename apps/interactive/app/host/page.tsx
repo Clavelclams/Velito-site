@@ -15,6 +15,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import HostLobby from "./HostLobby";
 import HostQuizGame from "./HostQuizGame";
+import HostPetitBacGame from "./HostPetitBacGame";
 
 export const dynamic = "force-dynamic";
 
@@ -121,27 +122,47 @@ export default async function HostScreen({ searchParams }: HostPageProps) {
 
   // 5. Routage selon le status :
   //    - lobby   → HostLobby (QR + joueurs qui arrivent)
-  //    - playing → HostQuizGame (question + scoreboard)
-  //    - ended   → HostQuizGame (montre l'écran final/victoire)
-  const playBaseUrl =
-    process.env.NEXT_PUBLIC_INTERACTIVE_URL ?? "https://interactive.velito.fr";
-
+  //    - playing → HostQuizGame (déroulé des questions + scoreboard live)
+  //    - ended   → HostQuizGame (qui affiche WinnerCelebration en phase 'final')
   if (sessionRow.status === "lobby") {
+    const playBaseUrl =
+      process.env.NEXT_PUBLIC_INTERACTIVE_URL ??
+      "https://interactive.velito.fr";
     return (
       <HostLobby
         sessionId={sessionRow.id}
         code={sessionRow.code}
         status={sessionRow.status}
         playBaseUrl={playBaseUrl}
+        gameType={sessionRow.game_type as "quiz" | "petit_bac" | "blind_test" | null}
       />
     );
   }
 
-  // playing ou ended → on rend le composant Quiz qui gère phase question/reveal/final
+  // Status 'playing' ou 'ended' → délègue au composant Game spécifique
+  // selon game_type (Quiz par défaut pour rétro-compat).
+  if (sessionRow.game_type === "petit_bac") {
+    const petitBacState = (sessionRow.current_state ?? {
+      phase: "round",
+      round: 1,
+      totalRounds: 5,
+      letter: "A",
+      categories: [],
+    }) as unknown as import("@/lib/games/petit-bac").PetitBacState;
+    return (
+      <HostPetitBacGame
+        sessionId={sessionRow.id}
+        initialState={petitBacState}
+        status={sessionRow.status}
+      />
+    );
+  }
+
   const initialState = sessionRow.current_state ?? {
     phase: "choose_game" as const,
     questionIndex: 0,
   };
+
   return (
     <HostQuizGame
       sessionId={sessionRow.id}

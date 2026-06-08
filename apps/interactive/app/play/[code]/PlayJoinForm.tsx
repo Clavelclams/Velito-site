@@ -29,6 +29,7 @@ import {
 } from "@repo/ui/avatar-data";
 import { createClient } from "@/lib/supabase/client";
 import PlayQuizGame from "./PlayQuizGame";
+import PlayPetitBacGame from "./PlayPetitBacGame";
 
 const AVATAR_STORAGE_KEY = "velito-interactive-avatar";
 const PLAYER_STORAGE_KEY = "velito-interactive-player";
@@ -36,11 +37,13 @@ const PLAYER_STORAGE_KEY = "velito-interactive-player";
 interface PlayJoinFormProps {
   sessionId: string;
   code: string;
+  /** Type de jeu pré-sélectionné (peut changer après start si null). */
+  gameType?: "quiz" | "petit_bac" | "blind_test" | null;
 }
 
 type Step = "avatar" | "ready" | "waiting" | "playing";
 
-export default function PlayJoinForm({ sessionId, code }: PlayJoinFormProps) {
+export default function PlayJoinForm({ sessionId, code, gameType }: PlayJoinFormProps) {
   const [step, setStep] = useState<Step>("avatar");
   const [avatar, setAvatar] = useState<AvatarConfig>(DEFAULT_AVATAR);
   const [pseudo, setPseudo] = useState("");
@@ -303,15 +306,27 @@ export default function PlayJoinForm({ sessionId, code }: PlayJoinFormProps) {
     );
   }
 
-  // ═══════════════════ Étape PLAYING — délègue au PlayQuizGame ═══════════════════
+  // ═══════════════════ Étape PLAYING — délègue au composant Game spécifique ═══════════════════
   if (!playerId) {
-    // Edge case : on devrait toujours avoir un playerId à ce stade (vient du waiting)
     return (
       <div className="w-full max-w-sm text-center text-white/50">
         Session corrompue. Recharge la page.
       </div>
     );
   }
+
+  // Route selon game_type. Petit Bac et Quiz pour l'instant.
+  if (gameType === "petit_bac") {
+    return (
+      <PlayPetitBacGame
+        sessionId={sessionId}
+        playerId={playerId}
+        pseudo={pseudo}
+        avatar={avatar}
+      />
+    );
+  }
+
   return (
     <PlayQuizGame
       sessionId={sessionId}
