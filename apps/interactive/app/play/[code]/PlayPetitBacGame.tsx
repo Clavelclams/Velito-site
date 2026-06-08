@@ -23,6 +23,7 @@ import {
   PETITBAC_REVEAL_DURATION_SEC,
   type PetitBacState,
 } from "@/lib/games/petit-bac";
+import NextSessionInput from "./NextSessionInput";
 
 interface MyAnswer {
   id: string;
@@ -263,6 +264,9 @@ export default function PlayPetitBacGame({
         <p className="mt-6 text-xs text-white/40">
           Regarde l&apos;écran TV pour voir le classement final 🏆
         </p>
+
+        {/* Permet de rejouer en entrant le code de la prochaine session */}
+        <NextSessionInput />
       </div>
     );
   }

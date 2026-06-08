@@ -26,6 +26,7 @@ import {
   wordStartsWithLetter,
   type PetitBacState,
 } from "@/lib/games/petit-bac";
+import { wordInDictionary } from "@/lib/games/petit-bac-dictionary";
 
 interface ActionResult {
   success: boolean;
@@ -123,9 +124,11 @@ export async function revealPetitBacRoundAction(
   }>;
 
   // 3. Scoring : 1 pt par mot valide (V1).
-  //    On regroupe par catégorie pour préparer la déduplication V2.
+  //    Validation stricte = (commence par bonne lettre + 3+ chars) ET (dans la banque)
   for (const a of rows) {
-    const isValid = wordStartsWithLetter(a.word, state.letter);
+    const startsOk = wordStartsWithLetter(a.word, state.letter);
+    const inDict = wordInDictionary(a.word, a.category);
+    const isValid = startsOk && inDict;
     const points = isValid ? 1 : 0;
 
     await supabase

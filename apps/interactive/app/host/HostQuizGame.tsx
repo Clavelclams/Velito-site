@@ -276,47 +276,54 @@ export default function HostQuizGame({
   if (state.phase === "final" || status === "ended") {
     const winner = sortedPlayers[0];
     return (
-      <main className="relative min-h-screen overflow-hidden bg-ink px-6 py-12">
+      <main className="relative min-h-screen overflow-hidden bg-ink px-6 py-10">
         <div className="pointer-events-none absolute inset-0 bg-grid-ink [background-size:48px_48px] opacity-30" />
-        <div className="relative mx-auto w-full max-w-5xl">
-          <header className="mb-8 text-center">
+        <div className="relative mx-auto w-full max-w-7xl">
+          <header className="mb-6 text-center">
             <p className="text-xs uppercase tracking-[0.3em] text-white/40">
               Velito Interactive · QUIZ
             </p>
             <h2 className="neon-title mt-2 text-3xl">Partie terminée</h2>
           </header>
 
-          {winner ? (
-            <WinnerCelebration
-              pseudo={winner.pseudo}
-              avatar={winner.avatar_config}
-              score={winner.score}
-              subtitle={`Quiz · ${QUIZ_QUESTIONS.length} questions`}
-            />
-          ) : (
-            <p className="text-center text-white/50">Aucun joueur.</p>
-          )}
+          {/* Layout 2 colonnes sur TV / desktop, 1 colonne sur mobile */}
+          <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-2">
+            {/* ─── Colonne gauche : winner ─── */}
+            <div className="flex items-start justify-center">
+              {winner ? (
+                <WinnerCelebration
+                  pseudo={winner.pseudo}
+                  avatar={winner.avatar_config}
+                  score={winner.score}
+                  subtitle={`Quiz · ${QUIZ_QUESTIONS.length} questions`}
+                />
+              ) : (
+                <p className="text-center text-white/50">Aucun joueur.</p>
+              )}
+            </div>
 
-          {sortedPlayers.length > 1 && (
-            <section className="mt-10">
-              <p className="mb-4 text-center text-xs uppercase tracking-[0.3em] text-white/40">
-                Classement complet
-              </p>
-              <div className="space-y-3">
-                {sortedPlayers.slice(1).map((p, i) => (
-                  <ScoreboardRow
-                    key={p.id}
-                    rank={i + 2}
-                    pseudo={p.pseudo}
-                    avatar={p.avatar_config}
-                    score={p.score}
-                    avatarSize="md"
-                    variant="tv"
-                  />
-                ))}
-              </div>
-            </section>
-          )}
+            {/* ─── Colonne droite : classement complet ─── */}
+            {sortedPlayers.length > 1 && (
+              <section className="self-start">
+                <p className="mb-3 text-center text-xs uppercase tracking-[0.3em] text-white/40 lg:text-left">
+                  Classement complet
+                </p>
+                <div className="space-y-2">
+                  {sortedPlayers.slice(1).map((p, i) => (
+                    <ScoreboardRow
+                      key={p.id}
+                      rank={i + 2}
+                      pseudo={p.pseudo}
+                      avatar={p.avatar_config}
+                      score={p.score}
+                      avatarSize="sm"
+                      variant="tv"
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
 
           <div className="mt-12 flex justify-center">
             <button

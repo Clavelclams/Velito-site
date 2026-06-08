@@ -176,6 +176,12 @@ export default function HostLobby({
         (payload) => {
           const r = payload.new as { status: string };
           setStatus(r.status);
+          // Quand la session passe en 'playing', on refresh la page server
+          // pour que /host/page.tsx route vers HostQuizGame/HostPetitBacGame.
+          // Sans ce refresh, l'animateur devait F5 manuellement.
+          if (r.status === "playing" || r.status === "ended") {
+            router.refresh();
+          }
         }
       )
       .subscribe();

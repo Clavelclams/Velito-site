@@ -24,6 +24,7 @@ import {
   QUESTION_TIME_LIMIT_SEC,
   REVEAL_DURATION_SEC,
 } from "@/lib/games/quiz-questions";
+import NextSessionInput from "./NextSessionInput";
 
 interface SessionState {
   phase: "choose_game" | "question" | "reveal" | "final";
@@ -315,6 +316,9 @@ export default function PlayQuizGame({
         <p className="mt-6 text-xs text-white/40">
           Regarde l&apos;écran TV pour voir le classement final 🏆
         </p>
+
+        {/* Permet de rejouer en entrant le code de la prochaine session */}
+        <NextSessionInput />
       </div>
     );
   }

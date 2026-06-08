@@ -32,6 +32,7 @@ import PlayQuizGame from "./PlayQuizGame";
 import PlayPetitBacGame from "./PlayPetitBacGame";
 
 const AVATAR_STORAGE_KEY = "velito-interactive-avatar";
+const PSEUDO_STORAGE_KEY = "velito-interactive-pseudo";
 const PLAYER_STORAGE_KEY = "velito-interactive-player";
 
 interface PlayJoinFormProps {
@@ -52,19 +53,31 @@ export default function PlayJoinForm({ sessionId, code, gameType }: PlayJoinForm
   const [error, setError] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
-  // 1. Au mount : restaurer avatar + check si déjà joueur dans cette session
+  // 1. Au mount : restaurer avatar + pseudo + check si déjà joueur dans cette session
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(AVATAR_STORAGE_KEY);
-      if (raw) setAvatar(parseAvatarConfig(JSON.parse(raw)));
-      // Check si on a déjà rejoint cette session
+      const avatarRaw = localStorage.getItem(AVATAR_STORAGE_KEY);
+      if (avatarRaw) setAvatar(parseAvatarConfig(JSON.parse(avatarRaw)));
+
+      // Restaure le pseudo précédent (persistance globale, pas par session)
+      const savedPseudo = localStorage.getItem(PSEUDO_STORAGE_KEY);
+      if (savedPseudo) setPseudo(savedPseudo);
+
+      // Check si on a déjà rejoint cette session (rejoint en cours)
       const playerRaw = localStorage.getItem(PLAYER_STORAGE_KEY);
       if (playerRaw) {
         const parsed = JSON.parse(playerRaw) as { sessionId: string; playerId: string };
         if (parsed.sessionId === sessionId) {
           setPlayerId(parsed.playerId);
           setStep("waiting");
+          return;
         }
+      }
+
+      // Si on a un avatar + pseudo en mémoire ET qu'on n'est pas déjà dans la session,
+      // on peut sauter directement à l'étape "ready" (preview avatar+pseudo)
+      if (avatarRaw && savedPseudo) {
+        setStep("ready");
       }
     } catch {
       /* localStorage indispo, on reste sur le default */
@@ -150,12 +163,14 @@ export default function PlayJoinForm({ sessionId, code, gameType }: PlayJoinForm
       const row = data as { id: string };
       setPlayerId(row.id);
 
-      // Mémorise qu'on est joueur dans cette session
+      // Mémorise qu'on est joueur dans cette session (lié au sessionId)
       try {
         localStorage.setItem(
           PLAYER_STORAGE_KEY,
           JSON.stringify({ sessionId, playerId: row.id })
         );
+        // Sauve le pseudo en global pour le réutiliser à la prochaine partie
+        localStorage.setItem(PSEUDO_STORAGE_KEY, pseudo.trim());
       } catch {
         /* ignore */
       }

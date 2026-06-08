@@ -13,12 +13,12 @@
 
 /** Catégories par défaut — le host pourra en customiser plus tard. */
 export const PETIT_BAC_DEFAULT_CATEGORIES = [
-  "Prénoms",
-  "Métiers",
-  "Pays",
-  "Villes",
-  "Fruits / Légumes",
-  "Animaux",
+  "Prénom garçon",
+  "Prénom fille",
+  "Objet",
+  "Marque",
+  "Pays / Ville",
+  "Animal",
 ];
 
 /** Durée d'un round (en secondes). */
@@ -65,16 +65,31 @@ export function normalizeWord(word: string): string {
     .replace(/[̀-ͯ]/g, ""); // Retire diacritiques (combining chars)
 }
 
+/** Longueur minimale d'un mot valide (évite la triche genre "B" tout seul). */
+export const MIN_WORD_LENGTH = 3;
+
 /**
- * Vérifie qu'un mot commence par la bonne lettre.
+ * Vérifie qu'un mot commence par la bonne lettre et est suffisamment long.
  *
- * Tolérance accent : "Élephant" commence par "E" même si la lettre du round est "E".
+ * Validations :
+ *  - Au moins MIN_WORD_LENGTH caractères (anti-triche : un seul lettre rejetée)
+ *  - Commence par la bonne lettre (tolérance accent : "Élephant" pour 'E')
+ *  - Pas que des chiffres / symboles : doit contenir au moins 2 lettres
+ *
+ * V2 : on pourra croiser avec une banque de mots SQL pour validation stricte.
  */
 export function wordStartsWithLetter(word: string, letter: string): boolean {
-  if (!word || word.trim().length === 0) return false;
-  const normalized = normalizeWord(word);
+  if (!word) return false;
+  const trimmed = word.trim();
+  if (trimmed.length < MIN_WORD_LENGTH) return false;
+
+  const normalized = normalizeWord(trimmed);
   const normalizedLetter = normalizeWord(letter);
-  return normalized.startsWith(normalizedLetter);
+  if (!normalized.startsWith(normalizedLetter)) return false;
+
+  // Au moins 2 caractères alphabétiques (évite "B12" ou "B--")
+  const letterCount = (normalized.match(/[a-z]/g) ?? []).length;
+  return letterCount >= 2;
 }
 
 /**
