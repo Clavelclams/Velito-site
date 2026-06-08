@@ -28,6 +28,7 @@ import {
   type AvatarConfig,
 } from "@repo/ui/avatar-data";
 import { createClient } from "@/lib/supabase/client";
+import PlayQuizGame from "./PlayQuizGame";
 
 const AVATAR_STORAGE_KEY = "velito-interactive-avatar";
 const PLAYER_STORAGE_KEY = "velito-interactive-player";
@@ -302,19 +303,21 @@ export default function PlayJoinForm({ sessionId, code }: PlayJoinFormProps) {
     );
   }
 
-  // ═══════════════════ Étape PLAYING (pour l'instant placeholder) ═══════════════════
-  return (
-    <div className="w-full max-w-sm text-center">
-      <p className="text-xs uppercase tracking-[0.3em] text-white/40">
-        Velito Interactive
-      </p>
-      <h1 className="neon-title mt-3 text-4xl">La partie démarre 🎮</h1>
-      <p className="mt-4 text-sm text-white/60">
-        Mécanique de jeu à venir. Pour l&apos;instant, reste ici.
-      </p>
-      <div className="mt-8 flex justify-center">
-        <Avatar config={avatar} size="lg" />
+  // ═══════════════════ Étape PLAYING — délègue au PlayQuizGame ═══════════════════
+  if (!playerId) {
+    // Edge case : on devrait toujours avoir un playerId à ce stade (vient du waiting)
+    return (
+      <div className="w-full max-w-sm text-center text-white/50">
+        Session corrompue. Recharge la page.
       </div>
-    </div>
+    );
+  }
+  return (
+    <PlayQuizGame
+      sessionId={sessionId}
+      playerId={playerId}
+      pseudo={pseudo}
+      avatar={avatar}
+    />
   );
 }

@@ -14,6 +14,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import HostLobby from "./HostLobby";
+import HostQuizGame from "./HostQuizGame";
 
 export const dynamic = "force-dynamic";
 
@@ -66,7 +67,7 @@ export default async function HostScreen({ searchParams }: HostPageProps) {
   const { data: session, error: sessionError } = await supabase
     .schema("interactive" as never)
     .from("sessions")
-    .select("id, code, status, host_user_id, game_type, created_at")
+    .select("id, code, status, host_user_id, game_type, current_state, created_at")
     .eq("code", code)
     .single();
 
@@ -95,6 +96,12 @@ export default async function HostScreen({ searchParams }: HostPageProps) {
     status: string;
     host_user_id: string;
     game_type: string | null;
+    current_state: {
+      phase: "choose_game" | "question" | "reveal" | "final";
+      questionIndex: number;
+      questionStartedAt?: string;
+      timeLimitSec?: number;
+    } | null;
     created_at: string;
   };
   if (sessionRow.host_user_id !== user.id) {
@@ -112,15 +119,34 @@ export default async function HostScreen({ searchParams }: HostPageProps) {
     );
   }
 
-  // 5. Tout est bon — on render le lobby live (Client Component)
+  // 5. Routage selon le status :
+  //    - lobby   → HostLobby (QR + joueurs qui arrivent)
+  //    - playing → HostQuizGame (question + scoreboard)
+  //    - ended   → HostQuizGame (montre l'écran final/victoire)
   const playBaseUrl =
     process.env.NEXT_PUBLIC_INTERACTIVE_URL ?? "https://interactive.velito.fr";
+
+  if (sessionRow.status === "lobby") {
+    return (
+      <HostLobby
+        sessionId={sessionRow.id}
+        code={sessionRow.code}
+        status={sessionRow.status}
+        playBaseUrl={playBaseUrl}
+      />
+    );
+  }
+
+  // playing ou ended → on rend le composant Quiz qui gère phase question/reveal/final
+  const initialState = sessionRow.current_state ?? {
+    phase: "choose_game" as const,
+    questionIndex: 0,
+  };
   return (
-    <HostLobby
+    <HostQuizGame
       sessionId={sessionRow.id}
-      code={sessionRow.code}
+      initialState={initialState}
       status={sessionRow.status}
-      playBaseUrl={playBaseUrl}
     />
   );
 }

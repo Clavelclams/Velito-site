@@ -23,7 +23,8 @@ import { useRouter } from "next/navigation";
 import { Avatar } from "@repo/ui/avatar";
 import { type AvatarConfig, parseAvatarConfig } from "@repo/ui/avatar-data";
 import { createClient } from "@/lib/supabase/client";
-import { startSessionAction, endSessionAction } from "./actions";
+import { endSessionAction } from "./actions";
+import { startQuizAction } from "./quiz-actions";
 
 interface SessionPlayer {
   id: string;
@@ -182,7 +183,9 @@ export default function HostLobby({
       return;
     }
     setActionPending(true);
-    await startSessionAction(sessionId);
+    // MVP : on lance directement un Quiz (sans choix de jeu).
+    // Plus tard : on affichera un sélecteur de jeu (Quiz/Blind Test/Petit Bac/Géo).
+    await startQuizAction(sessionId);
     setActionPending(false);
   }
 
@@ -300,22 +303,8 @@ export default function HostLobby({
         </div>
       )}
 
-      {status === "playing" && (
-        <div className="relative mt-10 rounded-2xl border border-tenant/40 bg-tenant/10 px-8 py-4 text-center">
-          <p className="font-display text-2xl font-black text-tenant">
-            Partie en cours 🎮
-          </p>
-          <p className="mt-1 text-sm text-white/60">
-            (Le module de gameplay sera branché au prochain sprint.)
-          </p>
-        </div>
-      )}
-
-      {status === "ended" && (
-        <p className="relative mt-10 text-xs italic text-white/40">
-          Session terminée.
-        </p>
-      )}
+      {/* status='playing' / 'ended' → la page parent rendra HostQuizGame
+          au lieu de HostLobby. Pas d'affichage ici. */}
     </main>
   );
 }
