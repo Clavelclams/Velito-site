@@ -1,23 +1,21 @@
 /**
  * <PlayJoinForm /> — formulaire d'arrivée dans une partie Interactive.
  *
- * Composant Client (state + localStorage) rendu par la page Server.
+ * Composant Client rendu par la page Server (qui a déjà résolu la session).
  *
  * Flow UX :
- *  1. Étape "avatar"  : l'utilisateur choisit son perso (galerie + customs)
- *  2. Étape "pseudo"  : récap (avatar choisi en grand) + champ pseudo + bouton "Entrer"
- *  3. Submit (à venir) : POST vers l'API Realtime pour rejoindre le channel
+ *  1. Étape "avatar"     : picker (galerie + customs Gentil/Méchant)
+ *  2. Étape "pseudo"     : récap avatar + champ pseudo + bouton "Entrer"
+ *  3. Submit → INSERT dans interactive.session_players (Supabase RLS permet
+ *     l'INSERT pour anon si la session est en mode 'lobby')
+ *  4. Étape "waiting"    : "Tu es dans la partie ! Attends que l'animateur lance."
+ *  5. Subscribe Realtime → quand la session passe en 'playing', on bascule
+ *     vers l'écran de jeu (à implémenter)
  *
- * Persistance MVP :
- *  - On stocke le AvatarConfig en localStorage sous la clé `velito-interactive-avatar`
- *  - Au prochain chargement, le picker repart avec ce choix par défaut
- *  - Plus tard (quand on aura les comptes Velito + la table profiles), un user
- *    connecté ira lire/écrire dans Supabase plutôt qu'en localStorage
- *
- * Pourquoi 2 étapes plutôt qu'1 seule page longue :
- *  - Le picker prend déjà beaucoup d'espace (grille + 2 bandeaux)
- *  - On veut que le joueur VOIT son avatar choisi en récap, c'est gratifiant
- *  - C'est cohérent avec l'UX Wii (perso d'abord, puis "tu vas jouer en tant que…")
+ * Persistance avatar :
+ *  - Stocké en localStorage (clé velito-interactive-avatar) pour pré-remplir
+ *    au prochain join
+ *  - L'avatar choisi est aussi INSERT en jsonb dans session_players
  */
 "use client";
 
@@ -29,70 +27,153 @@ import {
   parseAvatarConfig,
   type AvatarConfig,
 } from "@repo/ui/avatar-data";
+import { createClient } from "@/lib/supabase/client";
 
 const AVATAR_STORAGE_KEY = "velito-interactive-avatar";
+const PLAYER_STORAGE_KEY = "velito-interactive-player";
 
 interface PlayJoinFormProps {
-  /** Code de session (vient de l'URL /play/[code]) — affiché en titre. */
+  sessionId: string;
   code: string;
 }
 
-type Step = "avatar" | "ready";
+type Step = "avatar" | "ready" | "waiting" | "playing";
 
-export default function PlayJoinForm({ code }: PlayJoinFormProps) {
+export default function PlayJoinForm({ sessionId, code }: PlayJoinFormProps) {
   const [step, setStep] = useState<Step>("avatar");
   const [avatar, setAvatar] = useState<AvatarConfig>(DEFAULT_AVATAR);
   const [pseudo, setPseudo] = useState("");
+  const [playerId, setPlayerId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
-  // Au mount : on tente de restaurer le dernier avatar choisi (localStorage).
-  // Fait dans useEffect pour éviter un hydration mismatch (le serveur n'a pas
-  // accès au localStorage, donc on attend le client).
+  // 1. Au mount : restaurer avatar + check si déjà joueur dans cette session
   useEffect(() => {
     try {
       const raw = localStorage.getItem(AVATAR_STORAGE_KEY);
-      if (raw) {
-        setAvatar(parseAvatarConfig(JSON.parse(raw)));
+      if (raw) setAvatar(parseAvatarConfig(JSON.parse(raw)));
+      // Check si on a déjà rejoint cette session
+      const playerRaw = localStorage.getItem(PLAYER_STORAGE_KEY);
+      if (playerRaw) {
+        const parsed = JSON.parse(playerRaw) as { sessionId: string; playerId: string };
+        if (parsed.sessionId === sessionId) {
+          setPlayerId(parsed.playerId);
+          setStep("waiting");
+        }
       }
     } catch {
-      // localStorage indisponible (mode incognito strict, etc.) → on reste sur le default.
+      /* localStorage indispo, on reste sur le default */
     }
     setHydrated(true);
-  }, []);
+  }, [sessionId]);
+
+  // 2. Subscribe Realtime sur la session → si elle passe en 'playing', on bascule
+  useEffect(() => {
+    if (step !== "waiting") return;
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`play-session-${sessionId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "interactive",
+          table: "sessions",
+          filter: `id=eq.${sessionId}`,
+        },
+        (payload) => {
+          const newStatus = (payload.new as { status: string }).status;
+          if (newStatus === "playing") {
+            setStep("playing");
+          } else if (newStatus === "ended") {
+            setError("La session a été terminée par l'animateur.");
+            setStep("ready");
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [step, sessionId]);
 
   function handleAvatarSelect(config: AvatarConfig) {
     setAvatar(config);
     try {
       localStorage.setItem(AVATAR_STORAGE_KEY, JSON.stringify(config));
     } catch {
-      // ignore — pas fatal si on peut pas écrire
+      /* ignore */
     }
     setStep("ready");
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // Pour l'instant l'API Realtime n'est pas branchée — on affiche juste
-    // que le code est prêt à être envoyé. À remplacer par l'appel POST.
-    console.log("[PlayJoinForm] join", { code, pseudo, avatar });
+    setError(null);
+
+    if (pseudo.trim().length < 2) {
+      setError("Pseudo trop court (2 caractères minimum).");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const supabase = createClient();
+      const { data, error: insertError } = await supabase
+        .schema("interactive" as never)
+        .from("session_players")
+        .insert({
+          session_id: sessionId,
+          pseudo: pseudo.trim(),
+          avatar_config: avatar,
+        } as never)
+        .select("id")
+        .single();
+
+      if (insertError) {
+        // Cas typique : pseudo déjà pris dans cette session (UNIQUE constraint)
+        if (insertError.message?.includes("duplicate") || insertError.code === "23505") {
+          setError("Ce pseudo est déjà pris dans cette partie. Choisis-en un autre.");
+        } else {
+          setError("Impossible de rejoindre la session. Réessaye.");
+        }
+        console.error("[PlayJoinForm] insert error:", insertError.message);
+        return;
+      }
+
+      const row = data as { id: string };
+      setPlayerId(row.id);
+
+      // Mémorise qu'on est joueur dans cette session
+      try {
+        localStorage.setItem(
+          PLAYER_STORAGE_KEY,
+          JSON.stringify({ sessionId, playerId: row.id })
+        );
+      } catch {
+        /* ignore */
+      }
+
+      setStep("waiting");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
-  // ============================================================
-  // Étape 1 : picker
-  // ============================================================
+  // ═══════════════════ Étape AVATAR ═══════════════════
   if (step === "avatar") {
     return (
       <div className="w-full max-w-md">
         <p className="text-center text-xs uppercase tracking-[0.3em] text-white/40">
           Velito Interactive
         </p>
-        <h1 className="neon-title mt-3 text-center text-4xl">
-          Crée ton perso
-        </h1>
+        <h1 className="neon-title mt-3 text-center text-4xl">Crée ton perso</h1>
         <p className="mt-2 text-center text-sm text-white/60">
           Tu rejoins la session{" "}
           <span className="font-display font-black tracking-widest text-tenant">
-            {code?.toUpperCase()}
+            {code.toUpperCase()}
           </span>
         </p>
 
@@ -104,7 +185,6 @@ export default function PlayJoinForm({ code }: PlayJoinFormProps) {
               ctaLabel="C'est moi"
             />
           ) : (
-            // Skeleton pendant l'hydration pour éviter le flash
             <div className="grid place-items-center py-20 text-xs text-white/30">
               Chargement…
             </div>
@@ -114,67 +194,127 @@ export default function PlayJoinForm({ code }: PlayJoinFormProps) {
     );
   }
 
-  // ============================================================
-  // Étape 2 : récap + pseudo + entrée
-  // ============================================================
+  // ═══════════════════ Étape READY (pseudo + submit) ═══════════════════
+  if (step === "ready") {
+    return (
+      <div className="w-full max-w-sm text-center">
+        <p className="text-xs uppercase tracking-[0.3em] text-white/40">
+          Velito Interactive
+        </p>
+        <h1 className="neon-title mt-3 text-4xl">Presque prêt</h1>
+        <p className="mt-2 text-sm text-white/60">
+          Session{" "}
+          <span className="font-display font-black tracking-widest text-tenant">
+            {code.toUpperCase()}
+          </span>
+        </p>
+
+        <div className="mt-6 flex justify-center">
+          <Avatar config={avatar} size="xl" className="ring-4 ring-white/15" />
+        </div>
+        <button
+          type="button"
+          onClick={() => setStep("avatar")}
+          className="mt-2 text-[11px] text-white/40 underline-offset-2 transition hover:text-white hover:underline"
+        >
+          Changer de perso
+        </button>
+
+        <form onSubmit={handleSubmit} className="card-ink mt-6 space-y-4 p-6 text-left">
+          <div>
+            <label
+              htmlFor="pseudo"
+              className="mb-1.5 block text-xs uppercase tracking-widest text-white/50"
+            >
+              Ton pseudo
+            </label>
+            <input
+              id="pseudo"
+              type="text"
+              value={pseudo}
+              onChange={(e) => setPseudo(e.target.value.slice(0, 24))}
+              placeholder="Ex : Riza, MamaTeam, K7…"
+              maxLength={24}
+              minLength={2}
+              autoComplete="off"
+              required
+              className="w-full rounded-xl border border-white/15 bg-ink px-4 py-3 text-white placeholder-white/30 outline-none focus:border-tenant focus:ring-2 focus:ring-tenant/30"
+            />
+          </div>
+
+          {error && (
+            <p
+              role="alert"
+              className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-200"
+            >
+              {error}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={pseudo.trim().length < 2 || submitting}
+            className="btn-tenant w-full disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {submitting ? "Entrée…" : "Entrer dans la partie"}
+          </button>
+        </form>
+      </div>
+    );
+  }
+
+  // ═══════════════════ Étape WAITING (en attente du host) ═══════════════════
+  if (step === "waiting") {
+    return (
+      <div className="w-full max-w-sm text-center">
+        <p className="text-xs uppercase tracking-[0.3em] text-white/40">
+          Velito Interactive
+        </p>
+        <h1 className="neon-title mt-3 text-4xl">Tu es dans la partie 🎮</h1>
+        <p className="mt-2 text-sm text-white/60">
+          Session{" "}
+          <span className="font-display font-black tracking-widest text-tenant">
+            {code.toUpperCase()}
+          </span>
+        </p>
+
+        <div className="mt-8 flex justify-center">
+          <Avatar
+            config={avatar}
+            size="xl"
+            className="ring-4 ring-tenant/40"
+            pulse
+          />
+        </div>
+
+        <p className="mt-6 text-sm text-white/70">
+          Le pseudo <span className="font-bold text-white">{pseudo}</span> est validé.
+        </p>
+        <p className="mt-2 text-xs text-white/40">
+          Attends que l&apos;animateur lance la partie. L&apos;écran se mettra à jour automatiquement.
+        </p>
+
+        <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-[11px] uppercase tracking-wider text-white/50">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-tenant" />
+          En attente du lancement
+        </div>
+      </div>
+    );
+  }
+
+  // ═══════════════════ Étape PLAYING (pour l'instant placeholder) ═══════════════════
   return (
     <div className="w-full max-w-sm text-center">
       <p className="text-xs uppercase tracking-[0.3em] text-white/40">
         Velito Interactive
       </p>
-      <h1 className="neon-title mt-3 text-4xl">Presque prêt</h1>
-      <p className="mt-2 text-sm text-white/60">
-        Session{" "}
-        <span className="font-display font-black tracking-widest text-tenant">
-          {code?.toUpperCase()}
-        </span>
+      <h1 className="neon-title mt-3 text-4xl">La partie démarre 🎮</h1>
+      <p className="mt-4 text-sm text-white/60">
+        Mécanique de jeu à venir. Pour l&apos;instant, reste ici.
       </p>
-
-      {/* Avatar choisi en grand */}
-      <div className="mt-6 flex justify-center">
-        <Avatar config={avatar} size="xl" className="ring-4 ring-white/15" />
+      <div className="mt-8 flex justify-center">
+        <Avatar config={avatar} size="lg" />
       </div>
-      <button
-        type="button"
-        onClick={() => setStep("avatar")}
-        className="mt-2 text-[11px] text-white/40 underline-offset-2 transition hover:text-white hover:underline"
-      >
-        Changer de perso
-      </button>
-
-      {/* Form pseudo + entrée */}
-      <form onSubmit={handleSubmit} className="card-ink mt-6 space-y-4 p-6 text-left">
-        <div>
-          <label
-            htmlFor="pseudo"
-            className="mb-1.5 block text-xs uppercase tracking-widest text-white/50"
-          >
-            Ton pseudo
-          </label>
-          <input
-            id="pseudo"
-            type="text"
-            value={pseudo}
-            onChange={(e) => setPseudo(e.target.value.slice(0, 24))}
-            placeholder="Ex : Riza, MamaTeam, K7…"
-            maxLength={24}
-            autoComplete="off"
-            className="w-full rounded-xl border border-white/15 bg-ink px-4 py-3 text-white placeholder-white/30 outline-none focus:border-tenant focus:ring-2 focus:ring-tenant/30"
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={pseudo.trim().length < 2}
-          className="btn-tenant w-full disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          Entrer dans la partie
-        </button>
-
-        <p className="text-center text-[11px] italic text-white/40">
-          Manette en construction — connexion temps réel à venir.
-        </p>
-      </form>
     </div>
   );
 }

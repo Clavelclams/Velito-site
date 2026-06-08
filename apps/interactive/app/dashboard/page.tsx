@@ -20,6 +20,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import DashboardLoggedOut from "./DashboardLoggedOut";
+import { createSessionAndRedirectAction } from "../host/actions";
 
 // Tailwind ne "voit" pas les classes calculées (`bg-${...}`), donc on les
 // met en dur ici pour qu'elles soient générées au build.
@@ -52,6 +53,14 @@ export default async function Dashboard() {
 
   return (
     <main className="mx-auto min-h-screen max-w-5xl px-6 py-12">
+      {/* Lien retour accueil — toujours en haut, indépendamment du header principal */}
+      <Link
+        href="/"
+        className="mb-6 inline-flex items-center gap-2 text-xs uppercase tracking-wider text-white/50 transition hover:text-white"
+      >
+        <span aria-hidden="true">←</span> Retour à l&apos;accueil
+      </Link>
+
       <header className="flex flex-wrap items-end justify-between gap-4 border-b border-white/10 pb-6">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-white/40">
@@ -62,9 +71,11 @@ export default async function Dashboard() {
             Connecté en tant que <span className="text-white/60">{userEmail}</span>
           </p>
         </div>
-        <Link href="/host" className="btn-tenant">
-          Lancer une session
-        </Link>
+        <form action={createSessionAndRedirectAction}>
+          <button type="submit" className="btn-tenant">
+            Lancer une session
+          </button>
+        </form>
       </header>
 
       <section className="mt-10">

@@ -1,132 +1,126 @@
 /**
- * /host — l'écran TV (affichage maître).
+ * /host — Écran TV / animateur Velito Interactive.
  *
- * Maquette du lobby tel qu'il s'affichera sur la TV avant le lancement d'un jeu :
- *  - Titre + URL/code à scanner
- *  - QR code (placeholder pour l'instant)
- *  - Liste des joueurs connectés AVEC leur avatar Wii-style
+ * Server Component qui :
+ *  - Vérifie l'auth (sinon redirect vers hub login)
+ *  - Lit ?code=XXX dans l'URL et lookup la session correspondante
+ *  - Si pas de code → affiche un placeholder "Crée une session depuis /dashboard"
+ *  - Si code → passe sessionId + code à HostLobby (Client) qui gère le reste
  *
- * Pour la démo / écran de présentation jury, on affiche 6 joueurs mock pour
- * que le visuel raconte une histoire. En vrai (à venir), c'est Realtime qui
- * pousse les arrivées.
+ * À venir : machine à états du jeu (lobby → playing → ended), reveal des
+ * réponses, animations de podium, etc.
  */
-import { Avatar } from "@repo/ui/avatar";
-import type { AvatarConfig } from "@repo/ui/avatar-data";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import HostLobby from "./HostLobby";
 
-/**
- * Joueurs simulés pour la maquette. À remplacer par un useEffect/subscribe
- * sur le channel Realtime quand la session sera branchée.
- */
-const MOCK_PLAYERS: Array<{
-  pseudo: string;
-  avatar: AvatarConfig;
-}> = [
-  {
-    pseudo: "Riza",
-    avatar: { base: "thea", background: "violet", accessory: "round" },
-  },
-  {
-    pseudo: "K7",
-    avatar: { base: "will", background: "cyan", accessory: "sunglasses" },
-  },
-  {
-    pseudo: "MamaTeam",
-    avatar: { base: "lea", background: "pink", accessory: "none" },
-  },
-  {
-    pseudo: "ZeroCool",
-    avatar: { base: "tony", background: "lime", accessory: "sunglasses" },
-  },
-  {
-    pseudo: "Bisou",
-    avatar: { base: "maeva", background: "pink", accessory: "round" },
-  },
-  {
-    pseudo: "GG",
-    avatar: { base: "leny", background: "cyan", accessory: "none" },
-  },
-];
+export const dynamic = "force-dynamic";
 
-export default function HostScreen() {
-  return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-8 py-12">
-      <div className="pointer-events-none absolute inset-0 bg-grid-ink [background-size:48px_48px] opacity-50" />
-      <div className="pointer-events-none absolute bottom-0 left-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-neon-violet/25 blur-3xl" />
+interface HostPageProps {
+  searchParams: Promise<{ code?: string }>;
+}
 
-      {/* ─── Header : titre + QR ─── */}
-      <div className="relative grid w-full max-w-6xl grid-cols-1 items-center gap-12 lg:grid-cols-2">
-        <div className="text-center lg:text-left">
-          <p className="text-sm uppercase tracking-[0.4em] text-white/50">
+export default async function HostScreen({ searchParams }: HostPageProps) {
+  const { code } = await searchParams;
+  const supabase = await createClient();
+
+  // 1. Vérif auth — seuls les animateurs loggés peuvent ouvrir /host
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    // Pas loggé → renvoie vers login hub avec returnTo
+    const hubUrl =
+      process.env.NEXT_PUBLIC_HUB_URL ?? "https://hub.velito.fr";
+    const returnTo = `${process.env.NEXT_PUBLIC_INTERACTIVE_URL ?? "https://interactive.velito.fr"}/host${code ? `?code=${code}` : ""}`;
+    redirect(`${hubUrl}/login?return=${encodeURIComponent(returnTo)}`);
+  }
+
+  // 2. Si pas de code dans l'URL, on affiche un message "crée une session"
+  if (!code) {
+    return (
+      <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-8 py-12">
+        <div className="pointer-events-none absolute inset-0 bg-grid-ink [background-size:48px_48px] opacity-50" />
+        <div className="relative max-w-md text-center">
+          <p className="text-xs uppercase tracking-[0.4em] text-white/40">
             Velito Interactive
           </p>
-          <h1 className="neon-title mt-4 text-6xl sm:text-7xl">
-            Rejoins
-            <br />
-            la partie
-          </h1>
-          <p className="mt-6 text-xl text-white/70">
-            Scanne le QR code avec ton téléphone, ou va sur{" "}
-            <span className="font-semibold text-tenant">play.velito.fr</span> et
-            entre le code.
+          <h1 className="neon-title mt-3 text-5xl">Écran TV vide</h1>
+          <p className="mt-4 text-white/60">
+            Pour lancer une session, retourne à ton tableau de bord et clique
+            sur « Lancer une session ».
           </p>
-          <div className="mt-8 inline-flex items-center gap-3 rounded-2xl border border-white/15 bg-ink-700/70 px-6 py-4">
-            <span className="text-sm text-white/50">CODE</span>
-            <span className="font-display text-4xl font-black tracking-[0.3em] text-tenant">
-              ----
-            </span>
-          </div>
+          <Link
+            href="/dashboard"
+            className="btn-tenant mt-8 inline-block"
+          >
+            Mon tableau de bord
+          </Link>
         </div>
+      </main>
+    );
+  }
 
-        <div className="flex justify-center">
-          <div className="card-ink flex aspect-square w-72 items-center justify-center p-6">
-            <div className="grid h-full w-full place-items-center rounded-xl border-2 border-dashed border-white/20 text-center text-sm text-white/40">
-              QR code
-              <br />
-              (généré à l&apos;ouverture
-              <br />
-              d&apos;une session)
-            </div>
-          </div>
-        </div>
-      </div>
+  // 3. Lookup la session via le code
+  const { data: session, error: sessionError } = await supabase
+    .schema("interactive" as never)
+    .from("sessions")
+    .select("id, code, status, host_user_id, game_type, created_at")
+    .eq("code", code)
+    .single();
 
-      {/* ─── Lobby joueurs avec AVATARS ─── */}
-      <div className="relative mt-14 w-full max-w-6xl">
-        <div className="mb-4 flex items-baseline justify-between">
-          <p className="text-sm uppercase tracking-widest text-white/40">
-            Joueurs connectés
-          </p>
-          <p className="font-display text-2xl font-black text-tenant">
-            {MOCK_PLAYERS.length}
-          </p>
-        </div>
+  if (sessionError || !session) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center px-8 py-12 text-center">
+        <p className="text-xs uppercase tracking-[0.4em] text-white/40">
+          Velito Interactive
+        </p>
+        <h1 className="neon-title mt-3 text-4xl">Session introuvable</h1>
+        <p className="mt-4 max-w-md text-white/60">
+          Le code <span className="font-display font-black text-tenant">{code.toUpperCase()}</span>{" "}
+          ne correspond à aucune session active. Elle a peut-être été fermée.
+        </p>
+        <Link href="/dashboard" className="btn-tenant mt-8">
+          Retour au dashboard
+        </Link>
+      </main>
+    );
+  }
 
-        <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 lg:grid-cols-6">
-          {MOCK_PLAYERS.map((p) => (
-            <div
-              key={p.pseudo}
-              className="card-ink flex flex-col items-center gap-3 p-4 transition hover:border-white/25"
-            >
-              <Avatar config={p.avatar} size="lg" />
-              <p className="font-display text-base font-bold tracking-wide text-white">
-                {p.pseudo}
-              </p>
-            </div>
-          ))}
-          {/* Slot vide pour montrer qu'il reste de la place */}
-          <div className="flex aspect-square flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-white/10 p-4 text-center text-white/30">
-            <span className="text-3xl font-light">+</span>
-            <span className="text-[10px] uppercase tracking-wider">
-              En attente
-            </span>
-          </div>
-        </div>
-      </div>
+  // 4. Vérif que c'est BIEN sa session (sécurité défense en profondeur — RLS déjà)
+  const sessionRow = session as {
+    id: string;
+    code: string;
+    status: string;
+    host_user_id: string;
+    game_type: string | null;
+    created_at: string;
+  };
+  if (sessionRow.host_user_id !== user.id) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center px-8 py-12 text-center">
+        <h1 className="neon-title text-3xl">Pas ta session</h1>
+        <p className="mt-4 max-w-md text-white/60">
+          Cette session a été créée par un autre animateur. Seul lui peut la
+          piloter depuis cet écran.
+        </p>
+        <Link href="/dashboard" className="btn-tenant mt-8">
+          Retour au dashboard
+        </Link>
+      </main>
+    );
+  }
 
-      <p className="relative mt-10 text-xs italic text-white/30">
-        Maquette — Realtime branché à la session quand l&apos;hôte cliquera
-        &laquo;&nbsp;Lancer&nbsp;&raquo;.
-      </p>
-    </main>
+  // 5. Tout est bon — on render le lobby live (Client Component)
+  const playBaseUrl =
+    process.env.NEXT_PUBLIC_INTERACTIVE_URL ?? "https://interactive.velito.fr";
+  return (
+    <HostLobby
+      sessionId={sessionRow.id}
+      code={sessionRow.code}
+      status={sessionRow.status}
+      playBaseUrl={playBaseUrl}
+    />
   );
 }
