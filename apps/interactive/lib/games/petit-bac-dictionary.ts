@@ -714,22 +714,24 @@ function levenshtein(a: string, b: string): number {
   const m = a.length;
   const n = b.length;
   // On garde seulement 2 lignes au lieu de la matrice complète (mémoire O(n))
-  let prev = Array(n + 1).fill(0).map((_, i) => i);
-  let curr = new Array(n + 1).fill(0);
+  let prev: number[] = Array(n + 1).fill(0).map((_, i) => i);
+  let curr: number[] = new Array(n + 1).fill(0);
 
   for (let i = 1; i <= m; i++) {
     curr[0] = i;
     for (let j = 1; j <= n; j++) {
       const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      // Les accès aux indices sont garantis valides (1 ≤ j ≤ n), mais TS strict
+      // demande le `!`
       curr[j] = Math.min(
-        prev[j] + 1,        // suppression
-        curr[j - 1] + 1,    // insertion
-        prev[j - 1] + cost  // substitution
+        prev[j]! + 1,        // suppression
+        curr[j - 1]! + 1,    // insertion
+        prev[j - 1]! + cost  // substitution
       );
     }
     [prev, curr] = [curr, prev];
   }
-  return prev[n];
+  return prev[n]!;
 }
 
 /**

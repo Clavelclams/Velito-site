@@ -151,21 +151,62 @@ export const dynamic = "force-dynamic";
 
 export default async function Dashboard() {
   let userEmail: string | null = null;
+  let userId: string | null = null;
   try {
     const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
     userEmail = user?.email ?? null;
+    userId = user?.id ?? null;
   } catch (e) {
     console.error("[/dashboard] auth.getUser() a échoué :", e);
   }
 
-  if (!userEmail) {
+  if (!userEmail || !userId) {
     return <DashboardLoggedOut />;
   }
 
   const availableCount = JEUX.filter((j) => j.available).length;
+
+  // ─── Stats du host (sessions, joueurs, parties) ───
+  // On le fait en best-effort : si une requête échoue on garde le placeholder.
+  let stats = { sessions: 0, joueurs: 0, parties: 0, emails: 0 };
+  try {
+    const supabase = await createClient();
+
+    // 1. Toutes mes sessions (id + status)
+    const { data: mySessionsData } = await supabase
+      .schema("interactive" as never)
+      .from("sessions")
+      .select("id, status")
+      .eq("host_user_id", userId);
+
+    const mySessions = (mySessionsData ?? []) as Array<{ id: string; status: string }>;
+    const totalSessions = mySessions.length;
+    const totalParties = mySessions.filter((s) => s.status === "ended").length;
+
+    // 2. Joueurs uniques (count des session_players sur mes sessions)
+    let joueursCount = 0;
+    if (mySessions.length > 0) {
+      const sessionIds = mySessions.map((s) => s.id);
+      const { count } = await supabase
+        .schema("interactive" as never)
+        .from("session_players")
+        .select("*", { count: "exact", head: true })
+        .in("session_id", sessionIds);
+      joueursCount = count ?? 0;
+    }
+
+    stats = {
+      sessions: totalSessions,
+      joueurs: joueursCount,
+      parties: totalParties,
+      emails: 0, // Pas de système email pour l'instant
+    };
+  } catch (e) {
+    console.error("[/dashboard] stats fetch failed:", e);
+  }
 
   return (
     <main className="relative mx-auto min-h-screen max-w-6xl px-6 py-10">
@@ -212,11 +253,18 @@ export default async function Dashboard() {
           Tes statistiques
         </h2>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {["Sessions", "Joueurs", "Parties", "Emails collectés"].map((k) => (
-            <div key={k} className="card-ink p-5">
-              <p className="font-display text-3xl font-black text-tenant">—</p>
+          {[
+            { label: "Sessions", value: stats.sessions },
+            { label: "Joueurs", value: stats.joueurs },
+            { label: "Parties terminées", value: stats.parties },
+            { label: "Emails collectés", value: stats.emails },
+          ].map((s) => (
+            <div key={s.label} className="card-ink p-5">
+              <p className="font-display text-3xl font-black tabular-nums text-tenant">
+                {s.value.toLocaleString("fr-FR")}
+              </p>
               <p className="mt-1 text-xs uppercase tracking-wider text-white/50">
-                {k}
+                {s.label}
               </p>
             </div>
           ))}
