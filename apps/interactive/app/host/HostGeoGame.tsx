@@ -366,7 +366,7 @@ export default function HostGeoGame({
           )}
         </header>
 
-        {/* Cible */}
+        {/* Cible (le hint n'est révélé qu'au reveal pour pas spoiler) */}
         <div className="mb-4 text-center">
           <p className="text-xs uppercase tracking-widest text-white/40">
             Trouve sur la carte
@@ -374,22 +374,49 @@ export default function HostGeoGame({
           <h1 className="neon-title mt-1 text-3xl sm:text-5xl">
             {currentTarget.label}
           </h1>
-          {currentTarget.hint && (
-            <p className="mt-1 text-xs italic text-white/40">{currentTarget.hint}</p>
+          {showReveal && currentTarget.hint && (
+            <p className="mt-2 text-sm italic text-emerald-300/80">
+              💡 {currentTarget.hint}
+            </p>
           )}
         </div>
 
-        {/* Carte */}
-        <LeafletMap
-          initialCenter={currentTarget.initialCenter ?? [46.7, 2.5]}
-          initialZoom={currentTarget.initialZoom ?? 5}
-          pinPosition={null}
-          onPinChange={() => {}}
-          readonly
-          extraMarkers={showReveal ? revealMarkers : []}
-        />
+        {/* Globe animé pendant le round, carte avec pins au reveal */}
+        {!showReveal ? (
+          <div className="mx-auto grid h-[55vh] max-w-2xl place-items-center rounded-2xl border border-white/10 bg-gradient-to-br from-emerald-500/10 via-cyan-500/10 to-blue-500/10">
+            <div className="text-center">
+              <div
+                className="text-[14rem] leading-none"
+                style={{
+                  animation: "spin 20s linear infinite",
+                  display: "inline-block",
+                }}
+              >
+                🌍
+              </div>
+              <p className="mt-4 text-sm uppercase tracking-widest text-white/40">
+                Cherche sur ton tel
+              </p>
+            </div>
+            <style jsx>{`
+              @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+            `}</style>
+          </div>
+        ) : (
+          <LeafletMap
+            initialCenter={currentTarget.initialCenter ?? [46.7, 2.5]}
+            initialZoom={currentTarget.initialZoom ?? 5}
+            pinPosition={null}
+            onPinChange={() => {}}
+            readonly
+            extraMarkers={revealMarkers}
+          />
+        )}
 
-        {/* Compteur ou podium */}
+        {/* Compteur ou podium — classement INVERSÉ : 3 derniers d'abord pour suspense top */}
         {!showReveal ? (
           <p className="mt-4 text-center text-sm text-white/60">
             <span className="font-bold text-emerald-300">{submittedCount}</span> /{" "}
@@ -397,42 +424,55 @@ export default function HostGeoGame({
           </p>
         ) : (
           <section className="mt-6 space-y-2">
-            {sortedByDistance.map((a, i) => {
-              const p = players.find((pl) => pl.id === a.player_id);
-              if (!p) return null;
-              const podium = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
-              return (
-                <div
-                  key={a.id}
-                  className={
-                    "flex items-center gap-4 rounded-2xl border p-3 transition " +
-                    (i === 0
-                      ? "border-amber-300/60 bg-amber-500/10"
-                      : i === 1
-                      ? "border-slate-300/60 bg-slate-300/10"
-                      : i === 2
-                      ? "border-orange-400/40 bg-orange-500/10"
-                      : "border-white/10 bg-white/[0.02]")
-                  }
-                >
-                  <span
-                    className="h-4 w-4 shrink-0 rounded-full border-2 border-white"
-                    style={{ backgroundColor: PLAYER_COLORS[i % PLAYER_COLORS.length] }}
-                  />
-                  <span className="w-8 text-center text-2xl">{podium ?? `${i + 1}`}</span>
-                  <Avatar config={p.avatar_config} size="sm" />
-                  <div className="flex-1">
-                    <p className="font-bold text-white">{p.pseudo}</p>
-                    <p className="text-xs text-white/50">
-                      {Number(a.distance_km).toLocaleString("fr-FR")} km
+            {/* On affiche les 3 derniers en premier (anti-suspense), puis montée vers le top */}
+            {(() => {
+              const total = sortedByDistance.length;
+              // <3 joueurs : on n'affiche RIEN avant le top (juste le 1er)
+              // 3-4 joueurs : on affiche juste le dernier
+              // 5+ joueurs : on affiche les 3 derniers
+              const losersCount = total <= 2 ? 0 : total <= 4 ? 1 : 3;
+              const losers = sortedByDistance.slice(-losersCount).reverse(); // du dernier au moins pire
+              const top = sortedByDistance.slice(0, total - losersCount); // du 1er au n-losersCount
+              const orderToDisplay = [...losers, ...top.reverse()]; // losers d'abord, puis top de bas en haut
+
+              return orderToDisplay.map((a) => {
+                const i = sortedByDistance.findIndex((x) => x.id === a.id);
+                const p = players.find((pl) => pl.id === a.player_id);
+                if (!p) return null;
+                const podium = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
+                return (
+                  <div
+                    key={a.id}
+                    className={
+                      "flex items-center gap-4 rounded-2xl border p-3 transition " +
+                      (i === 0
+                        ? "border-amber-300/60 bg-amber-500/10"
+                        : i === 1
+                        ? "border-slate-300/60 bg-slate-300/10"
+                        : i === 2
+                        ? "border-orange-400/40 bg-orange-500/10"
+                        : "border-white/10 bg-white/[0.02]")
+                    }
+                  >
+                    <span
+                      className="h-4 w-4 shrink-0 rounded-full border-2 border-white"
+                      style={{ backgroundColor: PLAYER_COLORS[i % PLAYER_COLORS.length] }}
+                    />
+                    <span className="w-8 text-center text-2xl">{podium ?? `${i + 1}`}</span>
+                    <Avatar config={p.avatar_config} size="sm" />
+                    <div className="flex-1">
+                      <p className="font-bold text-white">{p.pseudo}</p>
+                      <p className="text-xs text-white/50">
+                        {Number(a.distance_km).toLocaleString("fr-FR")} km
+                      </p>
+                    </div>
+                    <p className="font-display text-xl font-black text-emerald-300">
+                      +{a.points}
                     </p>
                   </div>
-                  <p className="font-display text-xl font-black text-emerald-300">
-                    +{a.points}
-                  </p>
-                </div>
-              );
-            })}
+                );
+              });
+            })()}
           </section>
         )}
 

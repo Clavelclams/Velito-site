@@ -192,10 +192,10 @@ export const GEO_TARGETS: GeoTarget[] = [
 
 /** Durée d'un round en secondes. */
 export const GEO_ROUND_DURATION_SEC = 25;
-/** Durée du reveal avant question suivante — 15s pour bien voir la distance + le classement. */
-export const GEO_REVEAL_DURATION_SEC = 15;
+/** Durée du reveal avant question suivante — 20s pour bien voir distance + hint + classement. */
+export const GEO_REVEAL_DURATION_SEC = 20;
 /** Nombre de rounds par partie. */
-export const GEO_TOTAL_ROUNDS = 5;
+export const GEO_TOTAL_ROUNDS = 7;
 
 /**
  * Calcule la distance en km entre 2 points (lat/lng) avec Haversine.

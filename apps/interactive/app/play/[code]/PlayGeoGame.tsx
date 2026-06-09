@@ -44,6 +44,14 @@ interface MyGeo {
   rank: number;
 }
 
+interface RoundClassement {
+  player_id: string;
+  pseudo: string;
+  distance_km: number;
+  points: number;
+  rank: number;
+}
+
 interface PlayGeoGameProps {
   sessionId: string;
   playerId: string;
@@ -63,6 +71,7 @@ export default function PlayGeoGame({
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
   const [pin, setPin] = useState<[number, number] | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [classement, setClassement] = useState<RoundClassement[]>([]);
 
   // Timer
   useEffect(() => {
@@ -86,6 +95,45 @@ export default function PlayGeoGame({
     }, 200);
     return () => clearInterval(interval);
   }, [state]);
+
+  // Au passage en reveal : fetch le classement complet du round
+  useEffect(() => {
+    if (state?.phase !== "reveal") {
+      setClassement([]);
+      return;
+    }
+    const supabase = createClient();
+    (async () => {
+      const { data: ansData } = await supabase
+        .schema("interactive" as never)
+        .from("geo_answers")
+        .select("player_id, distance_km, points, rank")
+        .eq("session_id", sessionId)
+        .eq("round", state.round)
+        .order("rank", { ascending: true });
+
+      const { data: playersData } = await supabase
+        .schema("interactive" as never)
+        .from("session_players")
+        .select("id, pseudo")
+        .eq("session_id", sessionId);
+
+      const players = (playersData ?? []) as Array<{ id: string; pseudo: string }>;
+      const rows = (ansData ?? []) as Array<{
+        player_id: string; distance_km: number; points: number; rank: number;
+      }>;
+
+      setClassement(
+        rows.map((r) => ({
+          player_id: r.player_id,
+          pseudo: players.find((p) => p.id === r.player_id)?.pseudo ?? "?",
+          distance_km: Number(r.distance_km),
+          points: r.points,
+          rank: r.rank,
+        }))
+      );
+    })();
+  }, [state?.phase, state?.round, sessionId]);
 
   // Realtime
   useEffect(() => {
@@ -247,8 +295,8 @@ export default function PlayGeoGame({
           {currentTarget.label}
         </h1>
         {currentTarget.hint && (
-          <p className="mt-1 text-center text-[11px] italic text-white/40">
-            {currentTarget.hint}
+          <p className="mt-2 text-center text-xs italic text-emerald-300/80">
+            💡 {currentTarget.hint}
           </p>
         )}
 
@@ -300,6 +348,35 @@ export default function PlayGeoGame({
           {myScore.toLocaleString("fr-FR")}
         </p>
 
+        {/* Classement du round */}
+        {classement.length > 0 && (
+          <div className="mt-6 space-y-1">
+            <p className="text-xs uppercase tracking-widest text-white/40">
+              Classement du round
+            </p>
+            {classement.slice(0, 5).map((c) => (
+              <div
+                key={c.player_id}
+                className={
+                  "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm " +
+                  (c.player_id === playerId
+                    ? "border-emerald-400/60 bg-emerald-500/10 font-bold"
+                    : "border-white/10 bg-white/[0.03]")
+                }
+              >
+                <span className="w-5 text-center text-xs">
+                  {c.rank === 1 ? "🥇" : c.rank === 2 ? "🥈" : c.rank === 3 ? "🥉" : c.rank}
+                </span>
+                <span className="flex-1 truncate text-left text-white">{c.pseudo}</span>
+                <span className="text-xs tabular-nums text-white/60">
+                  {c.distance_km.toLocaleString("fr-FR")} km
+                </span>
+                <span className="ml-2 font-display font-black text-emerald-300">+{c.points}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {secondsLeft !== null && (
           <p className="mt-4 text-center text-xs uppercase tracking-widest text-amber-300">
             Suivant dans {secondsLeft}s
@@ -335,11 +412,7 @@ export default function PlayGeoGame({
       <h1 className="mt-3 text-center text-2xl font-bold leading-tight text-white">
         Trouve : <span className="text-emerald-300">{currentTarget.label}</span>
       </h1>
-      {currentTarget.hint && (
-        <p className="mt-1 text-center text-[11px] italic text-white/40">
-          {currentTarget.hint}
-        </p>
-      )}
+      {/* Hint caché pendant le round, révélé seulement après */}
 
       <div className="mt-4">
         <LeafletMap

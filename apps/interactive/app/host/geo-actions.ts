@@ -97,8 +97,10 @@ export async function revealGeoRoundAction(sessionId: string): Promise<ActionRes
       basePoints: geoPointsForDistance(dist),
     };
   });
+  // Tri croissant : plus petite distance = meilleur rang
   enriched.sort((a, b) => a.distance - b.distance);
 
+  // Bonus rang : top 3 récompensés
   const RANK_BONUS = [50, 25, 10];
 
   for (let i = 0; i < enriched.length; i++) {

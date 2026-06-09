@@ -20,6 +20,7 @@ import HostEstimGame from "./HostEstimGame";
 import HostGeoGame from "./HostGeoGame";
 import HostBlindTestGame from "./HostBlindTestGame";
 import HostReflexGame from "./HostReflexGame";
+import HostLoupGarouGame from "./HostLoupGarouGame";
 
 export const dynamic = "force-dynamic";
 
@@ -145,6 +146,19 @@ export default async function HostScreen({ searchParams }: HostPageProps) {
 
   // Status 'playing' ou 'ended' → délègue au composant Game spécifique
   // selon game_type (Quiz par défaut pour rétro-compat).
+  if (sessionRow.game_type === "loup_garou") {
+    const lgState = (sessionRow.current_state ?? {
+      phase: "setup",
+      cycleNumber: 1,
+    }) as unknown as import("@/lib/games/loup-garou").LGState;
+    return (
+      <HostLoupGarouGame
+        sessionId={sessionRow.id}
+        initialState={lgState}
+        status={sessionRow.status}
+      />
+    );
+  }
   if (sessionRow.game_type === "reflex") {
     const reflexState = (sessionRow.current_state ?? {
       phase: "wait",
