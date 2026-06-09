@@ -26,6 +26,15 @@ function LoginForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    // GARDE ANTI-BOUCLE : empêche les double-submits via la touche Entrée
+    // pendant que la requête signInWithPassword est en cours. Le
+    // `disabled={loading}` du bouton ne bloque PAS le submit via Entrée
+    // dans un champ du form. Sans ce guard, plusieurs Entrée rapides
+    // déclenchent N requêtes en parallèle → rate limit Supabase 429.
+    // Même fix que apps/vea/app/login/page.tsx (boucle 10k req/h résolue).
+    if (loading) return;
+
     setLoading(true);
     setError("");
 
@@ -36,7 +45,28 @@ function LoginForm() {
     });
 
     if (signInError) {
-      setError("Email ou mot de passe incorrect.");
+      // GESTION EXPLICITE DU RATE LIMIT 429 :
+      // Supabase renvoie code "over_request_rate_limit" / status 429 quand
+      // on a dépassé la limite. On NE doit PAS retraduire ça en "email ou
+      // mot de passe incorrect" — sinon l'utilisateur retape son mdp pensant
+      // qu'il l'a mal saisi, ce qui relance la boucle.
+      const errCode =
+        (signInError as { code?: string }).code ??
+        (signInError as { name?: string }).name ??
+        "";
+      const errStatus = (signInError as { status?: number }).status;
+      const isRateLimit =
+        errCode === "over_request_rate_limit" ||
+        errStatus === 429 ||
+        signInError.message?.toLowerCase().includes("rate limit");
+
+      if (isRateLimit) {
+        setError(
+          "Trop de tentatives en peu de temps. Attends quelques minutes avant de réessayer."
+        );
+      } else {
+        setError("Email ou mot de passe incorrect.");
+      }
       setLoading(false);
       return;
     }

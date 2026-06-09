@@ -22,6 +22,13 @@ export default function LoginForm() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    // GARDE ANTI-BOUCLE : empêche les double-submits via la touche Entrée
+    // pendant qu'une transition est en cours. `useTransition` est déjà
+    // robuste mais ne bloque pas le submit du form côté event handler —
+    // ce guard est la vraie protection. Cohérent avec le fix VEA / VENA.
+    if (isPending) return;
+
     setError(null);
     if (!email.includes("@") || password.length < 6) {
       setError("Email valide + mot de passe (6+ caractères) requis.");

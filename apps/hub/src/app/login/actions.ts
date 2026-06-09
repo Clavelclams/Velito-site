@@ -62,6 +62,28 @@ export async function signInAction(input: SignInInput): Promise<ActionResult> {
       // On loggue côté serveur pour debug ; côté client, message générique
       // (ne révèle pas si l'email existe — sécurité contre l'énumération).
       console.error("[signInAction] Supabase auth error:", error.message);
+
+      // GESTION EXPLICITE DU RATE LIMIT 429 :
+      // On NE doit PAS retraduire un 429 en "Identifiants invalides" — sinon
+      // l'utilisateur retape son mdp pensant qu'il l'a mal saisi, ce qui
+      // relance la boucle. Même logique que apps/vea/app/login/page.tsx.
+      const errCode =
+        (error as { code?: string }).code ??
+        (error as { name?: string }).name ??
+        "";
+      const errStatus = (error as { status?: number }).status;
+      const isRateLimit =
+        errCode === "over_request_rate_limit" ||
+        errStatus === 429 ||
+        error.message?.toLowerCase().includes("rate limit");
+
+      if (isRateLimit) {
+        return {
+          success: false,
+          error:
+            "Trop de tentatives en peu de temps. Attends quelques minutes avant de réessayer.",
+        };
+      }
       return { success: false, error: "Identifiants invalides." };
     }
   } catch (e) {
