@@ -39,7 +39,7 @@ interface CreateSessionResult {
  *                  game_type déjà set. Sinon, le host choisira au lobby.
  */
 export async function createSessionAction(
-  gameType?: "quiz" | "petit_bac" | "blind_test" | null
+  gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | null
 ): Promise<CreateSessionResult> {
   const supabase = await createClient();
 
@@ -149,7 +149,8 @@ export async function createSessionAndRedirectAction(): Promise<void> {
 export async function createSessionWithGameAction(formData: FormData): Promise<void> {
   const gameTypeRaw = formData.get("game_type");
   const gameType = (
-    gameTypeRaw === "quiz" || gameTypeRaw === "petit_bac" || gameTypeRaw === "blind_test"
+    gameTypeRaw === "quiz" || gameTypeRaw === "petit_bac" ||
+    gameTypeRaw === "blind_test" || gameTypeRaw === "estim"
       ? gameTypeRaw
       : null
   );

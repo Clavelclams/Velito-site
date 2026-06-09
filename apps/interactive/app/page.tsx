@@ -235,64 +235,113 @@ export default function InteractiveHome() {
 
       {/* TARIFS */}
       <section id="tarifs" className="border-t border-white/5">
-        <div className="mx-auto max-w-5xl px-6 py-20">
+        <div className="mx-auto max-w-6xl px-6 py-20">
           <h2 className="neon-title text-center text-3xl sm:text-4xl">
-            Un tarif simple, tout inclus
+            Des tarifs faits pour les bars
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-center text-white/60">
-            Pas de surprise, pas de frais cachés.
+            Pas de surprise, pas de frais cachés. Pas d&apos;engagement.
           </p>
-          <div className="mt-12 grid gap-5 sm:grid-cols-3">
-            {/* Lancement */}
-            <div className="card-ink relative p-6 ring-2 ring-tenant">
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-tenant px-3 py-1 text-[10px] font-black uppercase tracking-widest text-ink">
-                Lancement
-              </span>
-              <p className="font-display text-xl font-bold">Premiers bars</p>
-              <p className="mt-4 font-display text-5xl font-black text-tenant">
-                29€<span className="text-base font-normal text-white/60">/mois</span>
+
+          {/* Bandeau essai gratuit */}
+          <div className="mx-auto mt-8 flex max-w-3xl flex-wrap items-center justify-center gap-3 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-6 py-4 text-center">
+            <span aria-hidden="true" className="text-2xl">🎁</span>
+            <div>
+              <p className="font-display text-base font-bold text-emerald-200">
+                Essai gratuit 7 jours
               </p>
-              <p className="mt-1 text-xs text-white/50">Limité aux 3 premiers bars partenaires</p>
+              <p className="text-xs text-emerald-100/80">
+                Sans carte bancaire · Accès complet à tous les jeux
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-10 grid gap-5 lg:grid-cols-3">
+            {/* Early Adopters */}
+            <div className="card-ink relative p-6 ring-2 ring-tenant">
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-tenant px-3 py-1 text-[10px] font-black uppercase tracking-widest text-ink">
+                Early Adopters
+              </span>
+              <p className="font-display text-xl font-bold">Pionniers</p>
+              <p className="mt-4 font-display text-5xl font-black text-tenant">
+                14,99€
+                <span className="text-base font-normal text-white/60">/mois</span>
+              </p>
+              <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-tenant">
+                À vie
+              </p>
+              <p className="mt-2 text-xs text-white/60">
+                Limité aux <span className="font-bold text-white">10 premiers bars</span>{" "}
+                amiénois (autres villes acceptées si compte ouvert)
+              </p>
               <ul className="mt-6 space-y-2 text-sm text-white/70">
-                <li>· Les 4 jeux inclus</li>
+                <li>· Tous les jeux inclus (Quiz, Petit Bac, Estim&apos;…)</li>
                 <li>· Joueurs illimités</li>
-                <li>· Tes couleurs & logo</li>
+                <li>· Tes couleurs &amp; logo</li>
                 <li>· Tableau de bord</li>
-                <li>· Support direct</li>
+                <li>· Support direct (Clavel)</li>
+                <li>· Nouveaux jeux gratuits à vie</li>
               </ul>
             </div>
+
             {/* Standard */}
             <div className="card-ink p-6">
               <p className="font-display text-xl font-bold">Standard</p>
               <p className="mt-4 font-display text-5xl font-black">
-                39€<span className="text-base font-normal text-white/60">/mois</span>
+                29,99€
+                <span className="text-base font-normal text-white/60">/mois</span>
               </p>
-              <p className="mt-1 text-xs text-white/50">Sans engagement, résiliable à tout moment</p>
+              <p className="mt-1 text-xs text-white/50">
+                Sans engagement, résiliable à tout moment
+              </p>
+              <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                <p className="text-xs font-semibold text-tenant">
+                  💸 2 mois offerts en annuel
+                </p>
+                <p className="mt-1 text-sm text-white">
+                  <span className="font-display text-xl font-black">300€/an</span>{" "}
+                  <span className="text-xs text-white/50 line-through">au lieu de 359€</span>
+                </p>
+              </div>
               <ul className="mt-6 space-y-2 text-sm text-white/70">
-                <li>· Les 4 jeux inclus</li>
+                <li>· Tous les jeux inclus</li>
                 <li>· Joueurs illimités</li>
-                <li>· Tes couleurs & logo</li>
+                <li>· Tes couleurs &amp; logo</li>
                 <li>· Tableau de bord</li>
                 <li>· Support par email</li>
               </ul>
             </div>
-            {/* Entreprise */}
+
+            {/* Multi-sites */}
             <div className="card-ink p-6">
-              <p className="font-display text-xl font-bold">Entreprise</p>
-              <p className="mt-4 font-display text-5xl font-black">
-                sur<br />devis
+              <p className="font-display text-xl font-bold">Multi-sites</p>
+              <p className="mt-4 font-display text-3xl font-black">
+                Sur devis
               </p>
-              <p className="mt-1 text-xs text-white/50">Multi-sites, jeux sur mesure, accompagnement</p>
+              <p className="mt-1 text-xs text-white/50">
+                À partir de{" "}
+                <span className="font-semibold text-white">79€/mois</span>{" "}
+                pour 3 établissements
+              </p>
               <ul className="mt-6 space-y-2 text-sm text-white/70">
-                <li>· Multi-établissements</li>
+                <li>· Plusieurs établissements</li>
+                <li>· Comptes animateurs séparés</li>
                 <li>· Packs de contenu sur mesure</li>
                 <li>· Onboarding accompagné</li>
                 <li>· SLA dédié</li>
+                <li>· Facturation centralisée</li>
               </ul>
+              <a
+                href="https://velito.fr/contact?service=interactive&plan=multi-sites"
+                className="mt-6 inline-flex w-full items-center justify-center rounded-xl border border-white/20 px-4 py-2.5 text-sm font-semibold text-white/90 transition hover:bg-white/5"
+              >
+                Demander un devis
+              </a>
             </div>
           </div>
+
           <p className="mt-8 text-center text-xs text-white/50">
-            Tarifs HT · Facturation portée par VENA (Velito Expertise Numérique Amiens, SASU)
+            Tarifs TTC · Facturation portée par VENA (Velito Expertise Numérique Amiens, SASU)
           </p>
         </div>
       </section>
@@ -304,7 +353,9 @@ export default function InteractiveHome() {
             Prêt à transformer tes soirées ?
           </h2>
           <p className="mt-4 text-white/70">
-            On lance avec les 3 premiers bars amiénois. Si tu es intéressé, écris-nous.
+            On lance avec les <span className="font-bold text-tenant">10 premiers bars
+            amiénois</span> à 14,99€/mois à vie. Autres villes acceptées tant que
+            le compteur n&apos;est pas plein. Si tu es intéressé, écris-nous.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link href="/dashboard" className="btn-tenant">

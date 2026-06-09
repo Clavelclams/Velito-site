@@ -30,6 +30,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import PlayQuizGame from "./PlayQuizGame";
 import PlayPetitBacGame from "./PlayPetitBacGame";
+import PlayEstimGame from "./PlayEstimGame";
 
 const AVATAR_STORAGE_KEY = "velito-interactive-avatar";
 const PSEUDO_STORAGE_KEY = "velito-interactive-pseudo";
@@ -39,7 +40,7 @@ interface PlayJoinFormProps {
   sessionId: string;
   code: string;
   /** Type de jeu pré-sélectionné (peut changer après start si null). */
-  gameType?: "quiz" | "petit_bac" | "blind_test" | null;
+  gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | null;
 }
 
 type Step = "avatar" | "ready" | "waiting" | "playing";
@@ -330,10 +331,20 @@ export default function PlayJoinForm({ sessionId, code, gameType }: PlayJoinForm
     );
   }
 
-  // Route selon game_type. Petit Bac et Quiz pour l'instant.
+  // Route selon game_type.
   if (gameType === "petit_bac") {
     return (
       <PlayPetitBacGame
+        sessionId={sessionId}
+        playerId={playerId}
+        pseudo={pseudo}
+        avatar={avatar}
+      />
+    );
+  }
+  if (gameType === "estim") {
+    return (
+      <PlayEstimGame
         sessionId={sessionId}
         playerId={playerId}
         pseudo={pseudo}

@@ -25,7 +25,7 @@ import { createSessionWithGameAction } from "../host/actions";
 // Catalogue jeux — source unique de vérité.
 // Tailwind doit "voir" les classes pour les générer au build, donc on les
 // écrit en dur dans `accentClass` (pas de bg-${...}).
-type GameType = "quiz" | "petit_bac" | "blind_test" | null;
+type GameType = "quiz" | "petit_bac" | "blind_test" | "estim" | null;
 
 interface GameCard {
   id: GameType;
@@ -116,9 +116,9 @@ const JEUX: GameCard[] = [
     available: false,
   },
   {
-    id: null,
+    id: "estim",
     nom: "Estim'",
-    desc: "Le plus proche du chiffre exact gagne",
+    desc: "Le plus proche du chiffre exact gagne — culture, sport, internet",
     emoji: "🎯",
     accentClass: {
       bg: "hover:bg-pink-500/10",
@@ -128,7 +128,7 @@ const JEUX: GameCard[] = [
     },
     joueurs: "2 – 100",
     duree: "5 min",
-    available: false,
+    available: true,
   },
   {
     id: null,

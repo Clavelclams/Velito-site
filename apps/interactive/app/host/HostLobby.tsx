@@ -26,6 +26,7 @@ import { createClient } from "@/lib/supabase/client";
 import { endSessionAction } from "./actions";
 import { startQuizAction } from "./quiz-actions";
 import { startPetitBacAction } from "./petitbac-actions";
+import { startEstimAction } from "./estim-actions";
 import { useBackgroundMusic, playSfx, AUDIO } from "@/lib/audio";
 import MuteFooter from "./MuteFooter";
 
@@ -43,7 +44,7 @@ interface HostLobbyProps {
   status: string;
   playBaseUrl: string;
   /** Type de jeu pré-sélectionné depuis la galerie. Null = pas encore choisi. */
-  gameType?: "quiz" | "petit_bac" | "blind_test" | null;
+  gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | null;
 }
 
 export default function HostLobby({
@@ -205,6 +206,8 @@ export default function HostLobby({
     // Si non set (cas legacy), on tombe sur Quiz par défaut.
     if (gameType === "petit_bac") {
       await startPetitBacAction(sessionId);
+    } else if (gameType === "estim") {
+      await startEstimAction(sessionId);
     } else {
       await startQuizAction(sessionId);
     }

@@ -16,6 +16,7 @@ import { createClient } from "@/lib/supabase/server";
 import HostLobby from "./HostLobby";
 import HostQuizGame from "./HostQuizGame";
 import HostPetitBacGame from "./HostPetitBacGame";
+import HostEstimGame from "./HostEstimGame";
 
 export const dynamic = "force-dynamic";
 
@@ -134,13 +135,28 @@ export default async function HostScreen({ searchParams }: HostPageProps) {
         code={sessionRow.code}
         status={sessionRow.status}
         playBaseUrl={playBaseUrl}
-        gameType={sessionRow.game_type as "quiz" | "petit_bac" | "blind_test" | null}
+        gameType={sessionRow.game_type as "quiz" | "petit_bac" | "blind_test" | "estim" | null}
       />
     );
   }
 
   // Status 'playing' ou 'ended' → délègue au composant Game spécifique
   // selon game_type (Quiz par défaut pour rétro-compat).
+  if (sessionRow.game_type === "estim") {
+    const estimState = (sessionRow.current_state ?? {
+      phase: "round",
+      round: 1,
+      totalRounds: 5,
+      questionId: "",
+    }) as unknown as import("@/lib/games/estim").EstimState;
+    return (
+      <HostEstimGame
+        sessionId={sessionRow.id}
+        initialState={estimState}
+        status={sessionRow.status}
+      />
+    );
+  }
   if (sessionRow.game_type === "petit_bac") {
     const petitBacState = (sessionRow.current_state ?? {
       phase: "round",

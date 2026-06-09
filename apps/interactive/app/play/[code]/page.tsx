@@ -97,7 +97,8 @@ export default async function PlayController({
   const gameType = (
     sessionRow.game_type === "quiz" ||
     sessionRow.game_type === "petit_bac" ||
-    sessionRow.game_type === "blind_test"
+    sessionRow.game_type === "blind_test" ||
+    sessionRow.game_type === "estim"
       ? sessionRow.game_type
       : null
   );
