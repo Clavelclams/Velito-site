@@ -21,6 +21,7 @@ import HostGeoGame from "./HostGeoGame";
 import HostBlindTestGame from "./HostBlindTestGame";
 import HostReflexGame from "./HostReflexGame";
 import HostLoupGarouGame from "./HostLoupGarouGame";
+import HostDrawGame from "./HostDrawGame";
 
 export const dynamic = "force-dynamic";
 
@@ -139,7 +140,7 @@ export default async function HostScreen({ searchParams }: HostPageProps) {
         code={sessionRow.code}
         status={sessionRow.status}
         playBaseUrl={playBaseUrl}
-        gameType={sessionRow.game_type as "quiz" | "petit_bac" | "blind_test" | "estim" | "geo" | null}
+        gameType={sessionRow.game_type as "quiz" | "petit_bac" | "blind_test" | "estim" | "geo" | "reflex" | "loup_garou" | "draw" | null}
       />
     );
   }
@@ -155,6 +156,22 @@ export default async function HostScreen({ searchParams }: HostPageProps) {
       <HostLoupGarouGame
         sessionId={sessionRow.id}
         initialState={lgState}
+        status={sessionRow.status}
+      />
+    );
+  }
+  if (sessionRow.game_type === "draw") {
+    const drawState = (sessionRow.current_state ?? {
+      phase: "lobby",
+      roundIndex: 0,
+      totalRounds: 5,
+      drawnBy: [],
+      timeLimitSec: 60,
+    }) as unknown as import("@/lib/games/draw").DrawState;
+    return (
+      <HostDrawGame
+        sessionId={sessionRow.id}
+        initialState={drawState}
         status={sessionRow.status}
       />
     );

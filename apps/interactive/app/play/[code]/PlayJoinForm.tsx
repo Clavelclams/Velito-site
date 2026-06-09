@@ -35,6 +35,7 @@ import PlayGeoGame from "./PlayGeoGame";
 import PlayBlindTestGame from "./PlayBlindTestGame";
 import PlayReflexGame from "./PlayReflexGame";
 import PlayLoupGarouGame from "./PlayLoupGarouGame";
+import PlayDrawGame from "./PlayDrawGame";
 
 const AVATAR_STORAGE_KEY = "velito-interactive-avatar";
 const PSEUDO_STORAGE_KEY = "velito-interactive-pseudo";
@@ -44,7 +45,7 @@ interface PlayJoinFormProps {
   sessionId: string;
   code: string;
   /** Type de jeu pré-sélectionné (peut changer après start si null). */
-  gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | "geo" | "reflex" | "loup_garou" | null;
+  gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | "geo" | "reflex" | "loup_garou" | "draw" | null;
   /** Statut actuel de la session côté DB ('lobby' ou 'playing'). */
   sessionStatus: "lobby" | "playing";
 }
@@ -491,6 +492,16 @@ export default function PlayJoinForm({ sessionId, code, gameType, sessionStatus 
   if (gameType === "loup_garou") {
     return (
       <PlayLoupGarouGame
+        sessionId={sessionId}
+        playerId={playerId}
+        pseudo={pseudo}
+        avatar={avatar}
+      />
+    );
+  }
+  if (gameType === "draw") {
+    return (
+      <PlayDrawGame
         sessionId={sessionId}
         playerId={playerId}
         pseudo={pseudo}

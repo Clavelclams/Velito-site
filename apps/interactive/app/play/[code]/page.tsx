@@ -98,7 +98,8 @@ export default async function PlayController({
     sessionRow.game_type === "estim" ||
     sessionRow.game_type === "geo" ||
     sessionRow.game_type === "reflex" ||
-    sessionRow.game_type === "loup_garou"
+    sessionRow.game_type === "loup_garou" ||
+    sessionRow.game_type === "draw"
       ? sessionRow.game_type
       : null
   );

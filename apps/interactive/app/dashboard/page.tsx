@@ -27,7 +27,7 @@ import SiretActivation from "./SiretActivation";
 // Catalogue jeux — source unique de vérité.
 // Tailwind doit "voir" les classes pour les générer au build, donc on les
 // écrit en dur dans `accentClass` (pas de bg-${...}).
-type GameType = "quiz" | "petit_bac" | "blind_test" | "estim" | "geo" | "reflex" | "loup_garou" | null;
+type GameType = "quiz" | "petit_bac" | "blind_test" | "estim" | "geo" | "reflex" | "loup_garou" | "draw" | null;
 
 interface GameCard {
   id: GameType;
@@ -162,6 +162,21 @@ const JEUX: GameCard[] = [
     duree: "3 min",
     available: true,
   },
+  {
+    id: "draw",
+    nom: "Dessin",
+    desc: "1 dessine, les autres devinent. Style Pictionary. Fou rire garanti.",
+    emoji: "🎨",
+    accentClass: {
+      bg: "hover:bg-orange-500/10",
+      border: "hover:border-orange-400/60",
+      text: "text-orange-300",
+      glow: "bg-orange-500/30",
+    },
+    joueurs: "3 – 12",
+    duree: "10 min",
+    available: true,
+  },
 ];
 
 export const dynamic = "force-dynamic";
@@ -203,7 +218,7 @@ export default async function Dashboard() {
       .eq("user_id", userId)
       .maybeSingle();
     if (subData) {
-      subscription = subData as typeof subscription;
+      subscription = subData as unknown as typeof subscription;
       // Trial actif ?
       if (
         subscription?.plan === "trial" &&

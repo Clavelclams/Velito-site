@@ -57,8 +57,10 @@ export default function PlayLoupGarouGame({
   const [seerSawRole, setSeerSawRole] = useState<{ pseudo: string; role: LGRole } | null>(null);
   const [voteSubmitted, setVoteSubmitted] = useState(false);
 
-  // Récupère le player_token (stocké en localStorage au premier join)
-  const playerToken = useMemo(() => {
+  // Player token — useState (PAS useMemo) pour que le re-render soit déclenché
+  // quand on le récupère depuis la DB. Le useMemo précédent ne s'invalidait jamais
+  // → playerToken restait null → loadMyRole skipait → joueur bloqué sur "Chargement".
+  const [playerToken, setPlayerToken] = useState<string | null>(() => {
     if (typeof window === "undefined") return null;
     try {
       const raw = localStorage.getItem(PLAYER_TOKEN_KEY);
@@ -68,13 +70,14 @@ export default function PlayLoupGarouGame({
       }
     } catch {}
     return null;
-  }, [playerId]);
+  });
 
-  // Fetch token si pas encore en local (depuis la BDD — RLS publique sur player_token oui malheureusement)
-  // → C'est imparfait sécu mais MVP. V2 : token fetch via RPC.
+  // Fetch token depuis la BDD si pas en localStorage (premier join, autre device, etc.)
+  // RLS : SELECT public sur player_token autorisé.
   useEffect(() => {
     if (playerToken) return;
     const supabase = createClient();
+    let cancelled = false;
     (async () => {
       const { data } = await supabase
         .schema("interactive" as never)
@@ -82,16 +85,22 @@ export default function PlayLoupGarouGame({
         .select("player_token")
         .eq("id", playerId)
         .single();
-      if (data) {
-        const token = (data as { player_token: string }).player_token;
-        try {
-          const raw = localStorage.getItem(PLAYER_TOKEN_KEY);
-          const map = raw ? JSON.parse(raw) as Record<string, string> : {};
-          map[playerId] = token;
-          localStorage.setItem(PLAYER_TOKEN_KEY, JSON.stringify(map));
-        } catch {}
-      }
+      if (cancelled || !data) return;
+      const token = (data as { player_token: string }).player_token;
+      if (!token) return;
+      // 1. Persiste en localStorage pour les prochains mounts
+      try {
+        const raw = localStorage.getItem(PLAYER_TOKEN_KEY);
+        const map = raw ? (JSON.parse(raw) as Record<string, string>) : {};
+        map[playerId] = token;
+        localStorage.setItem(PLAYER_TOKEN_KEY, JSON.stringify(map));
+      } catch {}
+      // 2. Set le state React → déclenche le re-render + loadMyRole peut tourner
+      setPlayerToken(token);
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [playerId, playerToken]);
 
   // Fetch role + state

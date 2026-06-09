@@ -36,7 +36,7 @@ export default function SiretActivation() {
     startTransition(async () => {
       const result = await previewSiretAction(formData);
       if (!result.success) {
-        setError(result.error);
+        setError(result.error ?? "Erreur inconnue.");
         return;
       }
       setPreview({
@@ -58,7 +58,7 @@ export default function SiretActivation() {
     startTransition(async () => {
       const result = await activateTrialAction(fd);
       if (!result.success) {
-        setError(result.error);
+        setError(result.error ?? "Activation impossible.");
         return;
       }
       // Succès → la revalidatePath va re-render le dashboard
@@ -160,7 +160,11 @@ export default function SiretActivation() {
 
           <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
             <span className="text-white/40">Pas d&apos;établissement ?</span>
-            <form action={declareIndividualAction}>
+            <form
+              action={async () => {
+                await declareIndividualAction();
+              }}
+            >
               <button type="submit" className="text-tenant underline hover:text-white">
                 Je suis un particulier
               </button>

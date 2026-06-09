@@ -31,6 +31,7 @@ import { startGeoAction } from "./geo-actions";
 import { startBlindTestAction } from "./blindtest-actions";
 import { startReflexAction } from "./reflex-actions";
 import { startLoupGarouAction } from "./loupgarou-actions";
+import { startDrawAction } from "./draw-actions";
 import { useBackgroundMusic, playSfx, AUDIO } from "@/lib/audio";
 import MuteFooter from "./MuteFooter";
 
@@ -48,7 +49,7 @@ interface HostLobbyProps {
   status: string;
   playBaseUrl: string;
   /** Type de jeu pré-sélectionné depuis la galerie. Null = pas encore choisi. */
-  gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | "geo" | "reflex" | "loup_garou" | null;
+  gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | "geo" | "reflex" | "loup_garou" | "draw" | null;
 }
 
 export default function HostLobby({
@@ -222,6 +223,8 @@ export default function HostLobby({
       await startReflexAction(sessionId);
     } else if (gameType === "loup_garou") {
       await startLoupGarouAction(sessionId);
+    } else if (gameType === "draw") {
+      await startDrawAction(sessionId);
     } else {
       await startQuizAction(sessionId);
     }
