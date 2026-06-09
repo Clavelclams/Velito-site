@@ -55,10 +55,21 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user: currentUser } }) => {
-      setUser(currentUser);
-      setAuthLoaded(true);
-    });
+    supabase.auth
+      .getUser()
+      .then(({ data: { user: currentUser } }) => {
+        setUser(currentUser);
+        setAuthLoaded(true);
+      })
+      .catch(() => {
+        // Si getUser() echoue (reseau coupe, rate limit 429, timeout...),
+        // on bascule quand meme authLoaded a true pour afficher les boutons
+        // (en mode deconnecte par defaut). Sinon les boutons Connexion /
+        // S'inscrire restent caches a vie et l'UI parait bloquee.
+        // L'onAuthStateChange juste en dessous corrigera l'etat des qu'il
+        // sera disponible.
+        setAuthLoaded(true);
+      });
 
     const {
       data: { subscription },
