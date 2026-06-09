@@ -238,7 +238,7 @@ export default function PlayLoupGarouGame({
   if (!myRole.alive) {
     return (
       <PrivacyShield
-        revealLabel="Voir ton rôle (tu es mort)"
+        revealLabel="Voir ton écran"
         cycle={state.cycleNumber}
         phaseLabel="Mort"
         autoHideMs={10000}
@@ -344,7 +344,7 @@ function PhaseActionPanel({
     if (myRole.lover_of) {
       const lover = allPlayers.find((p) => p.id === myRole.lover_of);
       return (
-        <PrivacyShield revealLabel="Voir ton amoureux" cycle={cycle} phaseLabel="Cupidon" autoHideMs={12000}>
+        <PrivacyShield revealLabel="Voir ton écran" cycle={cycle} phaseLabel="Nuit" autoHideMs={12000}>
           <Panel title="💘 Tu es amoureux">
             <p>Tu aimes <span className="font-bold text-pink-300">{lover?.pseudo}</span>. Si l&apos;un de vous meurt, l&apos;autre mourra de chagrin. Vous gagnez ensemble.</p>
           </Panel>
@@ -372,7 +372,7 @@ function PhaseActionPanel({
     if (myRole.role !== "seer") return <SleepScreen />;
     if (seerSawRole) {
       return (
-        <PrivacyShield revealLabel="Voir ce que tu as vu" cycle={cycle} phaseLabel="Voyante" autoHideMs={15000}>
+        <PrivacyShield revealLabel="Voir ton écran" cycle={cycle} phaseLabel="Nuit" autoHideMs={15000}>
           <Panel title="🔮 Voyante">
             <p><span className="font-bold">{seerSawRole.pseudo}</span> est :</p>
             <p className="mt-2 font-display text-3xl font-black text-cyan-300">
@@ -384,7 +384,7 @@ function PhaseActionPanel({
       );
     }
     return (
-      <PrivacyShield revealLabel="Voir ton action (Voyante)" cycle={cycle} phaseLabel="Voyante">
+      <PrivacyShield revealLabel="Voir ton action" cycle={cycle} phaseLabel="Nuit">
         <Panel title="🔮 Voyante — choisis un joueur">
           <div className="mt-4 grid grid-cols-2 gap-2">
             {alivePlayers.map((p) => (
@@ -403,7 +403,7 @@ function PhaseActionPanel({
     if (myRole.role !== "wolf" && myRole.role !== "white_wolf") return <SleepScreen />;
     const wolves = allPlayers.filter((p) => wolfTeammates.includes(p.id) && p.id !== playerId);
     return (
-      <PrivacyShield revealLabel="Voir ton action (Loup)" cycle={cycle} phaseLabel="Les Loups">
+      <PrivacyShield revealLabel="Voir ton action" cycle={cycle} phaseLabel="Nuit">
         <Panel title="🐺 Les Loups">
           {wolves.length > 0 && (
             <p className="mb-3 text-xs text-white/60">Tes congénères : <span className="font-bold text-red-300">{wolves.map((w) => w.pseudo).join(", ")}</span></p>
@@ -425,7 +425,7 @@ function PhaseActionPanel({
     if (myRole.role !== "white_wolf") return <SleepScreen />;
     const wolves = allPlayers.filter((p) => wolfTeammates.includes(p.id) && p.alive);
     return (
-      <PrivacyShield revealLabel="Voir ton action (Loup Blanc)" cycle={cycle} phaseLabel="Loup Blanc">
+      <PrivacyShield revealLabel="Voir ton action" cycle={cycle} phaseLabel="Nuit">
         <VotePanel
           title="👹 Loup Blanc — dévore un loup ou passe"
           subtitle="Tu peux tuer un loup pour gagner seul à la fin"
@@ -443,7 +443,7 @@ function PhaseActionPanel({
   if (phase === "night_witch") {
     if (myRole.role !== "witch") return <SleepScreen />;
     return (
-      <PrivacyShield revealLabel="Voir ton action (Sorcière)" cycle={cycle} phaseLabel="Sorcière">
+      <PrivacyShield revealLabel="Voir ton action" cycle={cycle} phaseLabel="Nuit">
         <WitchPanel
           state={state}
           myRole={myRole}
@@ -495,7 +495,7 @@ function PhaseActionPanel({
           Regarde la TV pour le détail.
         </p>
         <div className="mt-6">
-          <PrivacyShield revealLabel="Rappel de mon rôle" cycle={cycle} phaseLabel="Le jour" autoHideMs={8000}>
+          <PrivacyShield revealLabel="Voir ton écran" cycle={cycle} phaseLabel="Jour" autoHideMs={8000}>
             <Panel title="🎭 Ton rôle">
               <RoleCard role={myRole.role} />
             </Panel>
@@ -583,7 +583,7 @@ function PrivacyShield({
           </p>
         )}
         <div className="mt-12 mb-8">
-          <p className="text-8xl">🎭</p>
+          <p className="text-8xl">🌙</p>
         </div>
         <button
           type="button"

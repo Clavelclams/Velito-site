@@ -39,7 +39,7 @@ interface CreateSessionResult {
  *                  game_type déjà set. Sinon, le host choisira au lobby.
  */
 export async function createSessionAction(
-  gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | "geo" | "reflex" | "loup_garou" | null
+  gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | "geo" | "reflex" | "loup_garou" | "draw" | null
 ): Promise<CreateSessionResult> {
   const supabase = await createClient();
 
@@ -53,7 +53,15 @@ export async function createSessionAction(
 
   // 1.bis. Vérif abonnement pour les jeux non-gratuits
   // Loup-Garou = gratuit pour tous. Les autres demandent un essai ou abo actif.
-  if (gameType && gameType !== "loup_garou") {
+  // Bypass : super-admins (président SASU) ont accès illimité.
+  const SUPERADMIN_EMAILS = (process.env.SUPERADMIN_EMAILS ??
+    "contact@velito.fr,clavelclams12@gmail.com")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  const isSuperAdmin = !!user.email && SUPERADMIN_EMAILS.includes(user.email.toLowerCase());
+
+  if (!isSuperAdmin && gameType && gameType !== "loup_garou") {
     const { data: hasAccess } = await supabase
       .schema("shared" as never)
       .rpc("has_active_subscription", { p_user_id: user.id });
@@ -166,7 +174,7 @@ export async function createSessionWithGameAction(formData: FormData): Promise<v
     gameTypeRaw === "quiz" || gameTypeRaw === "petit_bac" ||
     gameTypeRaw === "blind_test" || gameTypeRaw === "estim" ||
     gameTypeRaw === "geo" || gameTypeRaw === "reflex" ||
-    gameTypeRaw === "loup_garou"
+    gameTypeRaw === "loup_garou" || gameTypeRaw === "draw"
       ? gameTypeRaw
       : null
   );
