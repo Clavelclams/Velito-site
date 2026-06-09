@@ -45,11 +45,13 @@ interface PlayJoinFormProps {
   code: string;
   /** Type de jeu pré-sélectionné (peut changer après start si null). */
   gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | "geo" | "reflex" | "loup_garou" | null;
+  /** Statut actuel de la session côté DB ('lobby' ou 'playing'). */
+  sessionStatus: "lobby" | "playing";
 }
 
-type Step = "avatar" | "ready" | "waiting" | "playing";
+type Step = "avatar" | "ready" | "waiting" | "playing" | "too_late";
 
-export default function PlayJoinForm({ sessionId, code, gameType }: PlayJoinFormProps) {
+export default function PlayJoinForm({ sessionId, code, gameType, sessionStatus }: PlayJoinFormProps) {
   const [step, setStep] = useState<Step>("avatar");
   const [avatar, setAvatar] = useState<AvatarConfig>(DEFAULT_AVATAR);
   const [pseudo, setPseudo] = useState("");
@@ -58,41 +60,116 @@ export default function PlayJoinForm({ sessionId, code, gameType }: PlayJoinForm
   const [error, setError] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
-  // 1. Au mount : restaurer avatar + pseudo + check si déjà joueur dans cette session
+  // 1. Au mount : décide step initial selon localStorage + sessionStatus côté serveur
+  //
+  //    Logique de reconnexion (fix bug F5 en cours de partie) :
+  //    ┌──────────────────────┬────────────────────────────────────────────┐
+  //    │ localStorage player ?│ sessionStatus → action                     │
+  //    ├──────────────────────┼────────────────────────────────────────────┤
+  //    │ OUI (cette session)  │ lobby   → step "waiting" (déjà inscrit)    │
+  //    │                      │ playing → step "playing" (reconnect game)  │
+  //    │ NON                  │ lobby   → flow normal (avatar → ready)     │
+  //    │                      │ playing → step "too_late" (trop tard)      │
+  //    └──────────────────────┴────────────────────────────────────────────┘
   useEffect(() => {
+    let restored = false;
     try {
       const avatarRaw = localStorage.getItem(AVATAR_STORAGE_KEY);
       if (avatarRaw) setAvatar(parseAvatarConfig(JSON.parse(avatarRaw)));
 
-      // Restaure le pseudo précédent (persistance globale, pas par session)
       const savedPseudo = localStorage.getItem(PSEUDO_STORAGE_KEY);
       if (savedPseudo) setPseudo(savedPseudo);
 
-      // Check si on a déjà rejoint cette session (rejoint en cours)
       const playerRaw = localStorage.getItem(PLAYER_STORAGE_KEY);
       if (playerRaw) {
         const parsed = JSON.parse(playerRaw) as { sessionId: string; playerId: string };
         if (parsed.sessionId === sessionId) {
           setPlayerId(parsed.playerId);
-          setStep("waiting");
-          return;
+          // Reconnexion : on plonge direct dans l'état adapté au statut serveur
+          if (sessionStatus === "playing") {
+            setStep("playing");
+          } else {
+            setStep("waiting");
+          }
+          restored = true;
         }
       }
 
-      // Si on a un avatar + pseudo en mémoire ET qu'on n'est pas déjà dans la session,
-      // on peut sauter directement à l'étape "ready" (preview avatar+pseudo)
-      if (avatarRaw && savedPseudo) {
-        setStep("ready");
+      // Pas de player en mémoire pour cette session
+      if (!restored) {
+        // Si la partie est déjà lancée, le joueur ne peut pas rejoindre
+        if (sessionStatus === "playing") {
+          setStep("too_late");
+        } else if (avatarRaw && savedPseudo) {
+          // Avatar + pseudo connus → on saute l'étape avatar
+          setStep("ready");
+        }
+        // Sinon : on garde "avatar" (default)
       }
     } catch {
-      /* localStorage indispo, on reste sur le default */
+      /* localStorage indispo */
     }
     setHydrated(true);
-  }, [sessionId]);
 
-  // 2. Subscribe Realtime sur la session → si elle passe en 'playing', on bascule
+    // Vérif serveur : si on a un playerId en localStorage, on vérifie qu'il existe
+    // toujours en DB (cas où l'animateur a kické le joueur ou supprimé la session).
+    if (restored) {
+      void verifyPlayerExists();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId, sessionStatus]);
+
+  /**
+   * Vérifie que le playerId en localStorage existe encore en DB.
+   * Si introuvable : on efface le localStorage et on remet le joueur sur l'écran
+   * de join normal (lobby) ou too_late (playing).
+   */
+  async function verifyPlayerExists() {
+    try {
+      const playerRaw = localStorage.getItem(PLAYER_STORAGE_KEY);
+      if (!playerRaw) return;
+      const parsed = JSON.parse(playerRaw) as { sessionId: string; playerId: string };
+
+      const supabase = createClient();
+      const { data, error: selErr } = await supabase
+        .schema("interactive" as never)
+        .from("session_players")
+        .select("id, pseudo, avatar_config")
+        .eq("id", parsed.playerId)
+        .eq("session_id", sessionId)
+        .maybeSingle();
+
+      if (selErr || !data) {
+        // Player kické ou session repartie de zéro → on nettoie
+        localStorage.removeItem(PLAYER_STORAGE_KEY);
+        setPlayerId(null);
+        if (sessionStatus === "playing") {
+          setStep("too_late");
+        } else {
+          setStep("ready"); // ils peuvent rejoindre comme nouveau
+        }
+        return;
+      }
+
+      // Resync pseudo + avatar depuis la DB (source de vérité)
+      const row = data as { id: string; pseudo: string; avatar_config: unknown };
+      if (row.pseudo) setPseudo(row.pseudo);
+      if (row.avatar_config) {
+        try {
+          setAvatar(parseAvatarConfig(row.avatar_config));
+        } catch {
+          /* avatar corrompu, on garde le default */
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  // 2. Subscribe Realtime sur la session → bascule lobby/playing/ended
+  //    Important : on écoute AUSSI en mode "playing" pour catcher la fin de partie
   useEffect(() => {
-    if (step !== "waiting") return;
+    if (step !== "waiting" && step !== "playing") return;
     const supabase = createClient();
     const channel = supabase
       .channel(`play-session-${sessionId}`)
@@ -106,11 +183,11 @@ export default function PlayJoinForm({ sessionId, code, gameType }: PlayJoinForm
         },
         (payload) => {
           const newStatus = (payload.new as { status: string }).status;
-          if (newStatus === "playing") {
+          if (newStatus === "playing" && step === "waiting") {
             setStep("playing");
           } else if (newStatus === "ended") {
-            setError("La session a été terminée par l'animateur.");
-            setStep("ready");
+            setError("La partie est terminée.");
+            // On garde le step "playing" pour que le composant Game affiche le classement final
           }
         }
       )
@@ -184,6 +261,31 @@ export default function PlayJoinForm({ sessionId, code, gameType }: PlayJoinForm
     } finally {
       setSubmitting(false);
     }
+  }
+
+  // ═══════════════════ Étape TOO_LATE (partie déjà lancée, joueur non inscrit) ═══════════════════
+  if (step === "too_late") {
+    return (
+      <div className="w-full max-w-sm text-center">
+        <p className="text-xs uppercase tracking-[0.3em] text-white/40">
+          Velito Interactive
+        </p>
+        <h1 className="neon-title mt-3 text-4xl">Partie en cours</h1>
+        <p className="mt-2 text-sm text-white/60">
+          Session{" "}
+          <span className="font-display font-black tracking-widest text-tenant">
+            {code.toUpperCase()}
+          </span>
+        </p>
+        <p className="mt-6 text-sm text-white/70">
+          Cette partie a déjà démarré. Demande à l&apos;animateur la prochaine session.
+        </p>
+        <p className="mt-3 text-xs text-white/40">
+          Si tu étais déjà dans la partie, vérifie que tu utilises bien le même
+          téléphone / navigateur qu&apos;au début.
+        </p>
+      </div>
+    );
   }
 
   // ═══════════════════ Étape AVATAR ═══════════════════

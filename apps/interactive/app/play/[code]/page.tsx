@@ -69,31 +69,28 @@ export default async function PlayController({
     game_type: string | null;
   };
 
-  // ═══════════ Session déjà commencée ou terminée ═══════════
-  if (sessionRow.status !== "lobby") {
+  // ═══════════ Session "ended" : aucune reconnexion possible ═══════════
+  if (sessionRow.status === "ended") {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm text-center">
           <p className="text-xs uppercase tracking-[0.3em] text-white/40">
             Velito Interactive
           </p>
-          <h1 className="neon-title mt-3 text-3xl">
-            {sessionRow.status === "playing" ? "Partie en cours" : "Session terminée"}
-          </h1>
+          <h1 className="neon-title mt-3 text-3xl">Session terminée</h1>
           <p className="mt-4 text-sm text-white/60">
-            {sessionRow.status === "playing"
-              ? "Cette partie a déjà démarré, tu ne peux plus rejoindre."
-              : "Cette session est terminée."}
-          </p>
-          <p className="mt-2 text-xs text-white/40">
-            Demande à l&apos;animateur d&apos;ouvrir une nouvelle session.
+            Cette session est close. Demande à l&apos;animateur d&apos;en ouvrir une
+            nouvelle.
           </p>
         </div>
       </main>
     );
   }
 
-  // ═══════════ OK — affiche le picker avatar + form pseudo ═══════════
+  // ═══════════ OK — pour 'lobby' ET 'playing'. Le Client décidera ═══════════
+  //   - 'lobby'   : nouveau joueur peut rejoindre OU reconnexion d'un joueur existant
+  //   - 'playing' : seuls les joueurs déjà inscrits (localStorage) peuvent reconnecter.
+  //                 Un nouveau joueur verra l'écran "trop tard" côté Client.
   const gameType = (
     sessionRow.game_type === "quiz" ||
     sessionRow.game_type === "petit_bac" ||
@@ -112,6 +109,7 @@ export default async function PlayController({
         sessionId={sessionRow.id}
         code={sessionRow.code}
         gameType={gameType}
+        sessionStatus={sessionRow.status as "lobby" | "playing"}
       />
     </main>
   );
