@@ -205,19 +205,17 @@ export default function HostLoupGarouGame({
                 Morts ({sortedDead.length})
               </p>
               <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                {sortedDead.map((p) => {
-                  const r = roles.find((x) => x.player_id === p.id);
-                  return (
-                    <div key={p.id} className="flex flex-col items-center gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-2 opacity-60">
-                      <Avatar config={p.avatar_config} size="xs" />
-                      <p className="text-[10px] font-medium text-white line-through">{p.pseudo}</p>
-                      <p className="text-[10px] text-white/60">
-                        {ROLE_EMOJIS[r?.role as keyof typeof ROLE_EMOJIS] ?? ""}{" "}
-                        {ROLE_LABELS[r?.role as keyof typeof ROLE_LABELS] ?? "?"}
-                      </p>
-                    </div>
-                  );
-                })}
+                {sortedDead.map((p) => (
+                  // On NE révèle PAS le rôle du mort pendant la partie : ça donnerait
+                  // des infos déductives sur les rôles restants (si on voit "Voyante"
+                  // morte alors qu'on connaît la composition, on peut déduire). Le
+                  // reveal complet a lieu uniquement à la phase 'ended'.
+                  <div key={p.id} className="flex flex-col items-center gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-2 opacity-60">
+                    <Avatar config={p.avatar_config} size="xs" />
+                    <p className="text-[10px] font-medium text-white line-through">{p.pseudo}</p>
+                    <p className="text-[10px] text-white/30">💀 Inconnu</p>
+                  </div>
+                ))}
               </div>
             </div>
           )}

@@ -202,12 +202,15 @@ export default async function Dashboard() {
   const availableCount = JEUX.filter((j) => j.available).length;
 
   // ─── Récupère le statut d'abonnement ───
-  let subscription: {
+  // Type explicite extrait pour pouvoir caster en local (le client Supabase
+  // typé via `.schema("shared" as never)` renvoie `never` et casse le narrowing).
+  type Subscription = {
     plan: string;
     trial_ends_at: string | null;
     paid_until: string | null;
     account_type: string | null;
-  } | null = null;
+  };
+  let subscription: Subscription | null = null;
   let hasPremiumAccess = false;
   try {
     const supabase = await createClient();
@@ -218,21 +221,23 @@ export default async function Dashboard() {
       .eq("user_id", userId)
       .maybeSingle();
     if (subData) {
-      subscription = subData as unknown as typeof subscription;
+      // Double cast : `subData` est typé `never` à cause du schema custom.
+      // On passe par `unknown` pour rassurer TS, puis vers notre type concret.
+      const sub: Subscription = subData as unknown as Subscription;
+      subscription = sub;
       // Trial actif ?
       if (
-        subscription?.plan === "trial" &&
-        subscription.trial_ends_at &&
-        new Date(subscription.trial_ends_at) > new Date()
+        sub.plan === "trial" &&
+        sub.trial_ends_at &&
+        new Date(sub.trial_ends_at) > new Date()
       ) {
         hasPremiumAccess = true;
       }
       // Abo payant actif ?
       if (
-        subscription &&
-        ["early_adopter", "standard", "multi_sites"].includes(subscription.plan) &&
-        subscription.paid_until &&
-        new Date(subscription.paid_until) > new Date()
+        ["early_adopter", "standard", "multi_sites"].includes(sub.plan) &&
+        sub.paid_until &&
+        new Date(sub.paid_until) > new Date()
       ) {
         hasPremiumAccess = true;
       }

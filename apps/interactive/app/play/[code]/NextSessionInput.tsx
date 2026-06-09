@@ -37,16 +37,15 @@ export default function NextSessionInput() {
   }
 
   return (
-    <div className="card-ink mt-8 p-5">
-      <p className="text-xs uppercase tracking-widest text-white/50">
+    <div className="card-ink mt-4 p-4">
+      <p className="text-[10px] uppercase tracking-widest text-white/50">
         Rejouer
       </p>
-      <p className="mt-1 text-sm text-white/70">
-        L&apos;animateur a relancé une partie ? Entre le nouveau code (pas besoin
-        de re-scanner).
+      <p className="mt-0.5 text-xs text-white/70">
+        Nouveau code de session ?
       </p>
 
-      <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3">
+      <form onSubmit={handleSubmit} className="mt-3 flex flex-col gap-2">
         <input
           type="text"
           inputMode="text"

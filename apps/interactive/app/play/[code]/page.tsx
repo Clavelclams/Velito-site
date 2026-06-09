@@ -105,7 +105,9 @@ export default async function PlayController({
   );
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center px-6 py-12">
+    // overflow-y-auto + py-8 garantissent que le contenu peut scroller si
+    // l'écran déborde (ex: fin de partie LG avec NextSessionInput sur petit mobile).
+    <main className="flex min-h-screen flex-col items-center justify-center overflow-y-auto px-6 py-8">
       <PlayJoinForm
         sessionId={sessionRow.id}
         code={sessionRow.code}

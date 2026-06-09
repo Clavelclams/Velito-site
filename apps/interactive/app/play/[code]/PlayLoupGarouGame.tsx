@@ -148,7 +148,15 @@ export default function PlayLoupGarouGame({
 
     const channel = supabase.channel(`play-lg-${playerId}`)
       .on("postgres_changes", { event: "UPDATE", schema: "interactive", table: "sessions", filter: `id=eq.${sessionId}` }, (payload) => {
-        setState((payload.new as { current_state: LGState }).current_state);
+        const newState = (payload.new as { current_state: LGState }).current_state;
+        setState((prevState) => {
+          // Reset seerSawRole si on change de phase (sinon Voyante voit le résultat du tour précédent
+          // sans avoir cliqué — bug remonté en prod le 09/06/2026)
+          if (prevState?.phase !== newState.phase) {
+            setSeerSawRole(null);
+          }
+          return newState;
+        });
         setVoteSubmitted(false); // reset à chaque changement de phase
         loadMyRole();
       })
@@ -200,6 +208,8 @@ export default function PlayLoupGarouGame({
   }
 
   // ─── PARTIE TERMINÉE ──────────────────────────────────────────────────
+  // Layout compact : tout doit tenir dans le viewport mobile sans scroll.
+  // Le NextSessionInput est mis en avant car c'est la prochaine action attendue.
   if (state.phase === "ended") {
     const won =
       (state.winnerCamp === "wolves" && (myRole.role === "wolf" || myRole.role === "white_wolf")) ||
@@ -208,11 +218,13 @@ export default function PlayLoupGarouGame({
       (state.winnerCamp === "lovers" && myRole.lover_of);
     return (
       <div className="w-full max-w-sm text-center">
-        <p className="text-xs uppercase tracking-[0.3em] text-white/40">Loup-Garou · Terminé</p>
-        <h1 className={"neon-title mt-3 text-3xl " + (won ? "text-emerald-300" : "text-red-300")}>
+        <p className="text-[10px] uppercase tracking-[0.3em] text-white/40">
+          Loup-Garou · Terminé
+        </p>
+        <h1 className={"mt-2 font-display text-3xl font-black " + (won ? "text-emerald-300" : "text-red-300")}>
           {won ? "VICTOIRE 🏆" : "Défaite"}
         </h1>
-        <p className="mt-4 text-sm text-white/70">
+        <p className="mt-2 text-xs text-white/60">
           Tu étais {ROLE_EMOJIS[myRole.role]} <span className="font-bold">{ROLE_LABELS[myRole.role]}</span>
         </p>
         <NextSessionInput />
@@ -221,14 +233,29 @@ export default function PlayLoupGarouGame({
   }
 
   // ─── MORT ─────────────────────────────────────────────────────────────
+  // On masque toujours le rôle du mort derrière un shield (sinon un voisin
+  // voit qui tu étais — spoiler des autres rôles encore vivants par déduction).
   if (!myRole.alive) {
     return (
-      <div className="w-full max-w-sm text-center">
-        <p className="text-xs uppercase tracking-[0.3em] text-white/40">Tu es mort 💀</p>
-        <h1 className="neon-title mt-3 text-2xl">{ROLE_LABELS[myRole.role]}</h1>
-        <p className="mt-4 text-sm text-white/60">Tu peux suivre la partie sur l&apos;écran TV.</p>
-        <p className="mt-2 text-xs text-white/40">Pas un mot sur ce que tu sais. Sois honnête.</p>
-      </div>
+      <PrivacyShield
+        revealLabel="Voir ton rôle (tu es mort)"
+        cycle={state.cycleNumber}
+        phaseLabel="Mort"
+        autoHideMs={10000}
+      >
+        <div className="w-full max-w-sm text-center">
+          <p className="text-xs uppercase tracking-[0.3em] text-white/40">
+            Tu es mort 💀
+          </p>
+          <h1 className="neon-title mt-3 text-2xl">{ROLE_LABELS[myRole.role]}</h1>
+          <p className="mt-4 text-sm text-white/60">
+            Tu peux suivre la partie sur l&apos;écran TV.
+          </p>
+          <p className="mt-2 text-xs text-white/40">
+            Pas un mot sur ce que tu sais. Sois honnête.
+          </p>
+        </div>
+      </PrivacyShield>
     );
   }
 
@@ -317,9 +344,11 @@ function PhaseActionPanel({
     if (myRole.lover_of) {
       const lover = allPlayers.find((p) => p.id === myRole.lover_of);
       return (
-        <Panel title="💘 Tu es amoureux">
-          <p>Tu aimes <span className="font-bold text-pink-300">{lover?.pseudo}</span>. Si l&apos;un de vous meurt, l&apos;autre mourra de chagrin. Vous gagnez ensemble.</p>
-        </Panel>
+        <PrivacyShield revealLabel="Voir ton amoureux" cycle={cycle} phaseLabel="Cupidon" autoHideMs={12000}>
+          <Panel title="💘 Tu es amoureux">
+            <p>Tu aimes <span className="font-bold text-pink-300">{lover?.pseudo}</span>. Si l&apos;un de vous meurt, l&apos;autre mourra de chagrin. Vous gagnez ensemble.</p>
+          </Panel>
+        </PrivacyShield>
       );
     }
     return <SleepScreen />;
@@ -343,25 +372,29 @@ function PhaseActionPanel({
     if (myRole.role !== "seer") return <SleepScreen />;
     if (seerSawRole) {
       return (
-        <Panel title="🔮 Voyante">
-          <p><span className="font-bold">{seerSawRole.pseudo}</span> est :</p>
-          <p className="mt-2 font-display text-3xl font-black text-cyan-300">
-            {ROLE_EMOJIS[seerSawRole.role]} {ROLE_LABELS[seerSawRole.role]}
-          </p>
-          <p className="mt-4 text-xs italic text-white/50">Garde ce secret. Personne ne doit savoir.</p>
-        </Panel>
+        <PrivacyShield revealLabel="Voir ce que tu as vu" cycle={cycle} phaseLabel="Voyante" autoHideMs={15000}>
+          <Panel title="🔮 Voyante">
+            <p><span className="font-bold">{seerSawRole.pseudo}</span> est :</p>
+            <p className="mt-2 font-display text-3xl font-black text-cyan-300">
+              {ROLE_EMOJIS[seerSawRole.role]} {ROLE_LABELS[seerSawRole.role]}
+            </p>
+            <p className="mt-4 text-xs italic text-white/50">Garde ce secret. Personne ne doit savoir.</p>
+          </Panel>
+        </PrivacyShield>
       );
     }
     return (
-      <Panel title="🔮 Voyante — choisis un joueur">
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          {alivePlayers.map((p) => (
-            <button key={p.id} onClick={() => seerPeek(p.id)} className="rounded-xl border border-cyan-400/30 bg-cyan-500/5 p-3 text-sm font-medium text-white hover:bg-cyan-500/15">
-              {p.pseudo}
-            </button>
-          ))}
-        </div>
-      </Panel>
+      <PrivacyShield revealLabel="Voir ton action (Voyante)" cycle={cycle} phaseLabel="Voyante">
+        <Panel title="🔮 Voyante — choisis un joueur">
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            {alivePlayers.map((p) => (
+              <button key={p.id} onClick={() => seerPeek(p.id)} className="rounded-xl border border-cyan-400/30 bg-cyan-500/5 p-3 text-sm font-medium text-white hover:bg-cyan-500/15">
+                {p.pseudo}
+              </button>
+            ))}
+          </div>
+        </Panel>
+      </PrivacyShield>
     );
   }
 
@@ -370,18 +403,20 @@ function PhaseActionPanel({
     if (myRole.role !== "wolf" && myRole.role !== "white_wolf") return <SleepScreen />;
     const wolves = allPlayers.filter((p) => wolfTeammates.includes(p.id) && p.id !== playerId);
     return (
-      <Panel title="🐺 Les Loups">
-        {wolves.length > 0 && (
-          <p className="mb-3 text-xs text-white/60">Tes congénères : <span className="font-bold text-red-300">{wolves.map((w) => w.pseudo).join(", ")}</span></p>
-        )}
-        <VotePanel
-          title="Choisis la victime"
-          candidates={alivePlayers.filter((p) => !wolfTeammates.includes(p.id))}
-          onVote={(targetId) => submitVote(`night_${cycle}_wolves`, targetId)}
-          voteSubmitted={voteSubmitted}
-          inline
-        />
-      </Panel>
+      <PrivacyShield revealLabel="Voir ton action (Loup)" cycle={cycle} phaseLabel="Les Loups">
+        <Panel title="🐺 Les Loups">
+          {wolves.length > 0 && (
+            <p className="mb-3 text-xs text-white/60">Tes congénères : <span className="font-bold text-red-300">{wolves.map((w) => w.pseudo).join(", ")}</span></p>
+          )}
+          <VotePanel
+            title="Choisis la victime"
+            candidates={alivePlayers.filter((p) => !wolfTeammates.includes(p.id))}
+            onVote={(targetId) => submitVote(`night_${cycle}_wolves`, targetId)}
+            voteSubmitted={voteSubmitted}
+            inline
+          />
+        </Panel>
+      </PrivacyShield>
     );
   }
 
@@ -390,15 +425,17 @@ function PhaseActionPanel({
     if (myRole.role !== "white_wolf") return <SleepScreen />;
     const wolves = allPlayers.filter((p) => wolfTeammates.includes(p.id) && p.alive);
     return (
-      <VotePanel
-        title="👹 Loup Blanc — dévore un loup ou passe"
-        subtitle="Tu peux tuer un loup pour gagner seul à la fin"
-        candidates={wolves}
-        onVote={(targetId) => submitVote(`night_${cycle}_white_wolf`, targetId)}
-        voteSubmitted={voteSubmitted}
-        allowSkip
-        onSkip={() => setVoteSubmitted(true)}
-      />
+      <PrivacyShield revealLabel="Voir ton action (Loup Blanc)" cycle={cycle} phaseLabel="Loup Blanc">
+        <VotePanel
+          title="👹 Loup Blanc — dévore un loup ou passe"
+          subtitle="Tu peux tuer un loup pour gagner seul à la fin"
+          candidates={wolves}
+          onVote={(targetId) => submitVote(`night_${cycle}_white_wolf`, targetId)}
+          voteSubmitted={voteSubmitted}
+          allowSkip
+          onSkip={() => setVoteSubmitted(true)}
+        />
+      </PrivacyShield>
     );
   }
 
@@ -406,15 +443,17 @@ function PhaseActionPanel({
   if (phase === "night_witch") {
     if (myRole.role !== "witch") return <SleepScreen />;
     return (
-      <WitchPanel
-        state={state}
-        myRole={myRole}
-        allPlayers={allPlayers}
-        playerId={playerId}
-        onSave={(targetId) => submitVote(`night_${cycle}_witch_save`, targetId)}
-        onKill={(targetId) => submitVote(`night_${cycle}_witch_kill`, targetId)}
-        voteSubmitted={voteSubmitted}
-      />
+      <PrivacyShield revealLabel="Voir ton action (Sorcière)" cycle={cycle} phaseLabel="Sorcière">
+        <WitchPanel
+          state={state}
+          myRole={myRole}
+          allPlayers={allPlayers}
+          playerId={playerId}
+          onSave={(targetId) => submitVote(`night_${cycle}_witch_save`, targetId)}
+          onKill={(targetId) => submitVote(`night_${cycle}_witch_kill`, targetId)}
+          voteSubmitted={voteSubmitted}
+        />
+      </PrivacyShield>
     );
   }
 
@@ -444,13 +483,25 @@ function PhaseActionPanel({
     );
   }
 
-  // ─── Day reveal / debate / resolve — affichage neutre ───
+  // ─── Day reveal / debate / resolve — phase publique, on cache le rôle
+  // par défaut (sinon quelqu'un qui passe à côté lit "Tu es Voyante" en gros).
   if (phase === "day_reveal" || phase === "day_debate" || phase === "day_resolve") {
     return (
-      <Panel title={phase === "day_debate" ? "🗣️ Discute à voix haute" : "☀️ Le jour"}>
-        <RoleCard role={myRole.role} />
-        <p className="mt-4 text-xs italic text-white/50">Regarde la TV pour le détail.</p>
-      </Panel>
+      <div className="w-full max-w-sm text-center">
+        <p className="text-xs uppercase tracking-[0.3em] text-white/40">
+          {phase === "day_debate" ? "🗣️ Discute à voix haute" : "☀️ Le jour"}
+        </p>
+        <p className="mt-2 text-sm text-white/60">
+          Regarde la TV pour le détail.
+        </p>
+        <div className="mt-6">
+          <PrivacyShield revealLabel="Rappel de mon rôle" cycle={cycle} phaseLabel="Le jour" autoHideMs={8000}>
+            <Panel title="🎭 Ton rôle">
+              <RoleCard role={myRole.role} />
+            </Panel>
+          </PrivacyShield>
+        </div>
+      </div>
     );
   }
 
@@ -469,13 +520,97 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
-function SleepScreen({ myRole }: { myRole?: MyRole }) {
+function SleepScreen({ myRole: _myRole }: { myRole?: MyRole }) {
+  // Anti-trahison : on n'affiche PLUS "Tu es Voyante" en bas (sinon quelqu'un
+  // qui regarde ton tel pendant que tu dors voit ton rôle). Le rôle est dispo
+  // uniquement via le PrivacyShield au-dessus de cette vue dans les phases
+  // d'action. Ici on affiche juste la lune.
   return (
     <div className="w-full max-w-sm text-center">
       <p className="text-9xl">🌙</p>
       <h1 className="neon-title mt-4 text-2xl">Tu dors</h1>
       <p className="mt-1 text-xs text-white/40">L&apos;action continue ailleurs.</p>
-      {myRole && <p className="mt-6 text-xs text-white/30">Tu es {ROLE_LABELS[myRole.role]}</p>}
+    </div>
+  );
+}
+
+/**
+ * <PrivacyShield /> — Masque le contenu sensible derrière un écran neutre.
+ *
+ * Par défaut : on voit un écran "Velito Interactive · LG · Cycle X" avec un
+ * bouton "👁️ Voir mon rôle / mon action".
+ * Au clic → reveal du contenu enfant + bouton "🙈 Cacher".
+ * Si `autoHideMs` > 0, le contenu se re-cache automatiquement après ce délai
+ * (protection si tu cliques "Voir" et que tu poses ton tel sans cacher).
+ *
+ * Usage type :
+ *   <PrivacyShield revealLabel="Voir mon rôle" cycle={1} phase="Setup">
+ *     <RoleCard role={myRole.role} />
+ *   </PrivacyShield>
+ */
+function PrivacyShield({
+  children,
+  revealLabel = "Voir",
+  cycle,
+  phaseLabel,
+  autoHideMs = 0,
+}: {
+  children: React.ReactNode;
+  revealLabel?: string;
+  cycle?: number;
+  phaseLabel?: string;
+  autoHideMs?: number;
+}) {
+  const [revealed, setRevealed] = useState(false);
+
+  // Auto-hide après autoHideMs si > 0
+  useEffect(() => {
+    if (!revealed || !autoHideMs) return;
+    const timer = setTimeout(() => setRevealed(false), autoHideMs);
+    return () => clearTimeout(timer);
+  }, [revealed, autoHideMs]);
+
+  if (!revealed) {
+    return (
+      <div className="w-full max-w-sm text-center">
+        <p className="text-xs uppercase tracking-[0.3em] text-white/40">
+          Velito Interactive · Loup-Garou
+        </p>
+        {cycle !== undefined && (
+          <p className="mt-1 text-xs text-white/50">
+            Cycle {cycle}
+            {phaseLabel && <span> · {phaseLabel}</span>}
+          </p>
+        )}
+        <div className="mt-12 mb-8">
+          <p className="text-8xl">🎭</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setRevealed(true)}
+          className="btn-tenant"
+        >
+          👁️ {revealLabel}
+        </button>
+        <p className="mt-6 text-[11px] italic text-white/40">
+          Personne ne doit voir ton écran.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full max-w-sm">
+      {children}
+      <div className="mt-4 text-center">
+        <button
+          type="button"
+          onClick={() => setRevealed(false)}
+          className="rounded-xl border border-white/20 px-4 py-2 text-xs text-white/70 hover:bg-white/[0.05]"
+        >
+          🙈 Cacher
+        </button>
+      </div>
     </div>
   );
 }
