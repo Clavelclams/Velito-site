@@ -22,6 +22,8 @@ import {
   QUESTION_TIME_LIMIT_SEC,
   REVEAL_DURATION_SEC,
   calculateScore,
+  getQuestionsByTheme,
+  type QuizTheme,
 } from "@/lib/games/quiz-questions";
 
 interface ActionResult {
@@ -38,24 +40,45 @@ interface SessionState {
   timeLimitSec?: number;
   /** Durée du reveal en secondes (auto-next quand expiré). */
   revealDurationSec?: number;
+  /** Thème sélectionné. 'Mix' = toutes les questions. */
+  theme?: QuizTheme;
+}
+
+/**
+ * Retourne les questions filtrées par thème depuis le state.
+ * Fallback sur QUIZ_QUESTIONS complet si pas de thème (rétro-compat).
+ */
+function getQuestionsForState(state: SessionState | null) {
+  if (!state?.theme) return QUIZ_QUESTIONS;
+  return getQuestionsByTheme(state.theme);
 }
 
 /**
  * Lance le Quiz : passe la session en status='playing', game_type='quiz',
  * et affiche la première question.
  */
-export async function startQuizAction(sessionId: string): Promise<ActionResult> {
+export async function startQuizAction(
+  sessionId: string,
+  theme: QuizTheme = "Mix"
+): Promise<ActionResult> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { success: false, error: "Non connecté." };
 
+  // Vérif qu'il y a bien des questions pour ce thème
+  const themeQuestions = getQuestionsByTheme(theme);
+  if (themeQuestions.length === 0) {
+    return { success: false, error: `Aucune question pour le thème "${theme}".` };
+  }
+
   const newState: SessionState = {
     phase: "question",
     questionIndex: 0,
     questionStartedAt: new Date().toISOString(),
     timeLimitSec: QUESTION_TIME_LIMIT_SEC,
+    theme,
   };
 
   const { error } = await supabase
@@ -103,7 +126,8 @@ export async function revealAnswerAction(sessionId: string): Promise<ActionResul
     return { success: false, error: "Pas en phase question." };
   }
 
-  const question = QUIZ_QUESTIONS[state.questionIndex];
+  const questions = getQuestionsForState(state);
+  const question = questions[state.questionIndex];
   if (!question) {
     return { success: false, error: "Question introuvable." };
   }
@@ -224,9 +248,10 @@ export async function nextQuestionAction(sessionId: string): Promise<ActionResul
 
   const state = (sessionRow as { current_state: SessionState }).current_state;
   const nextIndex = (state?.questionIndex ?? 0) + 1;
+  const questions = getQuestionsForState(state);
 
   // Si on a épuisé les questions → fin du jeu
-  if (nextIndex >= QUIZ_QUESTIONS.length) {
+  if (nextIndex >= questions.length) {
     return await endGameAction(sessionId);
   }
 
@@ -235,6 +260,7 @@ export async function nextQuestionAction(sessionId: string): Promise<ActionResul
     questionIndex: nextIndex,
     questionStartedAt: new Date().toISOString(),
     timeLimitSec: QUESTION_TIME_LIMIT_SEC,
+    theme: state?.theme, // préserve le thème entre questions
   };
 
   const { error } = await supabase
@@ -260,9 +286,20 @@ export async function endGameAction(sessionId: string): Promise<ActionResult> {
   } = await supabase.auth.getUser();
   if (!user) return { success: false, error: "Non connecté." };
 
+  // Récupère le state actuel pour préserver le thème dans le state final
+  const { data: existingRow } = await supabase
+    .schema("interactive" as never)
+    .from("sessions")
+    .select("current_state")
+    .eq("id", sessionId)
+    .single();
+  const existingState = (existingRow as { current_state: SessionState } | null)?.current_state;
+  const questions = getQuestionsForState(existingState);
+
   const newState: SessionState = {
     phase: "final",
-    questionIndex: QUIZ_QUESTIONS.length,
+    questionIndex: questions.length,
+    theme: existingState?.theme,
   };
 
   const { error } = await supabase

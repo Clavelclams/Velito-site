@@ -61,8 +61,18 @@ create unique index if not exists draw_guesses_one_correct_per_player
 -- │ en live sur la TV (effet "machine à écrire" en bas d'écran).         │
 -- │ draw_rounds aussi pour suivre le start/end des rounds.               │
 -- └──────────────────────────────────────────────────────────────────────┘
-alter publication supabase_realtime add table interactive.draw_rounds;
-alter publication supabase_realtime add table interactive.draw_guesses;
+-- Idempotent : on ignore si la table est déjà membre de la publication
+do $$
+begin
+  alter publication supabase_realtime add table interactive.draw_rounds;
+exception when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table interactive.draw_guesses;
+exception when duplicate_object then null;
+end $$;
 
 -- ┌──────────────────────────────────────────────────────────────────────┐
 -- │ RLS                                                                  │

@@ -66,6 +66,10 @@ export default function HostLobby({
   const [actionPending, setActionPending] = useState(false);
   /** Nombre de rounds (seulement utilisé par Blind Test pour l'instant) */
   const [numRounds, setNumRounds] = useState(12);
+  /** Thème Quiz sélectionné (Mix = tous thèmes). */
+  const [quizTheme, setQuizTheme] = useState<
+    "Mix" | "Culture G" | "Sport" | "Amiens" | "Gaming" | "Musique" | "Cinéma"
+  >("Mix");
 
   const joinUrl = `${playBaseUrl}/play/${code}`;
   const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
@@ -226,7 +230,7 @@ export default function HostLobby({
     } else if (gameType === "draw") {
       await startDrawAction(sessionId);
     } else {
-      await startQuizAction(sessionId);
+      await startQuizAction(sessionId, quizTheme);
     }
     setActionPending(false);
   }
@@ -352,6 +356,50 @@ export default function HostLobby({
                   </button>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Sélecteur thème — seulement pour Quiz (ou quand pas de game_type set = fallback Quiz) */}
+          {(gameType === "quiz" || !gameType) && (
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-xs uppercase tracking-widest text-white/50">
+                Thème du Quiz
+              </p>
+              <div className="flex flex-wrap justify-center gap-2">
+                {(["Mix", "Culture G", "Sport", "Amiens", "Gaming", "Musique", "Cinéma"] as const).map(
+                  (t) => {
+                    const emoji = {
+                      Mix: "🎲",
+                      "Culture G": "🧠",
+                      Sport: "⚽",
+                      Amiens: "🏛️",
+                      Gaming: "🎮",
+                      Musique: "🎵",
+                      Cinéma: "🎬",
+                    }[t];
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setQuizTheme(t)}
+                        className={
+                          "rounded-xl border px-3 py-2 text-sm font-bold transition " +
+                          (quizTheme === t
+                            ? "border-violet-400 bg-violet-500/20 text-violet-200"
+                            : "border-white/15 bg-white/[0.04] text-white/70 hover:bg-white/[0.08]")
+                        }
+                      >
+                        <span aria-hidden="true">{emoji}</span> {t}
+                      </button>
+                    );
+                  }
+                )}
+              </div>
+              <p className="text-[10px] text-white/30">
+                {quizTheme === "Mix"
+                  ? "Toutes thématiques mélangées (70 questions)"
+                  : "10 questions sur ce thème"}
+              </p>
             </div>
           )}
 
