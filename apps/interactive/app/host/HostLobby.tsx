@@ -28,6 +28,8 @@ import { startQuizAction } from "./quiz-actions";
 import { startPetitBacAction } from "./petitbac-actions";
 import { startEstimAction } from "./estim-actions";
 import { startGeoAction } from "./geo-actions";
+import { startBlindTestAction } from "./blindtest-actions";
+import { startReflexAction } from "./reflex-actions";
 import { useBackgroundMusic, playSfx, AUDIO } from "@/lib/audio";
 import MuteFooter from "./MuteFooter";
 
@@ -45,7 +47,7 @@ interface HostLobbyProps {
   status: string;
   playBaseUrl: string;
   /** Type de jeu pré-sélectionné depuis la galerie. Null = pas encore choisi. */
-  gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | "geo" | null;
+  gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | "geo" | "reflex" | null;
 }
 
 export default function HostLobby({
@@ -60,6 +62,8 @@ export default function HostLobby({
   const [status, setStatus] = useState(initialStatus);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [actionPending, setActionPending] = useState(false);
+  /** Nombre de rounds (seulement utilisé par Blind Test pour l'instant) */
+  const [numRounds, setNumRounds] = useState(12);
 
   const joinUrl = `${playBaseUrl}/play/${code}`;
   const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
@@ -211,6 +215,10 @@ export default function HostLobby({
       await startEstimAction(sessionId);
     } else if (gameType === "geo") {
       await startGeoAction(sessionId);
+    } else if (gameType === "blind_test") {
+      await startBlindTestAction(sessionId, numRounds);
+    } else if (gameType === "reflex") {
+      await startReflexAction(sessionId);
     } else {
       await startQuizAction(sessionId);
     }
@@ -314,7 +322,34 @@ export default function HostLobby({
 
       {/* ─── Bouton Lancer (visible en mode lobby uniquement) ─── */}
       {status === "lobby" && (
-        <div className="relative mt-10 flex flex-wrap items-center justify-center gap-3">
+        <div className="relative mt-10 flex flex-col items-center gap-4">
+          {/* Sélecteur nombre de rounds — seulement pour Blind Test */}
+          {gameType === "blind_test" && (
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-xs uppercase tracking-widest text-white/50">
+                Nombre de morceaux
+              </p>
+              <div className="flex gap-2">
+                {[7, 12, 15].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setNumRounds(n)}
+                    className={
+                      "rounded-xl border px-4 py-2 font-display text-lg font-black transition " +
+                      (numRounds === n
+                        ? "border-cyan-400 bg-cyan-500/20 text-cyan-300"
+                        : "border-white/15 bg-white/[0.04] text-white/70 hover:bg-white/[0.08]")
+                    }
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center justify-center gap-3">
           <button
             type="button"
             onClick={handleStart}
@@ -331,6 +366,7 @@ export default function HostLobby({
           >
             Annuler la session
           </button>
+          </div>
         </div>
       )}
     </main>

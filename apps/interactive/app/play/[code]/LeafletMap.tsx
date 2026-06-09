@@ -69,11 +69,17 @@ export default function LeafletMap({
         attributionControl: false,
       });
 
-      // Tuiles OpenStreetMap (gratuites, pas d'API key)
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 18,
-        minZoom: 2,
-      }).addTo(map);
+      // Tuiles CartoDB "Voyager No Labels" — épurées SANS noms de villes/pays
+      // (l'intérêt du jeu c'est de chercher sans avoir la réponse écrite).
+      // Gratuit, pas d'API key. Fallback OSM si CARTO down.
+      L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png",
+        {
+          maxZoom: 18,
+          minZoom: 2,
+          subdomains: "abcd",
+        }
+      ).addTo(map);
 
       // Layer pour les marqueurs extras
       const extraLayer = L.layerGroup().addTo(map);

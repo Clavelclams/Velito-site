@@ -192,8 +192,8 @@ export const GEO_TARGETS: GeoTarget[] = [
 
 /** Durée d'un round en secondes. */
 export const GEO_ROUND_DURATION_SEC = 25;
-/** Durée du reveal avant question suivante. */
-export const GEO_REVEAL_DURATION_SEC = 10;
+/** Durée du reveal avant question suivante — 15s pour bien voir la distance + le classement. */
+export const GEO_REVEAL_DURATION_SEC = 15;
 /** Nombre de rounds par partie. */
 export const GEO_TOTAL_ROUNDS = 5;
 

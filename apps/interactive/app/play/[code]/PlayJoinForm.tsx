@@ -32,6 +32,8 @@ import PlayQuizGame from "./PlayQuizGame";
 import PlayPetitBacGame from "./PlayPetitBacGame";
 import PlayEstimGame from "./PlayEstimGame";
 import PlayGeoGame from "./PlayGeoGame";
+import PlayBlindTestGame from "./PlayBlindTestGame";
+import PlayReflexGame from "./PlayReflexGame";
 
 const AVATAR_STORAGE_KEY = "velito-interactive-avatar";
 const PSEUDO_STORAGE_KEY = "velito-interactive-pseudo";
@@ -41,7 +43,7 @@ interface PlayJoinFormProps {
   sessionId: string;
   code: string;
   /** Type de jeu pré-sélectionné (peut changer après start si null). */
-  gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | "geo" | null;
+  gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | "geo" | "reflex" | null;
 }
 
 type Step = "avatar" | "ready" | "waiting" | "playing";
@@ -356,6 +358,26 @@ export default function PlayJoinForm({ sessionId, code, gameType }: PlayJoinForm
   if (gameType === "geo") {
     return (
       <PlayGeoGame
+        sessionId={sessionId}
+        playerId={playerId}
+        pseudo={pseudo}
+        avatar={avatar}
+      />
+    );
+  }
+  if (gameType === "blind_test") {
+    return (
+      <PlayBlindTestGame
+        sessionId={sessionId}
+        playerId={playerId}
+        pseudo={pseudo}
+        avatar={avatar}
+      />
+    );
+  }
+  if (gameType === "reflex") {
+    return (
+      <PlayReflexGame
         sessionId={sessionId}
         playerId={playerId}
         pseudo={pseudo}

@@ -18,6 +18,8 @@ import HostQuizGame from "./HostQuizGame";
 import HostPetitBacGame from "./HostPetitBacGame";
 import HostEstimGame from "./HostEstimGame";
 import HostGeoGame from "./HostGeoGame";
+import HostBlindTestGame from "./HostBlindTestGame";
+import HostReflexGame from "./HostReflexGame";
 
 export const dynamic = "force-dynamic";
 
@@ -143,6 +145,35 @@ export default async function HostScreen({ searchParams }: HostPageProps) {
 
   // Status 'playing' ou 'ended' → délègue au composant Game spécifique
   // selon game_type (Quiz par défaut pour rétro-compat).
+  if (sessionRow.game_type === "reflex") {
+    const reflexState = (sessionRow.current_state ?? {
+      phase: "wait",
+      roundIndex: 0,
+      totalRounds: 5,
+    }) as unknown as import("@/lib/games/reflex").ReflexState;
+    return (
+      <HostReflexGame
+        sessionId={sessionRow.id}
+        initialState={reflexState}
+        status={sessionRow.status}
+      />
+    );
+  }
+  if (sessionRow.game_type === "blind_test") {
+    const btState = (sessionRow.current_state ?? {
+      phase: "question",
+      roundIndex: 0,
+      totalRounds: 12,
+      rounds: [],
+    }) as unknown as import("@/lib/games/blindtest").BlindTestState;
+    return (
+      <HostBlindTestGame
+        sessionId={sessionRow.id}
+        initialState={btState}
+        status={sessionRow.status}
+      />
+    );
+  }
   if (sessionRow.game_type === "geo") {
     const geoState = (sessionRow.current_state ?? {
       phase: "round",
