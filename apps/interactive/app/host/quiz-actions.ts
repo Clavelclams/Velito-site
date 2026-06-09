@@ -293,7 +293,10 @@ export async function endGameAction(sessionId: string): Promise<ActionResult> {
     .select("current_state")
     .eq("id", sessionId)
     .single();
-  const existingState = (existingRow as { current_state: SessionState } | null)?.current_state;
+  // Le ?. retourne undefined si la row n'existe pas — on normalise en null
+  // pour matcher la signature de getQuestionsForState(SessionState | null).
+  const existingState =
+    (existingRow as { current_state: SessionState } | null)?.current_state ?? null;
   const questions = getQuestionsForState(existingState);
 
   const newState: SessionState = {
