@@ -69,23 +69,47 @@ export function setGloballyMuted(muted: boolean): void {
 }
 
 /**
- * Joue un SFX one-shot. Crée un nouvel élément audio à chaque appel pour
- * permettre de superposer plusieurs sons (ex: clic + reveal en même temps).
+ * Tracker des SFX en cours par src. Évite qu'un même SFX se joue 2 fois si
+ * appelé en rapide succession (ex: state Realtime qui re-trigger une phase).
  *
- * En cas d'autoplay bloqué (avant interaction user), on log juste — c'est
- * normal sur la 1re page avant qu'il clique n'importe où.
+ * Throttle : pour un même src, on ignore les appels qui arrivent < 300ms après
+ * le précédent. Sinon les SFX longs (round-end.mp3 = 8s) se cumulent.
+ */
+const _lastPlayedAt = new Map<string, number>();
+const _activeSfx = new Set<HTMLAudioElement>();
+
+/**
+ * Joue un SFX one-shot.
+ *
+ *  - Throttle 300 ms : un même src ne peut pas être lancé 2 fois en moins de 300ms
+ *  - Tracking : on garde la ref de l'audio pour pouvoir tout couper au mute global
+ *  - Cleanup auto : quand l'audio finit, on l'enlève du tracker
  *
  * @param src    Chemin du fichier (utilise AUDIO.xxx)
  * @param volume Entre 0 et 1, défaut 0.5
  */
 export function playSfx(src: string, volume: number = 0.5): void {
   if (typeof window === "undefined") return;
-  if (isGloballyMuted()) return; // Mute global : on ignore
+  if (isGloballyMuted()) return;
+
+  // Throttle par src
+  const now = Date.now();
+  const last = _lastPlayedAt.get(src) ?? 0;
+  if (now - last < 300) return;
+  _lastPlayedAt.set(src, now);
+
   try {
     const audio = new Audio(src);
     audio.volume = Math.max(0, Math.min(1, volume));
+    _activeSfx.add(audio);
+    audio.addEventListener("ended", () => {
+      _activeSfx.delete(audio);
+    });
+    audio.addEventListener("error", () => {
+      _activeSfx.delete(audio);
+    });
     audio.play().catch((err) => {
-      // Autoplay bloqué tant que l'user n'a pas interagi — normal
+      _activeSfx.delete(audio);
       if (err.name !== "NotAllowedError") {
         console.warn("[playSfx] erreur lecture:", err.message);
       }
@@ -93,6 +117,17 @@ export function playSfx(src: string, volume: number = 0.5): void {
   } catch (e) {
     console.warn("[playSfx] exception:", e);
   }
+}
+
+/**
+ * Coupe TOUS les SFX en cours immédiatement.
+ * Appelé au mute global pour stopper les longs SFX déjà déclenchés.
+ */
+function stopAllSfx(): void {
+  for (const a of _activeSfx) {
+    try { a.pause(); a.currentTime = 0; a.src = ""; } catch {}
+  }
+  _activeSfx.clear();
 }
 
 /**
@@ -106,22 +141,81 @@ export function playSfx(src: string, volume: number = 0.5): void {
  *                pas couvrir les voix)
  */
 /**
- * Singleton global — garantit qu'UNE seule musique de fond joue à la fois.
- * Évite le bug "musique doublée avec écho" en StrictMode ou lors d'une
- * transition lobby→game où l'ancien hook n'a pas eu le temps de cleanup.
+ * Singleton global STRICT — garantit qu'UNE seule musique de fond joue à la fois.
+ * On stocke sur window pour survivre aux remounts React StrictMode.
+ *
+ * Fix du bug "double musique avec écho" :
+ *  - On stoppe l'ancien audio AVANT de créer le nouveau
+ *  - On force `audio.src = ""` pour libérer le stream (pas juste pause)
+ *  - On utilise un compteur d'instances pour ignorer les cleanups tardifs
  */
-let _activeMusic: { src: string; audio: HTMLAudioElement } | null = null;
+interface ActiveMusic {
+  id: number;
+  src: string;
+  audio: HTMLAudioElement;
+}
 
-function stopActiveMusic() {
-  if (_activeMusic) {
+declare global {
+  // eslint-disable-next-line no-var
+  var __velitoActiveMusic: ActiveMusic | null;
+  // eslint-disable-next-line no-var
+  var __velitoMusicCounter: number;
+}
+
+function getActiveMusic(): ActiveMusic | null {
+  if (typeof window === "undefined") return null;
+  return globalThis.__velitoActiveMusic ?? null;
+}
+
+function setActiveMusic(m: ActiveMusic | null): void {
+  if (typeof window === "undefined") return;
+  globalThis.__velitoActiveMusic = m;
+}
+
+function nextMusicId(): number {
+  if (typeof window === "undefined") return 0;
+  globalThis.__velitoMusicCounter = (globalThis.__velitoMusicCounter ?? 0) + 1;
+  return globalThis.__velitoMusicCounter;
+}
+
+/**
+ * Registry global de TOUTES les audio "background music" jamais créées.
+ * Quand un nouveau useBackgroundMusic démarre, on TUE toutes les anciennes —
+ * peu importe si elles ont déjà été cleanup ou pas. Bug double-musique fini.
+ */
+declare global {
+  // eslint-disable-next-line no-var
+  var __velitoAllBgMusic: Set<HTMLAudioElement> | undefined;
+}
+
+function getAllBgMusic(): Set<HTMLAudioElement> {
+  if (typeof window === "undefined") return new Set();
+  if (!globalThis.__velitoAllBgMusic) {
+    globalThis.__velitoAllBgMusic = new Set();
+  }
+  return globalThis.__velitoAllBgMusic;
+}
+
+/** Tue TOUTES les musiques de fond en cours. Robuste, idempotent. */
+function killAllBgMusic(): void {
+  const all = getAllBgMusic();
+  for (const a of all) {
     try {
-      _activeMusic.audio.pause();
-      _activeMusic.audio.currentTime = 0;
+      a.pause();
+      a.currentTime = 0;
+      a.src = "";
+      a.load();
     } catch {
       /* ignore */
     }
-    _activeMusic = null;
   }
+  all.clear();
+}
+
+// Cleanup quand l'utilisateur quitte la page
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeunload", killAllBgMusic);
+  window.addEventListener("pagehide", killAllBgMusic);
 }
 
 export function useBackgroundMusic(
@@ -131,33 +225,43 @@ export function useBackgroundMusic(
   const [muted, setMuted] = useState<boolean>(() => isGloballyMuted());
 
   useEffect(() => {
-    // STOP toute musique en cours avant d'en lancer une nouvelle (singleton)
-    stopActiveMusic();
+    // 1. TUE toute musique existante (registre global) → fini le double-écho
+    killAllBgMusic();
 
+    // 2. Crée et lance la nouvelle
     const audio = new Audio(src);
     audio.loop = true;
     audio.volume = isGloballyMuted() ? 0 : volume;
     audio.muted = isGloballyMuted();
+
+    // 3. Enregistre AVANT le play (au cas où le play échoue mais le registry sait)
+    getAllBgMusic().add(audio);
+
     audio.play().catch((err) => {
       if (err.name !== "NotAllowedError") {
         console.warn("[useBackgroundMusic] autoplay bloqué:", err.message);
       }
     });
-    _activeMusic = { src, audio };
 
-    // Écoute le mute global
     function onMuteChange(e: Event) {
       const m = (e as CustomEvent<boolean>).detail;
       audio.muted = m;
       setMuted(m);
+      if (m) stopAllSfx();
     }
     window.addEventListener("velito-mute-change", onMuteChange);
 
     return () => {
       window.removeEventListener("velito-mute-change", onMuteChange);
-      // Ne stop QUE si c'est notre instance (pas si une autre l'a remplacée)
-      if (_activeMusic?.audio === audio) {
-        stopActiveMusic();
+      // Cleanup MA propre audio (et seulement la mienne)
+      getAllBgMusic().delete(audio);
+      try {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.src = "";
+        audio.load();
+      } catch {
+        /* ignore */
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

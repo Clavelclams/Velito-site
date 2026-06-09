@@ -143,13 +143,51 @@ export default function PlayLoupGarouGame({
         setVoteSubmitted(false); // reset à chaque changement de phase
         loadMyRole();
       })
-      .on("postgres_changes", { event: "*", schema: "interactive", table: "lg_player_roles", filter: `session_id=eq.${sessionId}` }, () => loadAll())
+      .on("postgres_changes", { event: "*", schema: "interactive", table: "lg_player_roles", filter: `session_id=eq.${sessionId}` }, () => {
+        loadAll();
+        // Quand un INSERT/UPDATE arrive sur lg_player_roles, mon rôle peut venir d'arriver
+        loadMyRole();
+      })
       .subscribe();
+
+    // Retry périodique de loadMyRole si on n'a pas encore notre rôle
+    // (sécurité au cas où le Realtime aurait raté un event)
+    const retryInterval = setInterval(() => {
+      loadMyRole();
+    }, 3000);
+    setTimeout(() => clearInterval(retryInterval), 30000); // arrête après 30s
     return () => { supabase.removeChannel(channel); };
   }, [sessionId, playerId, loadMyRole]);
 
-  if (!state || !myRole) {
-    return <div className="w-full max-w-sm text-center text-white/40">Chargement de ton rôle…</div>;
+  // Cas où le state n'est pas encore chargé (premier render)
+  if (!state) {
+    return <div className="w-full max-w-sm text-center text-white/40">Connexion à la partie…</div>;
+  }
+
+  // Cas où la partie n'a pas encore démarré → pas de rôle distribué
+  if (!myRole && state.phase === "setup") {
+    return (
+      <div className="w-full max-w-sm text-center">
+        <p className="text-9xl">⏳</p>
+        <h1 className="neon-title mt-4 text-2xl">En attente</h1>
+        <p className="mt-2 text-sm text-white/60">
+          L&apos;animateur va lancer la partie. Ton rôle te sera révélé dans un instant.
+        </p>
+      </div>
+    );
+  }
+
+  // Cas où la partie a démarré mais myRole pas encore arrivé (Realtime un peu en retard)
+  if (!myRole) {
+    return (
+      <div className="w-full max-w-sm text-center">
+        <p className="text-9xl">🌙</p>
+        <h1 className="neon-title mt-4 text-2xl">Récupération de ton rôle…</h1>
+        <p className="mt-3 text-xs text-white/40">
+          Si ça bloque plus de 10 secondes, recharge la page.
+        </p>
+      </div>
+    );
   }
 
   // ─── PARTIE TERMINÉE ──────────────────────────────────────────────────

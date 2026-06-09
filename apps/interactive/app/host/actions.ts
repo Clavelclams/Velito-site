@@ -51,6 +51,20 @@ export async function createSessionAction(
     return { success: false, error: "Tu dois être connecté pour lancer une session." };
   }
 
+  // 1.bis. Vérif abonnement pour les jeux non-gratuits
+  // Loup-Garou = gratuit pour tous. Les autres demandent un essai ou abo actif.
+  if (gameType && gameType !== "loup_garou") {
+    const { data: hasAccess } = await supabase
+      .schema("shared" as never)
+      .rpc("has_active_subscription", { p_user_id: user.id });
+    if (!hasAccess) {
+      return {
+        success: false,
+        error: "Active ton essai 7 jours gratuit pour débloquer ce jeu.",
+      };
+    }
+  }
+
   try {
     // 2. Générer un code unique via la function Postgres
     const { data: codeData, error: codeError } = await supabase

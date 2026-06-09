@@ -144,18 +144,22 @@ export default function InteractiveHome() {
             Aucune app à installer. Pensé pour les bars, MJC et lieux d'animation.
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-            <Link href="/dashboard" className="btn-tenant">
-              Tester la démo
+            <Link
+              href="/dashboard?demo=loup_garou"
+              className="btn-tenant inline-flex items-center gap-2"
+            >
+              <span aria-hidden="true">🐺</span>
+              Joue à Loup-Garou GRATUIT
             </Link>
             <a
               href="#tarifs"
               className="rounded-xl border border-white/20 px-5 py-3 font-semibold text-white/90 transition hover:bg-white/5"
             >
-              Voir les tarifs
+              Voir les autres jeux
             </a>
           </div>
-          <p className="mt-6 text-xs text-white/40">
-            Sans engagement · Tu résilies quand tu veux
+          <p className="mt-6 text-xs text-emerald-300/80">
+            ✨ Loup-Garou est gratuit à vie. Les 6 autres jeux : essai 7 jours sans CB.
           </p>
         </div>
       </section>

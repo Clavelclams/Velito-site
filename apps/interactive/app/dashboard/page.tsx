@@ -21,6 +21,8 @@ import { createClient } from "@/lib/supabase/server";
 import DashboardLoggedOut from "./DashboardLoggedOut";
 import DashboardAudio from "./DashboardAudio";
 import { createSessionWithGameAction } from "../host/actions";
+import { activateTrialAction, declareIndividualAction } from "./subscription-actions";
+import SiretActivation from "./SiretActivation";
 
 // Catalogue jeux — source unique de vérité.
 // Tailwind doit "voir" les classes pour les générer au build, donc on les
@@ -184,6 +186,60 @@ export default async function Dashboard() {
 
   const availableCount = JEUX.filter((j) => j.available).length;
 
+  // ─── Récupère le statut d'abonnement ───
+  let subscription: {
+    plan: string;
+    trial_ends_at: string | null;
+    paid_until: string | null;
+    account_type: string | null;
+  } | null = null;
+  let hasPremiumAccess = false;
+  try {
+    const supabase = await createClient();
+    const { data: subData } = await supabase
+      .schema("shared" as never)
+      .from("subscriptions")
+      .select("plan, trial_ends_at, paid_until, account_type")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (subData) {
+      subscription = subData as typeof subscription;
+      // Trial actif ?
+      if (
+        subscription?.plan === "trial" &&
+        subscription.trial_ends_at &&
+        new Date(subscription.trial_ends_at) > new Date()
+      ) {
+        hasPremiumAccess = true;
+      }
+      // Abo payant actif ?
+      if (
+        subscription &&
+        ["early_adopter", "standard", "multi_sites"].includes(subscription.plan) &&
+        subscription.paid_until &&
+        new Date(subscription.paid_until) > new Date()
+      ) {
+        hasPremiumAccess = true;
+      }
+    }
+  } catch (e) {
+    console.error("[/dashboard] subscription fetch failed:", e);
+  }
+
+  // Jour J de l'essai (si applicable)
+  let trialDaysLeft: number | null = null;
+  if (
+    subscription?.plan === "trial" &&
+    subscription.trial_ends_at &&
+    hasPremiumAccess
+  ) {
+    const msLeft = new Date(subscription.trial_ends_at).getTime() - Date.now();
+    trialDaysLeft = Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
+  }
+  const hasUsedTrial = subscription?.trial_ends_at !== null && subscription?.trial_ends_at !== undefined;
+  const isIndividual = subscription?.account_type === "individual";
+  const hasDeclared = subscription !== null;
+
   // ─── Stats du host (sessions, joueurs, parties) ───
   // On le fait en best-effort : si une requête échoue on garde le placeholder.
   let stats = { sessions: 0, joueurs: 0, parties: 0, emails: 0 };
@@ -238,6 +294,58 @@ export default async function Dashboard() {
         <span aria-hidden="true">←</span> Retour à l&apos;accueil
       </Link>
 
+      {/* Bandeau abonnement selon le statut */}
+      {/* Cas 1 : pas encore déclaré → flow SIRET en 2 étapes (preview INSEE) */}
+      {!hasDeclared && !hasPremiumAccess && (
+        <div className="mb-8">
+          <SiretActivation />
+        </div>
+      )}
+
+      {/* Cas 2 : déclaré particulier, pas abonné */}
+      {hasDeclared && isIndividual && !hasPremiumAccess && (
+        <div className="mb-8 rounded-2xl border border-white/15 bg-white/[0.03] p-5">
+          <div className="flex items-start gap-3">
+            <span aria-hidden="true" className="text-2xl">👤</span>
+            <div>
+              <p className="text-sm font-semibold text-white">Compte particulier</p>
+              <p className="mt-1 text-sm text-white/70">
+                Loup-Garou reste gratuit pour toi. Pour les autres jeux,{" "}
+                <Link href="/#tarifs" className="font-bold text-tenant underline">
+                  abonne-toi
+                </Link>
+                {" "}directement (pas d&apos;essai pour les particuliers).
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {hasPremiumAccess && trialDaysLeft !== null && (
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-400/30 bg-amber-500/10 p-4">
+          <p className="text-sm text-amber-200">
+            ⏳ Essai en cours — il te reste{" "}
+            <span className="font-bold">{trialDaysLeft} jour{trialDaysLeft > 1 ? "s" : ""}</span>.
+            Passe au plan Early Adopters{" "}
+            <span className="font-bold">14,99€/vie</span> pour garder l&apos;accès.
+          </p>
+          <Link href="/#tarifs" className="text-xs font-semibold text-amber-200 underline">
+            Voir les tarifs
+          </Link>
+        </div>
+      )}
+      {!hasPremiumAccess && hasUsedTrial && (
+        <div className="mb-8 rounded-2xl border border-white/15 bg-white/[0.03] p-5">
+          <p className="text-sm text-white/70">
+            🔒 Ton essai est terminé. Pour rejouer à tous les jeux, abonne-toi.{" "}
+            <Link href="/#tarifs" className="font-bold text-tenant underline">
+              Voir les tarifs
+            </Link>
+            {" · "}Loup-Garou reste accessible gratuitement.
+          </p>
+        </div>
+      )}
+
       <header className="border-b border-white/10 pb-8">
         <p className="text-xs uppercase tracking-[0.3em] text-white/40">
           Espace animateur
@@ -258,7 +366,11 @@ export default async function Dashboard() {
       <section className="mt-10">
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {JEUX.map((jeu) => (
-            <GameCardItem key={jeu.nom} jeu={jeu} />
+            <GameCardItem
+              key={jeu.nom}
+              jeu={jeu}
+              locked={!hasPremiumAccess && jeu.id !== "loup_garou" && jeu.available}
+            />
           ))}
         </div>
       </section>
@@ -294,7 +406,13 @@ export default async function Dashboard() {
   );
 }
 
-function GameCardItem({ jeu }: { jeu: GameCard }) {
+function GameCardItem({
+  jeu,
+  locked = false,
+}: {
+  jeu: GameCard;
+  locked?: boolean;
+}) {
   const baseCard =
     "group relative flex h-full flex-col overflow-hidden rounded-2xl border transition";
 
@@ -311,6 +429,31 @@ function GameCardItem({ jeu }: { jeu: GameCard }) {
     );
   }
 
+  // Card verrouillée — pas d'abo et jeu non gratuit
+  if (locked) {
+    return (
+      <div
+        className={
+          baseCard +
+          " relative cursor-not-allowed border-white/10 bg-white/[0.02] opacity-70"
+        }
+      >
+        <CardInner jeu={jeu} />
+        <div className="absolute inset-0 grid place-items-center bg-ink/60 backdrop-blur-[2px]">
+          <div className="rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-2 text-center">
+            <p className="font-display text-sm font-black text-emerald-300">
+              🔒 Active l&apos;essai gratuit
+            </p>
+            <p className="mt-1 text-[10px] uppercase tracking-widest text-emerald-200/70">
+              7 jours · sans CB
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Card gratuite (Loup-Garou) ou abonné — bouton normal
   return (
     <form action={createSessionWithGameAction} className="contents">
       <input type="hidden" name="game_type" value={jeu.id ?? ""} />
@@ -326,6 +469,11 @@ function GameCardItem({ jeu }: { jeu: GameCard }) {
         }
       >
         <CardInner jeu={jeu} />
+        {jeu.id === "loup_garou" && (
+          <span className="absolute right-3 top-3 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-emerald-300">
+            Gratuit
+          </span>
+        )}
       </button>
     </form>
   );

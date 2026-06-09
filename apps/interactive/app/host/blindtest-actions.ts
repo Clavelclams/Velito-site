@@ -23,6 +23,51 @@ interface ActionResult {
  * Skip ceux qui n'ont pas de previewUrl iTunes. Retry sur d'autres jusqu'à
  * avoir N tracks.
  */
+/**
+ * Pioche 3 leurres en favorisant des artistes DIFFÉRENTS du morceau cible.
+ * Bug précédent : on prenait les 3 decoys hardcodés qui étaient souvent du même
+ * artiste → frustrant. Maintenant on pioche dans la banque entière et on
+ * privilégie la diversité.
+ */
+function pickDiverseDecoys(
+  correctArtist: string,
+  count: number = 3
+): string[] {
+  const normalizeArtist = (s: string) =>
+    s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").split("—")[0]?.trim() ?? "";
+  const correctNorm = normalizeArtist(correctArtist);
+
+  // Pool de TOUS les correctLabels de la banque (pour les utiliser comme leurres)
+  const allOtherLabels = BLIND_TRACKS
+    .map((t) => t.correctLabel)
+    .filter((label) => normalizeArtist(label) !== correctNorm);
+
+  const shuffled = shuffle(allOtherLabels);
+  const used: string[] = [];
+  const usedArtists = new Set<string>([correctNorm]);
+
+  for (const label of shuffled) {
+    if (used.length >= count) break;
+    const artist = normalizeArtist(label);
+    // Privilégie un artiste pas encore utilisé
+    if (!usedArtists.has(artist)) {
+      used.push(label);
+      usedArtists.add(artist);
+    }
+  }
+
+  // Si on n'a pas atteint count (banque trop petite ou pleine de mêmes artistes),
+  // on complète avec les premiers leurres restants
+  if (used.length < count) {
+    for (const label of shuffled) {
+      if (used.length >= count) break;
+      if (!used.includes(label)) used.push(label);
+    }
+  }
+
+  return used.slice(0, count);
+}
+
 async function prefetchRounds(count: number): Promise<BlindTestRound[]> {
   const pool = shuffle(BLIND_TRACKS);
   const rounds: BlindTestRound[] = [];
@@ -32,22 +77,27 @@ async function prefetchRounds(count: number): Promise<BlindTestRound[]> {
 
     const enriched = await fetchITunesTrack(track.query);
     if (!enriched) {
-      // Pas de preview dispo → on saute
       console.warn(`[blindtest] no preview for ${track.query}, skipping`);
       continue;
     }
 
-    // Mélange les 4 labels (correct + 3 decoys)
-    const allLabels = [track.correctLabel, ...track.decoys];
+    // Utilise le VRAI titre iTunes pour la bonne réponse (pour matcher l'audio)
+    const correctLabel = `${enriched.realTrackName} — ${enriched.realArtistName}`;
+
+    // Pioche 3 leurres diversifiés d'artistes différents
+    const decoys = pickDiverseDecoys(enriched.realArtistName, 3);
+
+    // Mélange les 4 labels
+    const allLabels = [correctLabel, ...decoys];
     const shuffled = shuffle(allLabels);
-    const correctIndex = shuffled.indexOf(track.correctLabel);
+    const correctIndex = shuffled.indexOf(correctLabel);
 
     rounds.push({
       track: {
         id: track.id,
         query: track.query,
-        correctLabel: track.correctLabel,
-        decoys: track.decoys,
+        correctLabel,
+        decoys: [decoys[0] ?? "?", decoys[1] ?? "?", decoys[2] ?? "?"],
         theme: track.theme,
         previewUrl: enriched.previewUrl,
         artworkUrl: enriched.artworkUrl,

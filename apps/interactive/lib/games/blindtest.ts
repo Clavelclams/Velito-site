@@ -714,7 +714,13 @@ export interface BlindTestState {
  */
 export async function fetchITunesTrack(
   query: string
-): Promise<{ previewUrl: string; artworkUrl: string } | null> {
+): Promise<{
+  previewUrl: string;
+  artworkUrl: string;
+  /** Vrai titre retourné par iTunes (pour s'assurer que l'affichage match l'audio). */
+  realTrackName: string;
+  realArtistName: string;
+} | null> {
   try {
     const url = new URL("https://itunes.apple.com/search");
     url.searchParams.set("term", query);
@@ -728,16 +734,23 @@ export async function fetchITunesTrack(
       results: Array<{
         previewUrl?: string;
         artworkUrl100?: string;
+        trackName?: string;
+        artistName?: string;
       }>;
     };
 
     for (const r of data.results ?? []) {
-      if (r.previewUrl) {
+      if (r.previewUrl && r.trackName && r.artistName) {
         const artworkUrl =
           r.artworkUrl100?.replace("100x100bb", "600x600bb") ??
           r.artworkUrl100 ??
           "";
-        return { previewUrl: r.previewUrl, artworkUrl };
+        return {
+          previewUrl: r.previewUrl,
+          artworkUrl,
+          realTrackName: r.trackName,
+          realArtistName: r.artistName,
+        };
       }
     }
     return null;
