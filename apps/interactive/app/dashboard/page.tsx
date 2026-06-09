@@ -201,6 +201,16 @@ export default async function Dashboard() {
 
   const availableCount = JEUX.filter((j) => j.available).length;
 
+  // ─── Bypass super-admin (Clavel, président SASU VENA) ────────────────
+  // Configurable via env SUPERADMIN_EMAILS="contact@velito.fr,xxx@yyy.fr"
+  // Si non set, fallback sur les emails connus en dur.
+  const SUPERADMIN_EMAILS = (process.env.SUPERADMIN_EMAILS ??
+    "contact@velito.fr,clavelclams12@gmail.com")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  const isSuperAdmin = SUPERADMIN_EMAILS.includes(userEmail.toLowerCase());
+
   // ─── Récupère le statut d'abonnement ───
   // Type explicite extrait pour pouvoir caster en local (le client Supabase
   // typé via `.schema("shared" as never)` renvoie `never` et casse le narrowing).
@@ -211,7 +221,8 @@ export default async function Dashboard() {
     account_type: string | null;
   };
   let subscription: Subscription | null = null;
-  let hasPremiumAccess = false;
+  // Super-admin a TOUJOURS accès premium, pas de check abonnement.
+  let hasPremiumAccess = isSuperAdmin;
   try {
     const supabase = await createClient();
     const { data: subData } = await supabase
@@ -314,16 +325,33 @@ export default async function Dashboard() {
         <span aria-hidden="true">←</span> Retour à l&apos;accueil
       </Link>
 
-      {/* Bandeau abonnement selon le statut */}
+      {/* Bandeau super-admin (Clavel, président SASU VENA) — accès illimité */}
+      {isSuperAdmin && (
+        <div className="mb-8 rounded-2xl border border-amber-400/40 bg-gradient-to-r from-amber-500/15 to-orange-500/10 p-4">
+          <div className="flex items-center gap-3">
+            <span aria-hidden="true" className="text-2xl">👑</span>
+            <div>
+              <p className="text-sm font-bold text-amber-200">
+                Mode Admin VENA — Accès illimité
+              </p>
+              <p className="mt-0.5 text-xs text-amber-100/70">
+                Tu es président de la SASU. Tous les jeux sont débloqués sans abonnement.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bandeau abonnement selon le statut (caché pour les super-admins) */}
       {/* Cas 1 : pas encore déclaré → flow SIRET en 2 étapes (preview INSEE) */}
-      {!hasDeclared && !hasPremiumAccess && (
+      {!isSuperAdmin && !hasDeclared && !hasPremiumAccess && (
         <div className="mb-8">
           <SiretActivation />
         </div>
       )}
 
-      {/* Cas 2 : déclaré particulier, pas abonné */}
-      {hasDeclared && isIndividual && !hasPremiumAccess && (
+      {/* Cas 2 : déclaré particulier, pas abonné (caché pour super-admin) */}
+      {!isSuperAdmin && hasDeclared && isIndividual && !hasPremiumAccess && (
         <div className="mb-8 rounded-2xl border border-white/15 bg-white/[0.03] p-5">
           <div className="flex items-start gap-3">
             <span aria-hidden="true" className="text-2xl">👤</span>
@@ -341,7 +369,7 @@ export default async function Dashboard() {
         </div>
       )}
 
-      {hasPremiumAccess && trialDaysLeft !== null && (
+      {!isSuperAdmin && hasPremiumAccess && trialDaysLeft !== null && (
         <div className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-400/30 bg-amber-500/10 p-4">
           <p className="text-sm text-amber-200">
             ⏳ Essai en cours — il te reste{" "}
@@ -354,7 +382,7 @@ export default async function Dashboard() {
           </Link>
         </div>
       )}
-      {!hasPremiumAccess && hasUsedTrial && (
+      {!isSuperAdmin && !hasPremiumAccess && hasUsedTrial && (
         <div className="mb-8 rounded-2xl border border-white/15 bg-white/[0.03] p-5">
           <p className="text-sm text-white/70">
             🔒 Ton essai est terminé. Pour rejouer à tous les jeux, abonne-toi.{" "}
@@ -419,8 +447,7 @@ export default async function Dashboard() {
       </section>
 
       <p className="mt-12 text-xs italic text-white/40">
-        Stats branchées sur données réelles bientôt — la collecte est déjà
-        active dans Postgres.
+        Stats agrégées depuis tes sessions Postgres en temps réel.
       </p>
     </main>
   );
