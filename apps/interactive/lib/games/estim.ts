@@ -1,169 +1,745 @@
 /**
- * Estim' — Le plus proche du chiffre exact gagne.
+ * Estim' — Combien ça vaut ? Estimation de prix.
+ *
+ * Concept : on montre la photo d'un objet / monument / produit et chaque
+ * joueur tape une estimation en euros. Le plus proche gagne le plus de points.
  *
  * Mécanique :
- *  - 5 questions chiffrées par partie
- *  - 30s par question : le joueur tape un nombre (peut le modifier)
- *  - Au reveal : on calcule la diff absolue entre la valeur réelle et la guess
- *  - Scoring basé sur la diff en % de la valeur réelle :
- *      Exact (≤1%)        → 100 pts + bonus 1er = 150
- *      Très proche (≤5%)  → 80 pts
- *      Proche (≤15%)      → 50 pts
- *      Moyen (≤30%)       → 25 pts
- *      Loin (>30%)        → 10 pts
- *      Pas de réponse     → 0 pt
+ *  - 5 objets par partie
+ *  - 30s par objet : le joueur tape son prix (peut le modifier)
+ *  - Au reveal : on calcule la diff absolue + diff % du vrai prix
+ *  - Scoring basé sur la diff en % du vrai prix
  *
- *  - Bonus rang : le 1er du classement gagne +50 pts si dans top 3 par diff
+ * Images :
+ *  - Stockées dans /public/images/estim/<id>.jpg (à déposer manuellement)
+ *  - Si l'image n'existe pas → emoji fallback
+ *  - Format conseillé : 800×600 jpg/webp, optimisées (~80 Ko)
  */
 
 export interface EstimQuestion {
   id: string;
-  /** La question : "Combien d'habitants à Paris ?" */
-  question: string;
-  /** La vraie valeur (peut être très grande). */
-  answer: number;
-  /** Unité affichée à côté de la réponse ("habitants", "millions €", "min"). */
-  unit?: string;
-  /** Sous-titre / contexte affiché en petit ("source : INSEE 2023"). */
+  /** Le nom affiché (titre de la question) */
+  label: string;
+  /** Détail descriptif court ("iPhone 16 Pro Max · 256 Go · neuf"). */
   hint?: string;
+  /** Prix RÉEL en euros (HT ou TTC selon ce qui est cohérent côté pub). */
+  priceEur: number;
+  /** Path image dans /public/images/estim/. Si absent : emoji fallback. */
+  image?: string;
+  /** Emoji fallback si l'image manque. */
+  emoji?: string;
   /** Thème pour catégorisation visuelle. */
   theme?: string;
+  /** Source du prix (pour traçabilité, jamais affichée à l'écran). */
+  source?: string;
+  /**
+   * Question "blague" — pas de vrai prix.
+   *   - Le reveal affiche "INESTIMABLE" au lieu du chiffre
+   *   - Tous les joueurs gagnent 50 pts (pas de scoring diff)
+   *   - Pas de bonus rang
+   * Utilisé pour la question "Combien vaut Clavel ?" qui revient parfois.
+   */
+  joke?: boolean;
 }
 
+/**
+ * Banque V1 — 30 objets variés.
+ *
+ * Pour ajouter des images, dépose les fichiers dans :
+ *   apps/interactive/public/images/estim/<id>.jpg
+ *
+ * Si pas d'image, on affiche l'emoji.
+ */
 export const ESTIM_QUESTIONS: EstimQuestion[] = [
-  // ─── Culture pop ───
+  // ─────────────────────────────────────────────────────────────────────────
+  // PAS CHERS — anchors bas du barème
+  // ─────────────────────────────────────────────────────────────────────────
   {
-    id: "naruto",
-    question: "Combien d'épisodes dans la série Naruto Shippuden ?",
-    answer: 500,
-    unit: "épisodes",
-    hint: "Sans les hors-séries",
-    theme: "Manga",
+    id: "stylo-bic-cristal",
+    label: "Un stylo Bic Cristal (à l'unité)",
+    hint: "Le bic bleu classique, en magasin",
+    priceEur: 0.55,
+    image: "/images/estim/bic-cristal.jpg",
+    emoji: "🖊️",
+    theme: "Pas cher",
+    source: "Cultura 2026",
   },
   {
-    id: "fast-and-furious",
-    question: "Combien de films Fast & Furious existent (sortis ou annoncés) ?",
-    answer: 11,
-    unit: "films",
-    theme: "Cinéma",
+    id: "timbre-lettre-verte",
+    label: "Un timbre Lettre Verte (20g)",
+    hint: "Tarif unitaire La Poste 2026",
+    priceEur: 1.39,
+    emoji: "✉️",
+    theme: "Pas cher",
+    source: "La Poste 2026",
   },
   {
-    id: "harry-potter",
-    question: "Combien de pages a le 1er tome de Harry Potter à l'École des Sorciers (édition française) ?",
-    answer: 308,
-    unit: "pages",
-    theme: "Littérature",
-  },
-  // ─── France / Amiens ───
-  {
-    id: "habitants-amiens",
-    question: "Combien d'habitants à Amiens (commune) ?",
-    answer: 134000,
-    unit: "habitants",
-    hint: "Source : INSEE 2023",
-    theme: "Amiens",
+    id: "baguette-tradition",
+    label: "Une baguette tradition à Paris",
+    hint: "Boulangerie de quartier 2026",
+    priceEur: 1.6,
+    image: "/images/estim/baguette.jpg",
+    emoji: "🥖",
+    theme: "Pas cher",
+    source: "Moyenne Paris 2026",
   },
   {
-    id: "habitants-paris",
-    question: "Combien d'habitants à Paris (intra-muros) ?",
-    answer: 2102650,
-    unit: "habitants",
-    hint: "Source : INSEE 2023",
-    theme: "France",
+    id: "croissant-paris",
+    label: "Un croissant au beurre à Paris",
+    hint: "Boulangerie de quartier",
+    priceEur: 1.5,
+    image: "/images/estim/croissant.jpg",
+    emoji: "🥐",
+    theme: "Pas cher",
+    source: "Moyenne Paris 2026",
   },
   {
-    id: "distance-amiens-paris",
-    question: "Combien de kilomètres entre Amiens et Paris (par la route) ?",
-    answer: 145,
-    unit: "km",
-    theme: "Amiens",
+    id: "cafe-bar-amiens",
+    label: "Un café expresso au bar à Amiens",
+    hint: "Au comptoir d'un café classique",
+    priceEur: 1.6,
+    image: "/images/estim/cafe.jpg",
+    emoji: "☕",
+    theme: "Pas cher",
+    source: "Moyenne Amiens 2026",
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // TECH ICONIQUES — prix officiels stables
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: "iphone-16-pro-max",
+    label: "iPhone 16 Pro Max",
+    hint: "256 Go · neuf · prix officiel Apple",
+    priceEur: 1479,
+    image: "/images/estim/iphone-16-pro-max.jpg",
+    emoji: "📱",
+    theme: "Tech",
+    source: "apple.com 2026",
   },
   {
-    id: "tour-eiffel-hauteur",
-    question: "Combien de mètres mesure la tour Eiffel (antenne comprise) ?",
-    answer: 330,
-    unit: "mètres",
-    theme: "France",
+    id: "ps5-pro",
+    label: "PlayStation 5 Pro",
+    hint: "Console neuve, sans manette supp.",
+    priceEur: 799,
+    image: "/images/estim/ps5-pro.jpg",
+    emoji: "🎮",
+    theme: "Tech",
+    source: "Sony 2026",
   },
-  // ─── Sport ───
   {
-    id: "fifa-membres",
-    question: "Combien de fédérations sont membres de la FIFA ?",
-    answer: 211,
-    unit: "fédérations",
+    id: "macbook-pro-m4",
+    label: "MacBook Pro M4",
+    hint: "14 pouces · 16 Go RAM · 512 Go",
+    priceEur: 2249,
+    image: "/images/estim/macbook-pro-m4.jpg",
+    emoji: "💻",
+    theme: "Tech",
+    source: "apple.com 2026",
+  },
+  {
+    id: "airpods-pro-2",
+    label: "AirPods Pro 2",
+    hint: "USB-C · étui MagSafe",
+    priceEur: 279,
+    image: "/images/estim/airpods-pro-2.jpg",
+    emoji: "🎧",
+    theme: "Tech",
+    source: "apple.com 2026",
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // VOITURES — du compact à l'hypercar
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: "renault-5-electrique",
+    label: "Renault 5 E-Tech 100% électrique",
+    hint: "Version Techno · neuve · 2026",
+    priceEur: 27900,
+    image: "/images/estim/renault-5-electrique.jpg",
+    emoji: "🚗",
+    theme: "Voiture",
+    source: "renault.fr 2026",
+  },
+  {
+    id: "tesla-model-3",
+    label: "Tesla Model 3 Long Range",
+    hint: "Neuve · 2 moteurs · prix de base",
+    priceEur: 49990,
+    image: "/images/estim/tesla-model-3.jpg",
+    emoji: "🚙",
+    theme: "Voiture",
+    source: "tesla.com 2026",
+  },
+  {
+    id: "ferrari-296-gtb",
+    label: "Ferrari 296 GTB",
+    hint: "Neuve · prix de base en France",
+    priceEur: 269750,
+    image: "/images/estim/ferrari-296-gtb.jpg",
+    emoji: "🏎️",
+    theme: "Voiture",
+    source: "ferrari.com 2026",
+  },
+  {
+    id: "bugatti-tourbillon",
+    label: "Bugatti Tourbillon",
+    hint: "Neuve · 250 exemplaires uniquement au monde",
+    priceEur: 3800000,
+    image: "/images/estim/bugatti-tourbillon.jpg",
+    emoji: "🏎️",
+    theme: "Voiture",
+    source: "bugatti.com 2026",
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // ICONIQUES IDENTIFIABLES — prix officiel constructeur
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: "rolex-submariner",
+    label: "Rolex Submariner Date",
+    hint: "Acier · neuve · prix boutique officiel",
+    priceEur: 10350,
+    image: "/images/estim/rolex-submariner.jpg",
+    emoji: "⌚",
+    theme: "Iconique",
+    source: "rolex.com 2026",
+  },
+  {
+    id: "air-jordan-1-chicago",
+    label: "Air Jordan 1 Retro High OG Chicago",
+    hint: "Coloris originel · prix retail",
+    priceEur: 200,
+    image: "/images/estim/air-jordan-1.jpg",
+    emoji: "👟",
+    theme: "Iconique",
+    source: "nike.com 2026",
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // MONUMENTS / VALEUR ESTIMÉE — chiffres documentés
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: "tour-eiffel-valeur",
+    label: "La Tour Eiffel (valeur économique estimée)",
+    hint: "Étude CCI Paris Île-de-France 2012",
+    priceEur: 434000000000, // 434 milliards
+    image: "/images/estim/tour-eiffel.jpg",
+    emoji: "🗼",
+    theme: "Monument",
+    source: "Monitor Group / CCI Paris 2012",
+  },
+  {
+    id: "burj-khalifa-construction",
+    label: "Coût de construction du Burj Khalifa (Dubaï)",
+    hint: "Tour la plus haute du monde · livrée 2010",
+    priceEur: 1300000000, // 1,3 milliard $
+    image: "/images/estim/burj-khalifa.jpg",
+    emoji: "🏙️",
+    theme: "Monument",
+    source: "Emaar Properties officiel",
+  },
+  {
+    id: "stade-france-construction",
+    label: "Coût de construction du Stade de France",
+    hint: "Saint-Denis · ouvert 1998",
+    priceEur: 364000000,
+    image: "/images/estim/stade-de-france.jpg",
+    emoji: "🏟️",
+    theme: "Monument",
+    source: "Consortium SDF 1998",
+  },
+  {
+    id: "concorde-prix",
+    label: "Prix de vente neuf d'un Concorde (Air France)",
+    hint: "Prix unitaire à la livraison 1976",
+    priceEur: 23000000, // ~150 M FF de l'époque
+    image: "/images/estim/concorde.jpg",
+    emoji: "✈️",
+    theme: "Monument",
+    source: "Aérospatiale/BAC 1976",
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // ART / RECORDS — chiffres de ventes publiques vérifiables
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: "joconde-estimation",
+    label: "La Joconde (estimation assurance Louvre)",
+    hint: "Tableau de Léonard de Vinci · 1503",
+    priceEur: 850000000,
+    image: "/images/estim/joconde.jpg",
+    emoji: "🖼️",
+    theme: "Art",
+    source: "Estimation Louvre / Forbes",
+  },
+  {
+    id: "monet-nympheas",
+    label: "Tableau « Nymphéas » de Monet (record vente)",
+    hint: "Adjudication Sotheby's Londres 2018",
+    priceEur: 76200000,
+    image: "/images/estim/monet-nympheas.jpg",
+    emoji: "🎨",
+    theme: "Art",
+    source: "Sotheby's 2018",
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // BOUFFE EXCEPTIONNELLE
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: "kg-truffe-noire",
+    label: "1 kg de truffe noire fraîche du Périgord",
+    hint: "Prix grossiste en pleine saison",
+    priceEur: 1200,
+    image: "/images/estim/truffe-noire.jpg",
+    emoji: "🍄",
+    theme: "Bouffe rare",
+    source: "Marché Périgord 2025",
+  },
+  {
+    id: "kg-caviar-beluga",
+    label: "100 g de caviar Beluga sauvage",
+    hint: "Grade premium · Maison Nordique 2025",
+    priceEur: 1100,
+    image: "/images/estim/caviar.jpg",
+    emoji: "🥄",
+    theme: "Bouffe rare",
+    source: "Maisons spécialisées 2025",
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // ANIMAUX (du quotidien au luxe)
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: "vache-laitiere",
+    label: "Une vache laitière Prim'Holstein (adulte)",
+    hint: "Génétique standard · marché agricole français",
+    priceEur: 1500,
+    image: "/images/estim/vache.jpg",
+    emoji: "🐄",
+    theme: "Animal",
+    source: "Marché agricole FR 2025",
+  },
+  {
+    id: "cheval-trotteur",
+    label: "Un cheval de trot prêt à la course",
+    hint: "3 ans, génétique correcte, sans palmarès",
+    priceEur: 12000,
+    image: "/images/estim/cheval-trotteur.jpg",
+    emoji: "🐎",
+    theme: "Animal",
+    source: "Estimation Le Trot 2025",
+  },
+  {
+    id: "chiot-bouledogue",
+    label: "Un chiot Bouledogue Français (LOF)",
+    hint: "Élevage reconnu · 3 mois",
+    priceEur: 2200,
+    image: "/images/estim/bouledogue.jpg",
+    emoji: "🐶",
+    theme: "Animal",
+    source: "Sites d'éleveurs 2025",
+  },
+  {
+    id: "chat-bengal",
+    label: "Un chaton Bengal (race LOOF)",
+    hint: "Élevage agréé · 2 mois",
+    priceEur: 1500,
+    image: "/images/estim/chat-bengal.jpg",
+    emoji: "🐱",
+    theme: "Animal",
+    source: "Sites d'éleveurs 2025",
+  },
+  {
+    id: "poule-pondeuse",
+    label: "Une poule pondeuse adulte",
+    hint: "Race rousse · marché de campagne",
+    priceEur: 15,
+    image: "/images/estim/poule.jpg",
+    emoji: "🐔",
+    theme: "Animal",
+    source: "Coopératives 2025",
+  },
+  {
+    id: "perroquet-gris-gabon",
+    label: "Un perroquet gris du Gabon",
+    hint: "Jeune adulte · animalerie spécialisée",
+    priceEur: 1800,
+    image: "/images/estim/perroquet.jpg",
+    emoji: "🦜",
+    theme: "Animal",
+    source: "Animaleries spécialisées",
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // TRANSPORTS (du vélo au yacht)
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: "trottinette-electrique-xiaomi",
+    label: "Une trottinette électrique Xiaomi Pro 2",
+    hint: "Modèle pliable adulte · neuve",
+    priceEur: 549,
+    image: "/images/estim/trottinette-xiaomi.jpg",
+    emoji: "🛴",
+    theme: "Transport",
+    source: "mi.com 2026",
+  },
+  {
+    id: "scooter-yamaha-tmax",
+    label: "Un scooter Yamaha TMAX 560",
+    hint: "Neuf · prix de base France",
+    priceEur: 13499,
+    image: "/images/estim/yamaha-tmax.jpg",
+    emoji: "🛵",
+    theme: "Transport",
+    source: "yamaha-motor.eu 2026",
+  },
+  {
+    id: "voilier-occasion",
+    label: "Un voilier de 8m d'occasion (15 ans)",
+    hint: "Coque polyester · bon état général",
+    priceEur: 28000,
+    image: "/images/estim/voilier.jpg",
+    emoji: "⛵",
+    theme: "Transport",
+    source: "Le Bon Coin nautisme 2025",
+  },
+  {
+    id: "yacht-azimut-60",
+    label: "Un yacht Azimut 60 neuf",
+    hint: "Yacht italien · prix de base",
+    priceEur: 1900000,
+    image: "/images/estim/yacht-azimut.jpg",
+    emoji: "🛥️",
+    theme: "Transport",
+    source: "azimutyachts.com 2026",
+  },
+  {
+    id: "billet-avion-paris-ny",
+    label: "Un billet avion Paris ↔ New York (éco)",
+    hint: "Aller-retour · classe éco · réservé 2 mois avant",
+    priceEur: 650,
+    image: "/images/estim/avion-paris-ny.jpg",
+    emoji: "✈️",
+    theme: "Transport",
+    source: "Skyscanner moyenne 2025",
+  },
+  {
+    id: "croisiere-mediterranee",
+    label: "Une croisière 7 jours en Méditerranée (MSC)",
+    hint: "Cabine intérieure · 2 adultes · all-in",
+    priceEur: 999,
+    image: "/images/estim/croisiere-msc.jpg",
+    emoji: "🚢",
+    theme: "Transport",
+    source: "msccroisieres.fr 2026",
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // MAISON / MOBILIER (vraies vies, vrais prix)
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: "machine-cafe-nespresso",
+    label: "Machine Nespresso Vertuo Pop",
+    hint: "Modèle d'entrée · neuf",
+    priceEur: 79,
+    image: "/images/estim/nespresso-vertuo-pop.jpg",
+    emoji: "☕",
+    theme: "Maison",
+    source: "Nespresso 2026",
+  },
+  {
+    id: "velo-decathlon-electrique",
+    label: "Vélo électrique Decathlon Riverside 500E",
+    hint: "VTC électrique · neuf",
+    priceEur: 1499,
+    image: "/images/estim/decathlon-riverside-500e.jpg",
+    emoji: "🚲",
+    theme: "Maison",
+    source: "decathlon.fr 2026",
+  },
+  {
+    id: "tv-lg-oled-55",
+    label: "TV LG OLED Evo C4 55 pouces",
+    hint: "Modèle 2024 · neuf",
+    priceEur: 1499,
+    image: "/images/estim/lg-oled-c4.jpg",
+    emoji: "📺",
+    theme: "Maison",
+    source: "lg.com 2026",
+  },
+  {
+    id: "canape-ikea-kivik",
+    label: "Canapé IKEA Kivik 3 places (housse compacte)",
+    hint: "Neuf · livraison incluse",
+    priceEur: 699,
+    image: "/images/estim/ikea-kivik.jpg",
+    emoji: "🛋️",
+    theme: "Maison",
+    source: "ikea.fr 2026",
+  },
+  {
+    id: "frigo-americain-samsung",
+    label: "Un frigo américain Samsung 4 portes",
+    hint: "615 L · neuf · inox",
+    priceEur: 1799,
+    image: "/images/estim/frigo-samsung.jpg",
+    emoji: "🧊",
+    theme: "Maison",
+    source: "samsung.com 2026",
+  },
+  {
+    id: "matelas-bultex",
+    label: "Un matelas Bultex 160×200 cm",
+    hint: "Modèle Lyon mémoire de forme · neuf",
+    priceEur: 549,
+    image: "/images/estim/matelas-bultex.jpg",
+    emoji: "🛏️",
+    theme: "Maison",
+    source: "Conforama 2026",
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // BOUFFE & BOISSONS (au-delà du quotidien)
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: "kg-boeuf-charolais",
+    label: "1 kg d'entrecôte de bœuf Charolais (boucher)",
+    hint: "Boucherie de quartier · 2025",
+    priceEur: 32,
+    image: "/images/estim/boeuf-charolais.jpg",
+    emoji: "🥩",
+    theme: "Bouffe",
+    source: "Moyenne boucherie FR 2025",
+  },
+  {
+    id: "foie-gras-mi-cuit",
+    label: "Un foie gras mi-cuit (200g, conserve)",
+    hint: "Marque artisanale française",
+    priceEur: 24,
+    image: "/images/estim/foie-gras.jpg",
+    emoji: "🦆",
+    theme: "Bouffe",
+    source: "Maisons artisanales 2025",
+  },
+  {
+    id: "bouteille-veuve-clicquot",
+    label: "Une bouteille de Veuve Clicquot Brut (75 cl)",
+    hint: "En cave · pas en grande surface",
+    priceEur: 55,
+    image: "/images/estim/veuve-clicquot.jpg",
+    emoji: "🍾",
+    theme: "Bouffe",
+    source: "Cavistes FR 2026",
+  },
+  {
+    id: "petit-dej-hotel-luxe",
+    label: "Un petit-déjeuner buffet au Plaza Athénée",
+    hint: "Paris · par personne · 2026",
+    priceEur: 65,
+    image: "/images/estim/petit-dej-plaza.jpg",
+    emoji: "🥞",
+    theme: "Bouffe",
+    source: "dorchestercollection.com 2026",
+  },
+  {
+    id: "menu-mcdo",
+    label: "Menu Big Mac complet chez McDo France",
+    hint: "Maxi · 2026",
+    priceEur: 11.95,
+    image: "/images/estim/menu-mcdo.jpg",
+    emoji: "🍔",
+    theme: "Bouffe",
+    source: "mcdonalds.fr 2026",
+  },
+  {
+    id: "kebab-amiens",
+    label: "Un menu kebab à Amiens (kebab + frites + boisson)",
+    hint: "Restau de quartier · 2026",
+    priceEur: 9.5,
+    image: "/images/estim/kebab.jpg",
+    emoji: "🥙",
+    theme: "Bouffe",
+    source: "Moyenne Amiens 2026",
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SPORT & LOISIRS
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: "velo-tour-france-pro",
+    label: "Un vélo pro de Tour de France (Pinarello F)",
+    hint: "Configuration coureur · prix public",
+    priceEur: 14500,
+    image: "/images/estim/pinarello-f.jpg",
+    emoji: "🚴",
     theme: "Sport",
+    source: "pinarello.com 2026",
   },
   {
-    id: "mbappe-buts",
-    question: "Combien de buts Mbappé a-t-il marqué pour l'équipe de France (mai 2026) ?",
-    answer: 50,
-    unit: "buts",
-    hint: "Estimation au lancement Velito Interactive",
+    id: "place-roland-garros",
+    label: "Place finale Roland Garros (Philippe Chatrier)",
+    hint: "Catégorie 1 · officielle FFT",
+    priceEur: 740,
+    image: "/images/estim/roland-garros.jpg",
+    emoji: "🎾",
     theme: "Sport",
+    source: "FFT 2025",
   },
   {
-    id: "marathon",
-    question: "Combien de kilomètres fait un marathon officiel ?",
-    answer: 42.195,
-    unit: "km",
+    id: "abonnement-salle-basic-fit",
+    label: "Un abonnement Basic-Fit Premium (1 an)",
+    hint: "Engagement 12 mois · paiement mensuel",
+    priceEur: 360,
+    image: "/images/estim/basic-fit.jpg",
+    emoji: "💪",
     theme: "Sport",
-  },
-  // ─── Tech / Internet ───
-  {
-    id: "youtube-views-despacito",
-    question: "Combien de milliards de vues a la vidéo Despacito sur YouTube ?",
-    answer: 8.6,
-    unit: "milliards de vues",
-    hint: "Mai 2026",
-    theme: "Internet",
+    source: "basic-fit.com 2026",
   },
   {
-    id: "instagram-users",
-    question: "Combien de milliards d'utilisateurs actifs mensuels sur Instagram ?",
-    answer: 2.5,
-    unit: "milliards",
-    hint: "2025",
-    theme: "Internet",
+    id: "club-golf-callaway",
+    label: "Un driver de golf Callaway Paradym",
+    hint: "Neuf · prix conseillé",
+    priceEur: 599,
+    image: "/images/estim/callaway-driver.jpg",
+    emoji: "⛳",
+    theme: "Sport",
+    source: "callawaygolf.com 2026",
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // BIJOUX / LUXE PRÉCIS
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: "diamant-1-carat",
+    label: "Un diamant taillé de 1 carat (qualité D-VS1)",
+    hint: "GIA certifié · prix grossiste",
+    priceEur: 11000,
+    image: "/images/estim/diamant.jpg",
+    emoji: "💎",
+    theme: "Luxe",
+    source: "Indice Rapaport 2026",
   },
   {
-    id: "snapchat-snaps",
-    question: "Combien de millions de snaps sont envoyés chaque MINUTE dans le monde ?",
-    answer: 4,
-    unit: "millions de snaps",
-    theme: "Internet",
+    id: "lingot-or",
+    label: "Un lingot d'or de 1 kg (cours du jour)",
+    hint: "Or 999 · livraison France 2026",
+    priceEur: 87000,
+    image: "/images/estim/lingot-or.jpg",
+    emoji: "🪙",
+    theme: "Luxe",
+    source: "Cours LBMA 2026",
   },
-  // ─── Géopolitique / monde ───
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // IMMOBILIER (anchors variés)
+  // ─────────────────────────────────────────────────────────────────────────
   {
-    id: "pays-onu",
-    question: "Combien d'États membres à l'ONU ?",
-    answer: 193,
-    unit: "États membres",
-    theme: "Monde",
+    id: "loyer-studio-amiens",
+    label: "Loyer mensuel d'un studio à Amiens centre",
+    hint: "25 m² · charges comprises · 2026",
+    priceEur: 520,
+    image: "/images/estim/studio-amiens.jpg",
+    emoji: "🏠",
+    theme: "Immobilier",
+    source: "Le Bon Coin Amiens 2026",
   },
   {
-    id: "everest-altitude",
-    question: "Combien de mètres mesure l'Everest ?",
-    answer: 8849,
-    unit: "mètres",
-    theme: "Géo",
+    id: "loyer-studio-paris",
+    label: "Loyer mensuel d'un studio à Paris (10e)",
+    hint: "20 m² · charges comprises · 2026",
+    priceEur: 1100,
+    image: "/images/estim/studio-paris.jpg",
+    emoji: "🏙️",
+    theme: "Immobilier",
+    source: "SeLoger Paris 2026",
+  },
+  {
+    id: "maison-saint-tropez",
+    label: "Une villa de 200 m² à Saint-Tropez (achat)",
+    hint: "Avec piscine · vue mer · pas pied dans l'eau",
+    priceEur: 4500000,
+    image: "/images/estim/villa-saint-tropez.jpg",
+    emoji: "🏖️",
+    theme: "Immobilier",
+    source: "MeilleursAgents 2025",
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // CULTURE / FUN
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: "place-coupe-monde-finale",
+    label: "Place finale Coupe du Monde 2022 (Qatar)",
+    hint: "Catégorie 1 · officielle FIFA",
+    priceEur: 1607,
+    image: "/images/estim/cdm-2022.jpg",
+    emoji: "🏆",
+    theme: "Culture",
+    source: "FIFA 2022",
+  },
+  {
+    id: "place-cinema-amiens",
+    label: "Une place de ciné au Gaumont Amiens (adulte)",
+    hint: "Séance normale · 2026",
+    priceEur: 11.5,
+    image: "/images/estim/cine-amiens.jpg",
+    emoji: "🎬",
+    theme: "Culture",
+    source: "Gaumont Amiens 2026",
+  },
+  {
+    id: "place-concert-jul",
+    label: "Une place fosse au concert de Jul à Bercy",
+    hint: "2026 · fosse debout · billet officiel",
+    priceEur: 75,
+    image: "/images/estim/concert-jul.jpg",
+    emoji: "🎤",
+    theme: "Culture",
+    source: "Live Nation 2026",
+  },
+  {
+    id: "billet-disneyland-paris",
+    label: "Un billet 1 jour 1 parc Disneyland Paris (adulte)",
+    hint: "Date flexible · 2026 · plein tarif",
+    priceEur: 105,
+    image: "/images/estim/disneyland-paris.jpg",
+    emoji: "🏰",
+    theme: "Culture",
+    source: "disneylandparis.com 2026",
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SIGNATURE — Clavel (joke, revient parfois)
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: "clavel",
+    label: "Combien vaut Clavel ?",
+    hint: "Fondateur de Velito · réponse libre",
+    priceEur: 0, // ignoré car joke=true
+    image: "/images/estim/clavel.jpg",
+    emoji: "👑",
+    theme: "Signature Velito",
+    joke: true,
   },
 ];
 
 /** Durée d'un round Estim' en secondes. */
-export const ESTIM_ROUND_DURATION_SEC = 30;
+export const ESTIM_ROUND_DURATION_SEC = 25;
 /** Durée du reveal avant question suivante. */
 export const ESTIM_REVEAL_DURATION_SEC = 8;
 /** Nombre de rounds par partie. */
-export const ESTIM_TOTAL_ROUNDS = 5;
+export const ESTIM_TOTAL_ROUNDS = 12;
 
 /**
- * Calcule les points selon la diff en % de la vraie valeur.
+ * Calcule la diff en % du vrai prix.
  *
  * @param guess  L'estimation du joueur
- * @param answer La vraie valeur
+ * @param answer Le vrai prix
  */
 export function estimDiffPercent(guess: number, answer: number): number {
-  if (answer === 0) return Math.abs(guess) * 100; // edge case
+  if (answer === 0) return Math.abs(guess) * 100;
   return Math.abs((guess - answer) / answer) * 100;
 }
 
@@ -186,6 +762,6 @@ export interface EstimState {
   roundDurationSec?: number;
   revealStartedAt?: string;
   revealDurationSec?: number;
-  /** Indices déjà joués (anti-doublon dans la partie). */
+  /** IDs déjà joués (anti-doublon dans la partie). */
   playedQuestionIds?: string[];
 }

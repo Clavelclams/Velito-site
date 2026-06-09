@@ -19,6 +19,7 @@ import {
   type EstimState,
 } from "@/lib/games/estim";
 import NextSessionInput from "./NextSessionInput";
+import EstimImage from "../../host/EstimImage";
 
 interface MyEstim {
   id: string;
@@ -243,23 +244,37 @@ export default function PlayEstimGame({
           Question {state.round} / {state.totalRounds}
         </p>
 
-        <div className="card-ink mt-6 p-6">
+        <div
+          className={
+            "card-ink mt-6 p-6 text-center " +
+            (currentQuestion.joke ? "border-amber-400/40 bg-amber-500/5" : "")
+          }
+        >
           <p className="text-xs uppercase tracking-widest text-white/40">
-            Vraie réponse
+            {currentQuestion.joke ? "La vraie réponse" : "Le vrai prix"}
           </p>
-          <p className="mt-2 font-display text-4xl font-black tabular-nums text-pink-300">
-            {currentQuestion.answer.toLocaleString("fr-FR")}
-          </p>
-          {currentQuestion.unit && (
-            <p className="mt-1 text-xs text-white/60">{currentQuestion.unit}</p>
+          {currentQuestion.joke ? (
+            <>
+              <p className="mt-2 font-display text-4xl font-black tracking-wider text-amber-300">
+                INESTIMABLE
+              </p>
+              <p className="mt-1 text-xs italic text-white/60">
+                +50 pts pour tout le monde 🎁
+              </p>
+            </>
+          ) : (
+            <p className="mt-2 font-display text-4xl font-black tabular-nums text-pink-300">
+              {currentQuestion.priceEur.toLocaleString("fr-FR")} €
+            </p>
           )}
+          <p className="mt-1 text-sm text-white/70">{currentQuestion.label}</p>
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
           <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-            <p className="text-xs uppercase tracking-widest text-white/40">Ta réponse</p>
+            <p className="text-xs uppercase tracking-widest text-white/40">Ton estimation</p>
             <p className="mt-1 font-display text-xl font-black tabular-nums text-white">
-              {Number(a.guess).toLocaleString("fr-FR")}
+              {Number(a.guess).toLocaleString("fr-FR")} €
             </p>
           </div>
           <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
@@ -319,8 +334,20 @@ export default function PlayEstimGame({
         )}
       </div>
 
-      <h1 className="mt-4 text-center text-lg font-bold leading-tight text-white">
-        {currentQuestion.question}
+      <div className="mt-3">
+        <EstimImage
+          src={currentQuestion.image}
+          emoji={currentQuestion.emoji}
+          label={currentQuestion.label}
+          className="h-44 w-full"
+        />
+      </div>
+
+      <p className="mt-3 text-center text-xs uppercase tracking-widest text-white/40">
+        Combien ça vaut ?
+      </p>
+      <h1 className="mt-1 text-center text-lg font-bold leading-tight text-white">
+        {currentQuestion.label}
       </h1>
       {currentQuestion.hint && (
         <p className="mt-1 text-center text-[11px] italic text-white/40">
@@ -328,12 +355,12 @@ export default function PlayEstimGame({
         </p>
       )}
 
-      <div className="card-ink mt-6 p-5">
+      <div className="card-ink mt-4 p-5">
         <label
           htmlFor="estim-guess"
           className="mb-2 block text-xs uppercase tracking-widest text-white/50"
         >
-          Ton estimation
+          Ton estimation (en €)
         </label>
         <input
           id="estim-guess"
@@ -342,12 +369,10 @@ export default function PlayEstimGame({
           autoComplete="off"
           value={draft || displayDraft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="Tape ton chiffre…"
+          placeholder="Tape ton prix…"
           className="w-full rounded-xl border border-white/15 bg-ink px-4 py-3 text-center font-display text-3xl font-black tabular-nums text-white placeholder-white/20 outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-400/30"
         />
-        {currentQuestion.unit && (
-          <p className="mt-1 text-center text-xs text-white/40">{currentQuestion.unit}</p>
-        )}
+        <p className="mt-1 text-center text-xs text-white/40">€</p>
 
         <button
           type="button"
@@ -371,8 +396,8 @@ export default function PlayEstimGame({
         <p className="mt-4 text-center text-xs text-white/50">
           Estimation envoyée :{" "}
           <span className="font-bold text-pink-300">
-            {Number(myAnswerForCurrent.guess).toLocaleString("fr-FR")}
-          </span>
+            {Number(myAnswerForCurrent.guess).toLocaleString("fr-FR")} €
+          </span>{" "}
           · tu peux encore changer
         </p>
       )}

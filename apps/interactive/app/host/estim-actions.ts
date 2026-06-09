@@ -99,12 +99,57 @@ export async function revealEstimRoundAction(sessionId: string): Promise<ActionR
   const rows = (answers ?? []) as Array<{ id: string; player_id: string; guess: number }>;
 
   // Calcule diff + points pour chacun, trie par diff ASC pour le rang
+  // ─── Mode JOKE (ex: "Combien vaut Clavel ?") ───
+  // Pas de scoring diff : tout le monde gagne 50 pts fixes, pas de rang.
+  if (question.joke) {
+    for (const a of rows) {
+      await supabase
+        .schema("interactive" as never)
+        .from("estim_answers")
+        .update({
+          diff_absolute: 0,
+          diff_percent: 0,
+          points: 50,
+          rank: 1, // tout le monde 1er
+        } as never)
+        .eq("id", a.id);
+
+      const { data: pData } = await supabase
+        .schema("interactive" as never)
+        .from("session_players")
+        .select("score")
+        .eq("id", a.player_id)
+        .single();
+      const currentScore = (pData as { score: number } | null)?.score ?? 0;
+      await supabase
+        .schema("interactive" as never)
+        .from("session_players")
+        .update({ score: currentScore + 50 } as never)
+        .eq("id", a.player_id);
+    }
+
+    const newState: EstimState = {
+      ...state,
+      phase: "reveal",
+      revealStartedAt: new Date().toISOString(),
+      revealDurationSec: ESTIM_REVEAL_DURATION_SEC,
+    };
+    await supabase
+      .schema("interactive" as never)
+      .from("sessions")
+      .update({ current_state: newState } as never)
+      .eq("id", sessionId);
+
+    return { success: true };
+  }
+
+  // ─── Mode normal : scoring diff + bonus rang ───
   const enriched = rows.map((a) => {
-    const diffPct = estimDiffPercent(Number(a.guess), question.answer);
+    const diffPct = estimDiffPercent(Number(a.guess), question.priceEur);
     return {
       ...a,
       diffPercent: diffPct,
-      diffAbsolute: Math.abs(Number(a.guess) - question.answer),
+      diffAbsolute: Math.abs(Number(a.guess) - question.priceEur),
       basePoints: estimPointsForDiff(diffPct),
     };
   });

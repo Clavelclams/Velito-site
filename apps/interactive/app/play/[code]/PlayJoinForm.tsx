@@ -31,6 +31,7 @@ import { createClient } from "@/lib/supabase/client";
 import PlayQuizGame from "./PlayQuizGame";
 import PlayPetitBacGame from "./PlayPetitBacGame";
 import PlayEstimGame from "./PlayEstimGame";
+import PlayGeoGame from "./PlayGeoGame";
 
 const AVATAR_STORAGE_KEY = "velito-interactive-avatar";
 const PSEUDO_STORAGE_KEY = "velito-interactive-pseudo";
@@ -40,7 +41,7 @@ interface PlayJoinFormProps {
   sessionId: string;
   code: string;
   /** Type de jeu pré-sélectionné (peut changer après start si null). */
-  gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | null;
+  gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | "geo" | null;
 }
 
 type Step = "avatar" | "ready" | "waiting" | "playing";
@@ -345,6 +346,16 @@ export default function PlayJoinForm({ sessionId, code, gameType }: PlayJoinForm
   if (gameType === "estim") {
     return (
       <PlayEstimGame
+        sessionId={sessionId}
+        playerId={playerId}
+        pseudo={pseudo}
+        avatar={avatar}
+      />
+    );
+  }
+  if (gameType === "geo") {
+    return (
+      <PlayGeoGame
         sessionId={sessionId}
         playerId={playerId}
         pseudo={pseudo}

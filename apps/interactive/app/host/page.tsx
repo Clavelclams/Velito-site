@@ -17,6 +17,7 @@ import HostLobby from "./HostLobby";
 import HostQuizGame from "./HostQuizGame";
 import HostPetitBacGame from "./HostPetitBacGame";
 import HostEstimGame from "./HostEstimGame";
+import HostGeoGame from "./HostGeoGame";
 
 export const dynamic = "force-dynamic";
 
@@ -135,13 +136,28 @@ export default async function HostScreen({ searchParams }: HostPageProps) {
         code={sessionRow.code}
         status={sessionRow.status}
         playBaseUrl={playBaseUrl}
-        gameType={sessionRow.game_type as "quiz" | "petit_bac" | "blind_test" | "estim" | null}
+        gameType={sessionRow.game_type as "quiz" | "petit_bac" | "blind_test" | "estim" | "geo" | null}
       />
     );
   }
 
   // Status 'playing' ou 'ended' → délègue au composant Game spécifique
   // selon game_type (Quiz par défaut pour rétro-compat).
+  if (sessionRow.game_type === "geo") {
+    const geoState = (sessionRow.current_state ?? {
+      phase: "round",
+      round: 1,
+      totalRounds: 5,
+      targetId: "",
+    }) as unknown as import("@/lib/games/geo").GeoState;
+    return (
+      <HostGeoGame
+        sessionId={sessionRow.id}
+        initialState={geoState}
+        status={sessionRow.status}
+      />
+    );
+  }
   if (sessionRow.game_type === "estim") {
     const estimState = (sessionRow.current_state ?? {
       phase: "round",

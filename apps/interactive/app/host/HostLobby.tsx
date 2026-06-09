@@ -27,6 +27,7 @@ import { endSessionAction } from "./actions";
 import { startQuizAction } from "./quiz-actions";
 import { startPetitBacAction } from "./petitbac-actions";
 import { startEstimAction } from "./estim-actions";
+import { startGeoAction } from "./geo-actions";
 import { useBackgroundMusic, playSfx, AUDIO } from "@/lib/audio";
 import MuteFooter from "./MuteFooter";
 
@@ -44,7 +45,7 @@ interface HostLobbyProps {
   status: string;
   playBaseUrl: string;
   /** Type de jeu pré-sélectionné depuis la galerie. Null = pas encore choisi. */
-  gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | null;
+  gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | "geo" | null;
 }
 
 export default function HostLobby({
@@ -208,6 +209,8 @@ export default function HostLobby({
       await startPetitBacAction(sessionId);
     } else if (gameType === "estim") {
       await startEstimAction(sessionId);
+    } else if (gameType === "geo") {
+      await startGeoAction(sessionId);
     } else {
       await startQuizAction(sessionId);
     }

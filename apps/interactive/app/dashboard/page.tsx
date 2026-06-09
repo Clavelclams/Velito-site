@@ -25,7 +25,7 @@ import { createSessionWithGameAction } from "../host/actions";
 // Catalogue jeux — source unique de vérité.
 // Tailwind doit "voir" les classes pour les générer au build, donc on les
 // écrit en dur dans `accentClass` (pas de bg-${...}).
-type GameType = "quiz" | "petit_bac" | "blind_test" | "estim" | null;
+type GameType = "quiz" | "petit_bac" | "blind_test" | "estim" | "geo" | null;
 
 interface GameCard {
   id: GameType;
@@ -101,9 +101,9 @@ const JEUX: GameCard[] = [
     available: false,
   },
   {
-    id: null,
+    id: "geo",
     nom: "Géo",
-    desc: "Trouve la ville sur la carte le plus précisément possible",
+    desc: "Place ton pin au plus proche — villes France, Europe, monde",
     emoji: "🗺️",
     accentClass: {
       bg: "hover:bg-emerald-500/10",
@@ -112,14 +112,14 @@ const JEUX: GameCard[] = [
       glow: "bg-emerald-500/30",
     },
     joueurs: "2 – 100",
-    duree: "12 min",
-    available: false,
+    duree: "5 min",
+    available: true,
   },
   {
     id: "estim",
     nom: "Estim'",
-    desc: "Le plus proche du chiffre exact gagne — culture, sport, internet",
-    emoji: "🎯",
+    desc: "Combien ça vaut ? Estime le prix d'objets, voitures, monuments…",
+    emoji: "💰",
     accentClass: {
       bg: "hover:bg-pink-500/10",
       border: "hover:border-pink-400/60",

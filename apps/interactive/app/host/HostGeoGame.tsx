@@ -1,14 +1,16 @@
 /**
- * <HostEstimGame /> — Vue TV pendant une partie Estim'.
+ * <HostGeoGame /> — Vue TV pendant une partie Géo.
  *
  * Phases :
- *  - 'round'  : question + grille des estimations live + timer
- *  - 'reveal' : vraie réponse + podium des plus proches + bonus rangs
+ *  - 'round'  : grande carte + cible + compteur "X/Y ont pinned"
+ *  - 'reveal' : grande carte avec vraie cible (vert) + pins de tous les joueurs
+ *               (couleurs par avatar) + podium des plus proches
  *  - 'final'  : WinnerCelebration + scoreboard
  */
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { Avatar } from "@repo/ui/avatar";
 import { ScoreboardRow } from "@repo/ui/scoreboard-row";
@@ -17,18 +19,30 @@ import { parseAvatarConfig } from "@repo/ui/avatar-data";
 import { createClient } from "@/lib/supabase/client";
 import { playSfx, AUDIO } from "@/lib/audio";
 import {
-  ESTIM_QUESTIONS,
-  ESTIM_ROUND_DURATION_SEC,
-  ESTIM_REVEAL_DURATION_SEC,
-  type EstimState,
-} from "@/lib/games/estim";
+  GEO_TARGETS,
+  GEO_ROUND_DURATION_SEC,
+  GEO_REVEAL_DURATION_SEC,
+  type GeoState,
+} from "@/lib/games/geo";
 import {
-  revealEstimRoundAction,
-  nextEstimRoundAction,
-  endEstimAction,
-} from "./estim-actions";
+  revealGeoRoundAction,
+  nextGeoRoundAction,
+  endGeoAction,
+} from "./geo-actions";
 import MuteFooter from "./MuteFooter";
-import EstimImage from "./EstimImage";
+
+// Carte côté TV — même composant que côté joueur
+const LeafletMap = dynamic(
+  () => import("../play/[code]/LeafletMap"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="grid h-[60vh] w-full place-items-center rounded-2xl border border-white/15 bg-white/[0.02] text-sm text-white/40">
+        Chargement de la carte…
+      </div>
+    ),
+  }
+);
 
 interface SessionPlayer {
   id: string;
@@ -37,33 +51,39 @@ interface SessionPlayer {
   score: number;
 }
 
-interface EstimAnswer {
+interface GeoAnswer {
   id: string;
   player_id: string;
   round: number;
-  guess: number;
-  diff_absolute: number;
-  diff_percent: number;
+  guess_lat: number;
+  guess_lng: number;
+  distance_km: number;
   points: number;
   rank: number;
 }
 
-interface HostEstimGameProps {
+interface HostGeoGameProps {
   sessionId: string;
-  initialState: EstimState;
+  initialState: GeoState;
   status: string;
 }
 
-export default function HostEstimGame({
+// Couleurs pour distinguer les pins joueurs sur la carte de reveal
+const PLAYER_COLORS = [
+  "#22d3ee", "#f43f5e", "#a78bfa", "#fbbf24",
+  "#34d399", "#fb923c", "#ec4899", "#60a5fa",
+];
+
+export default function HostGeoGame({
   sessionId,
   initialState,
   status: initialStatus,
-}: HostEstimGameProps) {
+}: HostGeoGameProps) {
   const router = useRouter();
-  const [state, setState] = useState<EstimState>(initialState);
+  const [state, setState] = useState<GeoState>(initialState);
   const [status, setStatus] = useState(initialStatus);
   const [players, setPlayers] = useState<SessionPlayer[]>([]);
-  const [answers, setAnswers] = useState<EstimAnswer[]>([]);
+  const [answers, setAnswers] = useState<GeoAnswer[]>([]);
   const [actionPending, setActionPending] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
 
@@ -72,7 +92,6 @@ export default function HostEstimGame({
     const prev = prevPhaseRef.current;
     const curr = state.phase;
     if (prev === curr) return;
-
     if (curr === "reveal" && prev === "round") {
       playSfx(AUDIO.revealExplain, 0.5);
     } else if (curr === "round" && prev === "reveal") {
@@ -83,10 +102,8 @@ export default function HostEstimGame({
     prevPhaseRef.current = curr;
   }, [state.phase]);
 
-  // Realtime
   useEffect(() => {
     const supabase = createClient();
-
     async function load() {
       const [{ data: pData }, { data: aData }] = await Promise.all([
         supabase
@@ -96,8 +113,8 @@ export default function HostEstimGame({
           .eq("session_id", sessionId),
         supabase
           .schema("interactive" as never)
-          .from("estim_answers")
-          .select("id, player_id, round, guess, diff_absolute, diff_percent, points, rank")
+          .from("geo_answers")
+          .select("id, player_id, round, guess_lat, guess_lng, distance_km, points, rank")
           .eq("session_id", sessionId),
       ]);
 
@@ -111,13 +128,11 @@ export default function HostEstimGame({
           score: r.score,
         }))
       );
-      setAnswers((aData ?? []) as EstimAnswer[]);
+      setAnswers((aData ?? []) as GeoAnswer[]);
     }
-
     load();
-
     const channel = supabase
-      .channel(`estim-${sessionId}`)
+      .channel(`geo-${sessionId}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "interactive", table: "session_players", filter: `session_id=eq.${sessionId}` },
@@ -125,23 +140,20 @@ export default function HostEstimGame({
       )
       .on(
         "postgres_changes",
-        { event: "*", schema: "interactive", table: "estim_answers", filter: `session_id=eq.${sessionId}` },
+        { event: "*", schema: "interactive", table: "geo_answers", filter: `session_id=eq.${sessionId}` },
         () => load()
       )
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "interactive", table: "sessions", filter: `id=eq.${sessionId}` },
         (payload) => {
-          const r = payload.new as { status: string; current_state: EstimState };
+          const r = payload.new as { status: string; current_state: GeoState };
           setStatus(r.status);
           setState(r.current_state);
         }
       )
       .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [sessionId]);
 
   // Timer round + auto-reveal
@@ -151,7 +163,7 @@ export default function HostEstimGame({
       return;
     }
     const startedAt = new Date(state.roundStartedAt).getTime();
-    const limit = state.roundDurationSec ?? ESTIM_ROUND_DURATION_SEC;
+    const limit = state.roundDurationSec ?? GEO_ROUND_DURATION_SEC;
     let triggered = false;
     const interval = setInterval(() => {
       const elapsed = Date.now() - startedAt;
@@ -159,7 +171,7 @@ export default function HostEstimGame({
       setSecondsLeft(remaining);
       if (remaining === 0 && !triggered && !actionPending) {
         triggered = true;
-        revealEstimRoundAction(sessionId).catch(console.error);
+        revealGeoRoundAction(sessionId).catch(console.error);
       }
     }, 200);
     return () => clearInterval(interval);
@@ -169,7 +181,7 @@ export default function HostEstimGame({
   useEffect(() => {
     if (state.phase !== "reveal" || !state.revealStartedAt) return;
     const startedAt = new Date(state.revealStartedAt).getTime();
-    const limit = state.revealDurationSec ?? ESTIM_REVEAL_DURATION_SEC;
+    const limit = state.revealDurationSec ?? GEO_REVEAL_DURATION_SEC;
     let triggered = false;
     const interval = setInterval(() => {
       const elapsed = Date.now() - startedAt;
@@ -177,28 +189,24 @@ export default function HostEstimGame({
       setSecondsLeft(remaining);
       if (remaining === 0 && !triggered && !actionPending) {
         triggered = true;
-        nextEstimRoundAction(sessionId).catch(console.error);
+        nextGeoRoundAction(sessionId).catch(console.error);
       }
     }, 200);
     return () => clearInterval(interval);
   }, [state.phase, state.revealStartedAt, state.revealDurationSec, sessionId, actionPending]);
 
-  const currentQuestion = useMemo(
-    () => ESTIM_QUESTIONS.find((q) => q.id === state.questionId) ?? null,
-    [state.questionId]
+  const currentTarget = useMemo(
+    () => GEO_TARGETS.find((t) => t.id === state.targetId) ?? null,
+    [state.targetId]
   );
-
   const currentAnswers = useMemo(
     () => answers.filter((a) => a.round === state.round),
     [answers, state.round]
   );
-
-  const sortedByDiff = useMemo(
-    () =>
-      [...currentAnswers].sort((a, b) => Number(a.diff_percent) - Number(b.diff_percent)),
+  const sortedByDistance = useMemo(
+    () => [...currentAnswers].sort((a, b) => Number(a.distance_km) - Number(b.distance_km)),
     [currentAnswers]
   );
-
   const sortedPlayers = useMemo(
     () => [...players].sort((a, b) => b.score - a.score),
     [players]
@@ -206,20 +214,43 @@ export default function HostEstimGame({
 
   async function handleReveal() {
     setActionPending(true);
-    await revealEstimRoundAction(sessionId);
+    await revealGeoRoundAction(sessionId);
     setActionPending(false);
   }
   async function handleNext() {
     setActionPending(true);
-    await nextEstimRoundAction(sessionId);
+    await nextGeoRoundAction(sessionId);
     setActionPending(false);
   }
   async function handleEnd() {
     if (!confirm("Terminer la partie maintenant ?")) return;
     setActionPending(true);
-    await endEstimAction(sessionId);
+    await endGeoAction(sessionId);
     setActionPending(false);
   }
+
+  // Marqueurs reveal : cible verte + pins joueurs colorés
+  const revealMarkers = useMemo(() => {
+    if (!currentTarget) return [];
+    const markers: Array<{ lat: number; lng: number; label?: string; color?: string }> = [
+      {
+        lat: currentTarget.lat,
+        lng: currentTarget.lng,
+        label: `🎯 ${currentTarget.label}`,
+        color: "#10b981",
+      },
+    ];
+    sortedByDistance.forEach((a, i) => {
+      const p = players.find((pl) => pl.id === a.player_id);
+      markers.push({
+        lat: Number(a.guess_lat),
+        lng: Number(a.guess_lng),
+        label: `${p?.pseudo ?? "?"} · ${Number(a.distance_km).toLocaleString("fr-FR")} km`,
+        color: PLAYER_COLORS[i % PLAYER_COLORS.length],
+      });
+    });
+    return markers;
+  }, [currentTarget, sortedByDistance, players]);
 
   // ═══ Final ═══
   if (state.phase === "final" || status === "ended") {
@@ -230,7 +261,7 @@ export default function HostEstimGame({
         <div className="relative mx-auto w-full max-w-7xl">
           <header className="mb-6 text-center">
             <p className="text-xs uppercase tracking-[0.3em] text-white/40">
-              Velito Interactive · ESTIM&apos;
+              Velito Interactive · GÉO
             </p>
             <h2 className="neon-title mt-2 text-3xl">Partie terminée</h2>
           </header>
@@ -242,7 +273,7 @@ export default function HostEstimGame({
                   pseudo={winner.pseudo}
                   avatar={winner.avatar_config}
                   score={winner.score}
-                  subtitle={`Estim' · ${state.totalRounds} questions`}
+                  subtitle={`Géo · ${state.totalRounds} cibles`}
                 />
               ) : (
                 <p className="text-center text-white/50">Aucun joueur.</p>
@@ -286,10 +317,10 @@ export default function HostEstimGame({
     );
   }
 
-  if (!currentQuestion) {
+  if (!currentTarget) {
     return (
       <main className="grid min-h-screen place-items-center text-white/40">
-        Question introuvable
+        Cible introuvable
       </main>
     );
   }
@@ -300,17 +331,16 @@ export default function HostEstimGame({
   return (
     <main className="relative flex min-h-screen flex-col items-center overflow-hidden px-6 py-10">
       <div className="pointer-events-none absolute inset-0 bg-grid-ink [background-size:48px_48px] opacity-50" />
-      <div className="pointer-events-none absolute bottom-0 left-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-pink-500/15 blur-3xl" />
 
-      <div className="relative w-full max-w-5xl">
+      <div className="relative w-full max-w-6xl">
         <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-white/40">
-              Question {state.round} / {state.totalRounds}
+              Round {state.round} / {state.totalRounds}
             </p>
-            {currentQuestion.theme && (
-              <p className="mt-1 text-sm font-semibold text-pink-300">
-                {currentQuestion.theme}
+            {currentTarget.theme && (
+              <p className="mt-1 text-sm font-semibold text-emerald-300">
+                {currentTarget.theme}
               </p>
             )}
           </div>
@@ -336,126 +366,78 @@ export default function HostEstimGame({
           )}
         </header>
 
-        {/* Question : image + label */}
-        <div className="mx-auto max-w-2xl">
-          <EstimImage
-            src={currentQuestion.image}
-            emoji={currentQuestion.emoji}
-            label={currentQuestion.label}
-            className="h-72 w-full"
-          />
-        </div>
-        <p className="mt-4 text-center text-xs uppercase tracking-widest text-white/40">
-          Combien ça vaut ?
-        </p>
-        <h1 className="neon-title mt-1 text-center text-2xl leading-tight sm:text-4xl">
-          {currentQuestion.label}
-        </h1>
-        {currentQuestion.hint && (
-          <p className="mt-2 text-center text-xs italic text-white/40">
-            {currentQuestion.hint}
+        {/* Cible */}
+        <div className="mb-4 text-center">
+          <p className="text-xs uppercase tracking-widest text-white/40">
+            Trouve sur la carte
           </p>
-        )}
+          <h1 className="neon-title mt-1 text-3xl sm:text-5xl">
+            {currentTarget.label}
+          </h1>
+          {currentTarget.hint && (
+            <p className="mt-1 text-xs italic text-white/40">{currentTarget.hint}</p>
+          )}
+        </div>
 
-        {/* Phase ROUND — grille live des estimations */}
-        {!showReveal && (
-          <section className="mt-8">
-            <p className="mb-3 text-center text-xs uppercase tracking-[0.3em] text-white/40">
-              Estimations en direct ({submittedCount}/{players.length})
-            </p>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-              {players.map((p) => {
-                const a = currentAnswers.find((x) => x.player_id === p.id);
-                return (
-                  <div
-                    key={p.id}
-                    className={
-                      "flex flex-col items-center gap-2 rounded-2xl border p-4 transition " +
-                      (a
-                        ? "border-pink-400/40 bg-pink-500/10"
-                        : "border-white/10 bg-white/[0.02]")
-                    }
-                  >
-                    <Avatar config={p.avatar_config} size="sm" />
-                    <p className="text-sm font-bold text-white">{p.pseudo}</p>
-                    <p className="font-display text-xl font-black tabular-nums text-pink-300">
-                      {a ? `${Number(a.guess).toLocaleString("fr-FR")} €` : "…"}
+        {/* Carte */}
+        <LeafletMap
+          initialCenter={currentTarget.initialCenter ?? [46.7, 2.5]}
+          initialZoom={currentTarget.initialZoom ?? 5}
+          pinPosition={null}
+          onPinChange={() => {}}
+          readonly
+          extraMarkers={showReveal ? revealMarkers : []}
+        />
+
+        {/* Compteur ou podium */}
+        {!showReveal ? (
+          <p className="mt-4 text-center text-sm text-white/60">
+            <span className="font-bold text-emerald-300">{submittedCount}</span> /{" "}
+            {players.length} ont placé leur pin
+          </p>
+        ) : (
+          <section className="mt-6 space-y-2">
+            {sortedByDistance.map((a, i) => {
+              const p = players.find((pl) => pl.id === a.player_id);
+              if (!p) return null;
+              const podium = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
+              return (
+                <div
+                  key={a.id}
+                  className={
+                    "flex items-center gap-4 rounded-2xl border p-3 transition " +
+                    (i === 0
+                      ? "border-amber-300/60 bg-amber-500/10"
+                      : i === 1
+                      ? "border-slate-300/60 bg-slate-300/10"
+                      : i === 2
+                      ? "border-orange-400/40 bg-orange-500/10"
+                      : "border-white/10 bg-white/[0.02]")
+                  }
+                >
+                  <span
+                    className="h-4 w-4 shrink-0 rounded-full border-2 border-white"
+                    style={{ backgroundColor: PLAYER_COLORS[i % PLAYER_COLORS.length] }}
+                  />
+                  <span className="w-8 text-center text-2xl">{podium ?? `${i + 1}`}</span>
+                  <Avatar config={p.avatar_config} size="sm" />
+                  <div className="flex-1">
+                    <p className="font-bold text-white">{p.pseudo}</p>
+                    <p className="text-xs text-white/50">
+                      {Number(a.distance_km).toLocaleString("fr-FR")} km
                     </p>
                   </div>
-                );
-              })}
-            </div>
-          </section>
-        )}
-
-        {/* Phase REVEAL — vrai prix (ou INESTIMABLE en mode joke) + podium */}
-        {showReveal && (
-          <section className="mt-8">
-            <div
-              className={
-                "card-ink p-6 text-center " +
-                (currentQuestion.joke ? "border-amber-400/40 bg-amber-500/5" : "")
-              }
-            >
-              <p className="text-xs uppercase tracking-widest text-white/40">
-                {currentQuestion.joke ? "La vraie réponse" : "Le vrai prix"}
-              </p>
-              {currentQuestion.joke ? (
-                <>
-                  <p className="mt-2 font-display text-5xl font-black tracking-wider text-amber-300 drop-shadow-[0_0_40px_rgba(252,211,77,0.4)] sm:text-6xl">
-                    INESTIMABLE
+                  <p className="font-display text-xl font-black text-emerald-300">
+                    +{a.points}
                   </p>
-                  <p className="mt-3 text-sm italic text-white/60">
-                    🎁 +50 pts pour tout le monde, on rigole tous ensemble
-                  </p>
-                </>
-              ) : (
-                <p className="mt-2 font-display text-6xl font-black tabular-nums text-pink-300 drop-shadow-[0_0_40px_rgba(244,114,182,0.35)]">
-                  {currentQuestion.priceEur.toLocaleString("fr-FR")} €
-                </p>
-              )}
-            </div>
-
-            <div className="mt-6 space-y-2">
-              {sortedByDiff.map((a, i) => {
-                const p = players.find((pl) => pl.id === a.player_id);
-                if (!p) return null;
-                const podium = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
-                return (
-                  <div
-                    key={a.id}
-                    className={
-                      "flex items-center gap-4 rounded-2xl border p-4 transition " +
-                      (i === 0
-                        ? "border-amber-300/60 bg-amber-500/10"
-                        : i === 1
-                        ? "border-slate-300/60 bg-slate-300/10"
-                        : i === 2
-                        ? "border-orange-400/40 bg-orange-500/10"
-                        : "border-white/10 bg-white/[0.02]")
-                    }
-                  >
-                    <span className="w-8 text-center text-2xl">{podium ?? `${i + 1}`}</span>
-                    <Avatar config={p.avatar_config} size="sm" />
-                    <div className="flex-1">
-                      <p className="font-bold text-white">{p.pseudo}</p>
-                      <p className="text-xs text-white/50">
-                        {Number(a.guess).toLocaleString("fr-FR")} € ·{" "}
-                        écart {Number(a.diff_percent).toFixed(1)}%
-                      </p>
-                    </div>
-                    <p className="font-display text-xl font-black text-emerald-300">
-                      +{a.points}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </section>
         )}
 
         {/* Boutons host */}
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
           {state.phase === "round" && (
             <button
               type="button"
@@ -477,7 +459,7 @@ export default function HostEstimGame({
                 ? "Suivant…"
                 : state.round >= state.totalRounds
                 ? "Voir le gagnant"
-                : "Question suivante"}
+                : "Cible suivante"}
             </button>
           )}
           <button
@@ -492,7 +474,7 @@ export default function HostEstimGame({
 
         {/* Scoreboard live */}
         {sortedPlayers.length > 0 && (
-          <section className="mt-10">
+          <section className="mt-8">
             <p className="mb-3 text-xs uppercase tracking-widest text-white/40">
               Classement
             </p>
