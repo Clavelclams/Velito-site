@@ -24,6 +24,7 @@ import { parseAvatarConfig } from "@repo/ui/avatar-data";
 import { createClient } from "@/lib/supabase/client";
 import { playSfx, AUDIO } from "@/lib/audio";
 import LetterReveal from "./LetterReveal";
+import MuteFooter from "./MuteFooter";
 import {
   ROUND_DURATION_SEC,
   PETITBAC_REVEAL_DURATION_SEC,
@@ -317,6 +318,7 @@ export default function HostPetitBacGame({
             </button>
           </div>
         </div>
+        <MuteFooter />
       </main>
     );
   }
@@ -532,6 +534,7 @@ export default function HostPetitBacGame({
           </section>
         )}
       </div>
+      <MuteFooter />
     </main>
   );
 }

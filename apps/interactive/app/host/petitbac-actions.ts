@@ -103,13 +103,16 @@ export async function revealPetitBacRoundAction(
     return { success: false, error: "Pas en phase round." };
   }
 
-  // 2. Récupère toutes les réponses du round courant
+  // 2. Récupère toutes les réponses du round courant, triées par created_at
+  //    (= ordre du 1er clic du joueur dans cette catégorie). Le tri ASC permet
+  //    de calculer le rang vitesse par catégorie.
   const { data: answers, error: ansErr } = await supabase
     .schema("interactive" as never)
     .from("petit_bac_answers")
-    .select("id, player_id, category, word")
+    .select("id, player_id, category, word, created_at")
     .eq("session_id", sessionId)
-    .eq("round", state.round);
+    .eq("round", state.round)
+    .order("created_at", { ascending: true });
 
   if (ansErr) {
     console.error("[revealPetitBacRoundAction] fetch error:", ansErr.message);
@@ -121,15 +124,47 @@ export async function revealPetitBacRoundAction(
     player_id: string;
     category: string;
     word: string;
+    created_at: string;
   }>;
 
-  // 3. Scoring : 1 pt par mot valide (V1).
-  //    Validation stricte = (commence par bonne lettre + 3+ chars) ET (dans la banque)
+  // 3. Pré-calcul validité par ligne + regroupement par catégorie
+  //    pour permettre le scoring vitesse par catégorie.
+  const validityByRow = new Map<string, boolean>();
+  const validsByCategory = new Map<string, typeof rows>();
   for (const a of rows) {
-    const startsOk = wordStartsWithLetter(a.word, state.letter);
-    const inDict = wordInDictionary(a.word, a.category);
-    const isValid = startsOk && inDict;
-    const points = isValid ? 1 : 0;
+    const isValid = wordStartsWithLetter(a.word, state.letter) && wordInDictionary(a.word, a.category);
+    validityByRow.set(a.id, isValid);
+    if (isValid) {
+      const list = validsByCategory.get(a.category) ?? [];
+      list.push(a);
+      validsByCategory.set(a.category, list);
+    }
+  }
+
+  /**
+   * Calcule les points d'un mot valide selon son rang vitesse par catégorie.
+   *
+   * - Seul à avoir trouvé → 2 pts (bonus solo)
+   * - 1er parmi N (N≥2) → 2 pts
+   * - Dernier parmi N (N≥2) → 0 pt (malus copieur)
+   * - Au milieu → 1 pt
+   */
+  function pointsForRank(rank: number, total: number): number {
+    if (total === 1) return 2; // solo = bonus
+    if (rank === 1) return 2;
+    if (rank === total) return 0;
+    return 1;
+  }
+
+  // 4. Update chaque ligne avec is_valid + points calculés
+  for (const a of rows) {
+    const isValid = validityByRow.get(a.id) ?? false;
+    let points = 0;
+    if (isValid) {
+      const validList = validsByCategory.get(a.category) ?? [];
+      const rank = validList.findIndex((v) => v.id === a.id) + 1; // 1-indexed
+      points = pointsForRank(rank, validList.length);
+    }
 
     await supabase
       .schema("interactive" as never)

@@ -43,6 +43,32 @@ export const AUDIO = {
 } as const;
 
 /**
+ * Mute global — quand true, AUCUN son ne joue (musique de fond + SFX).
+ * Synchronisé via localStorage pour persister entre les pages.
+ */
+const MUTE_STORAGE_KEY = "velito-interactive-muted";
+
+export function isGloballyMuted(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return localStorage.getItem(MUTE_STORAGE_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+export function setGloballyMuted(muted: boolean): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(MUTE_STORAGE_KEY, String(muted));
+    // Broadcast à tous les listeners (composants audio actifs)
+    window.dispatchEvent(new CustomEvent("velito-mute-change", { detail: muted }));
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
  * Joue un SFX one-shot. Crée un nouvel élément audio à chaque appel pour
  * permettre de superposer plusieurs sons (ex: clic + reveal en même temps).
  *
@@ -54,6 +80,7 @@ export const AUDIO = {
  */
 export function playSfx(src: string, volume: number = 0.5): void {
   if (typeof window === "undefined") return;
+  if (isGloballyMuted()) return; // Mute global : on ignore
   try {
     const audio = new Audio(src);
     audio.volume = Math.max(0, Math.min(1, volume));
@@ -78,41 +105,68 @@ export function playSfx(src: string, volume: number = 0.5): void {
  * @param volume  Volume entre 0 et 1, défaut 0.25 (musique de fond = doit
  *                pas couvrir les voix)
  */
+/**
+ * Singleton global — garantit qu'UNE seule musique de fond joue à la fois.
+ * Évite le bug "musique doublée avec écho" en StrictMode ou lors d'une
+ * transition lobby→game où l'ancien hook n'a pas eu le temps de cleanup.
+ */
+let _activeMusic: { src: string; audio: HTMLAudioElement } | null = null;
+
+function stopActiveMusic() {
+  if (_activeMusic) {
+    try {
+      _activeMusic.audio.pause();
+      _activeMusic.audio.currentTime = 0;
+    } catch {
+      /* ignore */
+    }
+    _activeMusic = null;
+  }
+}
+
 export function useBackgroundMusic(
   src: string,
   volume: number = 0.25
 ): { muted: boolean; toggleMute: () => void } {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [muted, setMuted] = useState(false);
+  const [muted, setMuted] = useState<boolean>(() => isGloballyMuted());
 
   useEffect(() => {
+    // STOP toute musique en cours avant d'en lancer une nouvelle (singleton)
+    stopActiveMusic();
+
     const audio = new Audio(src);
     audio.loop = true;
-    audio.volume = volume;
+    audio.volume = isGloballyMuted() ? 0 : volume;
+    audio.muted = isGloballyMuted();
     audio.play().catch((err) => {
       if (err.name !== "NotAllowedError") {
         console.warn("[useBackgroundMusic] autoplay bloqué:", err.message);
       }
     });
-    audioRef.current = audio;
+    _activeMusic = { src, audio };
+
+    // Écoute le mute global
+    function onMuteChange(e: Event) {
+      const m = (e as CustomEvent<boolean>).detail;
+      audio.muted = m;
+      setMuted(m);
+    }
+    window.addEventListener("velito-mute-change", onMuteChange);
+
     return () => {
-      audio.pause();
-      audio.currentTime = 0;
-      audioRef.current = null;
+      window.removeEventListener("velito-mute-change", onMuteChange);
+      // Ne stop QUE si c'est notre instance (pas si une autre l'a remplacée)
+      if (_activeMusic?.audio === audio) {
+        stopActiveMusic();
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [src]);
 
   function toggleMute() {
-    const audio = audioRef.current;
-    if (!audio) return;
-    if (audio.paused) {
-      audio.play().catch(console.warn);
-      setMuted(false);
-    } else {
-      audio.pause();
-      setMuted(true);
-    }
+    const next = !muted;
+    setGloballyMuted(next);
+    setMuted(next);
   }
 
   return { muted, toggleMute };

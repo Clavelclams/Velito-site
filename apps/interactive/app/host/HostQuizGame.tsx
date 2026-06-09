@@ -20,6 +20,7 @@ import { WinnerCelebration } from "@repo/ui/winner-celebration";
 import { parseAvatarConfig } from "@repo/ui/avatar-data";
 import { createClient } from "@/lib/supabase/client";
 import { playSfx, AUDIO } from "@/lib/audio";
+import MuteFooter from "./MuteFooter";
 import {
   QUIZ_QUESTIONS,
   type QuizQuestion,
@@ -335,6 +336,7 @@ export default function HostQuizGame({
             </button>
           </div>
         </div>
+        <MuteFooter />
       </main>
     );
   }
@@ -502,6 +504,7 @@ export default function HostQuizGame({
           </section>
         )}
       </div>
+      <MuteFooter />
     </main>
   );
 }

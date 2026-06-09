@@ -11,18 +11,23 @@
  *  - 6 catégories tient sur 1 vue scrollable confortable
  */
 
-/** Catégories par défaut — le host pourra en customiser plus tard. */
+/** Catégories par défaut — le host pourra en customiser plus tard.
+ *  9 catégories : c'est dense sur mobile mais ça donne plus de variété.
+ *  Round time augmenté en conséquence (60s au lieu de 45s). */
 export const PETIT_BAC_DEFAULT_CATEGORIES = [
   "Prénom garçon",
   "Prénom fille",
+  "Animal",
+  "Fruit / Légume",
+  "Célébrité",
+  "Mot anglais",
   "Objet",
   "Marque",
   "Pays / Ville",
-  "Animal",
 ];
 
-/** Durée d'un round (en secondes). */
-export const ROUND_DURATION_SEC = 45;
+/** Durée d'un round (en secondes). 60s car 9 catégories à remplir. */
+export const ROUND_DURATION_SEC = 60;
 
 /** Durée d'affichage du reveal avant round suivant (en secondes). */
 export const PETITBAC_REVEAL_DURATION_SEC = 8;

@@ -27,6 +27,7 @@ import { endSessionAction } from "./actions";
 import { startQuizAction } from "./quiz-actions";
 import { startPetitBacAction } from "./petitbac-actions";
 import { useBackgroundMusic, playSfx, AUDIO } from "@/lib/audio";
+import MuteFooter from "./MuteFooter";
 
 interface SessionPlayer {
   id: string;
@@ -62,10 +63,8 @@ export default function HostLobby({
   const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
 
   // Musique de fond du lobby — transition cards → game
-  const { muted: musicMuted, toggleMute: toggleMusic } = useBackgroundMusic(
-    AUDIO.lobbyMusic,
-    0.22
-  );
+  // Note : le toggleMute est maintenant géré par MuteFooter (footer global)
+  useBackgroundMusic(AUDIO.lobbyMusic, 0.22);
 
   // 1. Générer le QR code (chargement dynamique pour pas alourdir le bundle initial)
   useEffect(() => {
@@ -225,16 +224,8 @@ export default function HostLobby({
       <div className="pointer-events-none absolute inset-0 bg-grid-ink [background-size:48px_48px] opacity-50" />
       <div className="pointer-events-none absolute bottom-0 left-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-neon-violet/25 blur-3xl" />
 
-      {/* Bouton mute musique (fixed) */}
-      <button
-        type="button"
-        onClick={toggleMusic}
-        className="fixed bottom-6 right-6 z-50 rounded-full border border-white/15 bg-ink/80 px-3 py-2 text-lg backdrop-blur-sm transition hover:bg-white/[0.06]"
-        title={musicMuted ? "Activer la musique" : "Couper la musique"}
-        aria-label={musicMuted ? "Activer la musique" : "Couper la musique"}
-      >
-        {musicMuted ? "🔇" : "🔊"}
-      </button>
+      {/* Bouton mute global (couvre musique + SFX) */}
+      <MuteFooter />
 
       {/* ─── Header : titre + QR + code ─── */}
       <div className="relative grid w-full max-w-6xl grid-cols-1 items-center gap-12 lg:grid-cols-2">
