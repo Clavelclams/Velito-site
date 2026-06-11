@@ -141,7 +141,15 @@ ORDER BY saison DESC;
 COMMENT ON VIEW vea.compta_balance_par_saison IS
   'Balance comptable agregee par saison VEA. Sert pour le dashboard /admin/compta.';
 
--- GRANT sur la vue (RLS sur la table source filtre deja)
+-- ⚠️ SECURITE : force la vue en mode security_invoker (sinon, par defaut depuis
+-- Postgres 15+, les vues s'executent en SECURITY DEFINER = avec les droits du
+-- createur = superuser postgres, ce qui CONTOURNE la RLS de vea.compta_transactions.
+-- Resultat sans cette ligne : n'importe quel authenticated peut lire les soldes
+-- (alerte CRITICAL signalee par Supabase Advisor le 11/06/2026).
+-- Avec security_invoker=on, la vue respecte les RLS de la table sous-jacente.
+ALTER VIEW vea.compta_balance_par_saison SET (security_invoker = on);
+
+-- GRANT sur la vue (la RLS de vea.compta_transactions filtre via security_invoker)
 GRANT SELECT ON vea.compta_balance_par_saison TO authenticated;
 
 
