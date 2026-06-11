@@ -32,46 +32,72 @@ export default function ResetPasswordPage() {
   const [parseError, setParseError] = useState("");
 
   useEffect(() => {
-    const hash = typeof window !== "undefined"
-      ? window.location.hash.substring(1)
-      : "";
+    // Le flow reset accepte 2 modes (depuis fix 11/06/2026) :
+    //
+    // CAS 1 — Flow PKCE moderne (par defaut Supabase 2.x) :
+    //   /auth/forgot-password → email → /auth/callback?code=XXX&next=/auth/reset-password
+    //   → callback fait exchangeCodeForSession (cote serveur) → cookie de session pose
+    //   → redirect /auth/reset-password (sans hash, mais session deja etablie)
+    //
+    // CAS 2 — Flow implicit legacy (hash #access_token) :
+    //   /auth/forgot-password → email → /auth/reset-password#access_token=...&refresh_token=...
+    //   → on parse le hash et on setSession() cote client
+    //
+    // On gere les 2 pour robustesse.
+    let cancelled = false;
 
-    if (!hash) {
-      setParseError(
-        "Aucun jeton de recuperation trouve dans l'URL. Demande un nouveau lien depuis /admin/login."
-      );
-      return;
-    }
+    async function bootstrap() {
+      // CAS 1 : verifie si une session est deja etablie (vient de /auth/callback)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (cancelled) return;
+      if (session) {
+        setTokenReady(true);
+        return;
+      }
 
-    const params = new URLSearchParams(hash);
-    const accessToken = params.get("access_token");
-    const refreshToken = params.get("refresh_token");
-    const type = params.get("type");
+      // CAS 2 : pas de session, on tente le hash
+      const hash = typeof window !== "undefined"
+        ? window.location.hash.substring(1)
+        : "";
 
-    if (type !== "recovery" || !accessToken || !refreshToken) {
-      setParseError(
-        "Lien de recuperation invalide ou expire. Demande un nouveau password recovery."
-      );
-      return;
-    }
+      if (!hash) {
+        setParseError(
+          "Aucun jeton de recuperation trouve dans l'URL. Demande un nouveau lien depuis /admin/login."
+        );
+        return;
+      }
 
-    // Etablit la session Supabase avec les tokens du hash
-    supabase.auth
-      .setSession({
+      const params = new URLSearchParams(hash);
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
+      const type = params.get("type");
+
+      if (type !== "recovery" || !accessToken || !refreshToken) {
+        setParseError(
+          "Lien de recuperation invalide ou expire. Demande un nouveau password recovery."
+        );
+        return;
+      }
+
+      // Etablit la session Supabase avec les tokens du hash
+      const { error: sessionError } = await supabase.auth.setSession({
         access_token: accessToken,
         refresh_token: refreshToken,
-      })
-      .then(({ error: sessionError }) => {
-        if (sessionError) {
-          setParseError(
-            "Impossible de valider le lien de recuperation. Demande un nouveau lien."
-          );
-          return;
-        }
-        setTokenReady(true);
-        // Clean l'URL (retire le hash pour eviter de re-traiter au refresh)
-        window.history.replaceState({}, "", window.location.pathname);
       });
+      if (cancelled) return;
+      if (sessionError) {
+        setParseError(
+          "Impossible de valider le lien de recuperation. Demande un nouveau lien."
+        );
+        return;
+      }
+      setTokenReady(true);
+      // Clean l'URL (retire le hash pour eviter de re-traiter au refresh)
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+
+    void bootstrap();
+    return () => { cancelled = true; };
   }, [supabase]);
 
   async function handleSubmit(e: React.FormEvent) {

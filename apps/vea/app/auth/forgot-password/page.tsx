@@ -34,12 +34,17 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     const supabase = createClient();
-    // URL de retour DOIT pointer vers la page reset de VEA (pas du hub).
-    // En prod : https://vea.velito.fr/auth/reset-password
-    // En dev local : http://localhost:3001/auth/reset-password
+    // URL de retour : on passe par /auth/callback (qui fait exchangeCodeForSession
+    // côté serveur, pattern officiel @supabase/ssr pour le flow PKCE moderne).
+    // Le callback redirige ensuite vers /auth/reset-password avec session établie.
+    //
+    // Avant : redirectTo = /auth/reset-password directement → marchait uniquement
+    // pour le legacy implicit flow (hash #access_token). Avec Supabase moderne
+    // qui utilise PKCE (?code=...), la page reset n'arrivait pas à parser le
+    // token → erreur "Aucun jeton de récupération trouvé". Fix 11/06/2026.
     const origin =
       typeof window !== "undefined" ? window.location.origin : "https://vea.velito.fr";
-    const redirectTo = `${origin}/auth/reset-password`;
+    const redirectTo = `${origin}/auth/callback?next=/auth/reset-password`;
 
     // ⚠️ NE JAMAIS utiliser signInWithOtp({shouldCreateUser:true}) ici — voir
     // docs/OAUTH_ARCHITECTURE.md §8 bis. resetPasswordForEmail est SAFE :
