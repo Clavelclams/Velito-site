@@ -4,10 +4,18 @@
  */
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 import { signInAction } from "./actions";
+
+/**
+ * Site Key publique hCaptcha (Velito).
+ * Activé Supabase Auth → Bot Protection le 11/06/2026.
+ * Token obligatoire pour tout signInWithPassword.
+ */
+const HCAPTCHA_SITE_KEY = "b0b81630-4312-4e44-8c0a-7b24a2445748";
 
 export default function LoginForm() {
   const params = useSearchParams();
@@ -19,6 +27,9 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  // Token hCaptcha — obligatoire depuis activation Supabase 11/06/2026
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<HCaptcha>(null);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -34,8 +45,15 @@ export default function LoginForm() {
       setError("Email valide + mot de passe (6+ caractères) requis.");
       return;
     }
+    if (!captchaToken) {
+      setError("Coche le hCaptcha avant de te connecter.");
+      return;
+    }
     startTransition(async () => {
-      const res = await signInAction({ email, password, returnTo });
+      const res = await signInAction({ email, password, returnTo, captchaToken });
+      // Reset captcha apres chaque tentative (le token est single-use cote Supabase)
+      captchaRef.current?.resetCaptcha();
+      setCaptchaToken(null);
       if (!res.success) {
         setError(res.error ?? "Erreur de connexion");
       }
@@ -87,6 +105,18 @@ export default function LoginForm() {
           className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/30 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-400/20"
         />
       </div>
+      {/* Widget hCaptcha — token obligatoire depuis activation Supabase 11/06/2026 */}
+      <div className="flex justify-center">
+        <HCaptcha
+          sitekey={HCAPTCHA_SITE_KEY}
+          onVerify={(token) => setCaptchaToken(token)}
+          onExpire={() => setCaptchaToken(null)}
+          onError={() => setCaptchaToken(null)}
+          ref={captchaRef}
+          theme="dark"
+        />
+      </div>
+
       {error && (
         <div role="alert" className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
           {error}
@@ -94,7 +124,7 @@ export default function LoginForm() {
       )}
       <button
         type="submit"
-        disabled={isPending}
+        disabled={isPending || !captchaToken}
         className="w-full rounded-lg bg-violet-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isPending ? "Connexion…" : "Se connecter"}

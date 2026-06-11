@@ -15,6 +15,12 @@ interface SignInInput {
   email: string;
   password: string;
   returnTo: string;
+  /**
+   * Token hCaptcha généré côté client par le widget @hcaptcha/react-hcaptcha.
+   * Obligatoire depuis activation Supabase Bot Protection le 11/06/2026.
+   * Sans ce token, Supabase rejette signInWithPassword.
+   */
+  captchaToken: string;
 }
 
 interface ActionResult {
@@ -51,12 +57,16 @@ export async function signInAction(input: SignInInput): Promise<ActionResult> {
   if (!input.email?.includes("@") || !input.password || input.password.length < 6) {
     return { success: false, error: "Email valide + mot de passe (6+ caractères) requis." };
   }
+  if (!input.captchaToken) {
+    return { success: false, error: "Captcha obligatoire. Coche la case hCaptcha." };
+  }
 
   try {
     const supabase = await createClient();
     const { error } = await supabase.auth.signInWithPassword({
       email: input.email.trim().toLowerCase(),
       password: input.password,
+      options: { captchaToken: input.captchaToken },
     });
     if (error) {
       // On loggue côté serveur pour debug ; côté client, message générique

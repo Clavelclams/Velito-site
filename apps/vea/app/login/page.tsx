@@ -12,10 +12,18 @@
  */
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 import { createClient } from "@/lib/supabase/client";
+
+/**
+ * Site Key publique hCaptcha (Velito).
+ * Activé côté Supabase Auth → Settings → Bot Protection le 11/06/2026 à 3h20.
+ * À partir de cette date, tout signInWithPassword sans captchaToken est rejeté.
+ */
+const HCAPTCHA_SITE_KEY = "b0b81630-4312-4e44-8c0a-7b24a2445748";
 
 function LoginForm() {
   const router = useRouter();
@@ -32,6 +40,10 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  // Token hCaptcha généré par le widget — obligatoire depuis 11/06/2026
+  // pour pouvoir appeler signInWithPassword (cf. Supabase Auth Settings).
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<HCaptcha>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -43,6 +55,12 @@ function LoginForm() {
     // /token grant_type=password). Ce guard est la vraie protection.
     if (loading) return;
 
+    // GARDE hCAPTCHA : sans token, Supabase rejette l'auth depuis le 11/06/2026.
+    if (!captchaToken) {
+      setError("Coche le hCaptcha avant de te connecter.");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
@@ -50,7 +68,12 @@ function LoginForm() {
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
+      options: { captchaToken },
     });
+
+    // Reset captcha apres chaque tentative (le token est single-use).
+    captchaRef.current?.resetCaptcha();
+    setCaptchaToken(null);
 
     if (signInError) {
       // GESTION EXPLICITE DU RATE LIMIT 429 :
@@ -157,6 +180,17 @@ function LoginForm() {
             />
           </div>
 
+          {/* Widget hCaptcha — token obligatoire depuis activation Supabase 11/06/2026 */}
+          <div className="flex justify-center">
+            <HCaptcha
+              sitekey={HCAPTCHA_SITE_KEY}
+              onVerify={(token) => setCaptchaToken(token)}
+              onExpire={() => setCaptchaToken(null)}
+              onError={() => setCaptchaToken(null)}
+              ref={captchaRef}
+            />
+          </div>
+
           {error && (
             <div className="border border-vea-accent/30 bg-vea-accent-soft rounded-lg px-4 py-3 text-sm text-vea-accent">
               {error}
@@ -165,7 +199,7 @@ function LoginForm() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !captchaToken}
             className="btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {loading ? "Connexion..." : "Se connecter"}

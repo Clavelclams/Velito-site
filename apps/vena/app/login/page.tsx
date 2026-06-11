@@ -9,10 +9,18 @@
  */
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 import { createClient } from "@/lib/supabase/client";
+
+/**
+ * Site Key publique hCaptcha (Velito).
+ * Activé Supabase Auth → Bot Protection le 11/06/2026 à 3h20.
+ * Token obligatoire pour tout signInWithPassword.
+ */
+const HCAPTCHA_SITE_KEY = "b0b81630-4312-4e44-8c0a-7b24a2445748";
 
 function LoginForm() {
   const router = useRouter();
@@ -23,6 +31,9 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  // Token hCaptcha — obligatoire depuis activation Supabase 11/06/2026.
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<HCaptcha>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -35,6 +46,12 @@ function LoginForm() {
     // Même fix que apps/vea/app/login/page.tsx (boucle 10k req/h résolue).
     if (loading) return;
 
+    // GARDE hCAPTCHA : sans token, Supabase rejette depuis le 11/06/2026.
+    if (!captchaToken) {
+      setError("Coche le hCaptcha avant de te connecter.");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
@@ -42,7 +59,12 @@ function LoginForm() {
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
+      options: { captchaToken },
     });
+
+    // Reset captcha apres chaque tentative (le token est single-use).
+    captchaRef.current?.resetCaptcha();
+    setCaptchaToken(null);
 
     if (signInError) {
       // GESTION EXPLICITE DU RATE LIMIT 429 :
@@ -127,6 +149,17 @@ function LoginForm() {
             />
           </div>
 
+          {/* Widget hCaptcha — obligatoire depuis activation Supabase 11/06/2026 */}
+          <div className="flex justify-center">
+            <HCaptcha
+              sitekey={HCAPTCHA_SITE_KEY}
+              onVerify={(token) => setCaptchaToken(token)}
+              onExpire={() => setCaptchaToken(null)}
+              onError={() => setCaptchaToken(null)}
+              ref={captchaRef}
+            />
+          </div>
+
           {error && (
             <div className="border border-red-300 bg-red-50 rounded-lg px-4 py-3 text-sm text-red-700">
               {error}
@@ -135,7 +168,7 @@ function LoginForm() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !captchaToken}
             className="btn-vena-primary w-full disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {loading ? "Connexion..." : "Se connecter"}
