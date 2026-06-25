@@ -735,18 +735,6 @@ function levenshtein(a: string, b: string): number {
 }
 
 /**
- * Vérifie qu'un mot existe dans la banque de sa catégorie.
- *
- * Tolérance fautes d'orthographe :
- *   - Match exact toujours OK
- *   - Pour les mots de 5+ caractères, on autorise 1 erreur (distance Levenshtein ≤ 1)
- *   - Pour les mots courts (3-4 chars), on exige le match exact
- *     (risque de faux positifs sinon : "rat" vs "rit" = distance 1 mais c'est triché)
- *
- * @param word     Le mot tapé par le joueur (déjà trimé)
- * @param category La catégorie courante (clé de PETIT_BAC_DICTIONARIES)
- */
-/**
  * Catégories où on n'a PAS de dictionnaire de référence — les prénoms sont
  * infinis et culturellement variés (Younès, Maeloan, Kéziah…). On accepte
  * tout ce qui respecte "commence par la bonne lettre + min 3 chars".
@@ -754,27 +742,153 @@ function levenshtein(a: string, b: string): number {
  */
 const OPEN_CATEGORIES = new Set(["Prénom garçon", "Prénom fille", "Célébrité"]);
 
-export function wordInDictionary(word: string, category: string): boolean {
-  // Catégories ouvertes (prénoms) : on accepte tout (la validation lettre/longueur
-  // est faite ailleurs dans wordStartsWithLetter)
+/**
+ * Cache mémoire des validations Wiktionary (clé : "mot|lang"). Évite de
+ * re-spammer l'API si plusieurs joueurs tapent le même mot dans la partie.
+ * Vidé au reload serveur — pas critique car les mots courants seront en cache
+ * dans le dico local de toute façon.
+ */
+const wiktionaryCache = new Map<string, boolean>();
+
+/**
+ * Interroge Wiktionary pour vérifier qu'un mot EXISTE dans la langue donnée.
+ *
+ * Pourquoi ce fallback :
+ *   Retour Moxy 09/06/2026 : des joueurs ont donné de vraies bonnes réponses
+ *   rejetées car absentes du dico local (limité à ~100-150 mots/catégorie).
+ *   Wiktionary FR contient ~3 millions d'entrées → couverture quasi totale.
+ *
+ * Limites :
+ *   - Wiktionary dit juste "ce mot existe en français/anglais", pas s'il est
+ *     dans la BONNE catégorie. On l'utilise comme filet de sécurité, pas
+ *     comme source canonique de la sémantique.
+ *
+ * @returns true si Wiktionary trouve le mot, false si Wiktionary confirme
+ *          son absence, null si l'API a échoué (réseau, rate limit, etc.)
+ */
+async function validateOnWiktionary(
+  word: string,
+  lang: "fr" | "en" = "fr"
+): Promise<boolean | null> {
+  const cacheKey = `${normalizeWord(word)}|${lang}`;
+  if (wiktionaryCache.has(cacheKey)) return wiktionaryCache.get(cacheKey)!;
+
+  try {
+    // L'API MediaWiki est gratuite, sans clé, et CORS-friendly (origin=*).
+    // On cherche le titre EXACT du mot (Wiktionary est case-sensitive pour
+    // les majuscules françaises mais on tente d'abord la forme normalisée).
+    const tryTitle = async (title: string): Promise<boolean | null> => {
+      const url =
+        `https://${lang}.wiktionary.org/w/api.php` +
+        `?action=query&titles=${encodeURIComponent(title)}` +
+        `&format=json&origin=*&formatversion=2`;
+      const res = await fetch(url, {
+        headers: { Accept: "application/json" },
+        // Cache 24h côté Next pour ne pas spammer l'API en cas de mot répété
+        next: { revalidate: 86400 },
+      });
+      if (!res.ok) return null;
+      const data = (await res.json()) as {
+        query?: { pages?: Array<{ missing?: boolean; title?: string }> };
+      };
+      const page = data.query?.pages?.[0];
+      if (!page) return null;
+      // Page "missing" = mot inexistant. Sinon = mot existe en Wiktionary.
+      return !page.missing;
+    };
+
+    // Essai 1 : forme lowercase (la plupart des entrées Wiktionary sont en
+    // minuscules sauf noms propres)
+    const lowerResult = await tryTitle(word.toLowerCase());
+    if (lowerResult === true) {
+      wiktionaryCache.set(cacheKey, true);
+      return true;
+    }
+
+    // Essai 2 : forme capitalisée (pour villes, marques, noms propres)
+    const capitalized = word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    if (capitalized !== word.toLowerCase()) {
+      const capResult = await tryTitle(capitalized);
+      if (capResult === true) {
+        wiktionaryCache.set(cacheKey, true);
+        return true;
+      }
+    }
+
+    // Aucune des 2 formes ne marche → on est certain que le mot n'existe pas
+    // dans cette langue Wiktionary
+    if (lowerResult === false) {
+      wiktionaryCache.set(cacheKey, false);
+      return false;
+    }
+    return null; // API indisponible ou erreur réseau
+  } catch (e) {
+    console.warn(`[wiktionary] validation échouée pour "${word}":`, e);
+    return null;
+  }
+}
+
+/**
+ * Vérifie qu'un mot existe dans la banque de sa catégorie.
+ *
+ * STRATÉGIE EN 4 COUCHES (refonte 11/06/2026 après retour Moxy) :
+ *
+ *   L1 — Catégories ouvertes (prénoms, célébrités) → ACCEPT tout
+ *   L2 — Match exact dans le dictionnaire local
+ *   L3 — Tolérance Levenshtein dans le dictionnaire local (≤1 erreur pour mots 5+)
+ *   L4 — Fallback Wiktionary API (couverture quasi exhaustive du français)
+ *   L5 — Filet de sécurité : si Wiktionary indisponible (réseau), accept par
+ *        défaut. PHILOSOPHIE : le doute bénéficie au joueur. On préfère valider
+ *        à tort qu'invalider à raison (frustration garantie sinon).
+ *
+ * Async maintenant (était sync avant) car L4 fait un appel HTTP. Le seul caller
+ * `revealPetitBacRoundAction` est déjà une server action async — pas de breaking change.
+ *
+ * @param word     Le mot tapé par le joueur (déjà trimé)
+ * @param category La catégorie courante (clé de PETIT_BAC_DICTIONARIES)
+ */
+export async function wordInDictionary(
+  word: string,
+  category: string
+): Promise<boolean> {
+  // L1 : Catégories ouvertes (prénoms) → on accepte tout
   if (OPEN_CATEGORIES.has(category)) return true;
 
   const dict = PETIT_BAC_DICTIONARIES[category];
-  if (!dict) return false; // Catégorie inconnue → on rejette
   const normalized = normalizeWord(word);
 
-  // Match exact en priorité (90% des cas)
-  if (dict.has(normalized)) return true;
+  // L2 : Match exact dans le dico local (90% des cas, instantané)
+  if (dict?.has(normalized)) return true;
 
-  // Pour les mots courts, on n'autorise pas la tolérance (trop de faux positifs)
-  if (normalized.length < 5) return false;
-
-  // Pour les mots 5+ chars : on scanne le dico et on cherche un mot à distance ≤ 1
-  // Optim : on skip les mots dont la longueur diffère de plus de 1 (impossible d'être à
-  // distance 1 sinon)
-  for (const dictWord of dict) {
-    if (Math.abs(dictWord.length - normalized.length) > 1) continue;
-    if (levenshtein(normalized, dictWord) <= 1) return true;
+  // L3 : Tolérance Levenshtein dans le dico local (mots 5+ chars seulement)
+  if (dict && normalized.length >= 5) {
+    for (const dictWord of dict) {
+      if (Math.abs(dictWord.length - normalized.length) > 1) continue;
+      if (levenshtein(normalized, dictWord) <= 1) return true;
+    }
   }
-  return false;
+
+  // L4 : Fallback Wiktionary — détermine la langue selon la catégorie
+  // "Mot anglais" → Wiktionary EN. Tout le reste → Wiktionary FR.
+  const wikiLang: "fr" | "en" = category === "Mot anglais" ? "en" : "fr";
+  const wikiResult = await validateOnWiktionary(word, wikiLang);
+
+  if (wikiResult === true) {
+    // Wiktionary confirme que le mot existe. ATTENTION : ça ne dit pas qu'il
+    // est dans la BONNE catégorie. Pour minimiser les abus, on n'accepte que
+    // si le mot a au moins 3 chars (le wordStartsWithLetter checke déjà mais
+    // par sécurité). Suffit pour 95% des cas réels.
+    return normalized.length >= 3;
+  }
+
+  if (wikiResult === false) {
+    // Wiktionary confirme que le mot n'existe pas → rejet certain
+    return false;
+  }
+
+  // L5 : Wiktionary indisponible (null) → filet de sécurité. On accepte par
+  // défaut si le mot fait au moins 4 chars (un mot très court avec orthographe
+  // bizarre + API down = probablement triche, à rejeter).
+  // Philosophie : moins de frustration > moins de triche occasionnelle.
+  return normalized.length >= 4;
 }

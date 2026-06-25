@@ -91,10 +91,18 @@ function LoginForm() {
         errCode === "over_request_rate_limit" ||
         errStatus === 429 ||
         signInError.message?.toLowerCase().includes("rate limit");
+      // Detection erreur captcha (depuis activation Supabase Bot Protection 11/06/2026)
+      const isCaptchaError =
+        errCode === "captcha_failed" ||
+        signInError.message?.toLowerCase().includes("captcha");
 
       if (isRateLimit) {
         setError(
           "Trop de tentatives en peu de temps. Attends quelques minutes avant de reessayer."
+        );
+      } else if (isCaptchaError) {
+        setError(
+          "Verification captcha echouee. Re-coche le hCaptcha et reessaie."
         );
       } else {
         setError("Email ou mot de passe incorrect.");

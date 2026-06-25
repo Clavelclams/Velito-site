@@ -24,45 +24,82 @@ interface ActionResult {
  * avoir N tracks.
  */
 /**
- * Pioche 3 leurres en favorisant des artistes DIFFÉRENTS du morceau cible.
- * Bug précédent : on prenait les 3 decoys hardcodés qui étaient souvent du même
- * artiste → frustrant. Maintenant on pioche dans la banque entière et on
- * privilégie la diversité.
+ * Pioche 3 leurres en favorisant des artistes DIFFÉRENTS du morceau cible
+ * ET en privilégiant le même thème musical (cohérence genre).
+ *
+ * Bug remonté Moxy 09/06/2026 :
+ *   1. Option C identique à D (doublon strict après shuffle)
+ *   2. Genre musical incohérent (cible Jazz, decoys Rap → trop évident)
+ *
+ * Fix 11/06/2026 :
+ *   - Dedup STRICT par label complet (pas juste par artiste) → fini les C=D
+ *   - Priorité 1 : leurres du même `theme` que la cible (cohérence genre)
+ *   - Priorité 2 : leurres d'artistes différents
+ *   - Priorité 3 : compléter avec n'importe quoi si banque trop petite
  */
 function pickDiverseDecoys(
-  correctArtist: string,
+  correctLabel: string,
+  correctTheme: string | undefined,
   count: number = 3
 ): string[] {
+  const normalize = (s: string) =>
+    s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
   const normalizeArtist = (s: string) =>
-    s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").split("—")[0]?.trim() ?? "";
-  const correctNorm = normalizeArtist(correctArtist);
+    normalize(s.split("—")[0] ?? "");
 
-  // Pool de TOUS les correctLabels de la banque (pour les utiliser comme leurres)
-  const allOtherLabels = BLIND_TRACKS
-    .map((t) => t.correctLabel)
-    .filter((label) => normalizeArtist(label) !== correctNorm);
+  const correctLabelNorm = normalize(correctLabel);
+  const correctArtistNorm = normalizeArtist(correctLabel);
 
-  const shuffled = shuffle(allOtherLabels);
+  // Pool de TOUS les autres correctLabels (pour utiliser comme leurres)
+  const allOtherTracks = BLIND_TRACKS.filter(
+    (t) => normalize(t.correctLabel) !== correctLabelNorm
+  );
+
+  // 1) Priorité aux leurres du MÊME thème (cohérence genre musical)
+  const sameThemeShuffled = shuffle(
+    correctTheme
+      ? allOtherTracks.filter((t) => t.theme === correctTheme)
+      : []
+  );
+  // 2) Le reste (autres thèmes), randomisé
+  const otherThemesShuffled = shuffle(
+    allOtherTracks.filter((t) => t.theme !== correctTheme)
+  );
+
+  const candidates = [...sameThemeShuffled, ...otherThemesShuffled];
+
   const used: string[] = [];
-  const usedArtists = new Set<string>([correctNorm]);
+  const usedLabels = new Set<string>([correctLabelNorm]); // dedup strict label
+  const usedArtists = new Set<string>([correctArtistNorm]);
 
-  for (const label of shuffled) {
+  // Passe 1 : artiste pas encore utilisé + label unique
+  for (const track of candidates) {
     if (used.length >= count) break;
-    const artist = normalizeArtist(label);
-    // Privilégie un artiste pas encore utilisé
-    if (!usedArtists.has(artist)) {
-      used.push(label);
-      usedArtists.add(artist);
+    const labelN = normalize(track.correctLabel);
+    const artistN = normalizeArtist(track.correctLabel);
+    if (usedLabels.has(labelN)) continue;
+    if (usedArtists.has(artistN)) continue;
+    used.push(track.correctLabel);
+    usedLabels.add(labelN);
+    usedArtists.add(artistN);
+  }
+
+  // Passe 2 : si pas assez, on relâche la contrainte artiste (juste label unique)
+  if (used.length < count) {
+    for (const track of candidates) {
+      if (used.length >= count) break;
+      const labelN = normalize(track.correctLabel);
+      if (usedLabels.has(labelN)) continue;
+      used.push(track.correctLabel);
+      usedLabels.add(labelN);
     }
   }
 
-  // Si on n'a pas atteint count (banque trop petite ou pleine de mêmes artistes),
-  // on complète avec les premiers leurres restants
-  if (used.length < count) {
-    for (const label of shuffled) {
-      if (used.length >= count) break;
-      if (!used.includes(label)) used.push(label);
-    }
+  // Garde-fou : si la banque est vraiment trop petite, on remplit avec
+  // des placeholders distincts plutôt que d'avoir des doublons.
+  while (used.length < count) {
+    const placeholder = `Titre inconnu #${used.length + 1}`;
+    used.push(placeholder);
   }
 
   return used.slice(0, count);
@@ -84,12 +121,25 @@ async function prefetchRounds(count: number): Promise<BlindTestRound[]> {
     // Utilise le VRAI titre iTunes pour la bonne réponse (pour matcher l'audio)
     const correctLabel = `${enriched.realTrackName} — ${enriched.realArtistName}`;
 
-    // Pioche 3 leurres diversifiés d'artistes différents
-    const decoys = pickDiverseDecoys(enriched.realArtistName, 3);
+    // Pioche 3 leurres diversifiés (même thème en priorité + artistes différents + label unique)
+    const decoys = pickDiverseDecoys(correctLabel, track.theme, 3);
 
-    // Mélange les 4 labels
-    const allLabels = [correctLabel, ...decoys];
-    const shuffled = shuffle(allLabels);
+    // SANITY CHECK : on garantit 4 labels distincts avant shuffle.
+    // Si jamais on a un doublon (banque trop petite ou edge case), on remplace.
+    const seenLabels = new Set<string>();
+    const finalLabels: string[] = [];
+    for (const label of [correctLabel, ...decoys]) {
+      const norm = label.toLowerCase().trim();
+      if (seenLabels.has(norm)) {
+        // Doublon détecté → on suffixe pour distinguer (cas ultra rare)
+        finalLabels.push(`${label} (alt)`);
+      } else {
+        finalLabels.push(label);
+        seenLabels.add(norm);
+      }
+    }
+
+    const shuffled = shuffle(finalLabels);
     const correctIndex = shuffled.indexOf(correctLabel);
 
     rounds.push({

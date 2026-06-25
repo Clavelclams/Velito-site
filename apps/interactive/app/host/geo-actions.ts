@@ -16,10 +16,18 @@ interface ActionResult {
   error?: string;
 }
 
-function pickTarget(excluded: string[]) {
-  const available = GEO_TARGETS.filter((t) => !excluded.includes(t.id));
-  const pool = available.length > 0 ? available : GEO_TARGETS;
-  return pool[Math.floor(Math.random() * pool.length)]!;
+/**
+ * Pré-shuffle les cibles pour toute la partie. Garantie mathématique
+ * "aucun doublon" sur les N rounds (cf. fix bug Moxy 11/06/2026).
+ */
+function buildShuffledSequence(): string[] {
+  const ids = GEO_TARGETS.map((t) => t.id);
+  // Fisher-Yates shuffle
+  for (let i = ids.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [ids[i], ids[j]] = [ids[j]!, ids[i]!];
+  }
+  return ids;
 }
 
 export async function startGeoAction(sessionId: string): Promise<ActionResult> {
@@ -27,15 +35,18 @@ export async function startGeoAction(sessionId: string): Promise<ActionResult> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: "Non connecté." };
 
-  const t = pickTarget([]);
+  // Génère la séquence pré-shufflée pour toute la partie (anti-doublon)
+  const shuffledIds = buildShuffledSequence();
+  const firstId = shuffledIds[0]!;
   const newState: GeoState = {
     phase: "round",
     round: 1,
     totalRounds: GEO_TOTAL_ROUNDS,
-    targetId: t.id,
+    targetId: firstId,
     roundStartedAt: new Date().toISOString(),
     roundDurationSec: GEO_ROUND_DURATION_SEC,
-    playedTargetIds: [t.id],
+    playedTargetIds: [firstId],
+    shuffledTargetIds: shuffledIds,
   };
 
   const { error } = await supabase
@@ -168,15 +179,28 @@ export async function nextGeoRoundAction(sessionId: string): Promise<ActionResul
     return endGeoAction(sessionId);
   }
 
-  const t = pickTarget(state.playedTargetIds ?? []);
+  // Si la session a une séquence pré-shufflée (parties créées après 11/06/2026),
+  // on prend l'élément à l'index `nextRound - 1`. Garantie anti-doublon.
+  // Fallback (parties anciennes sans shuffledTargetIds) : pick random hors playedTargetIds.
+  let nextTargetId: string;
+  if (state.shuffledTargetIds && state.shuffledTargetIds.length >= nextRound) {
+    nextTargetId = state.shuffledTargetIds[nextRound - 1]!;
+  } else {
+    const excluded = state.playedTargetIds ?? [];
+    const available = GEO_TARGETS.filter((t) => !excluded.includes(t.id));
+    const pool = available.length > 0 ? available : GEO_TARGETS;
+    nextTargetId = pool[Math.floor(Math.random() * pool.length)]!.id;
+  }
+
   const newState: GeoState = {
     phase: "round",
     round: nextRound,
     totalRounds: state.totalRounds,
-    targetId: t.id,
+    targetId: nextTargetId,
     roundStartedAt: new Date().toISOString(),
     roundDurationSec: GEO_ROUND_DURATION_SEC,
-    playedTargetIds: [...(state.playedTargetIds ?? []), t.id],
+    playedTargetIds: [...(state.playedTargetIds ?? []), nextTargetId],
+    shuffledTargetIds: state.shuffledTargetIds,
   };
 
   const { error } = await supabase

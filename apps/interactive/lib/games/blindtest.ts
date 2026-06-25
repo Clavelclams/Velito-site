@@ -661,8 +661,11 @@ export const BLIND_TRACKS: BlindTrack[] = [
   },
 ];
 
-/** Durée d'un round (en secondes). */
-export const BLINDTEST_QUESTION_TIME_LIMIT_SEC = 20;
+/** Durée d'un round (en secondes).
+ * Retour Moxy 09/06/2026 : 20s laisse trop de temps, tout le monde trouve → no fun.
+ * Réduit à 12s pour avoir une vraie pression compétitive.
+ */
+export const BLINDTEST_QUESTION_TIME_LIMIT_SEC = 12;
 /** Durée du reveal avant question suivante. */
 export const BLINDTEST_REVEAL_DURATION_SEC = 6;
 /** Nombre de rounds par partie. */

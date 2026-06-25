@@ -245,6 +245,12 @@ export interface GeoState {
   roundDurationSec?: number;
   revealStartedAt?: string;
   revealDurationSec?: number;
-  /** Cibles déjà jouées (anti-doublon). */
+  /** Cibles déjà jouées (anti-doublon). Conservé pour rétro-compat / debug. */
   playedTargetIds?: string[];
+  /**
+   * Séquence pré-shufflée des cibles pour la partie entière.
+   * Ajouté 11/06/2026 pour garantir mathématiquement aucune ville doublon
+   * sur la durée de la partie (bug remonté Moxy : mêmes villes 2× de suite).
+   */
+  shuffledTargetIds?: string[];
 }

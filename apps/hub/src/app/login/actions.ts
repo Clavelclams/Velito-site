@@ -94,6 +94,16 @@ export async function signInAction(input: SignInInput): Promise<ActionResult> {
             "Trop de tentatives en peu de temps. Attends quelques minutes avant de réessayer.",
         };
       }
+      // Detection erreur captcha (depuis activation Supabase Bot Protection 11/06/2026)
+      const isCaptchaError =
+        errCode === "captcha_failed" ||
+        error.message?.toLowerCase().includes("captcha");
+      if (isCaptchaError) {
+        return {
+          success: false,
+          error: "Vérification captcha échouée. Re-coche le hCaptcha et réessaie.",
+        };
+      }
       return { success: false, error: "Identifiants invalides." };
     }
   } catch (e) {

@@ -711,18 +711,10 @@ export const ESTIM_QUESTIONS: EstimQuestion[] = [
   },
 
   // ─────────────────────────────────────────────────────────────────────────
-  // SIGNATURE — Clavel (joke, revient parfois)
+  // SIGNATURE — Clavel (joke) RETIRÉE le 11/06/2026 après retour Moxy
+  // Les joueurs trouvaient la question relou/inutile. À ré-introduire seulement
+  // si on trouve un format qui fait rire sans casser le rythme.
   // ─────────────────────────────────────────────────────────────────────────
-  {
-    id: "clavel",
-    label: "Combien vaut Clavel ?",
-    hint: "Fondateur de Velito · réponse libre",
-    priceEur: 0, // ignoré car joke=true
-    image: "/images/estim/clavel.jpg",
-    emoji: "👑",
-    theme: "Signature Velito",
-    joke: true,
-  },
 ];
 
 /** Durée d'un round Estim' en secondes. */

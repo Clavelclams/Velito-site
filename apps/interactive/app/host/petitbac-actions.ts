@@ -129,10 +129,28 @@ export async function revealPetitBacRoundAction(
 
   // 3. Pré-calcul validité par ligne + regroupement par catégorie
   //    pour permettre le scoring vitesse par catégorie.
+  //
+  // wordInDictionary est ASYNC depuis le 11/06/2026 (fallback Wiktionary API
+  // pour couvrir les mots absents du dico local — retour Moxy : trop de mots
+  // valides étaient rejetés). On valide en PARALLÈLE via Promise.all pour ne
+  // pas séquentialiser les ~50 appels (1 par mot soumis).
   const validityByRow = new Map<string, boolean>();
   const validsByCategory = new Map<string, typeof rows>();
+
+  const validityChecks = await Promise.all(
+    rows.map(async (a) => {
+      // Check synchrone d'abord (lettre + longueur min) — pas besoin d'API
+      const startsOk = wordStartsWithLetter(a.word, state.letter);
+      if (!startsOk) return { id: a.id, isValid: false };
+      // Check async dico + Wiktionary fallback
+      const inDict = await wordInDictionary(a.word, a.category);
+      return { id: a.id, isValid: inDict };
+    })
+  );
+  const validityById = new Map(validityChecks.map((v) => [v.id, v.isValid]));
+
   for (const a of rows) {
-    const isValid = wordStartsWithLetter(a.word, state.letter) && wordInDictionary(a.word, a.category);
+    const isValid = validityById.get(a.id) ?? false;
     validityByRow.set(a.id, isValid);
     if (isValid) {
       const list = validsByCategory.get(a.category) ?? [];
