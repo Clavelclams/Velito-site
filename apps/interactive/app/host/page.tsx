@@ -140,7 +140,7 @@ export default async function HostScreen({ searchParams }: HostPageProps) {
         code={sessionRow.code}
         status={sessionRow.status}
         playBaseUrl={playBaseUrl}
-        gameType={sessionRow.game_type as "quiz" | "petit_bac" | "blind_test" | "estim" | "geo" | "reflex" | "loup_garou" | "draw" | null}
+        gameType={sessionRow.game_type as "quiz" | "petit_bac" | "blind_test" | "estim" | "pinpoint" | "reflex" | "loup_garou" | "draw" | null}
       />
     );
   }
@@ -205,7 +205,7 @@ export default async function HostScreen({ searchParams }: HostPageProps) {
       />
     );
   }
-  if (sessionRow.game_type === "geo") {
+  if (sessionRow.game_type === "pinpoint") {
     const geoState = (sessionRow.current_state ?? {
       phase: "round",
       round: 1,

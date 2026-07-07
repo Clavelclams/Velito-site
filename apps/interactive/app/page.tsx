@@ -50,12 +50,12 @@ const JEUX = [
 ];
 
 const ATOUTS = [
-  { titre: "Zéro installation", desc: "Un navigateur, une TV, c'est tout. Pas d'app à télécharger pour tes clients." },
-  { titre: "Joueurs illimités", desc: "De 2 à 50+ joueurs simultanés. Personne sur le banc de touche." },
+  { titre: "Aucune app à télécharger", desc: "Un navigateur, une TV, un QR code. Les clients jouent depuis leur smartphone en 10 secondes." },
+  { titre: "Jusqu'à 50 joueurs en simultané", desc: "De la petite tablée aux grosses soirées. Personne sur le banc de touche." },
   { titre: "Aux couleurs du bar", desc: "Logo + couleurs + message promo personnalisés par établissement." },
-  { titre: "Plug & play", desc: "Prêt en 2 minutes. Pas de formation, pas de technicien." },
-  { titre: "Tableau de bord", desc: "Suis tes soirées : joueurs revenus, jeux préférés, ambiance." },
-  { titre: "RGPD natif", desc: "Pas d'email forcé. Les joueurs gardent leur score s'ils veulent." },
+  { titre: "Prêt en 2 minutes chrono", desc: "Câble HDMI branché, jeu lancé, QR affiché. Pas de formation, pas de technicien." },
+  { titre: "Stats live pendant la soirée", desc: "Suis tes soirées : joueurs revenus, jeux préférés, ambiance." },
+  { titre: "Conforme RGPD, zéro formulaire", desc: "Pas d'email forcé. Les joueurs gardent leur score s'ils veulent." },
 ];
 
 export default function InteractiveHome() {
@@ -139,9 +139,10 @@ export default function InteractiveHome() {
             <span className="text-tenant">arcade en 2 minutes</span>.
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-white/70">
-            Tes clients scannent un QR code et jouent depuis leur téléphone à
-            des Quiz, du Blind Test, du Petit Bac et du Géo en temps réel.
-            Aucune app à installer. Pensé pour les bars, MJC et lieux d'animation.
+            Anime ton bar en mode arcade. Tes clients flashent un QR, sortent
+            leur téléphone, et lancent une partie sur ta TV : Quiz, Blind Test,
+            Petit Bac, Pin&apos;Point. Pas d&apos;app, pas de compte. Pensé à
+            Amiens pour les bars, MJC et lieux qui veulent du bruit.
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
             <Link
@@ -175,9 +176,9 @@ export default function InteractiveHome() {
           </p>
           <div className="mt-12 grid gap-6 sm:grid-cols-3">
             {[
-              { n: "01", t: "Branche", d: "Connecte un PC à ta TV via HDMI et ouvre Interactive dans ton navigateur." },
-              { n: "02", t: "Lance", d: "Choisis un jeu dans le catalogue. Un QR code apparaît à l'écran." },
-              { n: "03", t: "Joue !", d: "Tes clients scannent et jouent depuis leur téléphone. C'est parti." },
+              { n: "PLUG", t: "Branche", d: "Connecte un PC à ta TV via HDMI et ouvre Interactive dans ton navigateur." },
+              { n: "PLAY", t: "Lance", d: "Choisis un jeu dans le catalogue. Un QR code apparaît à l'écran." },
+              { n: "PARTY", t: "Joue !", d: "Tes clients scannent et jouent depuis leur téléphone. C'est parti." },
             ].map((e) => (
               <div key={e.n} className="card-ink p-6">
                 <p className="font-display text-3xl font-black text-tenant">
@@ -280,9 +281,9 @@ export default function InteractiveHome() {
               </p>
               <ul className="mt-6 space-y-2 text-sm text-white/70">
                 <li>· Tous les jeux inclus (Quiz, Petit Bac, Estim&apos;…)</li>
-                <li>· Joueurs illimités</li>
+                <li>· Jusqu&apos;à 50 joueurs simultanés</li>
                 <li>· Tes couleurs &amp; logo</li>
-                <li>· Tableau de bord</li>
+                <li>· Stats live pendant la soirée</li>
                 <li>· Support direct (Clavel)</li>
                 <li>· Nouveaux jeux gratuits à vie</li>
               </ul>
@@ -309,9 +310,9 @@ export default function InteractiveHome() {
               </div>
               <ul className="mt-6 space-y-2 text-sm text-white/70">
                 <li>· Tous les jeux inclus</li>
-                <li>· Joueurs illimités</li>
+                <li>· Jusqu&apos;à 50 joueurs simultanés</li>
                 <li>· Tes couleurs &amp; logo</li>
-                <li>· Tableau de bord</li>
+                <li>· Stats live pendant la soirée</li>
                 <li>· Support par email</li>
               </ul>
             </div>

@@ -49,7 +49,7 @@ interface HostLobbyProps {
   status: string;
   playBaseUrl: string;
   /** Type de jeu pré-sélectionné depuis la galerie. Null = pas encore choisi. */
-  gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | "geo" | "reflex" | "loup_garou" | "draw" | null;
+  gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | "pinpoint" | "reflex" | "loup_garou" | "draw" | null;
 }
 
 export default function HostLobby({
@@ -219,7 +219,7 @@ export default function HostLobby({
       await startPetitBacAction(sessionId);
     } else if (gameType === "estim") {
       await startEstimAction(sessionId);
-    } else if (gameType === "geo") {
+    } else if (gameType === "pinpoint") {
       await startGeoAction(sessionId);
     } else if (gameType === "blind_test") {
       await startBlindTestAction(sessionId, numRounds);

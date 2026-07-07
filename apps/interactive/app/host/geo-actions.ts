@@ -54,13 +54,13 @@ export async function startGeoAction(sessionId: string): Promise<ActionResult> {
     .from("sessions")
     .update({
       status: "playing",
-      game_type: "geo",
+      game_type: "pinpoint",
       started_at: new Date().toISOString(),
       current_state: newState,
     } as never)
     .eq("id", sessionId);
 
-  if (error) return { success: false, error: "Impossible de démarrer Géo." };
+  if (error) return { success: false, error: "Impossible de démarrer Pin'Point." };
   return { success: true };
 }
 

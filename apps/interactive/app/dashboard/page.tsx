@@ -27,7 +27,7 @@ import SiretActivation from "./SiretActivation";
 // Catalogue jeux — source unique de vérité.
 // Tailwind doit "voir" les classes pour les générer au build, donc on les
 // écrit en dur dans `accentClass` (pas de bg-${...}).
-type GameType = "quiz" | "petit_bac" | "blind_test" | "estim" | "geo" | "reflex" | "loup_garou" | "draw" | null;
+type GameType = "quiz" | "petit_bac" | "blind_test" | "estim" | "pinpoint" | "reflex" | "loup_garou" | "draw" | null;
 
 interface GameCard {
   id: GameType;
@@ -103,8 +103,8 @@ const JEUX: GameCard[] = [
     available: true,
   },
   {
-    id: "geo",
-    nom: "Géo",
+    id: "pinpoint",
+    nom: "Pin'Point",
     desc: "Place ton pin au plus proche — villes France, Europe, monde",
     emoji: "🗺️",
     accentClass: {

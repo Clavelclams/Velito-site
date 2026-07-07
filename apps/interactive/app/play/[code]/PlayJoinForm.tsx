@@ -45,7 +45,7 @@ interface PlayJoinFormProps {
   sessionId: string;
   code: string;
   /** Type de jeu pré-sélectionné (peut changer après start si null). */
-  gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | "geo" | "reflex" | "loup_garou" | "draw" | null;
+  gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | "pinpoint" | "reflex" | "loup_garou" | "draw" | null;
   /** Statut actuel de la session côté DB ('lobby' ou 'playing'). */
   sessionStatus: "lobby" | "playing";
 }
@@ -459,7 +459,7 @@ export default function PlayJoinForm({ sessionId, code, gameType, sessionStatus 
       />
     );
   }
-  if (gameType === "geo") {
+  if (gameType === "pinpoint") {
     return (
       <PlayGeoGame
         sessionId={sessionId}

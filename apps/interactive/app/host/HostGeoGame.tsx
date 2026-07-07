@@ -273,7 +273,7 @@ export default function HostGeoGame({
                   pseudo={winner.pseudo}
                   avatar={winner.avatar_config}
                   score={winner.score}
-                  subtitle={`Géo · ${state.totalRounds} cibles`}
+                  subtitle={`Pin'Point · ${state.totalRounds} cibles`}
                 />
               ) : (
                 <p className="text-center text-white/50">Aucun joueur.</p>
