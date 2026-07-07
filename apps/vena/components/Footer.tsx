@@ -150,7 +150,7 @@ export default function Footer() {
 
         <div className="border-t border-vena-cream/15 mt-10 pt-6 text-xs opacity-70 flex flex-col sm:flex-row gap-2 sm:gap-4 justify-between">
           <p>
-            © {new Date().getFullYear()} Velito Expertise Numérique Amiens —
+            © {new Date().getFullYear()} Velito Expertise Numérique Amiens ·
             SASU au capital de 500€
           </p>
           <p>Amiens · Hauts-de-France · France</p>

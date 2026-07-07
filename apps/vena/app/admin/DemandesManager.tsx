@@ -36,7 +36,7 @@ const STATUT_META: Record<string, { label: string; cls: string }> = {
 };
 
 const FALLBACK_META = {
-  label: "—",
+  label: "-",
   cls: "bg-gray-100 text-gray-500 border-gray-200",
 };
 
@@ -161,10 +161,10 @@ export default function DemandesManager({ demandes }: { demandes: Demande[] }) {
                     )}
                     <p className="text-vena-text">
                       <span className="text-vena-text-dim">Budget :</span>{" "}
-                      {d.budget_envisage || "—"}
+                      {d.budget_envisage || "-"}
                       {"  ·  "}
                       <span className="text-vena-text-dim">Délai :</span>{" "}
-                      {d.delai || "—"}
+                      {d.delai || "-"}
                     </p>
                     {d.source_decouverte && (
                       <p className="text-vena-text">

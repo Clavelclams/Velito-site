@@ -34,7 +34,7 @@ const MONO = "'JetBrains Mono', ui-monospace, 'Courier New', monospace";
 export const LIEN_ITEMS: FlowingMenuItem[] = [
   // 1. VEA — logo VEA (rouge) sur pastille blanche
   {
-    text: "VEA — Esport",
+    text: "VEA · Esport",
     link: VEA_URL,
     external: true,
     bubble: { kind: "image", src: "/images/lien-vea.svg", bg: "#ffffff" },
@@ -42,7 +42,7 @@ export const LIEN_ITEMS: FlowingMenuItem[] = [
 
   // 2. VENA — symbole VENA recoloré beige (matche le kaki du bandeau)
   {
-    text: "VENA — Agence",
+    text: "VENA · Agence",
     link: "/", // on est déjà sur velito.fr (VENA) -> retour accueil agence
     external: false,
     bubble: { kind: "image", src: "/images/vena-symbole-beige.svg" },

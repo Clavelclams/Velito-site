@@ -30,7 +30,7 @@ const STATUT_META: Record<string, { label: string; cls: string }> = {
   traite: { label: "Traité", cls: "bg-emerald-100 text-emerald-700 border-emerald-200" },
   archive: { label: "Archivé", cls: "bg-gray-100 text-gray-500 border-gray-200" },
 };
-const FALLBACK_META = { label: "—", cls: "bg-gray-100 text-gray-500 border-gray-200" };
+const FALLBACK_META = { label: "-", cls: "bg-gray-100 text-gray-500 border-gray-200" };
 function metaOf(s: string) {
   return STATUT_META[s] ?? FALLBACK_META;
 }

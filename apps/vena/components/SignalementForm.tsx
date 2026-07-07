@@ -150,7 +150,7 @@ export default function SignalementForm({
           className={inputCls}
           required
         >
-          <option value="">— Choisis —</option>
+          <option value="">Choisis</option>
           {CATEGORIES.map((c) => (
             <option key={c.value} value={c.value}>
               {c.label}

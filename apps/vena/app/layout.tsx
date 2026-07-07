@@ -15,12 +15,12 @@ const SITE_URL = "https://velito.fr";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "VENA — Velito Expertise Numérique Amiens · Agence digitale",
+    default: "VENA · Velito Expertise Numérique Amiens · Agence digitale",
     template: "%s · VENA",
   },
   description:
     "Agence numérique basée à Amiens. Développement web, production vidéo, location de matériel, formation. Une expertise locale pour les structures et entreprises des Hauts-de-France.",
-  applicationName: "VENA — Velito Expertise Numérique Amiens",
+  applicationName: "VENA · Velito Expertise Numérique Amiens",
   authors: [{ name: "Velito Expertise Numérique Amiens" }],
   keywords: [
     "agence numérique amiens",
@@ -38,13 +38,13 @@ export const metadata: Metadata = {
     locale: "fr_FR",
     url: SITE_URL,
     siteName: "VENA",
-    title: "VENA — Velito Expertise Numérique Amiens",
+    title: "VENA · Velito Expertise Numérique Amiens",
     description:
       "Agence numérique amiénoise. Sites web, vidéo, location matériel, formation.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "VENA — Velito Expertise Numérique Amiens",
+    title: "VENA · Velito Expertise Numérique Amiens",
     description: "Agence numérique amiénoise.",
   },
   alternates: {

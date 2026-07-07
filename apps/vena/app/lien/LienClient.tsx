@@ -32,7 +32,7 @@ export default function LienClient() {
         </h1>
         <p className="text-sm text-vena-text-muted mt-2 max-w-md mx-auto">
           L&apos;esport associatif, l&apos;agence numérique et le reste de
-          l&apos;écosystème — au même endroit.
+          l&apos;écosystème, au même endroit.
         </p>
       </header>
 

@@ -117,20 +117,20 @@ export async function submitContactAction(
     const prenom = escapeHtml(input.prenom.trim());
     const nom = escapeHtml(input.nom.trim());
     const clientEmail = input.email.trim().toLowerCase();
-    const structure = escapeHtml(input.structure?.trim() || "—");
+    const structure = escapeHtml(input.structure?.trim() || "-");
 
     // 1) Alerte au bureau (reply_to = email du demandeur)
     const htmlBureau = `
       <h2>Nouvelle demande de devis VENA</h2>
       <p><strong>Demandeur :</strong> ${prenom} ${nom}${
-        input.fonction ? " — " + escapeHtml(input.fonction.trim()) : ""
+        input.fonction ? " · " + escapeHtml(input.fonction.trim()) : ""
       }</p>
       <p><strong>Structure :</strong> ${structure}</p>
       <p><strong>Email :</strong> <a href="mailto:${escapeHtml(clientEmail)}">${escapeHtml(clientEmail)}</a><br/>
-         <strong>Tel :</strong> ${escapeHtml(input.telephone?.trim() || "—")}</p>
+         <strong>Tel :</strong> ${escapeHtml(input.telephone?.trim() || "-")}</p>
       <hr/>
       <p><strong>Service :</strong> ${escapeHtml(input.service_demande)}</p>
-      <p><strong>Budget :</strong> ${escapeHtml(input.budget_envisage?.trim() || "—")} &middot; <strong>Délai :</strong> ${escapeHtml(input.delai?.trim() || "—")}</p>
+      <p><strong>Budget :</strong> ${escapeHtml(input.budget_envisage?.trim() || "-")} &middot; <strong>Délai :</strong> ${escapeHtml(input.delai?.trim() || "-")}</p>
       <p><strong>Message :</strong><br/>${escapeHtml(input.message.trim()).replace(/\n/g, "<br/>")}</p>
       ${
         input.source_decouverte
@@ -146,7 +146,7 @@ export async function submitContactAction(
         input.structure ? ` concernant <strong>${structure}</strong>` : ""
       }.</p>
       <p>VENA revient vers toi sous 48 à 72h avec une proposition adaptée à ton besoin.</p>
-      <p>À très vite,<br/>— VENA · Velito Expertise Numérique Amiens</p>
+      <p>À très vite,<br/>VENA · Velito Expertise Numérique Amiens</p>
     `;
 
     try {
@@ -162,7 +162,7 @@ export async function submitContactAction(
             to: [toBureau],
             reply_to: clientEmail,
             subject: `[VENA Devis] ${input.prenom.trim()} ${input.nom.trim()}${
-              input.structure ? " — " + input.structure.trim() : ""
+              input.structure ? " · " + input.structure.trim() : ""
             }`,
             html: htmlBureau,
           }),
@@ -177,7 +177,7 @@ export async function submitContactAction(
             from: fromEmail,
             to: [clientEmail],
             reply_to: toBureau,
-            subject: "On a bien reçu ta demande — VENA",
+            subject: "On a bien reçu ta demande · VENA",
             html: htmlClient,
           }),
         }),

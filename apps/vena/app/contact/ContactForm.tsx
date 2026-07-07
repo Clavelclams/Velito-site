@@ -19,7 +19,7 @@ const SERVICES = [
   { value: "location_materiel", label: "Location de matériel" },
   { value: "formation", label: "Formation / accompagnement" },
   { value: "conseil", label: "Conseil / stratégie digitale" },
-  { value: "autre", label: "Autre — décrire ci-dessous" },
+  { value: "autre", label: "Autre (à préciser)" },
 ];
 
 const DELAIS = [
@@ -246,7 +246,7 @@ export default function ContactForm() {
           aria-required="true"
           className={inputClass}
         >
-          <option value="">— Choisis un service —</option>
+          <option value="">Choisis un service</option>
           {SERVICES.map((s) => (
             <option key={s.value} value={s.value}>
               {s.label}
@@ -279,7 +279,7 @@ export default function ContactForm() {
             onChange={(e) => setDelai(e.target.value)}
             className={inputClass}
           >
-            <option value="">— Au choix —</option>
+            <option value="">Au choix</option>
             {DELAIS.map((d) => (
               <option key={d} value={d}>
                 {d}
@@ -319,7 +319,7 @@ export default function ContactForm() {
           onChange={(e) => setSource(e.target.value)}
           className={inputClass}
         >
-          <option value="">— Optionnel —</option>
+          <option value="">Optionnel</option>
           {SOURCES.map((s) => (
             <option key={s.value} value={s.value}>
               {s.label}

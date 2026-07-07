@@ -103,7 +103,7 @@ export default function LanyardCard({ photoUrl }: LanyardCardProps) {
         <div
           role="button"
           tabIndex={0}
-          aria-label="Carte de visite Clavel / VENA — clique pour la retourner"
+          aria-label="Carte de visite Clavel / VENA, clique pour la retourner"
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={endDrag}

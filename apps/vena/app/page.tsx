@@ -80,7 +80,7 @@ const SERVICES: Service[] = [
     title: "Formation & accompagnement",
     intro: "T'apprendre, pas faire à ta place.",
     body:
-      "Si tu veux gérer ton site / tes réseaux / tes vidéos toi-même, on prend le temps de t'expliquer. Une session, un parcours, un accompagnement régulier — selon où tu es.",
+      "Si tu veux gérer ton site / tes réseaux / tes vidéos toi-même, on prend le temps de t'expliquer. Une session, un parcours, un accompagnement régulier, selon où tu es.",
     examples:
       "Atelier WordPress, formation OBS / streaming, prise en main d'outils numériques, coaching projet digital.",
     background: "bg-vena-lavande",
@@ -95,7 +95,7 @@ const CONVICTIONS = [
       "C'est notre cadre. On vit à Amiens, on connaît les structures et les gens, et on bosse mieux quand on peut se voir en vrai.",
   },
   {
-    label: "Un bon outil sert celui qui l'utilise — pas celui qui l'a fait.",
+    label: "Un bon outil sert celui qui l'utilise, pas celui qui l'a fait.",
     body:
       "On code pas pour montrer qu'on sait coder. On code pour que ton équipe arrive à publier une actu, encaisser un paiement, suivre un client, sans appeler le dev tous les 3 jours.",
   },
@@ -133,7 +133,7 @@ export default function VenaHome() {
           <p className="text-lg sm:text-xl text-vena-text leading-relaxed max-w-2xl mb-8">
             VENA, c&apos;est une boîte de dev / vidéo / matos basée à Amiens.
             On bosse avec des associations, des collectivités, des entreprises
-            locales — et avec Velito Esport Amiens, l&apos;asso qu&apos;on a
+            locales, et avec Velito Esport Amiens, l&apos;asso qu&apos;on a
             créée d&apos;abord.
           </p>
           <div className="flex flex-wrap gap-x-6 gap-y-3 items-center">
@@ -215,7 +215,7 @@ export default function VenaHome() {
               >
                 <div className="md:col-span-1">
                   <p className="font-display font-black text-3xl opacity-70">
-                    —{String(i + 1).padStart(2, "0")}
+                    {String(i + 1).padStart(2, "0")}
                   </p>
                 </div>
                 <div className="md:col-span-11 max-w-3xl">
@@ -273,7 +273,7 @@ export default function VenaHome() {
             Velito Esport Amiens, c&apos;est l&apos;asso loi 1901 qui a tout
             démarré. Tournois esport, animations dans les centres sociaux,
             prévention numérique, accompagnement de jeunes. On travaille en
-            parallèle, on mutualise quand ça aide — terrain pour VEA, technique
+            parallèle, on mutualise quand ça aide. Terrain pour VEA, technique
             pour VENA.
           </p>
           <div className="flex flex-wrap gap-x-6 gap-y-3">
@@ -308,7 +308,7 @@ export default function VenaHome() {
             On en parle ?
           </h2>
           <p className="text-base sm:text-lg text-vena-text mb-10 max-w-xl mx-auto">
-            Site, vidéo, formation, location matos — ou un truc qui rentre dans
+            Site, vidéo, formation, location matos, ou un truc qui rentre dans
             aucune case. Tu décris, on répond sous 72h.
           </p>
           <Link
