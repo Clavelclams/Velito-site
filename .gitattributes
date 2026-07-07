@@ -1,0 +1,33 @@
+# Auto-detect text files et normalize les line endings en LF dans le repo
+* text=auto eol=lf
+
+# Forcer LF pour les fichiers code, config, doc
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.css text eol=lf
+*.scss text eol=lf
+*.html text eol=lf
+*.sh text eol=lf
+*.sql text eol=lf
+
+# Binaires : pas de conversion
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg text eol=lf
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.mp3 binary
+*.mp4 binary
+*.pdf binary
+*.zip binary
