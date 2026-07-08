@@ -186,22 +186,12 @@ export async function revealAnswerAction(sessionId: string): Promise<ActionResul
       .update({ is_correct: isCorrect, points } as never)
       .eq("id", a.id);
 
-    // Met à jour le score cumulatif du joueur
+    // Met à jour le score cumulatif du joueur (atomique ; l'RPC clampe à 0,
+    // ce qui préserve l'ancien Math.max(0, …) pour le malus).
     if (points !== 0) {
-      const { data: playerData } = await supabase
-        .schema("interactive" as never)
-        .from("session_players")
-        .select("score")
-        .eq("id", a.player_id)
-        .single();
-
-      const currentScore = (playerData as { score: number } | null)?.score ?? 0;
-
       await supabase
         .schema("interactive" as never)
-        .from("session_players")
-        .update({ score: Math.max(0, currentScore + points) } as never)
-        .eq("id", a.player_id);
+        .rpc("add_player_score", { p_player_id: a.player_id, p_points: points } as never);
     }
   }
 

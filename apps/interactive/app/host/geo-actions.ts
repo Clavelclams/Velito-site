@@ -130,18 +130,9 @@ export async function revealGeoRoundAction(sessionId: string): Promise<ActionRes
       } as never)
       .eq("id", a.id);
 
-    const { data: pData } = await supabase
-      .schema("interactive" as never)
-      .from("session_players")
-      .select("score")
-      .eq("id", a.player_id)
-      .single();
-    const currentScore = (pData as { score: number } | null)?.score ?? 0;
     await supabase
       .schema("interactive" as never)
-      .from("session_players")
-      .update({ score: currentScore + points } as never)
-      .eq("id", a.player_id);
+      .rpc("add_player_score", { p_player_id: a.player_id, p_points: points } as never);
   }
 
   const newState: GeoState = {

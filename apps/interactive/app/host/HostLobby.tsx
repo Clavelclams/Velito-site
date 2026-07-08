@@ -32,6 +32,7 @@ import { startBlindTestAction } from "./blindtest-actions";
 import { startReflexAction } from "./reflex-actions";
 import { startLoupGarouAction } from "./loupgarou-actions";
 import { startDrawAction } from "./draw-actions";
+import { startLaserAction } from "./laser-actions";
 import { useBackgroundMusic, playSfx, AUDIO } from "@/lib/audio";
 import MuteFooter from "./MuteFooter";
 
@@ -49,7 +50,7 @@ interface HostLobbyProps {
   status: string;
   playBaseUrl: string;
   /** Type de jeu pré-sélectionné depuis la galerie. Null = pas encore choisi. */
-  gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | "pinpoint" | "reflex" | "loup_garou" | "draw" | null;
+  gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | "pinpoint" | "reflex" | "loup_garou" | "draw" | "laser" | null;
 }
 
 export default function HostLobby({
@@ -229,6 +230,8 @@ export default function HostLobby({
       await startLoupGarouAction(sessionId);
     } else if (gameType === "draw") {
       await startDrawAction(sessionId);
+    } else if (gameType === "laser") {
+      await startLaserAction(sessionId);
     } else {
       await startQuizAction(sessionId, quizTheme);
     }

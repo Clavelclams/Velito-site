@@ -84,7 +84,10 @@ export const modules: VelitoModule[] = [
   {
     slug: "interactive",
     name: "Interactive",
-    url: "/construction?slug=interactive",
+    url:
+      process.env.NODE_ENV === "production"
+        ? "https://interactive.velito.fr"
+        : process.env.NEXT_PUBLIC_INTERACTIVE_URL ?? "https://interactive.velito.fr",
     accent: "#ffc3a0",
     description: "Animations gaming bars et MJC",
     image: "/modules/interactive.png",

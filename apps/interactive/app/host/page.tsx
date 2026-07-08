@@ -18,6 +18,7 @@ import HostQuizGame from "./HostQuizGame";
 import HostPetitBacGame from "./HostPetitBacGame";
 import HostEstimGame from "./HostEstimGame";
 import HostGeoGame from "./HostGeoGame";
+import HostLaserGame from "./HostLaserGame";
 import HostBlindTestGame from "./HostBlindTestGame";
 import HostReflexGame from "./HostReflexGame";
 import HostLoupGarouGame from "./HostLoupGarouGame";
@@ -140,7 +141,7 @@ export default async function HostScreen({ searchParams }: HostPageProps) {
         code={sessionRow.code}
         status={sessionRow.status}
         playBaseUrl={playBaseUrl}
-        gameType={sessionRow.game_type as "quiz" | "petit_bac" | "blind_test" | "estim" | "pinpoint" | "reflex" | "loup_garou" | "draw" | null}
+        gameType={sessionRow.game_type as "quiz" | "petit_bac" | "blind_test" | "estim" | "pinpoint" | "reflex" | "loup_garou" | "draw" | "laser" | null}
       />
     );
   }
@@ -216,6 +217,20 @@ export default async function HostScreen({ searchParams }: HostPageProps) {
       <HostGeoGame
         sessionId={sessionRow.id}
         initialState={geoState}
+        status={sessionRow.status}
+      />
+    );
+  }
+  if (sessionRow.game_type === "laser") {
+    const laserState = (sessionRow.current_state ?? {
+      phase: "aim",
+      round: 0,
+      zone: { min: 0, max: 1 },
+    }) as unknown as import("@/lib/games/laser").LaserState;
+    return (
+      <HostLaserGame
+        sessionId={sessionRow.id}
+        initialState={laserState}
         status={sessionRow.status}
       />
     );

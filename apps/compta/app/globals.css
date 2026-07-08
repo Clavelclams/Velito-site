@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Styles globaux Velito Compta.
+ * On reste minimal : Tailwind fait le reste via les classes utilitaires.
+ * Les chiffres utilisent tabular-nums pour que les colonnes de montants
+ * s'alignent verticalement (chaque chiffre a la même largeur).
+ */
+@layer base {
+  body {
+    font-variant-numeric: tabular-nums;
+  }
+}

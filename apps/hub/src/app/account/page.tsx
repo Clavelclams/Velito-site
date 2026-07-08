@@ -40,6 +40,7 @@ const APPS: { key: string; label: string; description: string; href: string }[] 
   { key: "interactive", label: "Interactive", description: "Jeux interactifs pour bars & lieux.", href: "https://interactive.velito.fr" },
   { key: "arena", label: "Arena", description: "Tournois & compétitions esport.", href: "https://arena.velito.fr" },
   { key: "prevention", label: "Prévention", description: "Sensibilisation & ateliers numériques.", href: "https://prevention.velito.fr" },
+  { key: "compta", label: "Compta", description: "Pré-comptabilité VEA & VENA (outil interne).", href: "https://compta.velito.fr" },
 ];
 
 export const dynamic = "force-dynamic";

@@ -731,7 +731,11 @@ export const ESTIM_TOTAL_ROUNDS = 12;
  * @param answer Le vrai prix
  */
 export function estimDiffPercent(guess: number, answer: number): number {
-  if (answer === 0) return Math.abs(guess) * 100;
+  // Prix de référence à 0 € : l'écart relatif n'est pas défini. On borne
+  // proprement (0 % si le joueur a aussi mis 0, sinon 100 % = totalement faux)
+  // au lieu de l'ancien `guess * 100` qui donnait des écarts de milliers de %
+  // et cassait le classement.
+  if (answer === 0) return guess === 0 ? 0 : 100;
   return Math.abs((guess - answer) / answer) * 100;
 }
 

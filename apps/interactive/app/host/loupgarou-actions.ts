@@ -386,10 +386,15 @@ async function countWinner(supabase: any, sessionId: string, voteRound: string):
   for (const v of (data ?? []) as Array<{ target_id: string | null }>) {
     if (v.target_id) counts.set(v.target_id, (counts.get(v.target_id) ?? 0) + 1);
   }
+  // Égalité = personne d'éliminé. On collecte les ex æquo au lieu de renvoyer
+  // le premier de la Map (ordre non déterministe = tué aléatoire = bug).
   let max = 0;
-  let winner: string | undefined;
-  for (const [id, c] of counts) if (c > max) { max = c; winner = id; }
-  return winner;
+  let top: string[] = [];
+  for (const [id, c] of counts) {
+    if (c > max) { max = c; top = [id]; }
+    else if (c === max) top.push(id);
+  }
+  return top.length === 1 ? top[0] : undefined;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -407,10 +412,15 @@ async function countWinnerWithMayor(supabase: any, sessionId: string, voteRound:
       counts.set(v.target_id, (counts.get(v.target_id) ?? 0) + weight);
     }
   }
+  // Le maire pèse déjà double (weight=2). Si malgré ça il reste une égalité,
+  // on n'élimine personne plutôt que de tuer selon l'ordre de la Map.
   let max = 0;
-  let winner: string | undefined;
-  for (const [id, c] of counts) if (c > max) { max = c; winner = id; }
-  return winner;
+  let top: string[] = [];
+  for (const [id, c] of counts) {
+    if (c > max) { max = c; top = [id]; }
+    else if (c === max) top.push(id);
+  }
+  return top.length === 1 ? top[0] : undefined;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -440,8 +450,16 @@ async function checkWinner(supabase: any, sessionId: string): Promise<"wolves" |
   // Loup Blanc seul survivant
   if (alive.length === 1 && alive[0]!.role === "white_wolf") return "white_wolf";
 
-  // Amoureux : si exactement 2 vivants ET ils sont amoureux
-  if (alive.length === 2 && alive[0]!.lover_of === alive[1]!.player_id) return "lovers";
+  // Amoureux : si exactement 2 vivants ET ils sont amoureux L'UN DE L'AUTRE
+  // (test BIDIRECTIONNEL : sinon un simple changement d'ordre du tableau au
+  // re-render pouvait fausser la condition de victoire).
+  if (
+    alive.length === 2 &&
+    alive[0]!.lover_of === alive[1]!.player_id &&
+    alive[1]!.lover_of === alive[0]!.player_id
+  ) {
+    return "lovers";
+  }
 
   const aliveWolves = alive.filter((r) => r.role === "wolf" || r.role === "white_wolf").length;
   const aliveVillagers = alive.filter((r) => r.role !== "wolf" && r.role !== "white_wolf").length;

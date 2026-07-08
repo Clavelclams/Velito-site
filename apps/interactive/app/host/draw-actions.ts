@@ -209,20 +209,12 @@ export async function submitDrawGuessAction(
     return { success: false, error: "Impossible d'envoyer ta réponse." };
   }
 
-  // 7. Si correct → on update le score du joueur
+  // 7. Si correct → incrément ATOMIQUE du score (plusieurs devineurs peuvent
+  //    trouver en même temps → un read-add-update perdrait des points).
   if (correct && points > 0) {
-    const { data: pData } = await supabase
-      .schema("interactive" as never)
-      .from("session_players")
-      .select("score")
-      .eq("id", playerId)
-      .single();
-    const currentScore = (pData as { score: number } | null)?.score ?? 0;
     await supabase
       .schema("interactive" as never)
-      .from("session_players")
-      .update({ score: currentScore + points } as never)
-      .eq("id", playerId);
+      .rpc("add_player_score", { p_player_id: playerId, p_points: points } as never);
   }
 
   return { success: true, correct, points };
@@ -295,20 +287,14 @@ export async function revealDrawAction(sessionId: string): Promise<ActionResult>
 
   const drawerPoints = calculateDrawerScore(rows.length, totalGuessersDb);
 
-  // Update score du dessinateur
+  // Update score du dessinateur (atomique)
   if (drawerPoints > 0) {
-    const { data: pData } = await supabase
-      .schema("interactive" as never)
-      .from("session_players")
-      .select("score")
-      .eq("id", state.current.drawerPlayerId)
-      .single();
-    const currentScore = (pData as { score: number } | null)?.score ?? 0;
     await supabase
       .schema("interactive" as never)
-      .from("session_players")
-      .update({ score: currentScore + drawerPoints } as never)
-      .eq("id", state.current.drawerPlayerId);
+      .rpc("add_player_score", {
+        p_player_id: state.current.drawerPlayerId,
+        p_points: drawerPoints,
+      } as never);
   }
 
   // Update la ligne draw_rounds (stats + ended_at)

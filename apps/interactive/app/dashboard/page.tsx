@@ -27,7 +27,7 @@ import SiretActivation from "./SiretActivation";
 // Catalogue jeux — source unique de vérité.
 // Tailwind doit "voir" les classes pour les générer au build, donc on les
 // écrit en dur dans `accentClass` (pas de bg-${...}).
-type GameType = "quiz" | "petit_bac" | "blind_test" | "estim" | "pinpoint" | "reflex" | "loup_garou" | "draw" | null;
+type GameType = "quiz" | "petit_bac" | "blind_test" | "estim" | "pinpoint" | "reflex" | "loup_garou" | "draw" | "laser" | null;
 
 interface GameCard {
   id: GameType;
@@ -175,6 +175,21 @@ const JEUX: GameCard[] = [
     },
     joueurs: "3 – 12",
     duree: "10 min",
+    available: true,
+  },
+  {
+    id: "laser",
+    nom: "Laser",
+    desc: "Battle royale à l'aveugle. Place-toi, vise, tire au décompte. Touché = éliminé.",
+    emoji: "🔫",
+    accentClass: {
+      bg: "hover:bg-red-500/10",
+      border: "hover:border-red-400/60",
+      text: "text-red-300",
+      glow: "bg-red-500/30",
+    },
+    joueurs: "3 – 12",
+    duree: "6 min",
     available: true,
   },
 ];

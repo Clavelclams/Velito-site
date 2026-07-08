@@ -160,18 +160,22 @@ export async function revealPetitBacRoundAction(
   }
 
   /**
-   * Calcule les points d'un mot valide selon son rang vitesse par catégorie.
+   * Calcule les points d'un mot VALIDE selon son rang vitesse par catégorie.
+   *
+   * RÈGLE (corrigée) : un mot valide rapporte TOUJOURS au moins 1 point.
+   * L'ancien « 0 pt pour le dernier » (malus copieur) produisait le bug
+   * « j'ai un mot valide mais 0 point » — frustration injustifiée. Le bonus
+   * vitesse reste (solo / 1er = 2 pts), mais on ne pénalise plus une bonne
+   * réponse jusqu'à 0.
    *
    * - Seul à avoir trouvé → 2 pts (bonus solo)
-   * - 1er parmi N (N≥2) → 2 pts
-   * - Dernier parmi N (N≥2) → 0 pt (malus copieur)
-   * - Au milieu → 1 pt
+   * - 1er parmi N (N≥2)   → 2 pts (bonus vitesse)
+   * - tous les autres     → 1 pt
    */
   function pointsForRank(rank: number, total: number): number {
     if (total === 1) return 2; // solo = bonus
-    if (rank === 1) return 2;
-    if (rank === total) return 0;
-    return 1;
+    if (rank === 1) return 2; // le plus rapide = bonus
+    return 1; // tout mot valide vaut au moins 1 point
   }
 
   // 4. Update chaque ligne avec is_valid + points calculés
@@ -191,18 +195,11 @@ export async function revealPetitBacRoundAction(
       .eq("id", a.id);
 
     if (points > 0) {
-      const { data: pData } = await supabase
-        .schema("interactive" as never)
-        .from("session_players")
-        .select("score")
-        .eq("id", a.player_id)
-        .single();
-      const currentScore = (pData as { score: number } | null)?.score ?? 0;
+      // Incrément ATOMIQUE (voir sql/interactive-add-player-score-rpc-v1.sql) :
+      // évite la perte de points en cas de soumissions concurrentes.
       await supabase
         .schema("interactive" as never)
-        .from("session_players")
-        .update({ score: currentScore + points } as never)
-        .eq("id", a.player_id);
+        .rpc("add_player_score", { p_player_id: a.player_id, p_points: points } as never);
     }
   }
 

@@ -1,0 +1,60 @@
+/**
+ * Tests unitaires du SERVICE DOCUMENTS JURIDIQUES (fonctions pures).
+ * Lancer :  node scripts/test.mjs lib/services/documents-juridiques.test.ts
+ */
+import {
+  decisionAssocieUnique,
+  rapportGestionAllege,
+  documentVersHtml,
+  type ParamsDecision,
+} from "./documents-juridiques.ts";
+
+let pass = 0;
+let fail = 0;
+function ok(label: string, condition: boolean) {
+  if (condition) { pass++; console.log("  PASS  " + label); }
+  else { fail++; console.log("  FAIL  " + label); }
+}
+
+const base: ParamsDecision = {
+  entiteNom: "VENA",
+  formeSociale: "SASU",
+  capital: "500 €",
+  associeNom: "Clavel NDEMA MOUSSA",
+  exerciceDebut: "2026-01-01",
+  exerciceFin: "2026-12-31",
+  dateDecision: "2027-03-15",
+  resultatCentimes: 1_000_000, // 10 000 € bénéfice
+};
+
+function texte(sections: { titre?: string; paragraphes: string[] }[]): string {
+  return sections.map((s) => (s.titre ?? "") + " " + s.paragraphes.join(" ")).join(" ");
+}
+
+// --- décision associé unique ---
+const dec = decisionAssocieUnique(base);
+const tDec = texte(dec);
+ok("contient le nom de l'entité", tDec.includes("VENA"));
+ok("contient le nom de l'associé", tDec.includes("Clavel NDEMA MOUSSA"));
+ok("mentionne l'approbation des comptes", tDec.toLowerCase().includes("approuve les comptes"));
+ok("bénéfice affiché avec montant", tDec.includes("bénéfice") && tDec.includes("10 000,00 €"));
+ok("date d'exercice au format FR", tDec.includes("31/12/2026"));
+
+// --- perte ---
+const perte = decisionAssocieUnique({ ...base, resultatCentimes: -50000 });
+ok("perte détectée dans le texte", texte(perte).includes("perte"));
+
+// --- rapport de gestion ---
+const rap = rapportGestionAllege(base);
+ok("rapport mentionne l'exercice clos", texte(rap).includes("31/12/2026"));
+ok("rapport a une section Activité", rap.some((s) => s.titre === "Activité de l'exercice"));
+
+// --- HTML autonome ---
+const html = documentVersHtml("Décision", dec);
+ok("HTML complet (doctype + html)", html.includes("<!DOCTYPE html>") && html.includes("</html>"));
+ok("HTML contient le titre", html.includes("<title>Décision</title>"));
+ok("HTML contient des styles d'impression", html.includes("@media print"));
+ok("HTML échappe les chevrons", !documentVersHtml("<x>", []).includes("<title><x>"));
+
+console.log(`\n${pass} PASS / ${fail} FAIL`);
+if (fail > 0) process.exit(1);

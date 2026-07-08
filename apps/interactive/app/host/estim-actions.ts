@@ -114,18 +114,9 @@ export async function revealEstimRoundAction(sessionId: string): Promise<ActionR
         } as never)
         .eq("id", a.id);
 
-      const { data: pData } = await supabase
-        .schema("interactive" as never)
-        .from("session_players")
-        .select("score")
-        .eq("id", a.player_id)
-        .single();
-      const currentScore = (pData as { score: number } | null)?.score ?? 0;
       await supabase
         .schema("interactive" as never)
-        .from("session_players")
-        .update({ score: currentScore + 50 } as never)
-        .eq("id", a.player_id);
+        .rpc("add_player_score", { p_player_id: a.player_id, p_points: 50 } as never);
     }
 
     const newState: EstimState = {
@@ -175,19 +166,10 @@ export async function revealEstimRoundAction(sessionId: string): Promise<ActionR
       } as never)
       .eq("id", a.id);
 
-    // Update cumulé du joueur
-    const { data: pData } = await supabase
-      .schema("interactive" as never)
-      .from("session_players")
-      .select("score")
-      .eq("id", a.player_id)
-      .single();
-    const currentScore = (pData as { score: number } | null)?.score ?? 0;
+    // Update cumulé du joueur (atomique)
     await supabase
       .schema("interactive" as never)
-      .from("session_players")
-      .update({ score: currentScore + points } as never)
-      .eq("id", a.player_id);
+      .rpc("add_player_score", { p_player_id: a.player_id, p_points: points } as never);
   }
 
   // Passe en reveal

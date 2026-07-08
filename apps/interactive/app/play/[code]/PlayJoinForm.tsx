@@ -32,6 +32,7 @@ import PlayQuizGame from "./PlayQuizGame";
 import PlayPetitBacGame from "./PlayPetitBacGame";
 import PlayEstimGame from "./PlayEstimGame";
 import PlayGeoGame from "./PlayGeoGame";
+import PlayLaserGame from "./PlayLaserGame";
 import PlayBlindTestGame from "./PlayBlindTestGame";
 import PlayReflexGame from "./PlayReflexGame";
 import PlayLoupGarouGame from "./PlayLoupGarouGame";
@@ -45,7 +46,7 @@ interface PlayJoinFormProps {
   sessionId: string;
   code: string;
   /** Type de jeu pré-sélectionné (peut changer après start si null). */
-  gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | "pinpoint" | "reflex" | "loup_garou" | "draw" | null;
+  gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | "pinpoint" | "reflex" | "loup_garou" | "draw" | "laser" | null;
   /** Statut actuel de la session côté DB ('lobby' ou 'playing'). */
   sessionStatus: "lobby" | "playing";
 }
@@ -502,6 +503,16 @@ export default function PlayJoinForm({ sessionId, code, gameType, sessionStatus 
   if (gameType === "draw") {
     return (
       <PlayDrawGame
+        sessionId={sessionId}
+        playerId={playerId}
+        pseudo={pseudo}
+        avatar={avatar}
+      />
+    );
+  }
+  if (gameType === "laser") {
+    return (
+      <PlayLaserGame
         sessionId={sessionId}
         playerId={playerId}
         pseudo={pseudo}

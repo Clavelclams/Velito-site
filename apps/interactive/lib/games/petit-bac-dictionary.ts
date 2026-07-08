@@ -743,6 +743,14 @@ function levenshtein(a: string, b: string): number {
 const OPEN_CATEGORIES = new Set(["Prénom garçon", "Prénom fille", "Célébrité"]);
 
 /**
+ * Catégories « souples » : on tente le dico + Wiktionary comme AIDE, mais on
+ * ne rejette JAMAIS fermement. Raison : « Mot anglais » a un vocabulaire
+ * immense et Wiktionary EN rate/titre mal beaucoup de mots courants → trop de
+ * vraies bonnes réponses rejetées (retour joueur). Le doute profite au joueur.
+ */
+const SOFT_CATEGORIES = new Set(["Mot anglais"]);
+
+/**
  * Cache mémoire des validations Wiktionary (clé : "mot|lang"). Évite de
  * re-spammer l'API si plusieurs joueurs tapent le même mot dans la partie.
  * Vidé au reload serveur — pas critique car les mots courants seront en cache
@@ -870,8 +878,10 @@ export async function wordInDictionary(
 
   // L4 : Fallback Wiktionary — détermine la langue selon la catégorie
   // "Mot anglais" → Wiktionary EN. Tout le reste → Wiktionary FR.
+  // On TRIME le mot : un espace résiduel donnait un titre faux → "missing" →
+  // vrai mot rejeté à tort.
   const wikiLang: "fr" | "en" = category === "Mot anglais" ? "en" : "fr";
-  const wikiResult = await validateOnWiktionary(word, wikiLang);
+  const wikiResult = await validateOnWiktionary(word.trim(), wikiLang);
 
   if (wikiResult === true) {
     // Wiktionary confirme que le mot existe. ATTENTION : ça ne dit pas qu'il
@@ -882,13 +892,18 @@ export async function wordInDictionary(
   }
 
   if (wikiResult === false) {
-    // Wiktionary confirme que le mot n'existe pas → rejet certain
+    // Catégorie SOUPLE (ex : "Mot anglais") : on ne rejette pas fermement même
+    // si Wiktionary ne trouve pas — trop de faux négatifs. Le mot a déjà passé
+    // "bonne lettre + ≥2 lettres" ; on l'accepte dès 3 chars.
+    if (SOFT_CATEGORIES.has(category)) return normalized.length >= 3;
+    // Sinon : Wiktionary confirme l'absence → rejet certain.
     return false;
   }
 
   // L5 : Wiktionary indisponible (null) → filet de sécurité. On accepte par
-  // défaut si le mot fait au moins 4 chars (un mot très court avec orthographe
-  // bizarre + API down = probablement triche, à rejeter).
-  // Philosophie : moins de frustration > moins de triche occasionnelle.
-  return normalized.length >= 4;
+  // défaut dès MIN_WORD_LENGTH (3) chars, aligné avec wordStartsWithLetter :
+  // un mot déjà filtré (bonne lettre + ≥2 lettres) ne doit pas être rejeté
+  // juste parce que l'API est tombée. Philosophie : le doute profite au joueur
+  // (moins de frustration > triche occasionnelle sur un mot de 3 lettres).
+  return normalized.length >= 3;
 }

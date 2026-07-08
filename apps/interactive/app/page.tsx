@@ -20,9 +20,9 @@ import UserMenuSlot from "./components/UserMenuSlot";
 
 const JEUX = [
   {
-    nom: "GEO",
+    nom: "Pin'Point",
     cat: "Jeu phare",
-    desc: "Ping la carte au plus proche : Monde, France, Amiens, monuments. Spectaculaire sur TV.",
+    desc: "Place ton pin au plus proche : Monde, France, Amiens, monuments. Spectaculaire sur TV.",
     accent: "border-neon-pink/40 hover:border-neon-pink",
     badge: "text-neon-pink",
   },
