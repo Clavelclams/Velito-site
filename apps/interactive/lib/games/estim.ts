@@ -711,10 +711,115 @@ export const ESTIM_QUESTIONS: EstimQuestion[] = [
   },
 
   // ─────────────────────────────────────────────────────────────────────────
-  // SIGNATURE — Clavel (joke) RETIRÉE le 11/06/2026 après retour Moxy
-  // Les joueurs trouvaient la question relou/inutile. À ré-introduire seulement
-  // si on trouve un format qui fait rire sans casser le rythme.
+  // AJOUTS 07/2026 — variété (retour playtest : "on fait vite le tour")
+  // Prix stables, vérifiables, emoji fallback (pas d'image à produire).
   // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: "nintendo-switch-2",
+    label: "Une Nintendo Switch 2",
+    hint: "Console neuve · prix de lancement officiel",
+    priceEur: 470,
+    emoji: "🎮",
+    theme: "Tech",
+    source: "Nintendo 2025",
+  },
+  {
+    id: "smic-mensuel-net",
+    label: "Un mois de SMIC (net, temps plein)",
+    hint: "France · 35h · montant net avant impôt",
+    priceEur: 1426,
+    emoji: "💶",
+    theme: "Société",
+    source: "service-public.fr 2025",
+  },
+  {
+    id: "maillot-equipe-france",
+    label: "Le maillot officiel de l'équipe de France de foot",
+    hint: "Domicile · boutique officielle · taille adulte",
+    priceEur: 100,
+    emoji: "🇫🇷",
+    theme: "Sport",
+    source: "Boutique FFF 2026",
+  },
+  {
+    id: "lego-millennium-falcon",
+    label: "Le LEGO Star Wars Millennium Falcon (7 541 pièces)",
+    hint: "Ultimate Collector Series · neuf",
+    priceEur: 850,
+    emoji: "🧱",
+    theme: "Culture",
+    source: "LEGO.com 2026",
+  },
+  {
+    id: "baby-foot-bonzini",
+    label: "Un baby-foot Bonzini B90 (celui des bars)",
+    hint: "Neuf · fabrication française · monnayeur",
+    priceEur: 1900,
+    emoji: "⚽",
+    theme: "Objet",
+    source: "Bonzini 2026",
+  },
+  {
+    id: "gopro-hero-13",
+    label: "Une GoPro HERO13 Black",
+    hint: "Neuve · prix officiel",
+    priceEur: 450,
+    emoji: "📷",
+    theme: "Tech",
+    source: "GoPro 2024",
+  },
+  {
+    id: "airbus-a320neo",
+    label: "Un Airbus A320neo (l'avion entier)",
+    hint: "Prix catalogue constructeur · neuf",
+    priceEur: 98000000,
+    emoji: "✈️",
+    theme: "Démesure",
+    source: "Prix catalogue Airbus 2018",
+  },
+  {
+    id: "heure-vol-rafale",
+    label: "Une heure de vol d'un Rafale (coût complet)",
+    hint: "Estimation Cour des comptes · carburant + maintenance",
+    priceEur: 25000,
+    emoji: "🛩️",
+    theme: "Démesure",
+    source: "Cour des comptes (ordre de grandeur)",
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // JOKES "INESTIMABLE" — servis à 2 % de proba par manche (estim-actions).
+  // Format court qui ne casse pas le rythme (leçon du retrait 11/06/2026 :
+  // l'ancien joke tombait aussi souvent qu'une vraie question → relou.
+  // À 2 %, c'est un easter egg). Tout le monde gagne 50 pts, zéro scoring.
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: "joke-sommeil-dev",
+    label: "Une nuit complète de sommeil d'un dev avant une deadline",
+    hint: "Denrée rarissime · jamais vue en stock",
+    priceEur: 0,
+    emoji: "💤",
+    theme: "???",
+    joke: true,
+  },
+  {
+    id: "joke-recette-grand-mere",
+    label: "La recette secrète du gâteau de ta grand-mère",
+    hint: "Transmission orale uniquement · ingrédient mystère inclus",
+    priceEur: 0,
+    emoji: "🍰",
+    theme: "???",
+    joke: true,
+  },
+  {
+    id: "joke-dignite-petit-bac",
+    label: "Ta dignité après avoir tapé n'importe quoi au P'tit Bac",
+    hint: "État : introuvable depuis la dernière partie",
+    priceEur: 0,
+    emoji: "🫣",
+    theme: "???",
+    joke: true,
+  },
 ];
 
 /** Durée d'un round Estim' en secondes. */

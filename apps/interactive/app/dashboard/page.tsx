@@ -23,6 +23,7 @@ import DashboardAudio from "./DashboardAudio";
 import { createSessionWithGameAction } from "../host/actions";
 import { activateTrialAction, declareIndividualAction } from "./subscription-actions";
 import SiretActivation from "./SiretActivation";
+import GameCardButton from "./GameCardButton";
 
 // Catalogue jeux — source unique de vérité.
 // Tailwind doit "voir" les classes pour les générer au build, donc on les
@@ -118,9 +119,13 @@ const JEUX: GameCard[] = [
     available: true,
   },
   {
+    // Renommage 07/2026 : "Estim'" → "How Much?!" (nom d'affichage UNIQUEMENT,
+    // demande Clavel — nom plus distinctif). L'identifiant technique reste
+    // "estim" partout (DB, enum game_type, actions, fichiers) : le changer
+    // casserait les sessions existantes et les migrations SQL pour zéro gain.
     id: "estim",
-    nom: "Estim'",
-    desc: "Combien ça vaut ? Estime le prix d'objets, voitures, monuments…",
+    nom: "How Much?!",
+    desc: "Combien ça vaut ? Devine le prix d'objets, voitures, monuments…",
     emoji: "💰",
     accentClass: {
       bg: "hover:bg-pink-500/10",
@@ -519,8 +524,10 @@ function GameCardItem({
   return (
     <form action={createSessionWithGameAction} className="contents">
       <input type="hidden" name="game_type" value={jeu.id ?? ""} />
-      <button
-        type="submit"
+      {/* GameCardButton (client) : overlay "Création de la salle…" + bouton
+          désactivé pendant la Server Action — fix du "délai qui ressemble
+          à un bug" (playtest 07/2026). */}
+      <GameCardButton
         className={
           baseCard +
           " cursor-pointer border-white/10 bg-white/[0.03] text-left " +
@@ -536,7 +543,7 @@ function GameCardItem({
             Gratuit
           </span>
         )}
-      </button>
+      </GameCardButton>
     </form>
   );
 }

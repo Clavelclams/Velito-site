@@ -34,6 +34,11 @@ import { startLoupGarouAction } from "./loupgarou-actions";
 import { startDrawAction } from "./draw-actions";
 import { startLaserAction } from "./laser-actions";
 import { useBackgroundMusic, playSfx, AUDIO } from "@/lib/audio";
+import {
+  QUIZ_NUM_QUESTIONS_CHOICES,
+  QUIZ_DEFAULT_NUM_QUESTIONS,
+  getQuestionsByTheme,
+} from "@/lib/games/quiz-questions";
 import MuteFooter from "./MuteFooter";
 
 interface SessionPlayer {
@@ -67,6 +72,8 @@ export default function HostLobby({
   const [actionPending, setActionPending] = useState(false);
   /** Nombre de rounds (seulement utilisé par Blind Test pour l'instant) */
   const [numRounds, setNumRounds] = useState(12);
+  /** Nombre de questions du Quiz, choisi par l'hôte (playtest 07/2026). */
+  const [numQuestions, setNumQuestions] = useState<number>(QUIZ_DEFAULT_NUM_QUESTIONS);
   /** Thème Quiz sélectionné (Mix = tous thèmes). */
   const [quizTheme, setQuizTheme] = useState<
     "Mix" | "Culture G" | "Sport" | "Amiens" | "Gaming" | "Musique" | "Cinéma"
@@ -74,6 +81,12 @@ export default function HostLobby({
 
   const joinUrl = `${playBaseUrl}/play/${code}`;
   const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
+  /**
+   * Ids des joueurs déjà vus — pour décider du SFX "nouveau joueur" HORS du
+   * setter d'état (jouer un son dans un updater React est un effet de bord :
+   * l'updater peut être rejoué par React). Fix playtest 07/2026.
+   */
+  const seenPlayerIdsRef = useRef<Set<string>>(new Set());
 
   // Musique de fond du lobby — transition cards → game
   // Note : le toggleMute est maintenant géré par MuteFooter (footer global)
@@ -119,6 +132,8 @@ export default function HostLobby({
         joined_at: string;
         score: number;
       }>;
+      // Les joueurs déjà présents au chargement ne déclenchent pas de son.
+      rows.forEach((r) => seenPlayerIdsRef.current.add(r.id));
       setPlayers(
         rows.map((r) => ({
           id: r.id,
@@ -151,10 +166,16 @@ export default function HostLobby({
               joined_at: string;
               score: number;
             };
+            // SFX "nouveau joueur" — décidé HORS du setter (pas d'effet de
+            // bord dans un updater React) et throttlé à 2,5 s : quand
+            // plusieurs joueurs rejoignent en rafale, UN seul son au lieu
+            // du brouhaha type "appels Discord" (retour playtest 07/2026).
+            if (!seenPlayerIdsRef.current.has(r.id)) {
+              seenPlayerIdsRef.current.add(r.id);
+              playSfx(AUDIO.playerJoin, 0.35, { throttleMs: 2500 });
+            }
             setPlayers((prev) => {
               if (prev.some((p) => p.id === r.id)) return prev;
-              // SFX "nouveau joueur" — son discord-like
-              playSfx(AUDIO.playerJoin, 0.4);
               return [
                 ...prev,
                 {
@@ -233,7 +254,7 @@ export default function HostLobby({
     } else if (gameType === "laser") {
       await startLaserAction(sessionId);
     } else {
-      await startQuizAction(sessionId, quizTheme);
+      await startQuizAction(sessionId, quizTheme, numQuestions);
     }
     setActionPending(false);
   }
@@ -398,11 +419,40 @@ export default function HostLobby({
                   }
                 )}
               </div>
+              {/* Compte RÉEL de la banque (les anciens "70/10 questions"
+                  étaient des libellés en dur devenus faux — playtest 07/2026). */}
               <p className="text-[10px] text-white/30">
-                {quizTheme === "Mix"
-                  ? "Toutes thématiques mélangées (70 questions)"
-                  : "10 questions sur ce thème"}
+                {getQuestionsByTheme(quizTheme).length} questions disponibles
+                {quizTheme === "Mix" ? ", toutes thématiques mélangées" : " sur ce thème"}
               </p>
+            </div>
+          )}
+
+          {/* Sélecteur nombre de questions — Quiz (retour playtest 07/2026).
+              Le tirage est mélangé côté serveur : 15 questions ≠ toujours
+              les 15 mêmes. Clampé serveur si le thème en a moins. */}
+          {(gameType === "quiz" || !gameType) && (
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-xs uppercase tracking-widest text-white/50">
+                Nombre de questions
+              </p>
+              <div className="flex gap-2">
+                {QUIZ_NUM_QUESTIONS_CHOICES.map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setNumQuestions(n)}
+                    className={
+                      "rounded-xl border px-4 py-2 font-display text-lg font-black transition " +
+                      (numQuestions === n
+                        ? "border-violet-400 bg-violet-500/20 text-violet-200"
+                        : "border-white/15 bg-white/[0.04] text-white/70 hover:bg-white/[0.08]")
+                    }
+                  >
+                    {Math.min(n, getQuestionsByTheme(quizTheme).length)}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 

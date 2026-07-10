@@ -39,7 +39,7 @@ interface CreateSessionResult {
  *                  game_type déjà set. Sinon, le host choisira au lobby.
  */
 export async function createSessionAction(
-  gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | "pinpoint" | "reflex" | "loup_garou" | "draw" | null
+  gameType?: "quiz" | "petit_bac" | "blind_test" | "estim" | "pinpoint" | "reflex" | "loup_garou" | "draw" | "laser" | null
 ): Promise<CreateSessionResult> {
   const supabase = await createClient();
 
@@ -170,11 +170,16 @@ export async function createSessionAndRedirectAction(): Promise<void> {
  */
 export async function createSessionWithGameAction(formData: FormData): Promise<void> {
   const gameTypeRaw = formData.get("game_type");
+  // ATTENTION (bug playtest 07/2026) : "laser" manquait dans cette liste →
+  // gameType devenait null → session sans game_type → le fallback du lobby
+  // lançait le Quizz. Toute nouvelle carte de jeu DOIT être ajoutée ICI
+  // (et dans le type union de createSessionAction ci-dessus).
   const gameType = (
     gameTypeRaw === "quiz" || gameTypeRaw === "petit_bac" ||
     gameTypeRaw === "blind_test" || gameTypeRaw === "estim" ||
     gameTypeRaw === "pinpoint" || gameTypeRaw === "reflex" ||
-    gameTypeRaw === "loup_garou" || gameTypeRaw === "draw"
+    gameTypeRaw === "loup_garou" || gameTypeRaw === "draw" ||
+    gameTypeRaw === "laser"
       ? gameTypeRaw
       : null
   );

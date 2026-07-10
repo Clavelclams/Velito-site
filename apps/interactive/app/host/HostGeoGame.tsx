@@ -229,28 +229,37 @@ export default function HostGeoGame({
     setActionPending(false);
   }
 
-  // Marqueurs reveal : cible verte + pins joueurs colorés
+  // Marqueurs reveal : cible verte (étiquette PERMANENTE, visible sur TV)
+  // + pins joueurs ANONYMES (retour playtest 07/2026 : sans pseudo ni
+  // couleur perso — plus drôle de se demander qui s'est planté, et personne
+  // n'a la honte devant tout le monde). Le podium latéral garde les noms.
   const revealMarkers = useMemo(() => {
     if (!currentTarget) return [];
-    const markers: Array<{ lat: number; lng: number; label?: string; color?: string }> = [
+    const markers: Array<{
+      lat: number;
+      lng: number;
+      label?: string;
+      color?: string;
+      labelPermanent?: boolean;
+    }> = [
       {
         lat: currentTarget.lat,
         lng: currentTarget.lng,
         label: `🎯 ${currentTarget.label}`,
         color: "#10b981",
+        labelPermanent: true,
       },
     ];
-    sortedByDistance.forEach((a, i) => {
-      const p = players.find((pl) => pl.id === a.player_id);
+    sortedByDistance.forEach((a) => {
       markers.push({
         lat: Number(a.guess_lat),
         lng: Number(a.guess_lng),
-        label: `${p?.pseudo ?? "?"} · ${Number(a.distance_km).toLocaleString("fr-FR")} km`,
-        color: PLAYER_COLORS[i % PLAYER_COLORS.length],
+        // Pas de label, couleur unique : placement anonyme.
+        color: "#f43f5e",
       });
     });
     return markers;
-  }, [currentTarget, sortedByDistance, players]);
+  }, [currentTarget, sortedByDistance]);
 
   // ═══ Final ═══
   if (state.phase === "final" || status === "ended") {

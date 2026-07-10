@@ -735,12 +735,34 @@ function levenshtein(a: string, b: string): number {
 }
 
 /**
- * Catégories où on n'a PAS de dictionnaire de référence — les prénoms sont
- * infinis et culturellement variés (Younès, Maeloan, Kéziah…). On accepte
- * tout ce qui respecte "commence par la bonne lettre + min 3 chars".
- * Notre dico sert juste d'inspiration pour les joueurs en panne.
+ * SUPPRIMÉ (playtest 07/2026) : l'ancien OPEN_CATEGORIES acceptait TOUT pour
+ * Prénoms/Célébrité → "fubifubihbf" passait avec la bonne première lettre.
+ * Remplacé par : dico local + Wiktionary + fallback WIKIPÉDIA pour les noms
+ * propres (un prénom, une célébrité, une marque ou une ville réels ont une
+ * entrée Wikipédia ; du charabia, non). Le doute (API down) profite toujours
+ * au joueur.
  */
-const OPEN_CATEGORIES = new Set(["Prénom garçon", "Prénom fille", "Célébrité"]);
+const WIKIPEDIA_FALLBACK_CATEGORIES = new Set([
+  "Prénom garçon",
+  "Prénom fille",
+  "Célébrité",
+  "Marque",
+  "Pays / Ville",
+]);
+
+/**
+ * L0 — Anti-charabia : filtres de plausibilité ULTRA prudents (aucun mot réel
+ * ne les déclenche) pour couper le clavier-mashing avant tout appel réseau.
+ */
+function looksLikeRealWord(normalized: string): boolean {
+  // Un mot sans aucune voyelle n'existe pas en français/anglais ("bcdfg").
+  if (!/[aeiouy]/.test(normalized)) return false;
+  // Trois fois la même lettre d'affilée ("aaah", "zzzz") : jamais dans un mot réel.
+  if (/(.)\1\1/.test(normalized)) return false;
+  // Cinq consonnes consécutives : quasi impossible hors sigles.
+  if (/[^aeiouy\s'-]{5,}/.test(normalized)) return false;
+  return true;
+}
 
 /**
  * Catégories « souples » : on tente le dico + Wiktionary comme AIDE, mais on
@@ -757,6 +779,68 @@ const SOFT_CATEGORIES = new Set(["Mot anglais"]);
  * dans le dico local de toute façon.
  */
 const wiktionaryCache = new Map<string, boolean>();
+
+/** Cache mémoire des validations Wikipédia (même logique que wiktionaryCache). */
+const wikipediaCache = new Map<string, boolean>();
+
+/**
+ * Interroge Wikipédia FR pour vérifier qu'un TITRE existe (même API MediaWiki
+ * que Wiktionary, autre domaine). Utilisé pour les NOMS PROPRES : prénoms,
+ * célébrités, marques, villes — absents de Wiktionary mais présents sur
+ * Wikipédia (y compris via redirections : "Mbappé" → page joueur).
+ *
+ * @returns true = titre trouvé, false = confirmé absent, null = API en échec
+ */
+async function validateOnWikipedia(word: string): Promise<boolean | null> {
+  const cacheKey = normalizeWord(word);
+  if (wikipediaCache.has(cacheKey)) return wikipediaCache.get(cacheKey)!;
+
+  try {
+    const tryTitle = async (title: string): Promise<boolean | null> => {
+      const url =
+        `https://fr.wikipedia.org/w/api.php` +
+        `?action=query&titles=${encodeURIComponent(title)}` +
+        `&redirects=1&format=json&origin=*&formatversion=2`;
+      const res = await fetch(url, {
+        headers: { Accept: "application/json" },
+        next: { revalidate: 86400 },
+      });
+      if (!res.ok) return null;
+      const data = (await res.json()) as {
+        query?: { pages?: Array<{ missing?: boolean }> };
+      };
+      const page = data.query?.pages?.[0];
+      if (!page) return null;
+      return !page.missing;
+    };
+
+    // Essai 1 : forme capitalisée (convention des titres Wikipédia)
+    const capitalized = word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    const capResult = await tryTitle(capitalized);
+    if (capResult === true) {
+      wikipediaCache.set(cacheKey, true);
+      return true;
+    }
+
+    // Essai 2 : forme telle que tapée (ex. "iPhone", "McDonald's")
+    if (word !== capitalized) {
+      const rawResult = await tryTitle(word);
+      if (rawResult === true) {
+        wikipediaCache.set(cacheKey, true);
+        return true;
+      }
+    }
+
+    if (capResult === false) {
+      wikipediaCache.set(cacheKey, false);
+      return false;
+    }
+    return null;
+  } catch (e) {
+    console.warn(`[wikipedia] validation échouée pour "${word}":`, e);
+    return null;
+  }
+}
 
 /**
  * Interroge Wiktionary pour vérifier qu'un mot EXISTE dans la langue donnée.
@@ -839,13 +923,17 @@ async function validateOnWiktionary(
 /**
  * Vérifie qu'un mot existe dans la banque de sa catégorie.
  *
- * STRATÉGIE EN 4 COUCHES (refonte 11/06/2026 après retour Moxy) :
+ * STRATÉGIE EN COUCHES (refonte 11/06/2026 retour Moxy, durcie 07/2026
+ * après playtest : "fubifubihbf" passait en catégorie Prénom) :
  *
- *   L1 — Catégories ouvertes (prénoms, célébrités) → ACCEPT tout
+ *   L0 — Anti-charabia : plausibilité lexicale minimale (voyelles, répétitions)
+ *   L1 — SUPPRIMÉ (les catégories "ouvertes" acceptaient tout)
  *   L2 — Match exact dans le dictionnaire local
  *   L3 — Tolérance Levenshtein dans le dictionnaire local (≤1 erreur pour mots 5+)
  *   L4 — Fallback Wiktionary API (couverture quasi exhaustive du français)
- *   L5 — Filet de sécurité : si Wiktionary indisponible (réseau), accept par
+ *   L4bis — Noms propres (prénoms, célébrités, marques, villes) refusés par
+ *        Wiktionary → seconde chance sur WIKIPÉDIA (redirections incluses)
+ *   L5 — Filet de sécurité : si les API sont indisponibles (réseau), accept par
  *        défaut. PHILOSOPHIE : le doute bénéficie au joueur. On préfère valider
  *        à tort qu'invalider à raison (frustration garantie sinon).
  *
@@ -859,11 +947,12 @@ export async function wordInDictionary(
   word: string,
   category: string
 ): Promise<boolean> {
-  // L1 : Catégories ouvertes (prénoms) → on accepte tout
-  if (OPEN_CATEGORIES.has(category)) return true;
-
   const dict = PETIT_BAC_DICTIONARIES[category];
   const normalized = normalizeWord(word);
+
+  // L0 : anti-charabia — rejet immédiat du clavier-mashing évident, quelle
+  // que soit la catégorie (et sans appel réseau).
+  if (!looksLikeRealWord(normalized)) return false;
 
   // L2 : Match exact dans le dico local (90% des cas, instantané)
   if (dict?.has(normalized)) return true;
@@ -894,8 +983,19 @@ export async function wordInDictionary(
   if (wikiResult === false) {
     // Catégorie SOUPLE (ex : "Mot anglais") : on ne rejette pas fermement même
     // si Wiktionary ne trouve pas — trop de faux négatifs. Le mot a déjà passé
-    // "bonne lettre + ≥2 lettres" ; on l'accepte dès 3 chars.
+    // "bonne lettre + ≥2 lettres" + anti-charabia ; on l'accepte dès 3 chars.
     if (SOFT_CATEGORIES.has(category)) return normalized.length >= 3;
+
+    // L4bis : noms propres (prénoms, célébrités, marques, villes) — normal
+    // que Wiktionary ne les connaisse pas. Seconde chance sur Wikipédia :
+    // un prénom/une célébrité réels y ont une page, "fubifubihbf" non.
+    if (WIKIPEDIA_FALLBACK_CATEGORIES.has(category)) {
+      const wpResult = await validateOnWikipedia(word.trim());
+      if (wpResult === true) return normalized.length >= 3;
+      if (wpResult === null) return normalized.length >= 3; // API down → doute au joueur
+      return false; // les DEUX sources confirment l'absence → rejet certain
+    }
+
     // Sinon : Wiktionary confirme l'absence → rejet certain.
     return false;
   }

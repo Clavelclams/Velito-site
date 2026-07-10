@@ -94,6 +94,10 @@ export const DRAW_WORDS = {
     "pizza", "burger", "glace", "pomme", "banane",
     // Nature
     "soleil", "lune", "étoile", "arbre", "fleur",
+    // Ajouts 07/2026 (variété — retour playtest)
+    "fromage", "croissant", "carotte", "œuf", "gâteau",
+    "maison", "porte", "échelle", "bougie", "cadeau",
+    "nuage", "pluie", "arc-en-ciel", "champignon", "escargot",
   ],
   moyen: [
     // Animaux
@@ -109,12 +113,23 @@ export const DRAW_WORDS = {
     "ordinateur", "téléphone",
     // Actions
     "dormir", "courir", "danser", "manger",
+    // Ajouts 07/2026 (variété — retour playtest)
+    "crocodile", "chauve-souris", "hérisson", "flamant rose",
+    "cirque", "igloo", "moulin", "volcan", "cascade",
+    "coiffeur", "plombier", "arbitre", "clown",
+    "basket", "escalade", "pétanque", "ski",
+    "tracteur", "hélicoptère", "sous-marin", "montgolfière",
+    "pêcher", "peindre", "pleurer", "chanter",
   ],
   difficile: [
     "tournesol", "boussole", "labyrinthe", "kaléidoscope", "horloge",
     "microscope", "télescope", "trampoline", "saxophone", "harmonica",
     "sablier", "girouette", "chevalier", "magicien", "détective",
     "astronaute", "scaphandre", "marionnette", "perroquet", "caméléon",
+    // Ajouts 07/2026 (variété — retour playtest)
+    "épouvantail", "funambule", "catapulte", "périscope", "stalactite",
+    "ventriloque", "somnambule", "métronome", "phare breton", "gargouille",
+    "ornithorynque", "jongleur", "apiculteur", "paratonnerre", "hamac",
   ],
   /** Spécial Amiens — pour la com de l'event Moxy */
   amiens: [

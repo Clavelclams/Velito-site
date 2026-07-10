@@ -230,7 +230,7 @@ export default function HostEstimGame({
         <div className="relative mx-auto w-full max-w-7xl">
           <header className="mb-6 text-center">
             <p className="text-xs uppercase tracking-[0.3em] text-white/40">
-              Velito Interactive · ESTIM&apos;
+              Velito Interactive · HOW MUCH?!
             </p>
             <h2 className="neon-title mt-2 text-3xl">Partie terminée</h2>
           </header>
@@ -242,7 +242,7 @@ export default function HostEstimGame({
                   pseudo={winner.pseudo}
                   avatar={winner.avatar_config}
                   score={winner.score}
-                  subtitle={`Estim' · ${state.totalRounds} questions`}
+                  subtitle={`How Much?! · ${state.totalRounds} questions`}
                 />
               ) : (
                 <p className="text-center text-white/50">Aucun joueur.</p>

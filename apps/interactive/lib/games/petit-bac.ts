@@ -29,8 +29,13 @@ export const PETIT_BAC_DEFAULT_CATEGORIES = [
 /** Durée d'un round (en secondes). 60s car 9 catégories à remplir. */
 export const ROUND_DURATION_SEC = 60;
 
-/** Durée d'affichage du reveal avant round suivant (en secondes). */
-export const PETITBAC_REVEAL_DURATION_SEC = 8;
+/**
+ * Durée d'affichage du reveal avant round suivant (en secondes).
+ * 8s → 20s (playtest 07/2026) : avec 9 catégories × N joueurs à lire,
+ * 8 secondes ne suffisaient pas — la lettre suivante démarrait avant que
+ * les joueurs aient fini de regarder les résultats.
+ */
+export const PETITBAC_REVEAL_DURATION_SEC = 20;
 
 /** Nombre de rounds par partie (paramétrable à terme). */
 export const TOTAL_ROUNDS = 5;

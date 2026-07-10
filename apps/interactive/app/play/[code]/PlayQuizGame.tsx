@@ -19,10 +19,12 @@ import { Avatar } from "@repo/ui/avatar";
 import type { AvatarConfig } from "@repo/ui/avatar-data";
 import { createClient } from "@/lib/supabase/client";
 import {
-  QUIZ_QUESTIONS,
   type QuizQuestion,
+  type QuizTheme,
   QUESTION_TIME_LIMIT_SEC,
   REVEAL_DURATION_SEC,
+  resolveQuestion,
+  getTotalQuestions,
 } from "@/lib/games/quiz-questions";
 import NextSessionInput from "./NextSessionInput";
 
@@ -33,6 +35,9 @@ interface SessionState {
   revealStartedAt?: string;
   timeLimitSec?: number;
   revealDurationSec?: number;
+  /** Miroir du state serveur — fix désync playtest 07/2026. */
+  theme?: QuizTheme;
+  questionOrder?: number[];
 }
 
 interface MyAnswer {
@@ -170,7 +175,8 @@ export default function PlayQuizGame({
 
   const currentQuestion: QuizQuestion | null = useMemo(() => {
     if (!state) return null;
-    return QUIZ_QUESTIONS[state.questionIndex] ?? null;
+    // Helper PARTAGÉ avec le serveur et la TV (fix désync playtest 07/2026).
+    return resolveQuestion(state);
   }, [state]);
 
   const myAnswerForCurrent = useMemo(() => {
@@ -309,7 +315,7 @@ export default function PlayQuizGame({
           </p>
           <p className="mt-3 text-sm text-white/60">
             <span className="font-bold text-emerald-300">{correctCount}</span> /{" "}
-            {QUIZ_QUESTIONS.length} bonnes réponses
+            {state ? getTotalQuestions(state) : correctCount} bonnes réponses
           </p>
         </div>
 
@@ -341,7 +347,7 @@ export default function PlayQuizGame({
     return (
       <div className="w-full max-w-sm text-center">
         <p className="text-xs uppercase tracking-[0.3em] text-white/40">
-          Question {state.questionIndex + 1} / {QUIZ_QUESTIONS.length}
+          Question {state.questionIndex + 1} / {getTotalQuestions(state)}
         </p>
 
         <div
@@ -398,7 +404,7 @@ export default function PlayQuizGame({
     <div className="w-full max-w-sm">
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs uppercase tracking-[0.3em] text-white/40">
-          Question {state.questionIndex + 1} / {QUIZ_QUESTIONS.length}
+          Question {state.questionIndex + 1} / {getTotalQuestions(state)}
         </p>
         {secondsLeft !== null && (
           <span

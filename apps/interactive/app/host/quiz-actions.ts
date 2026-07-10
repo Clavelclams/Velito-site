@@ -18,11 +18,14 @@
 
 import { createClient } from "@/lib/supabase/server";
 import {
-  QUIZ_QUESTIONS,
   QUESTION_TIME_LIMIT_SEC,
   REVEAL_DURATION_SEC,
+  QUIZ_DEFAULT_NUM_QUESTIONS,
   calculateScore,
   getQuestionsByTheme,
+  buildQuestionOrder,
+  resolveQuestion,
+  getTotalQuestions,
   type QuizTheme,
 } from "@/lib/games/quiz-questions";
 
@@ -42,15 +45,13 @@ interface SessionState {
   revealDurationSec?: number;
   /** Thème sélectionné. 'Mix' = toutes les questions. */
   theme?: QuizTheme;
-}
-
-/**
- * Retourne les questions filtrées par thème depuis le state.
- * Fallback sur QUIZ_QUESTIONS complet si pas de thème (rétro-compat).
- */
-function getQuestionsForState(state: SessionState | null) {
-  if (!state?.theme) return QUIZ_QUESTIONS;
-  return getQuestionsByTheme(state.theme);
+  /**
+   * Tirage de la partie : indices (mélangés) dans la banque du thème,
+   * tronqués au nombre de questions choisi par l'hôte au lobby.
+   * La résolution état → question passe par resolveQuestion() (helper
+   * PARTAGÉ avec HostQuizGame et PlayQuizGame — fix désync playtest 07/2026).
+   */
+  questionOrder?: number[];
 }
 
 /**
@@ -59,7 +60,8 @@ function getQuestionsForState(state: SessionState | null) {
  */
 export async function startQuizAction(
   sessionId: string,
-  theme: QuizTheme = "Mix"
+  theme: QuizTheme = "Mix",
+  numQuestions: number = QUIZ_DEFAULT_NUM_QUESTIONS
 ): Promise<ActionResult> {
   const supabase = await createClient();
   const {
@@ -73,12 +75,21 @@ export async function startQuizAction(
     return { success: false, error: `Aucune question pour le thème "${theme}".` };
   }
 
+  // Tirage de la partie : mélange + tronque au nombre choisi par l'hôte
+  // (clampé côté buildQuestionOrder si le thème a moins de questions).
+  // Number() + garde-fou : numQuestions vient du client, on ne lui fait
+  // pas confiance aveuglément.
+  const safeNum = Number.isInteger(numQuestions) && numQuestions > 0
+    ? numQuestions
+    : QUIZ_DEFAULT_NUM_QUESTIONS;
+
   const newState: SessionState = {
     phase: "question",
     questionIndex: 0,
     questionStartedAt: new Date().toISOString(),
     timeLimitSec: QUESTION_TIME_LIMIT_SEC,
     theme,
+    questionOrder: buildQuestionOrder(theme, safeNum),
   };
 
   const { error } = await supabase
@@ -126,8 +137,9 @@ export async function revealAnswerAction(sessionId: string): Promise<ActionResul
     return { success: false, error: "Pas en phase question." };
   }
 
-  const questions = getQuestionsForState(state);
-  const question = questions[state.questionIndex];
+  // Résolution PARTAGÉE (même helper que TV et téléphones) : theme +
+  // questionOrder + index → la question que tout le monde voit.
+  const question = resolveQuestion(state);
   if (!question) {
     return { success: false, error: "Question introuvable." };
   }
@@ -238,10 +250,9 @@ export async function nextQuestionAction(sessionId: string): Promise<ActionResul
 
   const state = (sessionRow as { current_state: SessionState }).current_state;
   const nextIndex = (state?.questionIndex ?? 0) + 1;
-  const questions = getQuestionsForState(state);
 
-  // Si on a épuisé les questions → fin du jeu
-  if (nextIndex >= questions.length) {
+  // Si on a épuisé le tirage de la partie → fin du jeu
+  if (nextIndex >= getTotalQuestions(state ?? {})) {
     return await endGameAction(sessionId);
   }
 
@@ -251,6 +262,7 @@ export async function nextQuestionAction(sessionId: string): Promise<ActionResul
     questionStartedAt: new Date().toISOString(),
     timeLimitSec: QUESTION_TIME_LIMIT_SEC,
     theme: state?.theme, // préserve le thème entre questions
+    questionOrder: state?.questionOrder, // préserve le tirage de la partie
   };
 
   const { error } = await supabase
@@ -287,12 +299,12 @@ export async function endGameAction(sessionId: string): Promise<ActionResult> {
   // pour matcher la signature de getQuestionsForState(SessionState | null).
   const existingState =
     (existingRow as { current_state: SessionState } | null)?.current_state ?? null;
-  const questions = getQuestionsForState(existingState);
 
   const newState: SessionState = {
     phase: "final",
-    questionIndex: questions.length,
+    questionIndex: getTotalQuestions(existingState ?? {}),
     theme: existingState?.theme,
+    questionOrder: existingState?.questionOrder,
   };
 
   const { error } = await supabase

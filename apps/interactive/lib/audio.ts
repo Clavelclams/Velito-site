@@ -61,6 +61,12 @@ export function setGloballyMuted(muted: boolean): void {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(MUTE_STORAGE_KEY, String(muted));
+    // FIX playtest 07/2026 (bug Reflex "muet mais le son continue") :
+    // couper les SFX en cours ICI, à la source. Avant, stopAllSfx() n'était
+    // appelé que par le listener de useBackgroundMusic — or les écrans de
+    // jeu (Reflex, Quiz, P'tit bac…) ne montent PAS ce hook : un SFX long
+    // (round-end = plusieurs secondes) continuait donc après le mute.
+    if (muted) stopAllSfx();
     // Broadcast à tous les listeners (composants audio actifs)
     window.dispatchEvent(new CustomEvent("velito-mute-change", { detail: muted }));
   } catch {
@@ -87,16 +93,30 @@ const _activeSfx = new Set<HTMLAudioElement>();
  *
  * @param src    Chemin du fichier (utilise AUDIO.xxx)
  * @param volume Entre 0 et 1, défaut 0.5
+ * @param opts   Options :
+ *   - throttleMs : fenêtre anti-répétition pour CE son (défaut 300 ms).
+ *     Ex : playerJoin à 2500 ms → 5 joueurs qui rejoignent en rafale =
+ *     1 seul "ding" au lieu d'un brouhaha (bug playtest 07/2026).
+ *   - exclusive : coupe tous les SFX en cours avant de jouer. Pour les sons
+ *     de changement de phase (fin de manche, reveal) qui ne doivent JAMAIS
+ *     se superposer au son précédent (brouhaha P'tit bac).
  */
-export function playSfx(src: string, volume: number = 0.5): void {
+export function playSfx(
+  src: string,
+  volume: number = 0.5,
+  opts?: { throttleMs?: number; exclusive?: boolean },
+): void {
   if (typeof window === "undefined") return;
   if (isGloballyMuted()) return;
 
-  // Throttle par src
+  // Throttle par src (fenêtre personnalisable par appel)
   const now = Date.now();
   const last = _lastPlayedAt.get(src) ?? 0;
-  if (now - last < 300) return;
+  if (now - last < (opts?.throttleMs ?? 300)) return;
   _lastPlayedAt.set(src, now);
+
+  // Mode exclusif : ce son remplace tout ce qui joue encore.
+  if (opts?.exclusive) stopAllSfx();
 
   try {
     const audio = new Audio(src);

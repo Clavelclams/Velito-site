@@ -80,14 +80,17 @@ export default function HostPetitBacGame({
     const curr = state.phase;
     if (prev === curr) return;
 
+    // exclusive: true → chaque son de phase COUPE le précédent (le roundEnd
+    // dure plusieurs secondes ; sans ça, les sons se superposaient d'une
+    // phase à l'autre = brouhaha, retour playtest 07/2026).
     if (curr === "reveal" && prev === "round") {
       // Round terminé → son énergique
-      playSfx(AUDIO.roundEnd, 0.5);
+      playSfx(AUDIO.roundEnd, 0.5, { exclusive: true });
     } else if (curr === "round" && prev === "reveal") {
       // Nouveau round → whoosh transition
-      playSfx(AUDIO.transition, 0.4);
+      playSfx(AUDIO.transition, 0.4, { exclusive: true });
     } else if (curr === "final") {
-      playSfx(AUDIO.finalVictory, 0.6);
+      playSfx(AUDIO.finalVictory, 0.6, { exclusive: true });
     }
     prevPhaseRef.current = curr;
   }, [state.phase]);

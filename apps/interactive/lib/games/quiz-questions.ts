@@ -514,6 +514,360 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     correct: "B",
     theme: "Cinéma",
   },
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // AJOUTS 07/2026 — +48 questions (8/thème) : retour playtest "on fait
+  // vite le tour". Combiné au tirage mélangé (questionOrder), la banque
+  // passe de 60 à 108 questions. Faits stables et vérifiables uniquement.
+  // ═══════════════════════════════════════════════════════════════════════
+
+  // ─── CULTURE GÉNÉRALE (suite) ───
+  {
+    id: "cg-11",
+    question: "Quel est le plus long fleuve entièrement en France ?",
+    choices: { A: "La Seine", B: "La Loire", C: "Le Rhône", D: "La Garonne" },
+    correct: "B",
+    theme: "Culture G",
+  },
+  {
+    id: "cg-12",
+    question: "Quelle planète est la plus proche du Soleil ?",
+    choices: { A: "Vénus", B: "Mars", C: "Mercure", D: "Jupiter" },
+    correct: "C",
+    theme: "Culture G",
+  },
+  {
+    id: "cg-13",
+    question: "En quelle année le mur de Berlin est-il tombé ?",
+    choices: { A: "1985", B: "1989", C: "1991", D: "1993" },
+    correct: "B",
+    theme: "Culture G",
+  },
+  {
+    id: "cg-14",
+    question: "Quel est l'os le plus long du corps humain ?",
+    choices: { A: "Le tibia", B: "L'humérus", C: "Le fémur", D: "Le radius" },
+    correct: "C",
+    theme: "Culture G",
+  },
+  {
+    id: "cg-15",
+    question: "Quelle est la capitale du Canada ?",
+    choices: { A: "Toronto", B: "Vancouver", C: "Montréal", D: "Ottawa" },
+    correct: "D",
+    theme: "Culture G",
+  },
+  {
+    id: "cg-16",
+    question: "Qui a peint « La Nuit étoilée » ?",
+    choices: { A: "Claude Monet", B: "Vincent van Gogh", C: "Pablo Picasso", D: "Salvador Dalí" },
+    correct: "B",
+    theme: "Culture G",
+  },
+  {
+    id: "cg-17",
+    question: "Quel gaz les plantes absorbent-elles pour la photosynthèse ?",
+    choices: { A: "L'oxygène", B: "L'azote", C: "Le dioxyde de carbone", D: "L'hydrogène" },
+    correct: "C",
+    theme: "Culture G",
+  },
+  {
+    id: "cg-18",
+    question: "Combien de pays partagent une frontière terrestre avec la France métropolitaine ?",
+    choices: { A: "6", B: "8", C: "10", D: "4" },
+    correct: "B",
+    theme: "Culture G",
+  },
+
+  // ─── SPORT (suite) ───
+  {
+    id: "sport-11",
+    question: "Combien de joueurs d'une équipe de basket sont sur le terrain ?",
+    choices: { A: "5", B: "6", C: "7", D: "4" },
+    correct: "A",
+    theme: "Sport",
+  },
+  {
+    id: "sport-12",
+    question: "Quel pays a remporté la Coupe du monde de football 2022 ?",
+    choices: { A: "La France", B: "Le Brésil", C: "L'Argentine", D: "L'Allemagne" },
+    correct: "C",
+    theme: "Sport",
+  },
+  {
+    id: "sport-13",
+    question: "Quelle est la distance officielle d'un marathon ?",
+    choices: { A: "40 km", B: "42,195 km", C: "45,5 km", D: "38,2 km" },
+    correct: "B",
+    theme: "Sport",
+  },
+  {
+    id: "sport-14",
+    question: "Dans quel sport utilise-t-on un volant ?",
+    choices: { A: "Le squash", B: "Le padel", C: "Le badminton", D: "La pelote basque" },
+    correct: "C",
+    theme: "Sport",
+  },
+  {
+    id: "sport-15",
+    question: "Combien de points vaut un essai au rugby à XV ?",
+    choices: { A: "3", B: "5", C: "7", D: "4" },
+    correct: "B",
+    theme: "Sport",
+  },
+  {
+    id: "sport-16",
+    question: "Quel club Zinédine Zidane a-t-il entraîné ?",
+    choices: { A: "Le Real Madrid", B: "La Juventus", C: "L'OM", D: "Le PSG" },
+    correct: "A",
+    theme: "Sport",
+  },
+  {
+    id: "sport-17",
+    question: "Tous les combien d'années ont lieu les Jeux olympiques d'été ?",
+    choices: { A: "2 ans", B: "3 ans", C: "4 ans", D: "5 ans" },
+    correct: "C",
+    theme: "Sport",
+  },
+  {
+    id: "sport-18",
+    question: "Au tennis, comment appelle-t-on un score de zéro ?",
+    choices: { A: "Nul", B: "Zéro", C: "Blanc", D: "Love" },
+    correct: "D",
+    theme: "Sport",
+  },
+
+  // ─── AMIENS (suite) ───
+  {
+    id: "amiens-11",
+    question: "Quel écrivain célèbre a vécu plus de 30 ans à Amiens ?",
+    choices: { A: "Victor Hugo", B: "Jules Verne", C: "Émile Zola", D: "Alexandre Dumas" },
+    correct: "B",
+    theme: "Amiens",
+  },
+  {
+    id: "amiens-12",
+    question: "Comment s'appellent les jardins flottants d'Amiens ?",
+    choices: { A: "Les Hortillonnages", B: "Les Floralies", C: "Les Jardinets", D: "Les Marais verts" },
+    correct: "A",
+    theme: "Amiens",
+  },
+  {
+    id: "amiens-13",
+    question: "La cathédrale d'Amiens est la plus … de France.",
+    choices: { A: "Ancienne", B: "Haute", C: "Vaste", D: "Visitée" },
+    correct: "C",
+    theme: "Amiens",
+  },
+  {
+    id: "amiens-14",
+    question: "Quelle spécialité sucrée est typique d'Amiens ?",
+    choices: { A: "Le macaron", B: "Le calisson", C: "La bêtise", D: "Le canelé" },
+    correct: "A",
+    theme: "Amiens",
+  },
+  {
+    id: "amiens-15",
+    question: "Quel cours d'eau traverse Amiens ?",
+    choices: { A: "L'Oise", B: "La Somme", C: "L'Authie", D: "La Bresle" },
+    correct: "B",
+    theme: "Amiens",
+  },
+  {
+    id: "amiens-16",
+    question: "Comment s'appelle le quartier des canaux d'Amiens ?",
+    choices: { A: "Saint-Leu", B: "Saint-Pierre", C: "Henriville", D: "Saint-Maurice" },
+    correct: "A",
+    theme: "Amiens",
+  },
+  {
+    id: "amiens-17",
+    question: "Quel spectacle illumine la cathédrale d'Amiens en couleurs ?",
+    choices: { A: "Lumina", B: "Chroma", C: "Prisma", D: "Aurora" },
+    correct: "B",
+    theme: "Amiens",
+  },
+  {
+    id: "amiens-18",
+    question: "Dans quel département se trouve Amiens ?",
+    choices: { A: "L'Oise (60)", B: "L'Aisne (02)", C: "La Somme (80)", D: "Le Nord (59)" },
+    correct: "C",
+    theme: "Amiens",
+  },
+
+  // ─── GAMING (suite) ───
+  {
+    id: "gaming-11",
+    question: "Quel est le héros de la saga The Legend of Zelda ?",
+    choices: { A: "Zelda", B: "Link", C: "Ganon", D: "Epona" },
+    correct: "B",
+    theme: "Gaming",
+  },
+  {
+    id: "gaming-12",
+    question: "Quelle entreprise fabrique la PlayStation ?",
+    choices: { A: "Microsoft", B: "Nintendo", C: "Sony", D: "Sega" },
+    correct: "C",
+    theme: "Gaming",
+  },
+  {
+    id: "gaming-13",
+    question: "Quel est le jeu vidéo le plus vendu de l'histoire ?",
+    choices: { A: "GTA V", B: "Tetris", C: "Minecraft", D: "Wii Sports" },
+    correct: "C",
+    theme: "Gaming",
+  },
+  {
+    id: "gaming-14",
+    question: "Quel est le métier de Mario chez Nintendo ?",
+    choices: { A: "Plombier", B: "Menuisier", C: "Électricien", D: "Cuisinier" },
+    correct: "A",
+    theme: "Gaming",
+  },
+  {
+    id: "gaming-15",
+    question: "Dans quel battle royale saute-t-on d'un bus volant ?",
+    choices: { A: "Apex Legends", B: "Warzone", C: "Fortnite", D: "PUBG" },
+    correct: "C",
+    theme: "Gaming",
+  },
+  {
+    id: "gaming-16",
+    question: "Ryu et Chun-Li sont des personnages de…",
+    choices: { A: "Tekken", B: "Street Fighter", C: "Mortal Kombat", D: "KOF" },
+    correct: "B",
+    theme: "Gaming",
+  },
+  {
+    id: "gaming-17",
+    question: "Quelle console Nintendo se joue en portable ET sur TV ?",
+    choices: { A: "La Wii U", B: "La 3DS", C: "La Switch", D: "La GameCube" },
+    correct: "C",
+    theme: "Gaming",
+  },
+  {
+    id: "gaming-18",
+    question: "Dans Pokémon, comment s'appelle le félin parlant de la Team Rocket ?",
+    choices: { A: "Miaouss", B: "Évoli", C: "Rondoudou", D: "Psykokwak" },
+    correct: "A",
+    theme: "Gaming",
+  },
+
+  // ─── MUSIQUE (suite) ───
+  {
+    id: "music-11",
+    question: "Combien de cordes possède une guitare classique ?",
+    choices: { A: "4", B: "5", C: "6", D: "7" },
+    correct: "C",
+    theme: "Musique",
+  },
+  {
+    id: "music-12",
+    question: "Qui est surnommé le « King of Pop » ?",
+    choices: { A: "Prince", B: "Michael Jackson", C: "Elvis Presley", D: "Stevie Wonder" },
+    correct: "B",
+    theme: "Musique",
+  },
+  {
+    id: "music-13",
+    question: "De quel pays vient le groupe ABBA ?",
+    choices: { A: "Norvège", B: "Danemark", C: "Suède", D: "Finlande" },
+    correct: "C",
+    theme: "Musique",
+  },
+  {
+    id: "music-14",
+    question: "Quel DJ français a produit le titre « Titanium » ?",
+    choices: { A: "DJ Snake", B: "David Guetta", C: "Martin Solveig", D: "Bob Sinclar" },
+    correct: "B",
+    theme: "Musique",
+  },
+  {
+    id: "music-15",
+    question: "Quel compositeur a continué à créer alors qu'il devenait sourd ?",
+    choices: { A: "Mozart", B: "Bach", C: "Chopin", D: "Beethoven" },
+    correct: "D",
+    theme: "Musique",
+  },
+  {
+    id: "music-16",
+    question: "Quel tube a lancé la carrière d'Aya Nakamura ?",
+    choices: { A: "Djadja", B: "Copines", C: "Pookie", D: "Jolie Nana" },
+    correct: "A",
+    theme: "Musique",
+  },
+  {
+    id: "music-17",
+    question: "Quel groupe anglais a enregistré « Bohemian Rhapsody » ?",
+    choices: { A: "The Beatles", B: "Queen", C: "The Rolling Stones", D: "Pink Floyd" },
+    correct: "B",
+    theme: "Musique",
+  },
+  {
+    id: "music-18",
+    question: "Combien de notes différentes compte la gamme de do majeur ?",
+    choices: { A: "5", B: "6", C: "7", D: "8" },
+    correct: "C",
+    theme: "Musique",
+  },
+
+  // ─── CINÉMA (suite) ───
+  {
+    id: "cine-11",
+    question: "Qui a réalisé « Titanic » et « Avatar » ?",
+    choices: { A: "Steven Spielberg", B: "James Cameron", C: "Ridley Scott", D: "Christopher Nolan" },
+    correct: "B",
+    theme: "Cinéma",
+  },
+  {
+    id: "cine-12",
+    question: "Quel acteur incarne le capitaine Jack Sparrow ?",
+    choices: { A: "Orlando Bloom", B: "Johnny Depp", C: "Brad Pitt", D: "Keanu Reeves" },
+    correct: "B",
+    theme: "Cinéma",
+  },
+  {
+    id: "cine-13",
+    question: "Dans quelle saga croise-t-on Dark Vador ?",
+    choices: { A: "Star Trek", B: "Dune", C: "Star Wars", D: "Alien" },
+    correct: "C",
+    theme: "Cinéma",
+  },
+  {
+    id: "cine-14",
+    question: "Quel studio d'animation a créé « Toy Story » ?",
+    choices: { A: "DreamWorks", B: "Pixar", C: "Illumination", D: "Ghibli" },
+    correct: "B",
+    theme: "Cinéma",
+  },
+  {
+    id: "cine-15",
+    question: "Quel film détient le record du box-office mondial ?",
+    choices: { A: "Avengers: Endgame", B: "Titanic", C: "Avatar", D: "Star Wars VII" },
+    correct: "C",
+    theme: "Cinéma",
+  },
+  {
+    id: "cine-16",
+    question: "Quelle est la récompense suprême du Festival de Cannes ?",
+    choices: { A: "Le Lion d'or", B: "L'Ours d'or", C: "La Palme d'or", D: "Le César d'or" },
+    correct: "C",
+    theme: "Cinéma",
+  },
+  {
+    id: "cine-17",
+    question: "Qui joue aux côtés de François Cluzet dans « Intouchables » ?",
+    choices: { A: "Omar Sy", B: "Jamel Debbouze", C: "Dany Boon", D: "Kad Merad" },
+    correct: "A",
+    theme: "Cinéma",
+  },
+  {
+    id: "cine-18",
+    question: "Comment s'appelle l'école de sorciers de Harry Potter ?",
+    choices: { A: "Durmstrang", B: "Poudlard", C: "Beauxbâtons", D: "Salem" },
+    correct: "B",
+    theme: "Cinéma",
+  },
 ];
 
 /** Liste des thèmes disponibles (en ordre d'affichage dans le picker). */
@@ -541,6 +895,68 @@ export function getQuestionsByTheme(theme: QuizTheme): QuizQuestion[] {
 export const QUESTION_TIME_LIMIT_SEC = 20;
 /** Durée d'affichage du reveal avant question suivante. */
 export const REVEAL_DURATION_SEC = 5;
+
+/** Choix proposés à l'hôte pour la longueur de partie (playtest 07/2026). */
+export const QUIZ_NUM_QUESTIONS_CHOICES = [10, 15, 20, 30] as const;
+/** Nombre de questions par défaut d'une partie. */
+export const QUIZ_DEFAULT_NUM_QUESTIONS = 15;
+
+/**
+ * Vue minimale de l'état de session nécessaire pour résoudre une question.
+ * Partagée par le SERVEUR (quiz-actions), la TV (HostQuizGame) et les
+ * téléphones (PlayQuizGame) — c'était l'origine du bug de désynchronisation
+ * playtest 07/2026 : le serveur notait sur la banque FILTRÉE par thème
+ * pendant que les écrans lisaient QUIZ_QUESTIONS non filtré. Tout le monde
+ * passe désormais par resolveQuestion() : une seule logique, zéro désync.
+ */
+export interface QuizStateView {
+  questionIndex: number;
+  theme?: QuizTheme;
+  /**
+   * Ordre de tirage : indices dans la banque filtrée par thème, mélangés au
+   * lancement et TRONQUÉS au nombre de questions choisi. Stocké dans le
+   * current_state de la session → tous les écrans jouent le même tirage.
+   * Absent sur les vieilles sessions → fallback ordre naturel (rétro-compat).
+   */
+  questionOrder?: number[];
+}
+
+/** La banque de questions applicable à cet état (filtrée par thème). */
+function getPool(state: Pick<QuizStateView, "theme">): QuizQuestion[] {
+  return state.theme ? getQuestionsByTheme(state.theme) : QUIZ_QUESTIONS;
+}
+
+/** LA fonction : quelle question affiche-t-on / note-t-on pour cet état ? */
+export function resolveQuestion(state: QuizStateView): QuizQuestion | null {
+  const pool = getPool(state);
+  const poolIndex = state.questionOrder?.[state.questionIndex] ?? state.questionIndex;
+  return pool[poolIndex] ?? null;
+}
+
+/** Nombre total de questions de CETTE partie (pour "Question 3 / 15"). */
+export function getTotalQuestions(
+  state: Pick<QuizStateView, "theme" | "questionOrder">
+): number {
+  return state.questionOrder?.length ?? getPool(state).length;
+}
+
+/**
+ * Construit un tirage aléatoire de `numQuestions` indices dans la banque du
+ * thème (mélange de Fisher-Yates, le seul shuffle non biaisé — un
+ * sort(() => Math.random() - 0.5) produit des permutations inéquitables).
+ * Clampe au nombre de questions réellement disponibles pour le thème.
+ * Bonus vs avant : chaque partie a un tirage différent — fini "les 15
+ * premières questions à chaque fois".
+ */
+export function buildQuestionOrder(theme: QuizTheme, numQuestions: number): number[] {
+  const pool = getQuestionsByTheme(theme);
+  const indices = pool.map((_, i) => i);
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j]!, indices[i]!];
+  }
+  return indices.slice(0, Math.max(1, Math.min(numQuestions, pool.length)));
+}
 
 /**
  * Calcule le score d'une réponse — combine 3 facteurs :

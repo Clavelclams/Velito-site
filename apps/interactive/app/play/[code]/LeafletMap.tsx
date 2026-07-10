@@ -33,6 +33,12 @@ interface LeafletMapProps {
     lng: number;
     label?: string;
     color?: string; // hex
+    /**
+     * true = étiquette affichée EN PERMANENCE (pas seulement au survol).
+     * Indispensable sur une TV : personne ne "survole" un écran de télé
+     * (fix reveal Pin point, playtest 07/2026).
+     */
+    labelPermanent?: boolean;
   }>;
 }
 
@@ -158,7 +164,23 @@ export default function LeafletMap({
           iconAnchor: [10, 10],
         });
         const marker = L.marker([m.lat, m.lng], { icon }).addTo(extraLayerRef.current);
-        if (m.label) marker.bindTooltip(m.label, { permanent: false });
+        if (m.label) {
+          marker.bindTooltip(m.label, {
+            permanent: m.labelPermanent ?? false,
+            direction: "top",
+          });
+        }
+      }
+
+      // FIX reveal Pin point (playtest 07/2026) : recadrer la carte pour que
+      // TOUS les pins soient dans le champ. Avant, un placement hors du
+      // cadre initial était simplement invisible → "on voit pas les
+      // placements effectués".
+      if (extraMarkers.length > 0 && mapRef.current) {
+        const bounds = L.latLngBounds(
+          extraMarkers.map((m) => [m.lat, m.lng] as [number, number])
+        );
+        mapRef.current.fitBounds(bounds, { padding: [48, 48], maxZoom: 10 });
       }
     })();
 

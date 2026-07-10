@@ -210,7 +210,7 @@ export default function PlayEstimGame({
     return (
       <div className="w-full max-w-sm text-center">
         <p className="text-xs uppercase tracking-[0.3em] text-white/40">
-          Velito Interactive · ESTIM&apos;
+          Velito Interactive · HOW MUCH?!
         </p>
         <h1 className="neon-title mt-3 text-3xl">Partie terminée</h1>
 

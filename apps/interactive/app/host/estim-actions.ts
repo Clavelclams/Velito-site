@@ -19,10 +19,32 @@ interface ActionResult {
   error?: string;
 }
 
-/** Pioche une question non encore jouée. */
+/**
+ * Probabilité de tomber sur une question JOKE ("INESTIMABLE") à chaque manche.
+ * Décision Clavel 07/2026 : 2 % — assez rare pour rester une surprise qui
+ * fait rire, assez présent pour exister. (L'ancien système mettait les jokes
+ * dans le tirage uniforme → même proba que les vraies questions → "relou",
+ * retour Moxy 06/2026.)
+ */
+const ESTIM_JOKE_CHANCE = 0.02;
+
+/** Pioche une question non encore jouée (jokes servis à part, à 2 %). */
 function pickQuestion(excluded: string[]): typeof ESTIM_QUESTIONS[number] {
-  const available = ESTIM_QUESTIONS.filter((q) => !excluded.includes(q.id));
-  const pool = available.length > 0 ? available : ESTIM_QUESTIONS;
+  // 1. Tirage joke : 2 % de chance, et seulement si un joke non joué existe.
+  const jokes = ESTIM_QUESTIONS.filter(
+    (q) => q.joke && !excluded.includes(q.id),
+  );
+  if (jokes.length > 0 && Math.random() < ESTIM_JOKE_CHANCE) {
+    return jokes[Math.floor(Math.random() * jokes.length)]!;
+  }
+
+  // 2. Tirage normal : les jokes sont EXCLUS du pool uniforme — ils ne
+  //    peuvent apparaître QUE via le tirage à 2 % ci-dessus.
+  const available = ESTIM_QUESTIONS.filter(
+    (q) => !q.joke && !excluded.includes(q.id),
+  );
+  const pool =
+    available.length > 0 ? available : ESTIM_QUESTIONS.filter((q) => !q.joke);
   return pool[Math.floor(Math.random() * pool.length)]!;
 }
 

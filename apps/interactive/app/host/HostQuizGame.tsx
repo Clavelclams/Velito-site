@@ -22,10 +22,12 @@ import { createClient } from "@/lib/supabase/client";
 import { playSfx, AUDIO } from "@/lib/audio";
 import MuteFooter from "./MuteFooter";
 import {
-  QUIZ_QUESTIONS,
   type QuizQuestion,
+  type QuizTheme,
   QUESTION_TIME_LIMIT_SEC,
   REVEAL_DURATION_SEC,
+  resolveQuestion,
+  getTotalQuestions,
 } from "@/lib/games/quiz-questions";
 import {
   revealAnswerAction,
@@ -40,6 +42,11 @@ interface SessionState {
   revealStartedAt?: string;
   timeLimitSec?: number;
   revealDurationSec?: number;
+  /** Thème + tirage : DOIVENT refléter le state serveur, sinon la TV
+   *  affiche une autre question que celle que le serveur note
+   *  (bug playtest 07/2026). Résolution via resolveQuestion(). */
+  theme?: QuizTheme;
+  questionOrder?: number[];
 }
 
 interface SessionPlayer {
@@ -241,8 +248,10 @@ export default function HostQuizGame({
 
   // ─── Helpers ───
   const currentQuestion: QuizQuestion | null = useMemo(() => {
-    return QUIZ_QUESTIONS[state.questionIndex] ?? null;
-  }, [state.questionIndex]);
+    // Helper PARTAGÉ avec le serveur et les téléphones : même thème,
+    // même tirage, même index → même question partout.
+    return resolveQuestion(state);
+  }, [state]);
 
   const currentAnswers = useMemo(
     () => answers.filter((a) => a.question_index === state.questionIndex),
@@ -296,7 +305,7 @@ export default function HostQuizGame({
                   pseudo={winner.pseudo}
                   avatar={winner.avatar_config}
                   score={winner.score}
-                  subtitle={`Quiz · ${QUIZ_QUESTIONS.length} questions`}
+                  subtitle={`Quiz · ${getTotalQuestions(state)} questions`}
                 />
               ) : (
                 <p className="text-center text-white/50">Aucun joueur.</p>
@@ -363,7 +372,7 @@ export default function HostQuizGame({
         <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-white/40">
-              Question {state.questionIndex + 1} / {QUIZ_QUESTIONS.length}
+              Question {state.questionIndex + 1} / {getTotalQuestions(state)}
             </p>
             {currentQuestion.theme && (
               <p className="mt-1 text-sm font-semibold text-tenant">
@@ -467,7 +476,7 @@ export default function HostQuizGame({
             >
               {actionPending
                 ? "Suivant…"
-                : state.questionIndex + 1 >= QUIZ_QUESTIONS.length
+                : state.questionIndex + 1 >= getTotalQuestions(state)
                 ? "Voir le gagnant"
                 : "Question suivante"}
             </button>
