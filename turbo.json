@@ -33,6 +33,8 @@
         "VENA_CONTACT_FROM",
         "INTERACTIVE_CONTACT_TO",
         "INTERACTIVE_CONTACT_FROM",
+        "COMPTA_EMAILS_AUTORISES",
+        "COURS_EMAILS_AUTORISES",
         "CRON_SECRET"
       ]
     },

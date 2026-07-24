@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Styles du contenu Markdown des fiches (rendu par react-markdown).
+ * On style par balisage sémantique plutôt que d'ajouter la dépendance
+ * @tailwindcss/typography : 20 lignes suffisent pour des fiches.
+ */
+@layer components {
+  .fiche-contenu h2 {
+    @apply mb-3 mt-8 border-b border-cours-border pb-1 text-xl font-bold;
+  }
+  .fiche-contenu h3 {
+    @apply mb-2 mt-6 text-lg font-semibold;
+  }
+  .fiche-contenu p {
+    @apply mb-4 leading-relaxed;
+  }
+  .fiche-contenu ul,
+  .fiche-contenu ol {
+    @apply mb-4 ml-6 list-disc space-y-1;
+  }
+  .fiche-contenu ol {
+    @apply list-decimal;
+  }
+  .fiche-contenu code {
+    @apply rounded bg-cours-border/40 px-1.5 py-0.5 font-mono text-sm;
+  }
+  .fiche-contenu pre {
+    @apply mb-4 overflow-x-auto rounded-lg bg-[#1e1e2e] p-4 text-sm text-[#e6e6ef];
+  }
+  .fiche-contenu pre code {
+    @apply bg-transparent p-0;
+  }
+  .fiche-contenu blockquote {
+    @apply mb-4 border-l-4 border-cours-accent/40 pl-4 italic text-cours-text-muted;
+  }
+  .fiche-contenu strong {
+    @apply font-bold;
+  }
+}
