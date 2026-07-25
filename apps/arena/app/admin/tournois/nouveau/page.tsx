@@ -5,14 +5,21 @@
  * en base et redirige vers la page du tournoi.
  */
 import { creerTournoi } from "@/lib/arena/actions";
+import BandeauErreur from "@/components/BandeauErreur";
 
 const inputCls =
   "w-full rounded-lg border border-arena-border bg-arena-bg px-3 py-2 text-sm focus:border-arena-violet focus:outline-none";
 
-export default function NouveauTournoi() {
+export default async function NouveauTournoi({
+  searchParams,
+}: {
+  searchParams: Promise<{ erreur?: string }>;
+}) {
+  const { erreur } = await searchParams;
   return (
     <div className="max-w-lg">
       <h1 className="mb-6 text-2xl font-black">Nouveau tournoi</h1>
+      <BandeauErreur message={erreur} />
 
       <form action={creerTournoi} className="space-y-4">
         <div>

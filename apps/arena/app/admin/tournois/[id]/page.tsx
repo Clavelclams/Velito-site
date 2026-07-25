@@ -25,25 +25,23 @@ import type {
   Participation,
   Tournoi,
 } from "@/lib/arena/types";
+import { nomRound } from "@/lib/arena/affichage";
+import BandeauErreur from "@/components/BandeauErreur";
 
 const btn =
   "rounded-lg px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-40";
 const inputCls =
   "rounded-lg border border-arena-border bg-arena-bg px-3 py-1.5 text-sm focus:border-arena-violet focus:outline-none";
 
-function nomRound(round: number, nbRounds: number): string {
-  if (round === nbRounds) return "Finale";
-  if (round === nbRounds - 1) return "Demi-finales";
-  if (round === nbRounds - 2) return "Quarts de finale";
-  return `Round ${round}`;
-}
-
 export default async function PageTournoi({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ erreur?: string }>;
 }) {
   const { id } = await params;
+  const { erreur } = await searchParams;
   const ctx = await getContexteStaff();
   if (!ctx) return null; // écran de connexion géré par le layout
 
@@ -91,6 +89,8 @@ export default async function PageTournoi({
 
   return (
     <div className="space-y-10">
+      <BandeauErreur message={erreur} />
+
       {/* ---------- En-tête + cycle de vie ---------- */}
       <div>
         <div className="flex flex-wrap items-center justify-between gap-4">

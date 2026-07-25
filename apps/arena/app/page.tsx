@@ -96,6 +96,10 @@ export default async function ArenaHome() {
           Esport responsable
         </a>{" "}
         ·{" "}
+        <a href="/reglement" className="underline hover:text-gray-400">
+          Règlement
+        </a>{" "}
+        ·{" "}
         <a href="/admin" className="underline hover:text-gray-400">
           Espace orga
         </a>

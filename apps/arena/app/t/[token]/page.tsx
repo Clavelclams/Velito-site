@@ -13,14 +13,8 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Joueur, MatchRow, Participation, Tournoi } from "@/lib/arena/types";
+import { nomRound } from "@/lib/arena/affichage";
 import AutoRefresh from "./AutoRefresh";
-
-function nomRound(round: number, nbRounds: number): string {
-  if (round === nbRounds) return "Finale";
-  if (round === nbRounds - 1) return "Demi-finales";
-  if (round === nbRounds - 2) return "Quarts de finale";
-  return `Round ${round}`;
-}
 
 export default async function PagePubliqueTournoi({
   params,
