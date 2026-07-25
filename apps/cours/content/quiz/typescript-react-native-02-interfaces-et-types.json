@@ -1,0 +1,49 @@
+{
+  "fiche": "typescript-react-native-02-interfaces-et-types",
+  "questions": [
+    {
+      "question": "Dans src/types/pirb.ts, à quoi sert l'interface JoueurProfil ?",
+      "choix": [
+        "À créer automatiquement un objet joueuse au démarrage",
+        "À décrire la forme exacte des données du profil, vérifiée à la compilation",
+        "À stocker les données du profil dans le téléphone",
+        "À envoyer la requête HTTP vers le serveur Symfony"
+      ],
+      "bonne": 1,
+      "explication": "Une interface ne « fait » rien : c'est un contrat de forme. Elle garantit que tout objet déclaré JoueurProfil possède bien id, prenom, poste, club... avec les bons types, puis elle disparaît au build. C'est de la documentation vérifiée par le compilateur."
+    },
+    {
+      "question": "Avec `type PosteBasket = 'Meneuse' | 'Arrière' | 'Ailière' | 'Ailière forte' | 'Pivot';`, ce code compile-t-il ?\n```ts\nconst poste: PosteBasket = 'Gardienne';\n```",
+      "choix": [
+        "Oui, car 'Gardienne' est bien un string",
+        "Oui, mais la valeur sera remplacée par null",
+        "Non : 'Gardienne' ne fait pas partie de l'union des cinq valeurs autorisées",
+        "Non, car un type ne peut pas contenir d'accents"
+      ],
+      "bonne": 2,
+      "explication": "L'union de chaînes littérales borne les valeurs possibles : un PosteBasket est l'une des cinq chaînes listées, rien d'autre. 'Gardienne' est refusée à la compilation — le type encode la règle métier « on borne côté app » écrite en commentaire dans pirb.ts."
+    },
+    {
+      "question": "Dans pirb.ts, ZONE_LIBELLES est typé `Record<ZoneTir, string>`. Que se passe-t-il si on supprime l'entrée `mi_distance` de l'objet ?",
+      "choix": [
+        "Rien, la zone affichera simplement un libellé vide",
+        "L'app plante au lancement sur l'écran Stats",
+        "TypeScript convertit automatiquement la clé manquante en null",
+        "Erreur de compilation : le Record exige une entrée pour CHAQUE zone de ZoneTir"
+      ],
+      "bonne": 3,
+      "explication": "`Record<ZoneTir, string>` impose l'exhaustivité : une entrée par clé du type ZoneTir, soit les 8 zones du shot chart. En supprimer une casse la compilation — impossible d'oublier une zone en ajoutant une neuvième plus tard. C'est le type qui protège la cohérence avec le serveur."
+    },
+    {
+      "question": "Pourquoi le commentaire d'en-tête de src/types/pirb.ts précise-t-il que les types sont « calqués sur les structures RÉELLES du backend Symfony » ?",
+      "choix": [
+        "Parce que ce fichier est le contrat mobile ↔ API : mêmes formes des deux côtés, donc aucun écran à réécrire au passage mock → API",
+        "Parce que TypeScript exige de copier le code PHP du serveur",
+        "Parce que le serveur Symfony lit directement ce fichier au démarrage",
+        "Parce que c'est obligatoire pour publier sur les stores"
+      ],
+      "bonne": 0,
+      "explication": "pirb.ts reproduit la sortie exacte des services Symfony (ex. StatsSaison = JoueurStatsAggregator::statsSaison()). Si l'app et l'API respectent ces mêmes formes, brancher les vraies données ne change rien dans les écrans : c'est la promesse du chantier B4, et un vrai argument d'architecture pour le jury."
+    }
+  ]
+}

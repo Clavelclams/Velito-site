@@ -1,0 +1,49 @@
+{
+  "fiche": "terminal-07-variables-environnement-et-env",
+  "questions": [
+    {
+      "question": "À quoi sert la variable d'environnement PATH ?",
+      "choix": [
+        "Elle contient le chemin du dossier personnel de l'utilisateur",
+        "Elle liste les dossiers où le shell cherche les programmes quand tu tapes une commande comme npm ou git",
+        "Elle stocke l'historique des dossiers visités avec cd",
+        "Elle définit le dossier où npm installe les paquets"
+      ],
+      "bonne": 1,
+      "explication": "Quand tu tapes `npm`, le shell parcourt un à un les dossiers listés dans PATH jusqu'à trouver un programme portant ce nom. C'est pour ça qu'un outil fraîchement installé peut répondre « terme non reconnu » : son dossier n'a pas encore été ajouté au PATH. `Get-Command npm` te montre le chemin trouvé."
+    },
+    {
+      "question": "Pourquoi ne faut-il JAMAIS écrire un mot de passe ou une clé d'API directement dans le code source ?",
+      "choix": [
+        "Parce que ça ralentit l'exécution du programme",
+        "Parce que les mots de passe contiennent des caractères interdits en PHP et JavaScript",
+        "Parce que le code part sur Git puis GitHub : un secret dans le code est un secret publié, et des robots scannent les dépôts pour les voler",
+        "Parce que le compilateur refuse de compiler un fichier contenant un secret"
+      ],
+      "bonne": 2,
+      "explication": "Le code source est fait pour être partagé : Git, GitHub, collègues, parfois public. Un secret commité est exposé, et des bots scannent GitHub en continu pour récupérer les clés d'API. C'est pour ça que les secrets vivent dans des variables d'environnement via `.env`, exclu du versionnement — et qu'un secret qui a fuité doit être révoqué, pas juste effacé."
+    },
+    {
+      "question": "En PowerShell, comment affiches-tu la valeur de la variable d'environnement USERNAME ?",
+      "choix": [
+        "echo %USERNAME%",
+        "echo $USERNAME",
+        "print USERNAME",
+        "echo $env:USERNAME"
+      ],
+      "bonne": 3,
+      "explication": "PowerShell utilise le préfixe `$env:` pour accéder aux variables d'environnement. `%USERNAME%` est la syntaxe de l'ancien invite de commandes Windows (cmd), et `$USERNAME` tout court est la syntaxe bash de tes serveurs Linux. Connaître les trois t'évite de mélanger les mondes."
+    },
+    {
+      "question": "Dans un projet Symfony, quelle est la différence entre `.env` et `.env.local` ?",
+      "choix": [
+        ".env contient les valeurs par défaut non sensibles et peut être versionné ; .env.local contient tes vraies valeurs et secrets et ne quitte jamais ta machine",
+        ".env est pour la production, .env.local pour les tests unitaires",
+        ".env.local est une sauvegarde automatique de .env créée par Symfony",
+        "Aucune : Symfony lit les deux fichiers de façon strictement identique"
+      ],
+      "bonne": 0,
+      "explication": "La convention Symfony sépare le modèle (`.env`, versionné, avec des valeurs par défaut inoffensives) des valeurs réelles de chaque machine (`.env.local`, ignoré par Git). Ton `.env.local` pointe sur ta base locale ; celui du serveur OVH sur la base de production. Même code partout, configuration différente par machine."
+    }
+  ]
+}

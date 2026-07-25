@@ -1,0 +1,49 @@
+{
+  "fiche": "terminal-01-cest-quoi-un-terminal",
+  "questions": [
+    {
+      "question": "Quelle est la différence entre le terminal et le shell ?",
+      "choix": [
+        "C'est exactement la même chose, deux mots pour un même programme",
+        "Le terminal est la fenêtre d'affichage, le shell est le programme qui interprète et exécute les commandes",
+        "Le shell est la fenêtre, le terminal est le langage de programmation",
+        "Le terminal ne fonctionne que sur Linux, le shell que sur Windows"
+      ],
+      "bonne": 1,
+      "explication": "Le terminal, c'est juste l'écran texte (par exemple le panneau intégré de VS Code). Le shell — PowerShell chez toi, bash sur tes serveurs — tourne à l'intérieur : c'est lui qui lit `npm run dev`, trouve le programme npm et le lance. Devant le jury, savoir distinguer les deux montre que tu comprends ton outil de travail."
+    },
+    {
+      "question": "Que fait la commande `node --version` ?",
+      "choix": [
+        "Elle installe la dernière version de Node.js",
+        "Elle met à jour Node.js vers la version indiquée",
+        "Elle lance le programme node en lui passant l'argument --version, et node répond en affichant son numéro de version",
+        "Elle supprime les anciennes versions de Node.js"
+      ],
+      "bonne": 2,
+      "explication": "Le shell prend le premier mot (node), cherche ce programme sur le disque et le lance avec l'argument --version. Node ne fait alors qu'une chose : afficher sa version puis rendre la main. Rien n'est installé ni modifié — c'est une commande de pure lecture, parfaite pour vérifier qu'un outil est présent."
+    },
+    {
+      "question": "Que se passe-t-il si tu tapes une commande dont le nom ne correspond à aucun programme installé ?",
+      "choix": [
+        "Le shell affiche une erreur du type « terme non reconnu », car il n'a trouvé aucun programme portant ce nom",
+        "L'ordinateur plante et il faut redémarrer",
+        "Le shell installe automatiquement le programme manquant",
+        "Rien ne s'affiche, le shell ignore silencieusement la commande"
+      ],
+      "bonne": 0,
+      "explication": "PowerShell cherche un programme portant ce nom ; s'il n'en trouve pas, il te le dit clairement avec un message d'erreur, et rien d'autre ne se passe. C'est sans danger : une commande inconnue ne casse rien. Le bon réflexe de dev, c'est de lire ce message au lieu de paniquer."
+    },
+    {
+      "question": "Pourquoi les développeurs utilisent-ils le terminal plutôt que seulement la souris ?",
+      "choix": [
+        "Parce que c'est obligatoire légalement pour développer",
+        "Parce que la souris ne fonctionne pas dans VS Code",
+        "Parce que le terminal consomme moins de batterie",
+        "Parce que les outils de dev (npm, git, composer) n'existent qu'en ligne de commande, et que les commandes texte sont reproductibles et automatisables"
+      ],
+      "bonne": 3,
+      "explication": "npm, git ou composer n'ont pas d'interface graphique officielle : ce sont des programmes en ligne de commande. Et une commande texte peut être copiée, documentée et rejouée à l'identique — c'est exactement ce que fait Vercel quand il exécute `npm run build` sur ses serveurs pour déployer ton site."
+    }
+  ]
+}

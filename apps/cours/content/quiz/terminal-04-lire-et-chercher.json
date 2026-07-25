@@ -1,0 +1,49 @@
+{
+  "fiche": "terminal-04-lire-et-chercher",
+  "questions": [
+    {
+      "question": "Que fait la commande `Select-String \"3007\" package.json` ?",
+      "choix": [
+        "Elle remplace 3007 par une autre valeur dans package.json",
+        "Elle affiche les lignes de package.json qui contiennent « 3007 », avec leur numéro de ligne",
+        "Elle ouvre package.json dans VS Code à la ligne 3007",
+        "Elle vérifie que le port 3007 est libre sur la machine"
+      ],
+      "bonne": 1,
+      "explication": "Select-String est l'outil de recherche de texte de PowerShell, l'équivalent du `grep` de tes serveurs Linux. Il lit le fichier et affiche chaque ligne contenant le motif, avec son numéro. C'est une commande de pure lecture : rien n'est modifié."
+    },
+    {
+      "question": "Dans `Get-ChildItem -Recurse -Filter *.php | Select-String \"make:entity\"`, à quoi sert le symbole `|` ?",
+      "choix": [
+        "Il exécute les deux commandes en parallèle pour aller plus vite",
+        "Il sépare deux commandes indépendantes, comme un point-virgule",
+        "C'est un « ou » logique : l'une des deux commandes est exécutée",
+        "C'est un pipe : il envoie la sortie de la première commande (la liste des fichiers .php) en entrée de la seconde (la recherche)"
+      ],
+      "bonne": 3,
+      "explication": "Le pipe branche des commandes comme des tuyaux : Get-ChildItem produit la liste des fichiers, Select-String la reçoit et cherche dedans. C'est la philosophie du terminal — de petits outils simples qu'on assemble. Sur bash, la même idée s'écrirait `grep -rn \"make:entity\" .`."
+    },
+    {
+      "question": "Que fait la commande `code .` tapée à la racine de ton projet ?",
+      "choix": [
+        "Elle ouvre VS Code sur le dossier courant (le « . » désigne « ici »)",
+        "Elle affiche le code source de tous les fichiers du dossier",
+        "Elle compile le projet en cours",
+        "Elle formate automatiquement le code du projet"
+      ],
+      "bonne": 0,
+      "explication": "`code` est la commande fournie par VS Code, et `.` est le chemin relatif du dossier courant (vu en leçon 2). Ensemble : « ouvre l'éditeur sur ce dossier ». C'est le workflow classique d'un dev : naviguer au terminal jusqu'au projet, puis `code .` pour passer à l'édition."
+    },
+    {
+      "question": "Tu es en SSH sur ton serveur OVH (Linux) et tu veux chercher « DATABASE_URL » dans tous les fichiers du dossier courant. Quelle commande utilises-tu ?",
+      "choix": [
+        "Select-String \"DATABASE_URL\" -Recurse",
+        "findstr /s \"DATABASE_URL\"",
+        "grep -rn \"DATABASE_URL\" .",
+        "cat DATABASE_URL"
+      ],
+      "bonne": 2,
+      "explication": "Sur Linux, l'outil de recherche est `grep` : `-r` pour récursif, `-n` pour afficher les numéros de ligne, `.` pour « à partir d'ici ». Select-String est l'équivalent PowerShell côté Windows, et findstr est l'ancien outil MS-DOS. Connaître la correspondance Select-String ↔ grep te rend opérationnel des deux côtés."
+    }
+  ]
+}

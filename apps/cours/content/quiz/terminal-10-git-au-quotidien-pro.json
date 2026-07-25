@@ -1,0 +1,49 @@
+{
+  "fiche": "terminal-10-git-au-quotidien-pro",
+  "questions": [
+    {
+      "question": "Pourquoi node_modules, vendor et .env.local figurent-ils dans le .gitignore de tes projets ?",
+      "choix": [
+        "Parce que Git est incapable de gérer des dossiers aussi volumineux",
+        "Parce qu'on ne versionne ni ce qui se régénère (node_modules, vendor se reconstruisent avec install) ni ce qui est secret (.env.local)",
+        "Parce que ces fichiers ralentissent VS Code",
+        "Parce que GitHub facture au poids du dépôt"
+      ],
+      "bonne": 1,
+      "explication": "La règle d'or du versionnement : les sources, rien que les sources. node_modules et vendor se reconstruisent à l'identique avec npm install ou composer install ; .env.local contient tes secrets, qui ne doivent jamais partir sur GitHub. Le .gitignore rend ces exclusions automatiques : Git ne te les proposera même plus au commit."
+    },
+    {
+      "question": "Quelle est la différence entre `git revert` et `git reset --hard` pour annuler un commit ?",
+      "choix": [
+        "Aucune, ce sont deux syntaxes pour la même opération",
+        "revert ne marche que sur GitHub, reset que en local",
+        "revert crée un commit inverse qui défait les changements en gardant toute l'histoire visible ; reset --hard efface des commits comme s'ils n'avaient jamais existé",
+        "reset est plus sûr car il demande toujours une confirmation"
+      ],
+      "bonne": 2,
+      "explication": "revert ajoute une page « erratum » à l'album : l'erreur et sa correction restent lisibles, ce qui est sans danger même sur du travail déjà pushé. reset --hard arrache des pages de l'album — catastrophique si d'autres (ou Vercel) les ont déjà lues. D'où la règle : revert par défaut, reset --hard quasi jamais."
+    },
+    {
+      "question": "Tu tapes `git restore recette.md` alors que tu avais des modifications non commitées dans ce fichier. Que se passe-t-il ?",
+      "choix": [
+        "Les modifications sont mises de côté et récupérables avec git restore --undo",
+        "Le fichier est supprimé du disque",
+        "Rien, restore ne fait qu'afficher les différences",
+        "Le fichier revient à l'état du dernier commit : tes modifications en cours sont définitivement perdues"
+      ],
+      "bonne": 3,
+      "explication": "restore remet le fichier tel qu'il était à la dernière photo, et ce qui n'a jamais été commité n'existe nulle part ailleurs — c'est perdu. D'où le garde-fou systématique : un `git diff recette.md` juste avant, pour voir exactement ce que tu t'apprêtes à jeter. C'est la seule commande « de tous les jours » qui jette du travail."
+    },
+    {
+      "question": "En quoi ton historique Git sur mabb-site est-il un atout pour ton jury CDA en avril 2027 ?",
+      "choix": [
+        "Des mois de commits datés et signés prouvent la paternité du code et racontent une démarche de travail progressive et méthodique",
+        "Le jury exige un minimum de 1000 commits pour valider le titre",
+        "Il permet au jury de télécharger le projet plus rapidement",
+        "Un historique Git remplace le dossier professionnel écrit"
+      ],
+      "bonne": 0,
+      "explication": "L'historique est une preuve à trois niveaux : la paternité (commits signés à ton nom, étalés dans le temps — pas un code copié la veille), la démarche (des messages clairs qui racontent ta méthode), et la maîtrise de l'outil central du métier. Aucun quota de commits n'existe : c'est la régularité et la clarté qui comptent."
+    }
+  ]
+}

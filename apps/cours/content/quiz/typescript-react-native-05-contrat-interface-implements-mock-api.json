@@ -1,0 +1,49 @@
+{
+  "fiche": "typescript-react-native-05-contrat-interface-implements-mock-api",
+  "questions": [
+    {
+      "question": "Tu ajoutes `getClassementNational(): Promise<ClassementJoueuse[]>;` dans l'interface PirbDataService sans toucher aux classes. Que dit `npm run typecheck` ?",
+      "choix": [
+        "Aucune erreur : les classes hériteront de la méthode automatiquement",
+        "Une erreur uniquement dans les écrans qui l'appellent",
+        "Deux erreurs : MockPirbDataService et ApiPirbDataService ne respectent plus le contrat qu'elles déclarent avec implements",
+        "Une erreur dans pirb.ts, car le type n'y est pas déclaré"
+      ],
+      "bonne": 2,
+      "explication": "`implements PirbDataService` engage chaque classe à fournir TOUTES les méthodes du contrat. Ajouter une signature à l'interface met les deux implémentations en erreur tant qu'elles ne l'ont pas codée. Le compilateur est le gardien du contrat — c'est la garantie centrale de cette architecture."
+    },
+    {
+      "question": "Pourquoi la factory getDataService() de src/services/data/index.ts retourne-t-elle le type PirbDataService et non MockPirbDataService ou ApiPirbDataService ?",
+      "choix": [
+        "Pour que les écrans dépendent de l'abstraction et ignorent quelle implémentation répond (inversion de dépendance, le D de SOLID)",
+        "Parce que TypeScript interdit de retourner une classe",
+        "Parce que les deux classes ont le même nom de fichier",
+        "Pour économiser un import dans les écrans"
+      ],
+      "bonne": 0,
+      "explication": "Si les écrans voyaient la classe concrète, ils pourraient dépendre de ses détails et la bascule mock/API les casserait. En ne retournant que l'interface, la factory garantit que les écrans ne connaissent que le contrat : c'est l'inversion de dépendance, et l'argument SOLID à dérouler au jury."
+    },
+    {
+      "question": "Le mock répond en mémoire, quasi instantanément. Pourquoi toutes les méthodes du contrat renvoient-elles quand même des Promise ?",
+      "choix": [
+        "Parce que les classes TypeScript ne peuvent renvoyer que des Promise",
+        "Pour ralentir volontairement l'app en mode démo",
+        "Parce que expo-router exige des fonctions asynchrones",
+        "Parce que la future API réseau sera forcément async : les écrans sont écrits en asynchrone dès le départ, rien à réécrire ensuite"
+      ],
+      "bonne": 3,
+      "explication": "C'est une décision d'anticipation documentée dans PirbDataService.ts : une API HTTP est asynchrone par nature. En imposant Promise dès le mock (avec 300 ms de latence simulée en bonus), les écrans gèrent loading et erreurs depuis le premier jour — le branchement de l'API ne change rien à leur code."
+    },
+    {
+      "question": "En mode API, qui sert les données du social et de la carte des clubs, dont les endpoints n'existent pas encore côté serveur ?",
+      "choix": [
+        "Personne : les écrans concernés affichent une erreur",
+        "Le mock interne d'ApiPirbDataService (private fallback = new MockPirbDataService())",
+        "Le serveur Symfony, qui génère des données aléatoires",
+        "AsyncStorage, qui garde une copie locale"
+      ],
+      "bonne": 1,
+      "explication": "C'est la stratégie hybride assumée : les 5 domaines cœur (profil, stats, shot chart, badges, niveau) viennent de l'API, le reste est délégué au mock interne du service. Quand un endpoint naîtra, on remplacera UNE méthode — les écrans, protégés par l'interface, ne verront aucune différence."
+    }
+  ]
+}

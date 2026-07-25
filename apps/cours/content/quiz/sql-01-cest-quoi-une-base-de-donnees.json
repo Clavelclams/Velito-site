@@ -1,0 +1,49 @@
+{
+  "fiche": "sql-01-cest-quoi-une-base-de-donnees",
+  "questions": [
+    {
+      "question": "Dans une table relationnelle, que représente une ligne (row) ?",
+      "choix": [
+        "Une propriété d'un objet, comme l'email",
+        "Un enregistrement complet : un objet du monde réel (un utilisateur, un club)",
+        "Le type de données d'une colonne",
+        "Une requête SQL sauvegardée"
+      ],
+      "bonne": 1,
+      "explication": "Une ligne = un enregistrement = un objet du monde réel : dans la table user de Venaball, chaque ligne est un utilisateur. Les propriétés (email, nom...) sont les colonnes, qui ont chacune un type imposé par la base."
+    },
+    {
+      "question": "Pourquoi ne pas stocker le nom du club directement dans chaque ligne utilisateur, comme dans un fichier Excel ?",
+      "choix": [
+        "Parce que le texte prend trop de place sur le disque",
+        "Parce que SQL n'accepte pas deux colonnes de texte dans la même table",
+        "Parce que la donnée serait dupliquée : si le club change de nom, il faudrait corriger toutes les lignes, avec un risque d'incohérence",
+        "Parce qu'un utilisateur ne peut appartenir qu'à un seul club"
+      ],
+      "bonne": 2,
+      "explication": "C'est l'anomalie de mise à jour : une information dupliquée doit être corrigée partout à la fois, et un oubli crée des données contradictoires. Le modèle relationnel stocke le club UNE fois dans sa table, et les autres tables y font référence par son id."
+    },
+    {
+      "question": "Que renvoie la requête SELECT * FROM club_test; ?",
+      "choix": [
+        "Toutes les colonnes de toutes les lignes de la table club_test",
+        "Uniquement la première ligne de la table",
+        "Le nombre de lignes de la table",
+        "La structure de la table (noms et types des colonnes)"
+      ],
+      "bonne": 0,
+      "explication": "L'étoile signifie « toutes les colonnes » et, sans filtre WHERE, toutes les lignes sont renvoyées. Pratique pour explorer, mais en production on préfère nommer les colonnes utiles."
+    },
+    {
+      "question": "Dans le fichier User.php de Venaball, on trouve #[ORM\\Table(name: '`user`')] avec des backticks. Pourquoi ?",
+      "choix": [
+        "C'est une convention Symfony pour les entités de sécurité",
+        "Les backticks rendent la table plus rapide à interroger",
+        "C'est une erreur de frappe restée dans le projet",
+        "user est un mot réservé en MySQL : les backticks permettent de l'utiliser quand même comme nom de table"
+      ],
+      "bonne": 3,
+      "explication": "user est un mot réservé du SQL, donc MySQL exige de l'échapper entre backticks pour l'utiliser comme nom de table. PostgreSQL fait la même chose mais avec des guillemets doubles : \"user\". C'est une des petites différences de syntaxe entre les deux SGBD."
+    }
+  ]
+}

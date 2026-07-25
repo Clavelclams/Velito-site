@@ -1,0 +1,49 @@
+{
+  "fiche": "php-symfony-06-symfony-requete-controleur-reponse",
+  "questions": [
+    {
+      "question": "L'app mobile envoie une requête GET sur /api/auth/login. Que se passe-t-il, sachant que la route déclare methods: ['POST'] ?",
+      "choix": [
+        "Le login fonctionne quand même si le corps est correct",
+        "Symfony rejette la requête : la route n'accepte que POST (erreur 405 Method Not Allowed)",
+        "Symfony redirige automatiquement vers la version POST",
+        "Le contrôleur reçoit la requête mais $request->getContent() est vide"
+      ],
+      "bonne": 1,
+      "explication": "L'attribut #[Route(..., methods: ['POST'])] fait partie du routing : si la méthode HTTP ne correspond pas, le contrôleur n'est jamais appelé. C'est une première barrière de validation gratuite — un login doit être un POST car il transporte des identifiants dans le corps de la requête."
+    },
+    {
+      "question": "Dans login(), si l'email existe mais que le mot de passe est faux, quelle réponse part vers l'app mobile ?",
+      "choix": [
+        "200 avec {'token': null}",
+        "403 avec « Accès refusé »",
+        "400 avec « Email et mot de passe requis »",
+        "401 avec le message générique « Identifiants invalides. »"
+      ],
+      "bonne": 3,
+      "explication": "La condition regroupe volontairement « user inconnu » et « mot de passe invalide » dans le MÊME message 401 : c'est l'anti-énumération d'emails. Si les deux cas donnaient des messages différents, un attaquant pourrait deviner quels emails ont un compte. Le 400, lui, est réservé au JSON incomplet."
+    },
+    {
+      "question": "Dans le découpage MVC de Venaball, quel rôle joue ApiAuthController::login() ?",
+      "choix": [
+        "Modèle : il contient les règles métier des jetons",
+        "Vue : il met en forme le HTML",
+        "Contrôleur : il orchestre — lit la requête, délègue (repository, hasher, fabrique ApiToken) et construit la réponse",
+        "Les trois à la fois, c'est le principe d'un framework"
+      ],
+      "bonne": 2,
+      "explication": "Le contrôleur est un chef d'orchestre : la recherche du user est déléguée au repository, la vérification au hasher, la création du jeton à la fabrique ApiToken::creerPour(). La « vue » ici est le JSON de sortie. Garder le contrôleur mince rend chaque brique testable séparément."
+    },
+    {
+      "question": "Que fait new JsonResponse(['token' => $clair]) exactement ?",
+      "choix": [
+        "Elle encode le tableau PHP en JSON et prépare une réponse HTTP avec le bon Content-Type",
+        "Elle stocke le token en session pour la prochaine requête",
+        "Elle envoie immédiatement la réponse au client, avant la fin de la méthode",
+        "Elle valide que le tableau respecte un schéma JSON"
+      ],
+      "bonne": 0,
+      "explication": "JsonResponse est une Response spécialisée : elle sérialise le tableau en JSON et pose l'en-tête Content-Type: application/json. La réponse n'est réellement envoyée qu'à la fin du cycle Symfony, quand le contrôleur l'a retournée. Et rien ne part en session : l'API est stateless."
+    }
+  ]
+}

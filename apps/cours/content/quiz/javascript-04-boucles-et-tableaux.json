@@ -1,0 +1,39 @@
+{
+  "fiche": "javascript-04-boucles-et-tableaux",
+  "questions": [
+    {
+      "question": "const t = [\"a\", \"b\", \"c\"];\nQue vaut t[1] ?",
+      "choix": ["\"a\"", "\"b\"", "\"c\"", "undefined"],
+      "bonne": 1,
+      "explication": "Les index commencent à 0 : t[0] est \"a\", donc t[1] est \"b\". Ce décalage explique le +1 dans l'affichage « question 2/8 » de ton quiz : la machine compte depuis 0, l'affichage humain depuis 1."
+    },
+    {
+      "question": "const liste = [1, 2];\nliste.push(3);\nQue se passe-t-il, sachant que liste est déclarée avec const ?",
+      "choix": [
+        "Erreur : on ne peut pas modifier une const",
+        "push est ignoré silencieusement",
+        "Ça marche : liste devient [1, 2, 3]",
+        "liste devient [3, 1, 2]"
+      ],
+      "bonne": 2,
+      "explication": "const scelle la BOÎTE (impossible de faire liste = autreChose), pas le CONTENU du tableau. push modifie l'intérieur, c'est autorisé — et push ajoute à la FIN. Ton progression.ts fait exactement ça avec p.fichesLues.push(slug)."
+    },
+    {
+      "question": "Combien de lignes affiche ce code ?\nconst t = [\"x\", \"y\", \"z\"];\nfor (let i = 0; i < t.length; i++) { console.log(t[i]) }",
+      "choix": ["4", "2", "Une infinité", "3"],
+      "bonne": 3,
+      "explication": "i prend les valeurs 0, 1, 2 puis s'arrête car la condition i < 3 devient fausse quand i atteint 3. Trois tours, trois lignes. Note que t[3] n'est jamais lu — c'est bien i < t.length et pas i <= t.length, sinon on afficherait un undefined en trop."
+    },
+    {
+      "question": "Dans ton QuizFiche.tsx, le mélange des questions utilise for (let i = indices.length - 1; i > 0; i--) au lieu de for...of. Pourquoi ?",
+      "choix": [
+        "Parce que for...of est plus lent",
+        "Parce que l'algorithme a besoin de contrôler l'INDEX et de parcourir à l'envers, ce que for...of ne permet pas",
+        "Parce que for...of ne marche pas sur les tableaux de nombres",
+        "C'est un choix purement esthétique"
+      ],
+      "bonne": 1,
+      "explication": "for...of donne les ÉLÉMENTS dans l'ordre, sans accès à l'index ni au sens de parcours. Fisher-Yates échange des positions en partant de la fin : il lui faut i, i-1, etc. C'est le cas d'usage typique où le for classique reste indispensable. La performance n'est pas le sujet ici."
+    }
+  ]
+}

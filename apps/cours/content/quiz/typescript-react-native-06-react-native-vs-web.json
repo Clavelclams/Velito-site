@@ -1,0 +1,49 @@
+{
+  "fiche": "typescript-react-native-06-react-native-vs-web",
+  "questions": [
+    {
+      "question": "Ce composant React Native est-il correct ?\n```tsx\n<View>Plus de réseau</View>\n```",
+      "choix": [
+        "Oui, une View affiche son texte comme une div",
+        "Oui, mais le texte ne sera pas stylable",
+        "Non : tout texte doit être dans un composant <Text>, sinon l'app plante",
+        "Non, car View n'accepte aucun enfant"
+      ],
+      "bonne": 2,
+      "explication": "Contrairement au web où une div affiche du texte sans broncher, React Native exige que chaque texte vive dans un <Text>. C'est un des pièges classiques du passage web → mobile : EcranHorsLigne.tsx enveloppe bien chaque chaîne dans un <Text> stylé."
+    },
+    {
+      "question": "Dans EcranCrash.tsx, que fait `style={({ pressed }) => [styles.cta, pressed && { opacity: 0.9 }]}` sur le Pressable ?",
+      "choix": [
+        "Il applique une opacité réduite pendant l'appui du doigt — l'équivalent JavaScript du :active CSS",
+        "Il désactive le bouton après le premier appui",
+        "Il rend le bouton invisible à 90 %",
+        "Il anime le bouton en boucle"
+      ],
+      "bonne": 0,
+      "explication": "Sans CSS, pas de pseudo-classes : Pressable fournit l'état `pressed` à une fonction de style. Tant que le doigt appuie, le style { opacity: 0.9 } s'ajoute au style de base ; au relâchement, il disparaît. Le retour visuel d'interaction se code en JavaScript."
+    },
+    {
+      "question": "Quelle affirmation sur StyleSheet.create est correcte ?",
+      "choix": [
+        "C'est du CSS classique importé dans le composant",
+        "Il génère des classes Tailwind à la compilation",
+        "Les styles s'écrivent en kebab-case avec des unités px obligatoires",
+        "Ce sont des objets JavaScript en camelCase, sans unités, avec flexbox par défaut en colonne"
+      ],
+      "bonne": 3,
+      "explication": "Il n'y a pas de CSS sur le téléphone : les styles sont des objets JS (backgroundColor, paddingHorizontal...), les nombres sont des points logiques sans unité, et tout layout est en flexbox avec flexDirection: 'column' par défaut — l'inverse du row du web. Tes acquis CSS servent, avec ces nuances."
+    },
+    {
+      "question": "Ton site utilise Tailwind (classes dans le JSX) et Pirb utilise src/theme/tokens.ts (colors, spacing, fonts). Quel est le point COMMUN entre les deux approches ?",
+      "choix": [
+        "Les deux génèrent du CSS dans le navigateur",
+        "Centraliser la charte graphique en un seul endroit pour ne jamais coder une couleur en dur",
+        "Les deux nécessitent StyleSheet.create",
+        "Aucun : ce sont deux philosophies opposées"
+      ],
+      "bonne": 1,
+      "explication": "La config Tailwind côté web et le fichier tokens.ts côté mobile jouent le même rôle : une source unique pour couleurs, espacements et polices. EcranCrash et EcranHorsLigne n'écrivent jamais '#0A0E14' en dur — ils lisent colors.background. Même principe de cohérence, deux implémentations."
+    }
+  ]
+}

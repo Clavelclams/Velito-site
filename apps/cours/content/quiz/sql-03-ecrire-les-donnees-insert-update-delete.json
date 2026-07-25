@@ -1,0 +1,49 @@
+{
+  "fiche": "sql-03-ecrire-les-donnees-insert-update-delete",
+  "questions": [
+    {
+      "question": "Que se passe-t-il si on exécute UPDATE membre_test SET is_active = false; (sans WHERE) sur une table de 10 000 lignes ?",
+      "choix": [
+        "La base demande une confirmation avant d'exécuter",
+        "Les 10 000 lignes sont modifiées immédiatement, sans avertissement",
+        "Une erreur de syntaxe : le WHERE est obligatoire avec UPDATE",
+        "Seule la première ligne est modifiée"
+      ],
+      "bonne": 1,
+      "explication": "Sans WHERE, un UPDATE s'applique à TOUTES les lignes de la table, et la base obéit sans confirmation ni erreur. C'est le danger numéro un du SQL : d'où le réflexe pro de tester d'abord son WHERE avec un SELECT."
+    },
+    {
+      "question": "Quel est le bon réflexe professionnel avant de lancer un DELETE ciblé en production ?",
+      "choix": [
+        "Faire une capture d'écran de la table",
+        "Lancer le DELETE puis vérifier avec un SELECT juste après",
+        "Exécuter d'abord un SELECT avec le même WHERE pour vérifier quelles lignes seront touchées",
+        "Désactiver les clés étrangères pour éviter les erreurs"
+      ],
+      "bonne": 2,
+      "explication": "On valide le filtre avec un SELECT * ... WHERE identique, on vérifie que les lignes affichées sont bien celles à supprimer, puis on remplace le SELECT par le DELETE. Le nombre de « rows affected » sert ensuite de confirmation."
+    },
+    {
+      "question": "Que fait la requête UPDATE membre_test SET xp = xp + 50 WHERE prenom = 'Jean'; ?",
+      "choix": [
+        "Elle met l'XP de Jean à 50, quelle que soit sa valeur actuelle",
+        "Elle provoque une erreur : on ne peut pas utiliser xp dans son propre SET",
+        "Elle ajoute 50 XP à tous les membres sauf Jean",
+        "Elle ajoute 50 à la valeur actuelle d'XP de Jean (ex. 120 devient 170)"
+      ],
+      "bonne": 3,
+      "explication": "Dans un SET, on peut calculer la nouvelle valeur à partir de l'ancienne : xp = xp + 50 lit la valeur courante et lui ajoute 50. C'est le mécanisme typique d'un compteur d'XP comme dans la gamification de Venaball."
+    },
+    {
+      "question": "Dans Venaball (Symfony/Doctrine), quel duo de méthodes génère un INSERT en base ?",
+      "choix": [
+        "$entityManager->persist($user) puis $entityManager->flush()",
+        "$entityManager->insert($user) puis $entityManager->commit()",
+        "$user->save() puis $user->refresh()",
+        "$entityManager->create($user) puis $entityManager->push()"
+      ],
+      "bonne": 0,
+      "explication": "persist() dit à Doctrine de suivre le nouvel objet, et flush() déclenche réellement l'écriture SQL (l'INSERT INTO). Rien ne part en base tant que flush() n'est pas appelé : c'est lui qui synchronise les objets PHP avec MySQL."
+    }
+  ]
+}

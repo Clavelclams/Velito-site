@@ -1,0 +1,49 @@
+{
+  "fiche": "php-symfony-05-composer-namespaces-autoloading",
+  "questions": [
+    {
+      "question": "D'après la règle PSR-4 de ton composer.json (\"App\\\\\": \"src/\"), dans quel fichier vit la classe App\\Gamification\\XpCalculator ?",
+      "choix": [
+        "src/App/Gamification/XpCalculator.php",
+        "vendor/app/gamification/XpCalculator.php",
+        "src/Gamification/XpCalculator.php",
+        "src/gamification/xp-calculator.php"
+      ],
+      "bonne": 2,
+      "explication": "PSR-4 remplace le préfixe App\\ par src/ puis reproduit le reste du namespace en dossiers, en respectant la casse. Le préfixe App\\ lui-même ne crée pas de dossier. C'est ce calcul mécanique qui permet à l'autoloader de charger n'importe quelle classe sans aucun require manuel."
+    },
+    {
+      "question": "Ton composer.json exige \"symfony/framework-bundle\": \"7.4.*\". Quelle version un composer update peut-il installer ?",
+      "choix": [
+        "7.4.9 par exemple, mais jamais 7.5.0",
+        "N'importe quelle version 7.x",
+        "Uniquement 7.4.0 exactement",
+        "La dernière version disponible, y compris 8.0"
+      ],
+      "bonne": 0,
+      "explication": "L'étoile ne libère que le dernier chiffre : les correctifs 7.4.x passent, mais pas 7.5 ni 8.0. C'est une protection : une version mineure ou majeure peut changer des comportements et casser ton code. Le composer.lock fige ensuite la version exacte installée pour que tout le monde ait la même."
+    },
+    {
+      "question": "phpunit/phpunit est déclaré dans \"require-dev\" et non dans \"require\". Pourquoi ?",
+      "choix": [
+        "Parce que PHPUnit est gratuit uniquement en développement",
+        "C'est un outil de développement : inutile en production, donc non déployé (moins de code = moins de surface d'attaque)",
+        "Parce que require-dev installe les paquets plus rapidement",
+        "Parce que PHPUnit n'est pas compatible avec Symfony 7"
+      ],
+      "bonne": 1,
+      "explication": "require-dev regroupe tout ce qui sert à développer et tester : PHPUnit, le maker-bundle, le profiler. En production on installe avec --no-dev, donc ces paquets n'y existent pas. Devant le jury, c'est un argument à la fois de propreté et de sécurité du déploiement."
+    },
+    {
+      "question": "Que fait exactement la ligne « use App\\Entity\\Core\\ApiToken; » en tête d'ApiAuthController ?",
+      "choix": [
+        "Elle charge immédiatement le fichier ApiToken.php en mémoire",
+        "Elle crée une instance d'ApiToken",
+        "Elle copie la classe dans le namespace du contrôleur",
+        "Elle importe le NOM : dans ce fichier, écrire ApiToken suffira pour désigner App\\Entity\\Core\\ApiToken"
+      ],
+      "bonne": 3,
+      "explication": "Contrairement à l'import de JavaScript, use ne charge aucun fichier : c'est un simple alias de nom pour le fichier courant. Le chargement réel n'a lieu qu'au premier usage de la classe, quand l'autoloader Composer traduit le nom complet en chemin via PSR-4."
+    }
+  ]
+}

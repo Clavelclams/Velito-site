@@ -26,6 +26,8 @@ export interface Progression {
   xp: number;
   /** Slugs des fiches marquées comme lues. */
   fichesLues: string[];
+  /** Identifiants des leçons de parcours terminées (cours + pratique faits). */
+  leconsFaites: string[];
   /** Résultats par slug de quiz. */
   quiz: Record<string, ResultatQuiz>;
   /** Série : jours consécutifs avec au moins une activité. */
@@ -34,6 +36,7 @@ export interface Progression {
 
 /** Barème XP — centralisé ici pour être ajustable en un seul endroit. */
 export const XP_FICHE_LUE = 20;
+export const XP_LECON_FAITE = 30;
 export const XP_PAR_BONNE_REPONSE = 10;
 export const XP_BONUS_QUIZ_PARFAIT = 20;
 
@@ -42,6 +45,7 @@ const CLE = "velito-cours-progression-v1";
 const VIDE: Progression = {
   xp: 0,
   fichesLues: [],
+  leconsFaites: [],
   quiz: {},
   serie: { jours: 0, derniereActivite: "" },
 };
@@ -73,6 +77,8 @@ export function chargerProgression(): Progression {
     return {
       xp: typeof p.xp === "number" ? p.xp : 0,
       fichesLues: Array.isArray(p.fichesLues) ? p.fichesLues : [],
+      // Champ ajouté avec les parcours : absent des anciennes sauvegardes.
+      leconsFaites: Array.isArray(p.leconsFaites) ? p.leconsFaites : [],
       quiz: p.quiz && typeof p.quiz === "object" ? p.quiz : {},
       serie: p.serie?.derniereActivite
         ? p.serie
@@ -114,6 +120,21 @@ export function marquerFicheLue(slug: string): number {
   toucherSerie(p);
   sauvegarder(p);
   return XP_FICHE_LUE;
+}
+
+/**
+ * Marque une leçon de parcours comme terminée (cours lu + mise en pratique
+ * faite — c'est l'utilisateur qui l'affirme en cliquant, comme cocher un
+ * exercice dans un cahier). Retourne les XP gagnés (0 si déjà faite).
+ */
+export function marquerLeconFaite(id: string): number {
+  const p = chargerProgression();
+  if (p.leconsFaites.includes(id)) return 0;
+  p.leconsFaites.push(id);
+  p.xp += XP_LECON_FAITE;
+  toucherSerie(p);
+  sauvegarder(p);
+  return XP_LECON_FAITE;
 }
 
 /**

@@ -1,0 +1,49 @@
+{
+  "fiche": "terminal-05-npm-et-node-sans-magie",
+  "questions": [
+    {
+      "question": "Que fait exactement `npm install` lancé à la racine d'un projet ?",
+      "choix": [
+        "Il installe Node.js sur l'ordinateur",
+        "Il compile le projet pour la production",
+        "Il lit package.json, télécharge les paquets listés et leurs propres dépendances, et range le tout dans node_modules",
+        "Il met à jour npm vers sa dernière version"
+      ],
+      "bonne": 2,
+      "explication": "npm install fait « les courses » : package.json est la liste, le registre npm est le magasin, node_modules est le garde-manger. Il télécharge aussi les dépendances des dépendances, en cascade — d'où la taille énorme de node_modules. Installer Node ou compiler le projet, ce sont d'autres opérations."
+    },
+    {
+      "question": "Pourquoi le dossier node_modules ne doit-il jamais être partagé (ni sur Git, ni par clé USB) ?",
+      "choix": [
+        "Parce qu'il contient des secrets et mots de passe",
+        "Parce qu'il est entièrement reconstructible par un simple npm install grâce à package.json et package-lock.json",
+        "Parce qu'il est chiffré et illisible sur une autre machine",
+        "Parce que la licence npm interdit de le copier"
+      ],
+      "bonne": 1,
+      "explication": "node_modules est un produit dérivé : n'importe qui, avec package.json et package-lock.json, peut le régénérer à l'identique avec npm install. Le partager ferait transiter des centaines de mégaoctets pour rien. C'est exactement ce que fait Vercel : il clone ton code sans node_modules, puis lance npm install lui-même."
+    },
+    {
+      "question": "Que se passe-t-il quand tu tapes `npm run dev --workspace apps/cours` dans Velito-site ?",
+      "choix": [
+        "npm crée un nouveau workspace nommé apps/cours",
+        "npm lance le script dev de tous les workspaces du monorepo en même temps",
+        "npm installe les dépendances du dossier apps/cours",
+        "npm cherche le script « dev » dans le package.json du workspace apps/cours et exécute la commande écrite en face (ton serveur sur le port 3007)"
+      ],
+      "bonne": 3,
+      "explication": "npm run exécute une entrée de la section scripts, et --workspace précise dans quel sous-projet du monorepo la chercher. Ici c'est le package.json de apps/cours qui contient le script dev avec le port 3007. Sans l'option --workspace, npm chercherait le script à la racine."
+    },
+    {
+      "question": "À quoi sert le fichier package-lock.json ?",
+      "choix": [
+        "Il fige les versions exactes de tous les paquets installés, pour que chaque machine (la tienne, Vercel) obtienne le même node_modules",
+        "Il verrouille le projet par mot de passe pour empêcher les modifications",
+        "Il liste les fichiers que Git ne doit pas suivre",
+        "Il contient les scripts de démarrage du projet"
+      ],
+      "bonne": 0,
+      "explication": "package.json peut autoriser des plages de versions (« la 18 ou plus récente ») ; package-lock.json note la version précise réellement installée, jusqu'à la dernière décimale. Résultat : un npm install donne le même résultat partout, ce qui évite les fameux bugs « ça marche sur ma machine ». Contrairement à node_modules, lui se partage sur Git."
+    }
+  ]
+}

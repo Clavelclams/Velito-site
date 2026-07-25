@@ -1,0 +1,49 @@
+{
+  "fiche": "terminal-09-git-branches-et-remote",
+  "questions": [
+    {
+      "question": "Quel est l'intérêt principal de créer une branche avant de développer une nouvelle fonctionnalité ?",
+      "choix": [
+        "Ça accélère l'exécution des commandes Git",
+        "C'est obligatoire : Git refuse de commiter directement sur main",
+        "Travailler sur une ligne parallèle sans jamais mettre en danger la branche principale, puis fusionner seulement si c'est réussi",
+        "Ça crée automatiquement une sauvegarde sur GitHub"
+      ],
+      "bonne": 2,
+      "explication": "La branche est une photocopie du manuscrit : tu expérimentes dessus pendant que main reste stable et déployable. Si l'essai est concluant, `git merge` intègre tes commits ; sinon tu abandonnes la branche et main n'a jamais bougé. Rien n'est obligatoire techniquement — c'est une discipline professionnelle."
+    },
+    {
+      "question": "Pendant un merge, Git affiche « CONFLICT (content): Merge conflict in recette.md ». Que s'est-il passé ?",
+      "choix": [
+        "Le fichier est corrompu et doit être restauré depuis GitHub",
+        "Les deux branches ont modifié les mêmes lignes du même fichier différemment : Git refuse de choisir et te demande d'arbitrer",
+        "Git a détecté une erreur de syntaxe dans le fichier",
+        "Le merge a échoué définitivement, il faut supprimer la branche"
+      ],
+      "bonne": 1,
+      "explication": "Un conflit n'est pas une panne : c'est Git qui te pose une question quand deux versions des mêmes lignes existent. Il insère des marqueurs <<<<<<< et >>>>>>> autour des deux versions ; tu choisis, tu supprimes les marqueurs, puis `git add` et `git commit` terminent la fusion. Rien n'est perdu à aucun moment."
+    },
+    {
+      "question": "Tu as commité toute la journée mais jamais poussé. Ton PC est volé le soir. Que reste-t-il de ton travail du jour ?",
+      "choix": [
+        "Tout, car chaque commit est envoyé automatiquement sur GitHub",
+        "La moitié : GitHub synchronise un commit sur deux",
+        "Tout, car Vercel garde une copie de chaque commit",
+        "Rien : les commits étaient uniquement dans le .git local du PC ; seul un git push les aurait copiés sur le remote"
+      ],
+      "bonne": 3,
+      "explication": "git commit colle la photo dans TON album local, sur ton disque, et rien d'autre. C'est git push qui envoie tes commits vers origin (GitHub), qui sert alors de sauvegarde. D'où le réflexe pro : push régulièrement — et c'est aussi ce push qui déclenche le déploiement automatique chez Vercel."
+    },
+    {
+      "question": "Que fait la commande `git switch -c ajout-page-contact` ?",
+      "choix": [
+        "Elle crée une nouvelle branche nommée ajout-page-contact et te bascule immédiatement dessus",
+        "Elle fusionne la branche ajout-page-contact dans main",
+        "Elle supprime la branche ajout-page-contact",
+        "Elle renomme la branche courante en ajout-page-contact"
+      ],
+      "bonne": 0,
+      "explication": "L'option -c signifie « create » : création de la branche puis bascule dessus, en une seule commande. C'est l'équivalent moderne de l'historique `git checkout -b`. À partir de là, tes commits s'empilent sur cette branche, et ton disque affiche la version du projet correspondante."
+    }
+  ]
+}

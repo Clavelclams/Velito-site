@@ -1,0 +1,49 @@
+{
+  "fiche": "php-symfony-08-services-injection-de-dependances",
+  "questions": [
+    {
+      "question": "Comment Symfony sait-il quoi passer au constructeur de XpCalculator (PresenceRepository, MissionRepository) sans aucune configuration ?",
+      "choix": [
+        "Il lit un fichier services.xml généré par Composer",
+        "Il devine d'après le nom des variables",
+        "Par autowiring : il lit les TYPES des paramètres du constructeur et fournit l'instance correspondante",
+        "Il exécute le constructeur une première fois à vide pour détecter les erreurs"
+      ],
+      "bonne": 2,
+      "explication": "L'autowiring s'appuie sur le typage : « un paramètre de type PresenceRepository ? Je fournis mon instance unique de ce service. » C'est pour ça que le typage strict vu en leçon 2 n'est pas cosmétique : il sert littéralement de bon de commande au conteneur."
+    },
+    {
+      "question": "Pourquoi ne trouve-t-on AUCUN « new SaisonService » dans le projet, alors que de nombreux contrôleurs l'utilisent ?",
+      "choix": [
+        "Parce que SaisonService est une classe statique",
+        "Parce que le conteneur Symfony crée l'unique instance et l'injecte partout où le type apparaît",
+        "Parce que Doctrine l'instancie au premier accès à la base",
+        "Parce que Twig le charge automatiquement dans les templates"
+      ],
+      "bonne": 1,
+      "explication": "Un service est instancié UNE fois par le conteneur puis partagé : chaque contrôleur qui déclare SaisonService dans son constructeur reçoit la même instance. Écrire new soi-même casserait ce partage et obligerait à fournir manuellement RequestStack — c'est le travail du conteneur."
+    },
+    {
+      "question": "Le contrôleur login() demande UserPasswordHasherInterface plutôt qu'une classe concrète de hasher. Quel est l'intérêt ?",
+      "choix": [
+        "Les interfaces sont plus rapides à charger que les classes",
+        "C'est obligatoire : on ne peut pas injecter de classe concrète dans un contrôleur",
+        "Cela évite de déclarer un use en tête de fichier",
+        "On dépend du CONTRAT « sait vérifier un mot de passe » : si l'implémentation change, le contrôleur ne bouge pas"
+      ],
+      "bonne": 3,
+      "explication": "Demander l'interface, c'est demander une capacité, pas un fournisseur précis. Symfony injecte l'implémentation configurée (bcrypt, argon2...), et ton code reste identique si elle évolue. Même logique que ClubAwareInterface en leçon 4 : programmer vers le contrat découple les briques."
+    },
+    {
+      "question": "Grâce à l'injection de dépendances, comment peut-on tester le barème d'XpCalculator SANS base de données ?",
+      "choix": [
+        "En passant au constructeur de faux repositories (mocks) qui renvoient des présences fabriquées pour le test",
+        "En désactivant Doctrine dans phpunit.dist.xml",
+        "C'est impossible : un calcul d'XP nécessite de vraies présences en base",
+        "En utilisant une méthode statique de test fournie par Symfony"
+      ],
+      "bonne": 0,
+      "explication": "Puisque XpCalculator reçoit ses repositories au lieu de les fabriquer, un test unitaire peut lui injecter des doublures contrôlées : « voici 5 présences, vérifie que le total fait 70 XP ». C'est LE lien entre DI et testabilité, argument en or pour le jury — et le sujet de la leçon 10."
+    }
+  ]
+}

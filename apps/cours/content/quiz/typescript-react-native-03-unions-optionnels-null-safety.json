@@ -1,0 +1,49 @@
+{
+  "fiche": "typescript-react-native-03-unions-optionnels-null-safety",
+  "questions": [
+    {
+      "question": "Dans StatsSaison, pourquoi `tirs2` est-il typé `number | null` plutôt que juste `number` avec 0 par défaut ?",
+      "choix": [
+        "Parce que le serveur PHP ne sait pas envoyer de zéros",
+        "Pour économiser de la mémoire sur le téléphone",
+        "Parce que null (« aucun tir tenté ») et 0 % (« tout raté ») sont deux réalités différentes qu'il ne faut pas confondre",
+        "Parce que TypeScript interdit les nombres à zéro"
+      ],
+      "bonne": 2,
+      "explication": "Un 0 % voudrait dire que la joueuse a tenté des tirs et tout raté ; null dit qu'elle n'a rien tenté. Confondre les deux serait un mensonge statistique. Le `| null` inscrit cette règle métier dans le type, et TypeScript force chaque écran à traiter le cas."
+    },
+    {
+      "question": "Avec `profil.poste` typé `PosteBasket | null`, ce code compile-t-il ?\n```ts\nconst p = profil.poste.toUpperCase();\n```",
+      "choix": [
+        "Non : poste est peut-être null, il faut vérifier (ou utiliser ?.) avant",
+        "Oui, et p vaudra null si poste est null",
+        "Oui, TypeScript ignore les null sur les string",
+        "Non, car toUpperCase n'existe pas en TypeScript"
+      ],
+      "bonne": 0,
+      "explication": "C'est la null-safety : TypeScript refuse d'appeler une méthode sur une valeur possiblement nulle. Il faut vérifier (`if (profil.poste)`) ou chaîner prudemment (`profil.poste?.toUpperCase()`). Le crash classique « Cannot read property of null » devient une erreur de compilation."
+    },
+    {
+      "question": "Dans src/services/data/index.ts, que vaut `source` avec `const source = process.env.EXPO_PUBLIC_DATA_SOURCE ?? 'mock';` si la variable d'environnement n'est pas définie ?",
+      "choix": [
+        "undefined, car la variable n'existe pas",
+        "'mock' : l'opérateur ?? fournit la valeur de repli quand la gauche est null ou undefined",
+        "'api', car c'est le mode par défaut de l'app",
+        "Une erreur est levée immédiatement"
+      ],
+      "bonne": 1,
+      "explication": "`??` (nullish coalescing) renvoie la valeur de droite si celle de gauche est null ou undefined. Sans configuration, l'app part donc sur le MockPirbDataService : une décision par défaut assumée qui permet la démo sans réseau ni backend."
+    },
+    {
+      "question": "Dans EcranHorsLigne.tsx, pourquoi tester `reseau.isInternetReachable === false` plutôt que `!reseau.isInternetReachable` ?",
+      "choix": [
+        "Les deux écritures sont strictement équivalentes",
+        "Parce que === est plus rapide à exécuter",
+        "Parce que ! ne fonctionne pas sur les booléens en React Native",
+        "Parce que la valeur peut aussi être null (« pas encore su ») : avec !, le démarrage serait traité comme une coupure réseau"
+      ],
+      "bonne": 3,
+      "explication": "`isInternetReachable` a TROIS états : true, false, et null tant que le système ne s'est pas prononcé. `!null` vaut true, donc l'écran hors-ligne clignoterait à chaque ouverture de l'app. Comparer explicitement à false ne bascule qu'en cas de coupure certaine — c'est l'union qui force cette rigueur."
+    }
+  ]
+}

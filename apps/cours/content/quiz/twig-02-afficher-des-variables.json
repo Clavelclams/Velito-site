@@ -1,0 +1,49 @@
+{
+  "fiche": "twig-02-afficher-des-variables",
+  "questions": [
+    {
+      "question": "Le contrôleur passe ['joueur' => $joueur] où $joueur est une entité avec getPrenom(). Qu'affiche {{ joueur.prenom }} ?",
+      "choix": [
+        "Une erreur, car prenom est une propriété privée de l'entité",
+        "La valeur retournée par getPrenom() : Twig trouve le getter tout seul",
+        "Le texte littéral « joueur.prenom »",
+        "null, car il faudrait écrire {{ joueur.getPrenom() }}"
+      ],
+      "bonne": 1,
+      "explication": "Le point de Twig essaie plusieurs accès dans l'ordre : propriété publique, méthode prenom(), puis getPrenom(), puis isPrenom()/hasPrenom(). Comme les entités Symfony suivent la convention des getters, joueur.prenom appelle getPrenom() sans que tu l'écrives. C'est la « magie du point » à savoir expliquer au jury."
+    },
+    {
+      "question": "Une joueuse enregistre comme bio : <script>alert('XSS')</script>. Qu'affiche {{ joueur.bio }} dans le navigateur ?",
+      "choix": [
+        "Une fenêtre d'alerte « XSS » s'ouvre chez chaque visiteur",
+        "Rien : Twig refuse d'afficher les variables contenant des balises",
+        "Le texte <script>alert('XSS')</script> affiché tel quel, sans exécution",
+        "Une erreur 500, car le contenu est détecté comme malveillant"
+      ],
+      "bonne": 2,
+      "explication": "Grâce à l'échappement automatique, Twig convertit < en &lt; et > en &gt; : le navigateur affiche le script comme du texte au lieu de l'exécuter. C'est LA protection anti-XSS par défaut de Twig, sans aucun code supplémentaire. Le script ne s'exécuterait que si on désactivait l'échappement avec |raw."
+    },
+    {
+      "question": "Quel délimiteur Twig sert à écrire un commentaire qui n'apparaît jamais dans le HTML envoyé au navigateur ?",
+      "choix": [
+        "{# ... #}",
+        "{{ ... }}",
+        "<!-- ... -->",
+        "{% ... %}"
+      ],
+      "bonne": 0,
+      "explication": "{# #} est le commentaire Twig : il est supprimé à la compilation et n'atteint jamais le navigateur. Attention au piège : <!-- --> est un commentaire HTML, lui est bien envoyé au client et visible dans le code source. {{ }} affiche et {% %} exécute de la logique."
+    },
+    {
+      "question": "Le contrôleur passe ['stats' => ['points' => 12]]. Qu'affiche {{ stats.points * 2 }} ?",
+      "choix": [
+        "stats.points * 2, car Twig n'évalue pas les expressions",
+        "12, car la multiplication est ignorée dans un affichage",
+        "Une erreur, car le point ne fonctionne pas sur les tableaux PHP",
+        "24 : le point lit la clé du tableau et Twig évalue l'expression"
+      ],
+      "bonne": 3,
+      "explication": "Le point est universel : sur un tableau, stats.points lit la clé 'points' (12), et Twig sait évaluer des expressions simples comme la multiplication, donc 24 s'affiche. Même syntaxe pour objet et tableau : c'est ce qui rend les templates lisibles."
+    }
+  ]
+}

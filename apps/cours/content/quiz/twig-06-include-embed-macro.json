@@ -1,0 +1,49 @@
+{
+  "fiche": "twig-06-include-embed-macro",
+  "questions": [
+    {
+      "question": "Pourquoi nommer un fragment _carte_joueur.html.twig avec un underscore au début ?",
+      "choix": [
+        "L'underscore est obligatoire pour que include fonctionne",
+        "Convention : il signale un fragment destiné à l'inclusion, pas une page complète rendue par un contrôleur",
+        "Il cache le fichier aux utilisateurs pour des raisons de sécurité",
+        "Il indique à Twig de ne pas échapper les variables de ce fichier"
+      ],
+      "bonne": 1,
+      "explication": "C'est une pure convention de nommage, mais précieuse : d'un coup d'œil on distingue les pages (rendues par render()) des fragments (inclus par d'autres templates). Twig fonctionnerait sans, mais un projet à 88 contrôleurs a besoin de conventions lisibles — un argument d'organisation à citer au jury."
+    },
+    {
+      "question": "Quelle est la différence essentielle entre include et embed ?",
+      "choix": [
+        "include est plus rapide car embed recharge la page",
+        "embed ne peut être utilisé que dans base.html.twig",
+        "include colle le fragment tel quel ; embed permet en plus de redéfinir les blocks du fragment inclus",
+        "include ne peut pas recevoir de variables, embed oui"
+      ],
+      "bonne": 2,
+      "explication": "embed combine inclusion et héritage : on inclut le fragment ET on peut remplir ses blocks, comme un extends localisé. Formule à retenir : include = photocopie, embed = photocopie dont on remplit les trous. Les deux acceptent des variables ; embed sert quand le fragment a des zones personnalisables selon la page."
+    },
+    {
+      "question": "Après {% import '_macros.html.twig' as ui %}, qu'affiche {{ ui.pastille('Victoire', 'vert') }} si la macro génère <span class=\"badge badge-{{ couleur }}\">{{ texte }}</span> ?",
+      "choix": [
+        "<span class=\"badge badge-Victoire\">vert</span>",
+        "Une erreur, car une macro ne peut pas recevoir deux paramètres",
+        "Le texte littéral ui.pastille('Victoire', 'vert')",
+        "<span class=\"badge badge-vert\">Victoire</span>"
+      ],
+      "bonne": 3,
+      "explication": "La macro fonctionne comme une fonction : les arguments sont positionnels, donc texte='Victoire' et couleur='vert', injectés à leur place dans le HTML de la macro. Attention au piège de l'ordre des arguments — c'est la première cause de bug avec les macros."
+    },
+    {
+      "question": "Pourquoi passer les variables explicitement à un include (avec only) plutôt que le laisser hériter de tout le contexte ?",
+      "choix": [
+        "Le fragment devient autonome et prévisible : il ne dépend que de ce qu'on lui donne, donc réutilisable partout sans surprise",
+        "Sans only, l'include échoue avec une erreur de contexte",
+        "only active l'échappement automatique dans le fragment",
+        "C'est uniquement une question de performance mémoire"
+      ],
+      "bonne": 0,
+      "explication": "Un fragment qui pioche silencieusement dans les variables ambiantes de la page marche à un endroit et casse ailleurs. Avec only, son contrat est explicite : il reçoit exactement ce dont il a besoin, comme les paramètres d'une fonction. C'est le même principe que l'injection de dépendances côté PHP."
+    }
+  ]
+}

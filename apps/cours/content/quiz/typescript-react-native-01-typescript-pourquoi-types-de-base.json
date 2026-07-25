@@ -1,0 +1,49 @@
+{
+  "fiche": "typescript-react-native-01-typescript-pourquoi-types-de-base",
+  "questions": [
+    {
+      "question": "Quelle est LA différence fondamentale entre TypeScript et JavaScript ?",
+      "choix": [
+        "TypeScript est un autre langage, incompatible avec JavaScript",
+        "TypeScript vérifie les types avant l'exécution, puis est transformé en JavaScript",
+        "TypeScript s'exécute plus vite sur le téléphone",
+        "TypeScript remplace React dans les apps mobiles"
+      ],
+      "bonne": 1,
+      "explication": "TypeScript, c'est JavaScript plus une couche de vérification de types faite AVANT l'exécution. Au build, les types sont effacés et il ne reste que du JavaScript : rien ne change pour le téléphone, tout change pour toi qui attrapes les erreurs en amont."
+    },
+    {
+      "question": "Dans Pirb, on écrit `const prenom = \"Léa\";` sans annotation de type. Quel est le type de `prenom` pour TypeScript ?",
+      "choix": [
+        "any, car aucun type n'est écrit",
+        "unknown, tant qu'on ne l'a pas précisé",
+        "string, grâce à l'inférence",
+        "object, comme toute valeur JavaScript"
+      ],
+      "bonne": 2,
+      "explication": "C'est l'inférence : TypeScript déduit le type depuis la valeur initiale. `\"Léa\"` est une chaîne, donc `prenom` est un string sans qu'on l'écrive — et `prenom = 12` serait refusé à la compilation."
+    },
+    {
+      "question": "Ce code compile-t-il ?\n```ts\nlet points = 12;\npoints = \"douze\";\n```",
+      "choix": [
+        "Oui, car let autorise de changer la valeur",
+        "Oui, mais avec un simple avertissement",
+        "Non, car let interdit toute réassignation",
+        "Non : points est inféré number, on ne peut pas y mettre un string"
+      ],
+      "bonne": 3,
+      "explication": "`let` autorise bien de changer la VALEUR, mais pas le TYPE : `points` a été inféré number à sa création. Ranger `\"douze\"` dedans provoque l'erreur `Type 'string' is not assignable to type 'number'` — avant même de lancer l'app."
+    },
+    {
+      "question": "À quoi sert la commande `npm run typecheck` (`tsc --noEmit`) définie dans le package.json de Pirb ?",
+      "choix": [
+        "Vérifier les types de tout le projet sans produire aucun fichier",
+        "Compiler l'app en binaire pour les stores",
+        "Lancer l'app sur le téléphone en mode strict",
+        "Supprimer les types du code pour accélérer l'app"
+      ],
+      "bonne": 0,
+      "explication": "`tsc` est le compilateur TypeScript et `--noEmit` lui dit de vérifier sans rien générer. C'est le contrôle qualité du projet : si la commande passe en silence, aucune erreur de type ne traîne dans l'app — un crash potentiel évité avant publication."
+    }
+  ]
+}

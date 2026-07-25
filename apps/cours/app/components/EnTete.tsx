@@ -42,6 +42,12 @@ export default function EnTete() {
             Velito Cours
           </Link>
           <Link
+            href="/parcours"
+            className="text-sm font-medium text-cours-text-muted transition-colors hover:text-cours-accent"
+          >
+            📚 Parcours
+          </Link>
+          <Link
             href="/revision"
             className="text-sm font-medium text-cours-text-muted transition-colors hover:text-cours-accent"
           >

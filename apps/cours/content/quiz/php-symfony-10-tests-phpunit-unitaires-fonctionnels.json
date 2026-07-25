@@ -1,0 +1,49 @@
+{
+  "fiche": "php-symfony-10-tests-phpunit-unitaires-fonctionnels",
+  "questions": [
+    {
+      "question": "CategorieCalculatorTest étend TestCase, PirbSeancesIdorTest étend WebTestCase. Que traduit cette différence ?",
+      "choix": [
+        "TestCase est l'ancienne syntaxe, WebTestCase la nouvelle",
+        "WebTestCase ne fonctionne que pour les API JSON",
+        "TestCase exécute les tests plus lentement mais plus sûrement",
+        "TestCase = test unitaire pur sans Symfony ni base ; WebTestCase = test fonctionnel qui démarre le noyau et simule de vraies requêtes HTTP"
+      ],
+      "bonne": 3,
+      "explication": "Le test unitaire instancie directement la classe (new CategorieCalculator()) et vérifie sa logique en millisecondes. Le fonctionnel démarre tout Symfony — routing, firewall, Voters, base — pour prouver que le câblage complet tient. Les deux familles se complètent : c'est la pyramide de tests."
+    },
+    {
+      "question": "Dans PirbSeancesIdorTest, que vérifie exactement assertResponseStatusCodeSame(403) après que la joueuse A a demandé la séance de l'équipe B ?",
+      "choix": [
+        "Que la joueuse est bien redirigée vers la page de login",
+        "Que le serveur refuse l'accès : authentifiée mais NON autorisée — la preuve rejouable de la protection anti-IDOR",
+        "Que la séance B n'existe pas en base de test",
+        "Que le firewall a rejeté le token de la joueuse"
+      ],
+      "bonne": 1,
+      "explication": "La joueuse est correctement authentifiée (loginUser), donc pas de 302 vers le login : c'est l'AUTORISATION qui refuse, via le Voter qui compare le club/l'équipe de la ressource aux droits réels. Ce test transforme ton argument de sécurité de la leçon 9 en preuve exécutable devant le jury."
+    },
+    {
+      "question": "Pourquoi setUp() de PirbSeancesIdorTest ouvre-t-il une transaction, annulée par rollBack() dans tearDown() ?",
+      "choix": [
+        "Pour accélérer les INSERT pendant le test",
+        "Parce que Doctrine exige une transaction pour persister des entités",
+        "Pour isoler chaque test : tout ce qu'il écrit en base est annulé à la fin, aucun résidu ne pollue le test suivant",
+        "Pour empêcher les tests de s'exécuter en parallèle"
+      ],
+      "bonne": 2,
+      "explication": "Chaque test seed son propre mini-monde (club, équipes, users) ; le rollback efface tout à la fin. Les tests deviennent indépendants et rejouables dans n'importe quel ordre — un test qui dépend des restes d'un autre est un test fragile. C'est un point technique explicitement noté « défendable en jury » dans ton fichier."
+    },
+    {
+      "question": "À quoi sert l'attribut #[DataProvider('provideCategories')] dans CategorieCalculatorTest ?",
+      "choix": [
+        "Exécuter la même méthode de test avec une liste de cas nommés : huit vérifications de la règle FFBB avec un seul code de test",
+        "Charger des fixtures Doctrine avant le test",
+        "Générer des données aléatoires à chaque exécution",
+        "Documenter le test dans le rapport PHPUnit sans effet sur l'exécution"
+      ],
+      "bonne": 0,
+      "explication": "Le DataProvider fournit des jeux « entrée → résultat attendu » (naissance, saison, catégorie), et PHPUnit rejoue le test pour chacun. Les yield nommés ('U15 borne haute', 'Senior âge 19'...) rendent chaque échec immédiatement lisible. C'est l'outil idéal pour couvrir les bornes d'une règle de calcul comme la tienne."
+    }
+  ]
+}

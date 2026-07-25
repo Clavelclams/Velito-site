@@ -1,0 +1,49 @@
+{
+  "fiche": "php-symfony-09-securite-firewalls-voters-multi-tenant",
+  "questions": [
+    {
+      "question": "Quelle phrase distingue correctement firewall et Voter dans Venaball ?",
+      "choix": [
+        "Le firewall authentifie (« qui es-tu ? »), le Voter autorise (« as-tu le droit sur CETTE ressource ? »)",
+        "Le firewall protège la base de données, le Voter protège les templates",
+        "Le Voter s'exécute avant le firewall pour filtrer les requêtes",
+        "Les deux font la même chose, le Voter est juste plus moderne"
+      ],
+      "bonne": 0,
+      "explication": "C'est LA distinction à poser d'emblée au jury : authentification puis autorisation. Le portier (firewall) vérifie la carte de membre à l'entrée du gymnase ; le responsable de salle (Voter) décide qui entre dans le local matériel. Un user authentifié peut parfaitement se voir refuser une ressource (403)."
+    },
+    {
+      "question": "Dans hasMetaRole() du ClubVoter, trois conditions sont cumulées : club identique, isActive, ET isStatusActive. Que se passerait-il sans la troisième ?",
+      "choix": [
+        "Rien, isActive couvre déjà ce cas",
+        "Les super-admins perdraient leur accès cross-club",
+        "Un utilisateur dont l'inscription est encore « pending » (non validée par un dirigeant) obtiendrait déjà des droits dans le club",
+        "Les rôles seraient vérifiés dans le mauvais club"
+      ],
+      "bonne": 2,
+      "explication": "isActive est un interrupteur posé par le dirigeant sur un rôle existant ; isStatusActive vérifie le workflow d'inscription pending → active. Sans lui, n'importe qui pourrait s'inscrire dans un club et exercer un rôle avant validation — exactement les « voyeurs » que le commentaire de ton code mentionne."
+    },
+    {
+      "question": "Une joueuse authentifiée du club A devine l'URL /seances/42 d'une séance du club B. Grâce à quoi l'attaque échoue-t-elle (faille IDOR) ?",
+      "choix": [
+        "Le firewall bloque la requête car le token ne correspond pas au club B",
+        "L'id 42 est chiffré dans l'URL, impossible à deviner",
+        "La session expire automatiquement en cas d'URL suspecte",
+        "Le ClubVoter compare le club de la RESSOURCE (seance->getClub() via ClubAwareInterface) aux rôles réels de la joueuse → 403"
+      ],
+      "bonne": 3,
+      "explication": "Le firewall, lui, laisse passer : la joueuse est bien authentifiée. C'est l'autorisation qui tue l'attaque : le Voter extrait le club de la séance elle-même et constate que la joueuse n'y a aucun rôle validé. C'est exactement le comportement prouvé par ton test fonctionnel PirbSeancesIdorTest."
+    },
+    {
+      "question": "Pourquoi ApiTokenHandler lève-t-il le MÊME message (« Jeton d'accès invalide ou expiré ») que le jeton soit inconnu, expiré ou orphelin ?",
+      "choix": [
+        "Pour simplifier la traduction du message dans l'app mobile",
+        "Pour ne donner aucun « oracle » à un attaquant : distinguer les cas l'aiderait à comprendre l'état des jetons qu'il teste",
+        "Parce que Symfony n'autorise qu'un seul message par exception",
+        "Parce que les trois cas sont techniquement identiques en base"
+      ],
+      "bonne": 1,
+      "explication": "Un message précis renseigne l'attaquant : « expiré » confirme que le jeton a existé, « inconnu » qu'il peut continuer à en générer. Le message générique ferme cette fuite d'information. C'est le même réflexe que le 401 unique du login (anti-énumération d'emails) — un pattern défendable en jury."
+    }
+  ]
+}

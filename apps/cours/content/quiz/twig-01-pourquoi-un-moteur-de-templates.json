@@ -1,0 +1,49 @@
+{
+  "fiche": "twig-01-pourquoi-un-moteur-de-templates",
+  "questions": [
+    {
+      "question": "Dans le modèle MVC, quel rôle joue Twig ?",
+      "choix": [
+        "Le Modèle : il gère les données et les entités",
+        "Le Contrôleur : il décide quoi faire de la requête",
+        "La Vue : il produit l'affichage à partir des données reçues",
+        "Le Routeur : il fait correspondre les URL aux actions"
+      ],
+      "bonne": 2,
+      "explication": "Twig est la Vue : il reçoit des données déjà préparées par le contrôleur et se contente de les afficher. Le Modèle (entités, Doctrine) et le Contrôleur restent côté PHP. C'est cette séparation des responsabilités que le jury attend que tu saches expliquer."
+    },
+    {
+      "question": "Dans ApiAuthController de Venaball, login() termine par « return new JsonResponse([...]) ». Pourquoi n'y a-t-il pas de template Twig ici ?",
+      "choix": [
+        "Parce que Twig ne fonctionne pas dans les contrôleurs",
+        "Parce que le client est une app mobile qui veut des données JSON et fabrique elle-même son affichage",
+        "Parce que JsonResponse est plus rapide que render() dans tous les cas",
+        "Parce que les templates sont interdits dans le dossier Api pour des raisons de sécurité"
+      ],
+      "bonne": 1,
+      "explication": "L'API mobile ne consomme pas de HTML : l'app Expo reçoit du JSON brut et construit ses propres écrans. Twig ne sert que quand le serveur produit du HTML pour un navigateur. C'est le contraste render() vs json() : même contrôleur Symfony, deux types de réponses selon le client."
+    },
+    {
+      "question": "Que fait exactement $this->render('page.html.twig', ['joueur' => $joueur]) ?",
+      "choix": [
+        "Il envoie l'objet $joueur au navigateur, qui le transforme en HTML",
+        "Il exécute le template comme du PHP et renvoie du JSON",
+        "Il enregistre le template en base de données pour le prochain affichage",
+        "Il cherche le template dans templates/, lui injecte la variable joueur, et renvoie le HTML produit"
+      ],
+      "bonne": 3,
+      "explication": "render() fusionne un template du dossier templates/ avec les variables passées en deuxième argument, puis renvoie une réponse HTTP contenant le HTML. Le navigateur ne reçoit jamais l'objet PHP : seulement le HTML final. C'est le pont entre le C et le V du MVC."
+    },
+    {
+      "question": "Pourquoi est-ce une mauvaise pratique d'écrire le HTML directement dans le contrôleur avec des echo ?",
+      "choix": [
+        "On mélange logique et affichage : design difficile à modifier, pas d'échappement automatique, responsabilités confondues",
+        "C'est techniquement impossible en Symfony",
+        "Les echo sont plus lents que Twig dans tous les cas",
+        "Le HTML dans un fichier PHP est refusé par le serveur web"
+      ],
+      "bonne": 0,
+      "explication": "C'est techniquement possible mais ça viole la séparation des responsabilités : le contrôleur ferait deux métiers à la fois. On perd aussi l'échappement automatique de Twig (sécurité XSS) et l'héritage de templates. Twig compile d'ailleurs ses templates en PHP mis en cache, donc l'argument performance ne tient pas."
+    }
+  ]
+}

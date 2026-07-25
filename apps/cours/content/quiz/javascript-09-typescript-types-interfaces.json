@@ -1,0 +1,49 @@
+{
+  "fiche": "javascript-09-typescript-types-interfaces",
+  "questions": [
+    {
+      "question": "Que deviennent les annotations de types TypeScript (\": string\", les interfaces...) dans le code qui tourne réellement dans le navigateur ?",
+      "choix": [
+        "Elles sont vérifiées à chaque exécution pour bloquer les mauvaises valeurs",
+        "Elles sont EFFACÉES à la compilation : le navigateur ne reçoit que du JavaScript pur",
+        "Elles sont converties en commentaires",
+        "Le navigateur les interprète nativement depuis 2020"
+      ],
+      "bonne": 1,
+      "explication": "TypeScript n'existe qu'au moment de l'ÉCRITURE : il vérifie pendant que tu codes, puis tout est effacé à la compilation. Aucune vérification à l'exécution, aucun coût en performance. C'est aussi ce qui explique qu'un import type disparaisse totalement du bundle."
+    },
+    {
+      "question": "Dans ta FicheMeta : bloc: 1 | 2 | 3. Que se passe-t-il si du code essaie d'affecter bloc = 4 ?",
+      "choix": [
+        "Ça passe, mais un avertissement s'affiche dans la console du navigateur",
+        "La valeur est automatiquement ramenée à 3",
+        "Erreur de compilation : la barre verticale est une UNION qui n'autorise que les valeurs listées",
+        "Ça plante à l'exécution avec un TypeError"
+      ],
+      "bonne": 2,
+      "explication": "1 | 2 | 3 se lit « 1 ou 2 ou 3 » : toute autre valeur est refusée AVANT l'exécution, directement dans VS Code. Le référentiel CDA a trois blocs, et le type grave cette règle métier dans le code. Même mécanique que PosteBasket dans ton app Pirb : cinq textes autorisés, une faute de frappe devient une erreur visible."
+    },
+    {
+      "question": "Dans fiches.ts : interface Fiche extends FicheMeta { contenu: string }. Qu'est-ce qu'un objet de type Fiche doit contenir ?",
+      "choix": [
+        "TOUS les champs de FicheMeta, PLUS le champ contenu",
+        "Uniquement le champ contenu",
+        "Au choix : les champs de FicheMeta OU contenu",
+        "Les champs de FicheMeta, contenu restant optionnel"
+      ],
+      "bonne": 0,
+      "explication": "extends signifie « hérite de tout et ajoute » : une Fiche, c'est une FicheMeta complète (slug, titre, bloc...) plus son contenu Markdown. C'est le pendant côté types du spread { ...versMeta(...), contenu: content } que fait getFiche() côté valeurs : les deux racontent la même structure."
+    },
+    {
+      "question": "Pourquoi RechercheFiches.tsx utilise-t-il import type { FicheMeta } from \"@/lib/fiches/fiches\" au lieu d'un import normal ?",
+      "choix": [
+        "Parce que les composants client n'ont pas le droit d'importer quoi que ce soit",
+        "Pour accélérer le chargement de VS Code",
+        "Parce qu'un import normal serait une erreur de syntaxe pour une interface",
+        "Pour n'importer QUE le contrat de données : le code de fiches.ts (qui utilise fs, serveur uniquement) ne part jamais dans le bundle navigateur"
+      ],
+      "bonne": 3,
+      "explication": "fiches.ts lit des fichiers avec fs — ça n'existe pas dans un navigateur. import type n'importe que le TYPE, effacé à la compilation : le composant client connaît la forme des données sans embarquer une ligne de code serveur. C'est LA phrase à sortir au jury sur la séparation client/serveur."
+    }
+  ]
+}

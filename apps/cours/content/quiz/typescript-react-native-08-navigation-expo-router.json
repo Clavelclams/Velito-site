@@ -1,0 +1,49 @@
+{
+  "fiche": "typescript-react-native-08-navigation-expo-router",
+  "questions": [
+    {
+      "question": "Dans Pirb, pourquoi le dossier des onglets s'appelle-t-il `(tabs)` avec des parenthèses ?",
+      "choix": [
+        "C'est une convention purement décorative",
+        "Les parenthèses activent le mode onglets d'expo-router",
+        "C'est un groupe : le dossier organise les fichiers sans apparaître dans l'URL — l'accueil est « / », pas « /(tabs)/ »",
+        "Les parenthèses rendent le dossier privé et inaccessible"
+      ],
+      "bonne": 2,
+      "explication": "Les parenthèses créent un groupe de routes : elles structurent le projet (un layout dédié aux onglets) sans allonger les chemins. C'est le même principe que les groupes de routes de Next.js sur ton site — la navigation par fichiers est partagée entre tes deux stacks."
+    },
+    {
+      "question": "Tu crées un fichier `app/(tabs)/essai.tsx` qui exporte un composant. Que se passe-t-il ?",
+      "choix": [
+        "Rien tant qu'on n'a pas déclaré la route dans un fichier de configuration",
+        "Un nouvel onglet apparaît automatiquement : chez expo-router, le fichier EST la route",
+        "L'app refuse de compiler car l'onglet n'a pas d'icône",
+        "Le fichier écrase l'onglet Accueil"
+      ],
+      "bonne": 1,
+      "explication": "C'est le cœur d'expo-router : pas de tableau de routes à maintenir, le système de fichiers fait foi. Le nouvel écran devient un onglet (avec un titre par défaut tant qu'aucun Tabs.Screen ne le personnalise). Pour le retirer, il suffit de supprimer le fichier."
+    },
+    {
+      "question": "Dans app/(tabs)/_layout.tsx, `type IoniconName = keyof typeof Ionicons.glyphMap;` sert à...",
+      "choix": [
+        "Charger toutes les icônes en mémoire au démarrage",
+        "Convertir les icônes en composants React",
+        "Donner une couleur par défaut aux icônes",
+        "N'accepter que des noms d'icônes qui existent vraiment : icon('hoome') est une erreur de compilation, pas une icône vide en prod"
+      ],
+      "bonne": 3,
+      "explication": "`keyof typeof` extrait l'union de toutes les clés du catalogue d'icônes Ionicons. La fonction icon() ne peut donc recevoir qu'un nom valide : la faute de frappe est attrapée par le typecheck au lieu d'apparaître comme un carré vide chez une joueuse. TypeScript sécurise jusqu'à la barre d'onglets."
+    },
+    {
+      "question": "En mode API avec une session déconnectée, comment l'app affiche-t-elle l'écran de connexion ?",
+      "choix": [
+        "Le layout racine retourne <LoginScreen /> au lieu du Stack : tant qu'on n'est pas connectée, la navigation n'existe même pas",
+        "Un router.push('/login') est déclenché au démarrage",
+        "L'onglet Profil redirige vers une page de login",
+        "expo-router affiche sa page 404 personnalisée"
+      ],
+      "bonne": 0,
+      "explication": "Ce n'est pas une navigation, c'est une garde : dans app/_layout.tsx, si session.statut vaut 'deconnectee', le return court-circuite le Stack entier. Aucune route de l'app n'est atteignable sans session — plus sûr qu'une redirection qu'on pourrait contourner, et c'est un argument de sécurité pour le jury."
+    }
+  ]
+}

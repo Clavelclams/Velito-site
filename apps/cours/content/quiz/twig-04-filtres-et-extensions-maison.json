@@ -1,0 +1,49 @@
+{
+  "fiche": "twig-04-filtres-et-extensions-maison",
+  "questions": [
+    {
+      "question": "Le contrôleur passe ['nom' => 'venaball']. Qu'affiche {{ nom|upper }} ?",
+      "choix": [
+        "venaball, car les filtres ne s'appliquent qu'aux dates",
+        "VENABALL, et la valeur en base n'est pas modifiée",
+        "VENABALL, et l'entité est mise à jour en majuscules en base",
+        "Venaball, car upper ne touche que la première lettre"
+      ],
+      "bonne": 1,
+      "explication": "Le filtre |upper met toute la chaîne en majuscules, mais uniquement à l'affichage : un filtre transforme la sortie, jamais la donnée source. La Vue présente, elle ne persiste pas. Pour une majuscule initiale seulement, ce serait |capitalize."
+    },
+    {
+      "question": "La variable bio n'a PAS été passée par le contrôleur. Qu'affiche {{ bio|default('Pas de bio') }} ?",
+      "choix": [
+        "Une erreur « variable non définie » dans tous les cas",
+        "Une page blanche, car Twig s'arrête à la variable inconnue",
+        "Pas de bio : le filtre default fournit une valeur de repli",
+        "null, affiché littéralement"
+      ],
+      "bonne": 2,
+      "explication": "|default('...') couvre exactement ce cas : variable absente ou vide, il affiche la valeur de repli. C'est le filet de sécurité classique pour les champs optionnels d'une entité (bio, photo...). Sans lui, en mode strict, Twig lèverait une erreur."
+    },
+    {
+      "question": "Dans {{ joueur.bio|default('')|striptags|upper }}, dans quel ordre les filtres s'appliquent-ils ?",
+      "choix": [
+        "De gauche à droite : repli si null, puis suppression des balises, puis majuscules",
+        "De droite à gauche : majuscules d'abord, puis suppression des balises",
+        "Dans un ordre choisi par Twig selon le type de la valeur",
+        "Simultanément : l'ordre d'écriture n'a aucune importance"
+      ],
+      "bonne": 0,
+      "explication": "Les filtres s'enchaînent comme des tuyaux, de gauche à droite : la sortie de l'un devient l'entrée du suivant. L'ordre compte : |upper|striptags et |striptags|upper peuvent donner des résultats différents selon le contenu. Penser « la valeur coule à travers les pipes »."
+    },
+    {
+      "question": "À quoi sert une classe comme SaisonExtension dans src/Twig/ de Venaball ?",
+      "choix": [
+        "À remplacer le moteur Twig par un moteur maison",
+        "À stocker les templates liés aux saisons",
+        "À exécuter des requêtes SQL directement depuis les templates",
+        "À déclarer des filtres/fonctions Twig personnalisés, écrits en PHP et réutilisables dans tous les templates"
+      ],
+      "bonne": 3,
+      "explication": "Une extension Twig est une classe PHP (héritant d'AbstractExtension) qui enregistre via getFilters()/getFunctions() des filtres et fonctions maison. La logique vit une seule fois en PHP testable, et tous les templates l'utilisent avec une syntaxe courte. C'est la réponse au jury quand une transformation d'affichage se répète."
+    }
+  ]
+}

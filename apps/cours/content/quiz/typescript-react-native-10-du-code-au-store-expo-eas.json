@@ -1,0 +1,49 @@
+{
+  "fiche": "typescript-react-native-10-du-code-au-store-expo-eas",
+  "questions": [
+    {
+      "question": "Dans app.json, à quoi sert la valeur `fr.mabb.pirb` (bundleIdentifier iOS et package Android) ?",
+      "choix": [
+        "C'est l'adresse du serveur de l'API",
+        "C'est l'identifiant unique et définitif de l'app sur les stores : il ne change jamais, c'est lui qui fait qu'une mise à jour remplace l'app",
+        "C'est le nom affiché sous l'icône sur le téléphone",
+        "C'est un mot de passe de signature du binaire"
+      ],
+      "bonne": 1,
+      "explication": "Convention domaine inversé : fr.mabb → pirb. Cet identifiant enregistre l'app auprès d'Apple et de Google ; le changer après publication créerait une DEUXIÈME app au lieu de mettre à jour la première. Le nom affiché, lui, est « Venaball » et peut évoluer librement."
+    },
+    {
+      "question": "Dans eas.json, quelle est la différence entre les builds Android des profils preview et production ?",
+      "choix": [
+        "preview compile en mode mock, production en mode api",
+        "preview est gratuit, production payant",
+        "Aucune : les deux produisent le même fichier",
+        "preview produit un APK installable à la main (tests au club) ; production un app-bundle (AAB), le format exigé par le Play Store, avec autoIncrement"
+      ],
+      "bonne": 3,
+      "explication": "L'APK s'installe directement sur un téléphone : idéal pour faire tester sans passer par le store. L'AAB est le format que le Play Store exige pour publier. Et autoIncrement: true monte le versionCode à chaque build de production — Google refuse deux envois avec le même numéro. Attention au piège : les DEUX profils sont en EXPO_PUBLIC_DATA_SOURCE=api."
+    },
+    {
+      "question": "Pourquoi chaque profil de eas.json contient-il `\"EXPO_PUBLIC_DATA_SOURCE\": \"api\"` dans son bloc env ?",
+      "choix": [
+        "Pour que tout build EAS embarque la vraie API : la factory de src/services/data/index.ts choisira ApiPirbDataService, le mock reste réservé au développement local",
+        "Parce que EAS refuse de compiler sans cette variable",
+        "Pour activer le mode debug dans les builds",
+        "Pour désactiver TypeScript à la compilation"
+      ],
+      "bonne": 0,
+      "explication": "C'est la jonction entre le déploiement et l'architecture de la leçon 5 : les variables EXPO_PUBLIC_* sont injectées au build, et la factory lit EXPO_PUBLIC_DATA_SOURCE pour instancier le bon service. Un build sans cette variable partirait sur le mock (?? 'mock') — une app de démo sur les stores, l'erreur à ne jamais commettre."
+    },
+    {
+      "question": "Pourquoi le contrat PirbDataService contient-il la méthode demanderSuppressionCompte() ?",
+      "choix": [
+        "Pour libérer de l'espace disque sur le téléphone",
+        "C'est une exigence technique d'expo-secure-store",
+        "Apple (guideline 5.1.1(v)) exige la demande de suppression de compte DEPUIS l'app, et le RGPD (art. 17) donne le droit à l'effacement — la conformité est devenue une méthode du code",
+        "Pour permettre au coach de supprimer une joueuse de l'équipe"
+      ],
+      "bonne": 2,
+      "explication": "Sans ce parcours in-app, l'app serait rejetée en review Apple — un simple lien vers un site ne suffit pas. Et plutôt qu'un effacement immédiat, Pirb dépose une demande traitée sous 30 jours : comptes de mineures rattachées à un club, obligations fédérales. Savoir justifier une méthode par une règle de store ET une règle de droit, c'est exactement ce qu'attend le jury."
+    }
+  ]
+}

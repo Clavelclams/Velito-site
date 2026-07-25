@@ -1,0 +1,49 @@
+{
+  "fiche": "html-css-04-formulaires",
+  "questions": [
+    {
+      "question": "Un champ <input type=\"text\" id=\"ville\"> est rempli par l'utilisateur, mais la donnée n'arrive jamais au serveur. Cause la plus probable ?",
+      "choix": [
+        "Il manque l'attribut name : sans lui, le champ n'est pas inclus dans la requête envoyée",
+        "Il manque l'attribut required",
+        "type=\"text\" n'est pas envoyable, il faut type=\"data\"",
+        "L'id ne correspond pas au label"
+      ],
+      "bonne": 0,
+      "explication": "C'est name qui donne son nom à la donnée dans les paires name=valeur de la requête ; sans lui le champ est muet. Le piège id/label est tentant car id sert bien à lier le label — mais ce lien concerne le clic et les lecteurs d'écran, pas l'envoi. Tu l'as constaté dans test.html : supprimer name fait disparaître la donnée de l'URL."
+    },
+    {
+      "question": "Pourquoi un formulaire de connexion doit-il utiliser method=\"post\" et pas method=\"get\" ?",
+      "choix": [
+        "Parce que get est plus lent que post",
+        "Parce que get met les données dans l'URL : le mot de passe apparaîtrait dans la barre d'adresse et l'historique",
+        "Parce que get ne peut envoyer qu'un seul champ à la fois",
+        "Parce que post chiffre automatiquement les données"
+      ],
+      "bonne": 1,
+      "explication": "get colle les données dans l'URL — pratique pour une recherche partageable, catastrophique pour un mot de passe qui finirait dans l'historique et les journaux du serveur. Le piège « post chiffre » est très répandu : post met les données dans le corps de la requête, mais ne chiffre rien du tout — c'est HTTPS qui chiffre, quelle que soit la méthode."
+    },
+    {
+      "question": "Dans LoginForm.tsx, les <label> n'ont pas d'attribut for. Pourquoi le lien label/champ fonctionne-t-il quand même ?",
+      "choix": [
+        "React lie les labels automatiquement grâce au Virtual DOM",
+        "Le lien ne fonctionne pas : c'est un bug du fichier",
+        "Le label enveloppe directement son input : c'est la deuxième façon valide de lier, sans for ni id",
+        "L'attribut autoComplete remplace le for"
+      ],
+      "bonne": 2,
+      "explication": "HTML offre deux liaisons valides : for pointant vers un id, ou l'imbrication (l'input à l'intérieur du label). LoginForm.tsx utilise la seconde — tu l'as vérifié en cliquant sur le texte « Email », qui donne bien le focus au champ. Le piège « React fait la magie » est le réflexe à combattre dans tout ce parcours : ici c'est du HTML standard, pas du framework."
+    },
+    {
+      "question": "Ton formulaire a required et type=\"email\" partout. Peux-tu te passer de validation côté serveur ?",
+      "choix": [
+        "Oui, le navigateur bloque tout envoi invalide",
+        "Oui, si on ajoute aussi minlength sur chaque champ",
+        "Non, mais seulement pour les formulaires de paiement",
+        "Non, jamais : n'importe qui peut envoyer une requête sans passer par ton formulaire — le navigateur c'est le confort, le serveur c'est la sécurité"
+      ],
+      "bonne": 3,
+      "explication": "La validation navigateur ne protège que le passage par TON formulaire ; or une requête HTTP peut être fabriquée directement (curl, script, outils de dev) sans jamais afficher ta page. La réponse « le navigateur bloque tout » est tentante parce que c'est vrai... pour l'utilisateur honnête moyen — exactement la population dont un attaquant ne fait pas partie. Phrase jury : navigateur = confort, serveur = sécurité."
+    }
+  ]
+}

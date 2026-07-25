@@ -1,0 +1,49 @@
+{
+  "fiche": "twig-03-conditions-et-boucles",
+  "questions": [
+    {
+      "question": "Le contrôleur passe ['joueurs' => []] (liste vide). Qu'affiche ce template ?\n{% for j in joueurs %}<li>{{ j.nom }}</li>{% else %}<li>Aucune joueuse.</li>{% endfor %}",
+      "choix": [
+        "Rien du tout : la boucle ne s'exécute pas et le else est ignoré",
+        "<li>Aucune joueuse.</li> : le else d'un for s'exécute quand la liste est vide",
+        "Une erreur, car else n'est pas autorisé dans un for",
+        "<li></li> : une ligne vide est générée"
+      ],
+      "bonne": 1,
+      "explication": "Le {% else %} dans un {% for %} est une spécificité de Twig qui n'existe pas en PHP : il s'exécute uniquement quand la collection est vide. C'est le moyen propre d'afficher un message « aucune donnée » sans if séparé. Avec au moins un élément, le else serait ignoré."
+    },
+    {
+      "question": "Qu'affiche {% for i in 1..3 %}{{ loop.index }}{% if not loop.last %}-{% endif %}{% endfor %} ?",
+      "choix": [
+        "0-1-2",
+        "1-2-3-",
+        "3-2-1",
+        "1-2-3"
+      ],
+      "bonne": 3,
+      "explication": "loop.index compte à partir de 1 (contrairement à loop.index0 qui part de 0), et loop.last est vrai au dernier tour, donc le tiret n'est pas affiché après le 3. Résultat : 1-2-3. La variable loop est fournie gratuitement par Twig dans toute boucle for."
+    },
+    {
+      "question": "Tu dois afficher la moyenne de points par match d'une joueuse. Où ce calcul doit-il être fait ?",
+      "choix": [
+        "Dans un service PHP (comme les classes de src/Gamification/), le template ne fait qu'afficher le résultat",
+        "Dans le template avec une boucle qui additionne puis divise",
+        "Dans le JavaScript de la page, pour soulager le serveur",
+        "Dans base.html.twig pour qu'il soit disponible partout"
+      ],
+      "bonne": 0,
+      "explication": "C'est de la logique métier : elle appartient au PHP, dans un service testable, comme le font XpCalculator ou BadgeChecker dans Venaball. Le template ne garde que la logique d'affichage (montrer, répéter, formater). Cette frontière entre Vue et métier est un point que le jury CDA vérifie systématiquement."
+    },
+    {
+      "question": "Comment tester en Twig qu'une variable tirs existe ET n'est pas vide avant de l'afficher ?",
+      "choix": [
+        "{% if tirs === true %}",
+        "{% if isset(tirs) && count(tirs) > 0 %}",
+        "{% if tirs is defined and tirs is not empty %}",
+        "{% if tirs != null or tirs > 0 %}"
+      ],
+      "bonne": 2,
+      "explication": "Twig a ses propres tests lisibles : « is defined » vérifie que la variable existe, « is not empty » qu'elle contient quelque chose, reliés par « and ». Les fonctions PHP comme isset() ou count() et les opérateurs && n'existent pas en Twig : c'est un langage distinct, volontairement simple."
+    }
+  ]
+}

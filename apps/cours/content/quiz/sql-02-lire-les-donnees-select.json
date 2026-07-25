@@ -1,0 +1,49 @@
+{
+  "fiche": "sql-02-lire-les-donnees-select",
+  "questions": [
+    {
+      "question": "Sur la table membre_test (Jean 120 XP actif, Naomi 340 XP active, Karim 80 XP inactif, Sofia 200 XP active), que renvoie : SELECT prenom FROM membre_test WHERE is_active = true ORDER BY xp DESC LIMIT 2; ?",
+      "choix": [
+        "Naomi, Sofia",
+        "Naomi, Karim",
+        "Jean, Naomi",
+        "Sofia, Naomi"
+      ],
+      "bonne": 0,
+      "explication": "Le WHERE élimine Karim (inactif), le tri DESC classe Naomi (340) puis Sofia (200) puis Jean (120), et le LIMIT 2 ne garde que les deux premières. L'ordre des clauses s'exécute bien dans ce sens : filtre, puis tri, puis découpe."
+    },
+    {
+      "question": "Tu veux trouver les clubs de Venaball sans numéro FFBB renseigné. Quelle requête est correcte ?",
+      "choix": [
+        "SELECT nom FROM club WHERE numero_ffbb = NULL;",
+        "SELECT nom FROM club WHERE numero_ffbb = '';",
+        "SELECT nom FROM club WHERE numero_ffbb IS NULL;",
+        "SELECT nom FROM club WHERE NOT numero_ffbb;"
+      ],
+      "bonne": 2,
+      "explication": "NULL représente une absence de valeur, et rien n'est jamais « égal » à une absence : numero_ffbb = NULL ne renvoie aucune ligne, sans erreur. Le seul test valable est IS NULL (ou IS NOT NULL pour l'inverse). C'est un piège classique de jury."
+    },
+    {
+      "question": "Que fait la condition WHERE email LIKE '%@gmail.com' ?",
+      "choix": [
+        "Elle garde les emails qui commencent par @gmail.com",
+        "Elle garde les emails qui se terminent par @gmail.com, quel que soit le début",
+        "Elle garde les emails qui contiennent exactement le texte %@gmail.com",
+        "Elle provoque une erreur : LIKE n'accepte pas le caractère %"
+      ],
+      "bonne": 1,
+      "explication": "Le % est un joker qui remplace n'importe quelle suite de caractères. Placé au début du motif, il signifie « n'importe quoi, puis @gmail.com » : donc tous les emails finissant par @gmail.com."
+    },
+    {
+      "question": "Sans clause ORDER BY, dans quel ordre la base renvoie-t-elle les lignes ?",
+      "choix": [
+        "Toujours dans l'ordre d'insertion",
+        "Toujours triées par clé primaire croissante",
+        "Toujours par ordre alphabétique de la première colonne",
+        "Dans un ordre non garanti, qui peut changer d'une exécution à l'autre"
+      ],
+      "bonne": 3,
+      "explication": "Sans ORDER BY, le SGBD renvoie les lignes dans l'ordre qui l'arrange (organisation physique, plan d'exécution...), et cet ordre peut varier. Si l'ordre compte pour l'affichage, il faut TOUJOURS un ORDER BY explicite : c'est une phrase à savoir redire au jury."
+    }
+  ]
+}

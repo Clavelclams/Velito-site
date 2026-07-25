@@ -1,0 +1,49 @@
+{
+  "fiche": "typescript-react-native-04-fonctions-typees-et-generiques",
+  "questions": [
+    {
+      "question": "Dans MockPirbDataService.ts, que renvoie exactement `simulerReseau(MOCK_NIVEAU)` sachant que MOCK_NIVEAU est un NiveauInfo et que la fonction est déclarée `simulerReseau<T>(data: T): Promise<T>` ?",
+      "choix": [
+        "Promise<unknown>, car T n'est pas précisé à l'appel",
+        "NiveauInfo directement, sans Promise",
+        "Promise<NiveauInfo> : T est inféré depuis l'argument",
+        "Promise<any>, comme toute fonction générique"
+      ],
+      "bonne": 2,
+      "explication": "Le générique est un type à trou que TypeScript remplit à l'appel : l'argument est un NiveauInfo, donc T = NiveauInfo et le retour est Promise<NiveauInfo>. Une seule fonction sert ainsi tous les types de données du mock, en restant précisément typée."
+    },
+    {
+      "question": "Dans useAsyncData.ts, pourquoi écrire `useState<AsyncState<T>>({ data: null, loading: true, error: null })` au lieu de laisser l'inférence faire ?",
+      "choix": [
+        "Sans le générique, data serait inféré null pour toujours et ne pourrait jamais recevoir la donnée chargée",
+        "Parce que useState exige toujours un type explicite",
+        "Pour accélérer le rendu de l'écran",
+        "Parce que loading serait sinon de type string"
+      ],
+      "bonne": 0,
+      "explication": "L'inférence ne voit que la valeur initiale : `data: null` donnerait le type null, point. En précisant AsyncState<T>, on déclare que data est `T | null` — null pendant le chargement, puis la vraie donnée. C'est le cas d'école où on remplit le trou du générique à la main."
+    },
+    {
+      "question": "Que signifie le type du premier paramètre de useAsyncData : `fetcher: () => Promise<T>` ?",
+      "choix": [
+        "fetcher est la donnée déjà chargée, de type T",
+        "fetcher est un tableau de promesses à exécuter",
+        "fetcher est une chaîne contenant l'URL à appeler",
+        "fetcher est une FONCTION sans argument qui renvoie une promesse de T"
+      ],
+      "bonne": 3,
+      "explication": "La flèche décrit le type d'une fonction : « () => Promise<T> » se lit « fonction sans paramètre qui promet un T ». Le hook ne reçoit pas la donnée mais la FAÇON de la charger — c'est lui qui décide quand l'appeler (au montage, au reload, quand une dépendance change)."
+    },
+    {
+      "question": "Un écran appelle `useAsyncData(() => getDataService().getBadges())` et getBadges est déclaré `getBadges(): Promise<Badge[]>`. Quel est le type de `data` dans l'écran ?",
+      "choix": [
+        "Badge[], jamais null",
+        "Badge[] | null : T est inféré Badge[], et data reste null pendant le chargement",
+        "Promise<Badge[]>, car la promesse n'est pas résolue",
+        "any, car le hook est générique"
+      ],
+      "bonne": 1,
+      "explication": "TypeScript remonte la chaîne : getBadges renvoie Promise<Badge[]>, donc T = Badge[], donc data est typé Badge[] | null (AsyncState<T>). Le type circule du contrat de service jusqu'à l'écran sans une seule annotation — c'est l'inférence combinée aux génériques."
+    }
+  ]
+}

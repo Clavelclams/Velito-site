@@ -1,0 +1,49 @@
+{
+  "fiche": "html-css-01-cest-quoi-une-page-web",
+  "questions": [
+    {
+      "question": "Quand tu tapes une URL et que tu valides, que reçoit ton navigateur en premier de la part du serveur ?",
+      "choix": [
+        "La page déjà dessinée, prête à afficher, comme une image",
+        "Une réponse HTTP contenant du texte HTML, que le navigateur va lire pour construire la page",
+        "Le fichier CSS, car le style doit arriver avant le contenu",
+        "Le code JavaScript qui va générer toute la page"
+      ],
+      "bonne": 1,
+      "explication": "Le serveur renvoie du texte HTML dans une réponse HTTP ; c'est le navigateur qui fait tout le travail de construction et d'affichage. L'idée d'une « page déjà dessinée » est tentante parce que c'est ce qu'on voit apparaître — mais l'affichage est fabriqué localement, à partir de texte. CSS et JS arrivent après, parce que c'est le HTML qui dit au navigateur d'aller les chercher."
+    },
+    {
+      "question": "Dans la métaphore du corps humain utilisée dans la leçon, quel rôle joue le CSS ?",
+      "choix": [
+        "Le squelette : il structure ce qu'il y a sur la page",
+        "Les muscles : il gère les interactions comme les clics",
+        "La peau et les vêtements : il décrit l'apparence de la page",
+        "Le cerveau : il décide quelles requêtes envoyer au serveur"
+      ],
+      "bonne": 2,
+      "explication": "CSS ne s'occupe que de l'apparence : couleurs, tailles, placement. Le squelette c'est le HTML (la structure) et les muscles c'est le JavaScript (le comportement). La confusion classique est de croire que CSS « fait des choses » — non : il habille ce que le HTML a posé, sans jamais réagir à un clic."
+    },
+    {
+      "question": "Ton site de cours est en Next.js et Venaball en Symfony/Twig. Qu'est-ce que le navigateur reçoit au final dans les deux cas ?",
+      "choix": [
+        "Du code Next.js pour l'un, du code Twig pour l'autre : chaque navigateur sait lire les deux",
+        "Du HTML, du CSS et du JavaScript : les frameworks sont des usines qui produisent ces trois langages",
+        "Un format binaire optimisé, différent pour chaque framework",
+        "Du PHP pour Venaball, puisque Symfony est écrit en PHP"
+      ],
+      "bonne": 1,
+      "explication": "Le navigateur ne connaît ni Twig, ni React, ni PHP : il ne parle que HTML, CSS et JavaScript. Les frameworks travaillent en amont pour produire ces trois langages. Le piège « du PHP pour Venaball » est tentant car le serveur exécute bien du PHP — mais ce PHP tourne côté serveur et n'envoie au navigateur que son résultat : du HTML."
+    },
+    {
+      "question": "Tu recharges une page et l'onglet Réseau de l'inspecteur affiche 40 lignes. Pourquoi autant de requêtes pour une seule page ?",
+      "choix": [
+        "Le HTML reçu en premier référence des CSS, JS, images et polices : chaque fichier déclenche sa propre requête",
+        "Le navigateur redemande la même page 40 fois pour vérifier qu'elle n'a pas changé",
+        "C'est un signe de bug : une page saine ne fait qu'une seule requête",
+        "Chaque balise HTML de la page génère sa propre requête vers le serveur"
+      ],
+      "bonne": 0,
+      "explication": "Le HTML est le bon de commande initial : en le lisant, le navigateur découvre les fichiers annexes (styles, scripts, images) et passe une requête pour chacun. L'idée « une page = une requête » paraît logique puisque tu n'as tapé qu'une URL — mais c'est justement la découverte en cascade décrite dans la leçon. Les balises, elles, ne déclenchent une requête que si elles pointent vers une ressource externe."
+    }
+  ]
+}

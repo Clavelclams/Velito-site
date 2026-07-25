@@ -1,0 +1,6 @@
+{
+  "titre": "PHP & Symfony",
+  "description": "Le langage et le framework de Venaball, repris depuis zéro : POO, MVC, Doctrine, services, sécurité, tests. Ton projet de jury, enfin expliqué ligne par ligne.",
+  "icone": "🎼",
+  "ordre": 4
+}

@@ -1,0 +1,49 @@
+{
+  "fiche": "html-css-09-tailwind-du-css-que-tu-connais-deja",
+  "questions": [
+    {
+      "question": "Un développeur te dit : « Tailwind, c'est du style inline, c'est sale. » Quelle est la réponse argumentée de la leçon ?",
+      "choix": [
+        "Il a raison, mais c'est plus rapide à écrire donc on accepte le compromis",
+        "C'est faux : Tailwind génère des classes CSS avec un menu fermé de valeurs, et permet hover: et sm:, impossibles en style inline",
+        "C'est vrai techniquement, mais les navigateurs modernes optimisent le style inline",
+        "Tailwind convertit les classes en style inline au moment du build"
+      ],
+      "bonne": 1,
+      "explication": "Le style inline autorise n'importe quelle valeur (13px ici, 14px là), interdit :hover et les media queries, et écrase la cascade. Tailwind corrige les trois : échelle fermée (cohérence), variantes hover:/sm:, spécificité normale de classe — de l'inline discipliné. La comparaison est tentante car dans les deux cas le style se lit sur la balise ; c'est la ressemblance de surface qui cache trois différences de fond."
+    },
+    {
+      "question": "Dans tailwind.config.ts, tu as déclaré accent: \"#4F46E5\" dans colors.cours. Qu'est-ce que cela génère ?",
+      "choix": [
+        "Une seule classe .cours-accent applicable partout",
+        "Une variable JavaScript accessible dans les composants",
+        "Toute une famille de classes (bg-cours-accent, text-cours-accent, border-cours-accent, hover:bg-cours-accent…) branchées sur cette unique valeur",
+        "Un fichier CSS séparé nommé cours-accent.css"
+      ],
+      "bonne": 2,
+      "explication": "Un token de couleur se décline automatiquement dans tous les utilitaires colorés : fond, texte, bordure, avec toutes les variantes. C'est ce qui rend le test de la pratique si parlant : changer une ligne du config a recoloré liens, bouton et focus d'un coup. Le piège « une seule classe » sous-estime le mécanisme — c'est justement la démultiplication qui fait du config un design system, pas une simple liste de couleurs."
+    },
+    {
+      "question": "Pourquoi une classe construite dynamiquement comme \"bg-\" + couleur ne fonctionne-t-elle pas en Tailwind ?",
+      "choix": [
+        "Parce que JavaScript ne peut pas concaténer des chaînes dans un className",
+        "Parce que Tailwind interdit les couleurs variables pour des raisons de sécurité",
+        "Parce que le navigateur bloque les classes générées à l'exécution",
+        "Parce que Tailwind scanne les fichiers sources au build et ne génère que les classes écrites en toutes lettres : une classe assemblée à l'exécution n'existe pas dans le CSS produit"
+      ],
+      "bonne": 3,
+      "explication": "Le compilateur lit ton code comme du texte (la clé content du config) et produit uniquement le CSS des classes qu'il y trouve littéralement ; \"bg-\" + couleur n'apparaît jamais en entier, donc aucun CSS n'est généré pour elle. Le piège est que le HTML final porte bien la classe assemblée — elle s'affiche dans l'inspecteur, mais aucune règle CSS ne lui correspond. La solution : écrire les classes complètes et choisir entre elles."
+    },
+    {
+      "question": "Pourquoi globals.css utilise-t-il @apply pour styler .fiche-contenu h2 au lieu de mettre des classes Tailwind dans le JSX ?",
+      "choix": [
+        "Le HTML des fiches est généré depuis du Markdown : impossible de poser une classe sur chaque titre produit, donc on style par sélecteur",
+        "@apply est plus performant que les classes utilitaires",
+        "Les classes Tailwind ne fonctionnent pas sur les balises h2",
+        "C'est un choix esthétique pour raccourcir le JSX"
+      ],
+      "bonne": 0,
+      "explication": "La règle du projet est claire : utilitaires dans le JSX quand on contrôle le balisage, @apply + sélecteurs descendants quand le HTML vient d'ailleurs (ici, react-markdown transforme le texte des fiches en balises sans classes). Le piège « performance » est un faux argument fréquent : @apply produit du CSS équivalent, ni plus ni moins rapide — c'est une question de contrôle du HTML, pas de vitesse."
+    }
+  ]
+}

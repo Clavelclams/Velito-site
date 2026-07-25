@@ -1,0 +1,49 @@
+{
+  "fiche": "typescript-react-native-09-stockage-et-session-mobile",
+  "questions": [
+    {
+      "question": "Pourquoi le jeton d'authentification de Pirb est-il rangé dans expo-secure-store et pas dans AsyncStorage ?",
+      "choix": [
+        "Parce qu'AsyncStorage est trop lent pour les jetons",
+        "Parce qu'AsyncStorage est limité à 100 caractères",
+        "SecureStore s'appuie sur le coffre chiffré du système (Keychain iOS / Keystore Android) : un secret ne se range pas dans un stockage lisible",
+        "Parce que SecureStore synchronise le jeton entre les appareils"
+      ],
+      "bonne": 2,
+      "explication": "AsyncStorage est l'équivalent mobile du localStorage : pratique mais non chiffré. Un jeton Bearer valable 30 jours donne accès au compte — il se protège. Le commentaire de session.ts le dit : « PAS un fichier lisible, PAS AsyncStorage : un jeton d'auth se protège »."
+    },
+    {
+      "question": "Quelle différence fondamentale entre le localStorage de ton site (progression.ts) et le SecureStore de Pirb (session.ts) à l'USAGE dans le code ?",
+      "choix": [
+        "localStorage est synchrone ; SecureStore est asynchrone (await), d'où l'état 'chargement' au démarrage de l'app",
+        "localStorage stocke des objets, SecureStore seulement des nombres",
+        "SecureStore est synchrone, localStorage asynchrone",
+        "Aucune : les deux APIs sont identiques"
+      ],
+      "bonne": 0,
+      "explication": "`window.localStorage.getItem` répond immédiatement ; `SecureStore.getItemAsync` parle au coffre du système et renvoie une Promise. C'est pour ça que Pirb a un statut 'chargement' : le temps de relire le coffre au démarrage, avant de savoir si une session existe. La sensibilité des données justifie chaque choix."
+    },
+    {
+      "question": "Pourquoi session.ts est-il construit comme un store SANS React (variables de module + abonnés), branché aux composants via useSyncExternalStore ?",
+      "choix": [
+        "Parce que useState est interdit dans les fichiers .ts",
+        "Pour que la couche données (ApiPirbDataService) puisse lire le jeton et invalider la session sans dépendre de React",
+        "Parce que useSyncExternalStore est plus rapide que useState",
+        "Pour économiser la batterie du téléphone"
+      ],
+      "bonne": 1,
+      "explication": "Si la session vivait dans le useState d'un composant, seul React pourrait y accéder. En store autonome, getToken() et invaliderSession() sont de simples fonctions appelables depuis la couche HTTP. useSyncExternalStore fait le pont : les composants abonnés re-rendent à chaque notifier(). Architecture défendable en jury."
+    },
+    {
+      "question": "L'API répond 401 en plein milieu d'une session (jeton expiré). Que se passe-t-il dans Pirb ?",
+      "choix": [
+        "L'app crashe et affiche l'EcranCrash",
+        "L'app retente la requête en boucle jusqu'au succès",
+        "Le jeton est renouvelé automatiquement avec le mot de passe mémorisé",
+        "La couche données appelle invaliderSession() : statut 'deconnectee', et la garde du layout racine raffiche l'écran de connexion"
+      ],
+      "bonne": 3,
+      "explication": "C'est l'enchaînement des couches : le service HTTP détecte le 401, invalide la session (le jeton est supprimé du coffre), notifier() prévient les abonnés, et la garde de _layout.tsx remplace la navigation par le LoginScreen. Pas de re-login caché : c'est la joueuse qui détient ses identifiants, pas l'app."
+    }
+  ]
+}

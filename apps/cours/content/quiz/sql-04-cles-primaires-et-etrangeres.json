@@ -1,0 +1,49 @@
+{
+  "fiche": "sql-04-cles-primaires-et-etrangeres",
+  "questions": [
+    {
+      "question": "Quelles sont les deux propriétés obligatoires d'une clé primaire ?",
+      "choix": [
+        "Être un nombre entier et commencer à 1",
+        "Être unique et ne jamais être NULL",
+        "Être auto-incrémentée et invisible pour l'utilisateur",
+        "Être indexée et de type VARCHAR"
+      ],
+      "bonne": 1,
+      "explication": "Une clé primaire identifie une ligne sans ambiguïté : deux lignes ne peuvent pas partager la même valeur, et la valeur ne peut pas être absente. L'auto-incrément est très courant mais optionnel — c'est un moyen pratique, pas une obligation du concept."
+    },
+    {
+      "question": "Dans UserClubRole.php, l'attribut #[ORM\\ManyToOne(targetEntity: User::class)] sur $user produit quoi dans la base MySQL ?",
+      "choix": [
+        "Une table supplémentaire nommée many_to_one",
+        "Une colonne users dans la table user contenant la liste des rôles",
+        "Une colonne user_id dans la table user_club_role, clé étrangère vers user.id",
+        "Rien : ManyToOne est une notion purement PHP sans traduction en base"
+      ],
+      "bonne": 2,
+      "explication": "Le côté ManyToOne porte la clé étrangère : Doctrine crée une colonne user_id dans user_club_role qui référence user.id. Le côté OneToMany dans User.php, lui, n'existe pas en base : c'est juste une commodité de navigation en PHP."
+    },
+    {
+      "question": "Sur $valideParUser de UserClubRole, Clavel a choisi onDelete: 'SET NULL' et non 'CASCADE'. Pourquoi ce choix de conception ?",
+      "choix": [
+        "SET NULL est plus rapide que CASCADE à l'exécution",
+        "CASCADE est interdit quand il y a déjà deux autres clés étrangères dans la table",
+        "C'est le comportement par défaut de Doctrine, il n'y a pas de choix",
+        "Si le dirigeant validateur est supprimé, on veut garder le rôle validé et perdre seulement la trace de QUI a validé — pas supprimer le rôle"
+      ],
+      "bonne": 3,
+      "explication": "Avec CASCADE, supprimer le dirigeant supprimerait aussi tous les rôles qu'il a validés — absurde pour les membres concernés. SET NULL préserve la ligne et vide juste la référence d'audit. Comparer : $user est en CASCADE car un rôle sans utilisateur n'a aucun sens."
+    },
+    {
+      "question": "Que se passe-t-il si on tente : INSERT INTO role_mini (club_id, role) VALUES (99, 'JOUEUR'); alors qu'aucun club n'a l'id 99 ?",
+      "choix": [
+        "La base refuse l'insertion avec une erreur de violation de clé étrangère",
+        "La ligne est insérée avec club_id = 99, qui restera orphelin",
+        "La base crée automatiquement un club vide avec l'id 99",
+        "La ligne est insérée avec club_id remplacé par NULL"
+      ],
+      "bonne": 0,
+      "explication": "C'est l'intégrité référentielle : une clé étrangère doit pointer vers une ligne qui existe. La base rejette l'insertion avec une erreur « violates foreign key constraint », empêchant les références fantômes — même si le code applicatif est bugué."
+    }
+  ]
+}

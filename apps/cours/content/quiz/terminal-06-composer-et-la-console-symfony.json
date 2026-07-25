@@ -1,0 +1,49 @@
+{
+  "fiche": "terminal-06-composer-et-la-console-symfony",
+  "questions": [
+    {
+      "question": "Dans la commande `php bin/console cache:clear`, que représente `bin/console` ?",
+      "choix": [
+        "Une option du programme php qui active le mode console",
+        "Un fichier PHP présent dans ton projet, fourni par Symfony, que le programme php exécute",
+        "Un raccourci clavier de VS Code",
+        "Un programme installé dans Windows au même titre que php"
+      ],
+      "bonne": 1,
+      "explication": "bin/console est un vrai fichier de ton projet mabb-site — tu peux l'afficher avec `cat bin\\console`. La commande dit : « php, exécute ce script, avec cache:clear comme argument ». Même logique que `php bin/phpunit` pour les tests : programme + script du projet."
+    },
+    {
+      "question": "Quelle est la bonne correspondance entre le monde Node et le monde PHP ?",
+      "choix": [
+        "npm ↔ Doctrine, package.json ↔ vendor, node_modules ↔ composer.lock",
+        "npm ↔ Symfony, node_modules ↔ composer.json, package-lock.json ↔ vendor",
+        "npm ↔ Composer, package.json ↔ composer.json, node_modules ↔ vendor, package-lock.json ↔ composer.lock",
+        "npm ↔ Packagist, package.json ↔ bin/console, node_modules ↔ migrations"
+      ],
+      "bonne": 2,
+      "explication": "Les deux écosystèmes sont construits sur le même modèle : un gestionnaire (npm/Composer), un manifeste (package.json/composer.json), un fichier de versions exactes (package-lock.json/composer.lock) et un dossier de paquets reconstructible qu'on ne partage jamais (node_modules/vendor). Cette phrase de correspondance est excellente à sortir devant un jury."
+    },
+    {
+      "question": "Que se passe-t-il quand tu lances `php bin/console doctrine:migrations:migrate` ?",
+      "choix": [
+        "Toutes les migrations sont rejouées depuis le début, en vidant la base",
+        "Doctrine génère une nouvelle migration à partir de tes entités",
+        "La base de données est sauvegardée dans le dossier migrations",
+        "Doctrine compare son registre avec les fichiers de migration et applique uniquement celles pas encore exécutées, dans l'ordre"
+      ],
+      "bonne": 3,
+      "explication": "Chaque migration est un fichier décrivant un changement de schéma (créer une table, ajouter une colonne), et Doctrine note dans la base celles déjà passées. `migrate` n'applique donc que les nouvelles, dans l'ordre chronologique. Générer une migration, c'est une autre commande (`make:migration`)."
+    },
+    {
+      "question": "Que fait `php bin/console doctrine:migrations:status` et pourquoi est-ce une bonne commande à lancer avant `migrate` ?",
+      "choix": [
+        "Elle affiche l'état des migrations (appliquées / en attente) sans rien modifier : on sait ce que migrate ferait avant de le lancer",
+        "Elle applique les migrations mais en mode silencieux",
+        "Elle supprime les migrations en échec pour repartir à zéro",
+        "Elle teste la connexion à la base et vide le cache"
+      ],
+      "bonne": 0,
+      "explication": "`status` est une commande de pure lecture : elle compte les migrations déjà exécutées et celles en attente. C'est le même réflexe de garde-fou que le `-WhatIf` de PowerShell — regarder avant d'agir. Si `status` annonce 0 migration en attente, `migrate` ne fera rien du tout."
+    }
+  ]
+}

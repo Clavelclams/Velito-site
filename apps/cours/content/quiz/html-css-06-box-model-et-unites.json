@@ -1,0 +1,49 @@
+{
+  "fiche": "html-css-06-box-model-et-unites",
+  "questions": [
+    {
+      "question": "Quelle est la différence entre padding et margin ?",
+      "choix": [
+        "Padding s'applique aux div, margin aux balises sémantiques",
+        "Padding est l'espace intérieur (entre contenu et bordure), margin est l'espace extérieur qui repousse les autres boîtes",
+        "Aucune : ce sont deux noms pour l'espace autour d'un élément",
+        "Margin est toujours plus grand que padding"
+      ],
+      "bonne": 1,
+      "explication": "Reprends le colis : padding = papier bulle (dedans, fait partie du colis), margin = distance entre colis dans le camion (dehors). La confusion est facile car visuellement les deux « ajoutent de l'espace » — mais le padding porte le fond et la bordure de l'élément avec lui, la margin est transparente et n'appartient à personne. Le schéma de l'inspecteur les colore différemment pour ça."
+    },
+    {
+      "question": "Sans box-sizing: border-box, quelle est la largeur totale affichée d'une boîte avec width: 200px, padding: 20px et border: 5px ?",
+      "choix": [
+        "200px : width définit toujours la taille finale",
+        "225px : on ajoute une seule fois padding et border",
+        "250px : 200 + 20 de padding de chaque côté + 5 de bordure de chaque côté",
+        "240px : le padding compte mais pas la bordure"
+      ],
+      "bonne": 2,
+      "explication": "Par défaut, width mesure le contenu seul ; padding et bordure s'ajoutent des DEUX côtés : 200 + 2×20 + 2×5 = 250px. Le piège « 225px » vient d'oublier que gauche et droite comptent chacun. C'est ce piège historique que box-sizing: border-box corrige — et que Tailwind applique d'office, raison pour laquelle tu n'y as jamais pensé."
+    },
+    {
+      "question": "Pourquoi préférer rem à px pour les tailles de texte et les espacements ?",
+      "choix": [
+        "rem est plus rapide à calculer pour le navigateur",
+        "rem est obligatoire depuis HTML5",
+        "px n'est pas supporté sur mobile",
+        "rem suit la taille de police racine : si l'utilisateur agrandit le texte dans ses réglages, toute l'interface s'adapte"
+      ],
+      "bonne": 3,
+      "explication": "1rem = la taille de police racine (16px par défaut) ; un utilisateur malvoyant qui règle son navigateur sur 20px voit toute une interface en rem grandir proportionnellement, alors que les px restent figés. C'est un choix d'accessibilité, pas de performance. Tailwind est entièrement bâti sur cette échelle — chaque p-4 que tu écris en profite déjà."
+    },
+    {
+      "question": "Dans EnTete.tsx, le conteneur du header porte px-4 py-3. Traduction CSS exacte ?",
+      "choix": [
+        "padding gauche/droite de 1rem (16px) et padding haut/bas de 0.75rem (12px)",
+        "margin horizontale de 4px et verticale de 3px",
+        "padding de 4px horizontal et 3px vertical",
+        "position x=4 et y=3 dans la grille de la page"
+      ],
+      "bonne": 0,
+      "explication": "L'échelle Tailwind avance par pas de 0.25rem : 4 → 1rem (16px), 3 → 0.75rem (12px) ; px- vise l'axe horizontal, py- le vertical, et p signifie padding (m serait margin). Le piège « 4px et 3px » est le plus courant chez ceux qui découvrent Tailwind : les chiffres des classes sont des crans d'échelle, pas des pixels — tu l'as vérifié au box model de l'inspecteur."
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "fiche": "twig-07-formulaires-symfony-dans-twig",
+  "questions": [
+    {
+      "question": "Que regroupe exactement form_row(form.prenom) ?",
+      "choix": [
+        "Uniquement le champ <input> du prénom",
+        "Le label, le widget (l'input) et les erreurs de validation du champ, enrobés par le thème de formulaire",
+        "Tous les champs du formulaire sur une seule ligne",
+        "La contrainte de validation PHP du champ"
+      ],
+      "bonne": 1,
+      "explication": "form_row est un raccourci pour form_label + form_widget + form_errors (plus l'aide éventuelle), le tout habillé par le thème actif. Quand on veut un contrôle fin du HTML, on éclate la row en ses trois morceaux. Savoir décomposer cette « magie » est exactement ce que le jury attend."
+    },
+    {
+      "question": "Un développeur supprime {{ form_end(form) }} de son template. Quelle est la conséquence la plus grave ?",
+      "choix": [
+        "Le formulaire s'affiche en double",
+        "Aucune : form_end ne fait que fermer la balise </form>",
+        "Le jeton CSRF caché n'est pas rendu : la soumission sera rejetée par Symfony",
+        "Les labels des champs disparaissent"
+      ],
+      "bonne": 2,
+      "explication": "form_end ne fait pas que fermer </form> : elle affiche aussi tous les champs non rendus explicitement, dont le champ caché _token du jeton CSRF. Sans lui, handleRequest() rejette la soumission car la protection CSRF échoue. C'est le piège classique du « formulaire qui ne marche plus »."
+    },
+    {
+      "question": "Contre quelle attaque le jeton CSRF des formulaires Symfony protège-t-il ?",
+      "choix": [
+        "L'injection SQL dans les champs du formulaire",
+        "Le vol de session par interception réseau",
+        "L'injection de script dans les pages (XSS)",
+        "La soumission du formulaire à l'insu de l'utilisateur depuis un site tiers malveillant"
+      ],
+      "bonne": 3,
+      "explication": "Le Cross-Site Request Forgery consiste à faire soumettre une requête légitime (changement d'email, virement...) par le navigateur d'une victime connectée, depuis un site piège. Le site attaquant ne peut pas connaître le jeton unique injecté dans le formulaire, donc Symfony rejette la requête. XSS et injection SQL sont d'autres attaques, couvertes par d'autres protections."
+    },
+    {
+      "question": "Une contrainte #[Assert\\NotBlank] échoue à la soumission. Comment le message d'erreur arrive-t-il à l'écran ?",
+      "choix": [
+        "Le contrôleur re-render le template avec le même form, et form_row affiche automatiquement les erreurs du champ",
+        "Twig valide lui-même le champ et génère le message",
+        "Une alerte JavaScript est déclenchée par Symfony",
+        "Il faut écrire un {% if %} manuel par champ pour tester la validité"
+      ],
+      "bonne": 0,
+      "explication": "La validation se fait côté PHP via handleRequest() ; si elle échoue, le contrôleur ré-affiche le template avec l'objet form qui contient l'état des erreurs, et form_row (ou form_errors) les affiche au bon endroit. La Vue n'invente rien : elle rend l'état que le composant Form lui fournit — MVC de bout en bout."
+    }
+  ]
+}

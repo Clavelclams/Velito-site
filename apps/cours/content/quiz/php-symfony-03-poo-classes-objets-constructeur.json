@@ -1,0 +1,49 @@
+{
+  "fiche": "php-symfony-03-poo-classes-objets-constructeur",
+  "questions": [
+    {
+      "question": "Quand exécute-t-on le code du constructeur __construct() d'ApiToken ?",
+      "choix": [
+        "À chaque appel d'une méthode de l'objet",
+        "Automatiquement au moment du « new ApiToken() »",
+        "Uniquement quand Doctrine sauvegarde l'objet en base",
+        "Jamais : il faut l'appeler manuellement avec $token->__construct()"
+      ],
+      "bonne": 1,
+      "explication": "Le constructeur est appelé automatiquement à la création de l'objet par new (y compris via new self() dans creerPour). C'est pourquoi chaque ApiToken naît obligatoirement avec sa date de création et son expiration à +30 jours — aucun jeton « sans date » ne peut exister."
+    },
+    {
+      "question": "Dans ApiToken, la propriété $tokenHash est private. Quelle en est la conséquence directe ?",
+      "choix": [
+        "Elle n'est pas sauvegardée en base de données",
+        "Elle est partagée entre tous les jetons",
+        "Seul le code à l'intérieur de la classe ApiToken peut la lire ou l'écrire directement",
+        "Elle est chiffrée automatiquement par PHP"
+      ],
+      "bonne": 2,
+      "explication": "private, c'est l'encapsulation : de l'extérieur on passe obligatoirement par les méthodes publiques comme getTokenHash(). La classe garde ainsi le contrôle de ses données — même principe que setRole() de UserClubRole qui rejette un rôle invalide au lieu de laisser écrire n'importe quoi."
+    },
+    {
+      "question": "Que retourne l'appel ApiToken::creerPour($user) ?",
+      "choix": [
+        "Un tableau [entité ApiToken, jeton en clair], le clair n'étant jamais stocké en base",
+        "Le jeton en clair uniquement, sous forme de chaîne",
+        "L'objet ApiToken avec le jeton en clair dedans",
+        "true si la création a réussi, false sinon"
+      ],
+      "bonne": 0,
+      "explication": "La fabrique retourne deux choses : l'entité (qui ne contient que le hash SHA-256) et le jeton en clair à renvoyer une seule fois au client. C'est un choix de sécurité défendable en jury : un dump de la table api_token ne permet pas de rejouer les jetons."
+    },
+    {
+      "question": "Dans une méthode d'ApiToken, que désigne $this->expiresAt ?",
+      "choix": [
+        "La constante d'expiration partagée par tous les jetons",
+        "La classe ApiToken elle-même",
+        "Une variable locale à la méthode",
+        "La date d'expiration de l'objet courant, celui sur lequel la méthode est appelée"
+      ],
+      "bonne": 3,
+      "explication": "$this signifie « moi, l'objet en cours ». Chaque jeton a SA propre date d'expiration : estExpire() compare celle de ce jeton précis à l'heure actuelle. Pour une valeur partagée par toute la classe, on utiliserait une constante lue avec self::, comme self::VALIDITE."
+    }
+  ]
+}

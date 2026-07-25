@@ -1,0 +1,49 @@
+{
+  "fiche": "twig-05-heritage-extends-block",
+  "questions": [
+    {
+      "question": "Pourquoi n'avoir qu'une seule base.html.twig pour tout un site comme Venaball ?",
+      "choix": [
+        "Parce que Symfony refuse de charger plusieurs layouts",
+        "Principe DRY : le squelette existe en un seul exemplaire, un changement de menu ne touche qu'un fichier",
+        "Parce que Twig ne peut compiler qu'un seul template parent",
+        "Pour économiser de la mémoire sur le serveur"
+      ],
+      "bonne": 1,
+      "explication": "C'est l'application de Don't Repeat Yourself à la Vue : head, navigation et footer vivent dans un seul fichier, donc aucune page ne peut être oubliée lors d'une modification et la cohérence visuelle est garantie sur toutes les pages. Techniquement, plusieurs layouts sont possibles — mais un seul layout de base est la bonne pratique."
+    },
+    {
+      "question": "base.html.twig contient {% block title %}Venaball{% endblock %}. Une page enfant étend la base SANS redéfinir le block title. Qu'affiche l'onglet du navigateur ?",
+      "choix": [
+        "Une erreur : tout block du parent doit être redéfini",
+        "Un titre vide",
+        "Venaball : le contenu par défaut du block parent est conservé",
+        "Le nom du fichier de la page enfant"
+      ],
+      "bonne": 2,
+      "explication": "Le contenu écrit entre block et endblock dans le parent sert de valeur par défaut : un enfant qui ne redéfinit pas le block en hérite tel quel. C'est pour ça qu'on met un contenu raisonnable dans les blocks du layout. L'enfant ne redéfinit que ce qui change."
+    },
+    {
+      "question": "À quoi sert {{ parent() }} dans un block redéfini par un template enfant ?",
+      "choix": [
+        "À injecter le contenu du block parent, pour compléter au lieu de remplacer",
+        "À revenir au template précédent dans l'historique de navigation",
+        "À appeler le contrôleur parent de la page",
+        "À importer toutes les variables du template parent"
+      ],
+      "bonne": 0,
+      "explication": "Par défaut, redéfinir un block écrase son contenu parent. {{ parent() }} réinjecte ce contenu là où on le place : cas typique, un block stylesheets où l'enfant garde les CSS globaux du layout et ajoute les siens. Sans parent(), les CSS globaux disparaîtraient de la page."
+    },
+    {
+      "question": "Un template enfant écrit du HTML AVANT la ligne {% extends 'base.html.twig' %} et en dehors de tout block. Que se passe-t-il ?",
+      "choix": [
+        "Le HTML est ajouté automatiquement au début du body",
+        "Le HTML est ignoré silencieusement",
+        "Le HTML est placé dans le premier block disponible",
+        "Erreur : extends doit être la première instruction, et tout contenu doit vivre dans un block"
+      ],
+      "bonne": 3,
+      "explication": "Un template qui étend un parent ne peut produire du contenu que dans des blocks : tout ce qui est en dehors n'a nulle part où s'insérer dans le squelette, et extends doit être la première instruction du fichier. Twig lève une erreur explicite. C'est logique : l'enfant ne fait que remplir les trous du parent."
+    }
+  ]
+}

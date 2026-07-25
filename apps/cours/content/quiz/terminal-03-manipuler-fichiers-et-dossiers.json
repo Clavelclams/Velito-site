@@ -1,0 +1,49 @@
+{
+  "fiche": "terminal-03-manipuler-fichiers-et-dossiers",
+  "questions": [
+    {
+      "question": "Que fait l'option `-WhatIf` ajoutée à `Remove-Item` en PowerShell ?",
+      "choix": [
+        "Elle supprime le fichier mais garde une copie dans la corbeille",
+        "Elle demande une confirmation par oui/non avant chaque suppression",
+        "Elle simule l'opération : elle affiche ce qui serait supprimé, sans rien supprimer du tout",
+        "Elle supprime le fichier seulement s'il est vide"
+      ],
+      "bonne": 2,
+      "explication": "`-WhatIf` est un mode simulation : PowerShell décrit l'opération qu'il ferait, puis ne fait rien. C'est ton garde-fou obligatoire avant toute suppression, car `Remove-Item` ne passe pas par la corbeille. La confirmation oui/non, c'est une autre option (`-Confirm`)."
+    },
+    {
+      "question": "Ton serveur dev tourne dans le terminal après `npm run dev --workspace apps/cours`. Que fait Ctrl+C ?",
+      "choix": [
+        "Il copie la dernière ligne affichée dans le presse-papier",
+        "Il envoie un signal d'interruption au processus : le serveur s'arrête et le prompt revient",
+        "Il met le serveur en pause, qu'on peut reprendre avec Ctrl+V",
+        "Il ferme la fenêtre de VS Code"
+      ],
+      "bonne": 1,
+      "explication": "Dans un terminal, Ctrl+C interrompt le programme au premier plan — ici ton serveur Next sur le port 3007 — et te rend la main. C'est la façon propre d'arrêter un serveur de dev. Pour copier du texte dans le terminal VS Code, on utilise la sélection ou Ctrl+Shift+C."
+    },
+    {
+      "question": "Pourquoi renommer un fichier et le déplacer utilisent-ils la même commande (`Move-Item` / `mv`) ?",
+      "choix": [
+        "C'est un bug historique jamais corrigé",
+        "Parce que renommer copie le fichier puis supprime l'original",
+        "Parce que `mv` détecte automatiquement l'intention de l'utilisateur",
+        "Parce que pour le système, un fichier est identifié par son chemin : changer le nom ou changer le dossier, c'est dans les deux cas changer son adresse"
+      ],
+      "bonne": 3,
+      "explication": "Le système ne voit qu'un chemin complet (dossier + nom). `Move-Item rapport.md archives\\rapport.md` change la partie dossier, `Move-Item rapport.md bilan.md` change la partie nom : même opération de « changement d'adresse ». C'est pour ça qu'aucune commande `rename` n'est nécessaire au quotidien."
+    },
+    {
+      "question": "Que se passe-t-il quand tu appuies sur Ctrl+R dans ton terminal ?",
+      "choix": [
+        "Une recherche interactive s'ouvre dans l'historique : tu tapes un bout de commande et le shell retrouve la commande complète déjà tapée",
+        "Le terminal se rafraîchit et efface tout l'écran",
+        "La dernière commande est relancée immédiatement",
+        "Le terminal redémarre et l'historique est perdu"
+      ],
+      "bonne": 0,
+      "explication": "Ctrl+R lance une recherche dans l'historique du shell : tape `workspace` et il retrouve ton dernier `npm run dev --workspace apps/cours`. Combiné à la flèche ↑, c'est ce qui évite de retaper les commandes longues. Ça marche pareil en PowerShell et en bash sur tes serveurs."
+    }
+  ]
+}

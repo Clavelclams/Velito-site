@@ -1,0 +1,49 @@
+{
+  "fiche": "html-css-05-selecteurs-cascade-specificite",
+  "questions": [
+    {
+      "question": "Deux règles visent le même paragraphe : p { color: blue; } écrite en dernier, et .note { color: red; } écrite en premier. Le paragraphe a class=\"note\". De quelle couleur est-il ?",
+      "choix": [
+        "Bleu, car la dernière règle lue gagne toujours",
+        "Rouge, car .note (0-1-0) est plus spécifique que p (0-0-1) : la spécificité se compare avant l'ordre",
+        "Bleu, car les sélecteurs de balise sont prioritaires sur les classes",
+        "Les deux couleurs se mélangent en violet"
+      ],
+      "bonne": 1,
+      "explication": "L'ordre ne départage QUE les égalités de spécificité — et ici il n'y a pas égalité : une classe bat une balise. Le piège « la dernière gagne toujours » vient d'une simplification qu'on entend partout ; elle est vraie uniquement à spécificité égale. C'est exactement ce que montre le panneau Styles : la règle p apparaît barrée, même écrite en dernier."
+    },
+    {
+      "question": "Dans globals.css de ton site, que sélectionne exactement .fiche-contenu h2 ?",
+      "choix": [
+        "Tous les h2 de la page, plus tous les éléments avec la classe fiche-contenu",
+        "Les h2 qui portent eux-mêmes la classe fiche-contenu",
+        "Les h2 situés à l'intérieur d'un élément portant la classe fiche-contenu",
+        "Le premier h2 qui suit un élément fiche-contenu"
+      ],
+      "bonne": 2,
+      "explication": "L'espace entre les deux est le sélecteur descendant : « des h2 quelque part DANS un .fiche-contenu ». C'est ce qui permet de styler le HTML généré par Markdown sans poser de classe sur chaque titre. Le piège b (h2.fiche-contenu, collé sans espace) est la confusion classique : un simple espace change complètement le sens du sélecteur."
+    },
+    {
+      "question": "Pourquoi la règle .fiche-contenu pre code gagne-t-elle contre .fiche-contenu code sur un code placé dans un bloc pre ?",
+      "choix": [
+        "Parce qu'elle est écrite plus bas dans le fichier, et l'ordre prime",
+        "Parce que pre est une balise prioritaire en HTML",
+        "Parce que les deux règles s'appliquent à des éléments différents, il n'y a pas de conflit",
+        "Parce que sa spécificité (0-1-2 : une classe, deux balises) dépasse celle de .fiche-contenu code (0-1-1)"
+      ],
+      "bonne": 3,
+      "explication": "On compte : une classe et deux balises (0-1-2) contre une classe et une balise (0-1-1) — la première l'emporte, quel que soit l'ordre d'écriture. La réponse « l'ordre prime » est le réflexe naturel puisque la règle gagnante est effectivement écrite après, mais l'inspecteur te montre que même inversées, le résultat serait le même : la spécificité tranche d'abord."
+    },
+    {
+      "question": "Tu es tenté d'ajouter !important pour forcer un style qui ne s'applique pas. Que dit la leçon ?",
+      "choix": [
+        "C'est le plus souvent un aveu d'échec : mieux vaut comprendre quelle règle gagne (via l'inspecteur) et ajuster la spécificité proprement",
+        "C'est la solution recommandée : c'est fait pour ça",
+        "C'est interdit par les navigateurs modernes",
+        "Ça ne fonctionne que sur les sélecteurs d'id"
+      ],
+      "bonne": 0,
+      "explication": "!important court-circuite la cascade : le style s'applique, mais la prochaine personne (souvent toi dans trois mois) devra surenchérir avec un autre !important, et le CSS devient ingérable. La tentation est forte parce que ça « marche » immédiatement — c'est précisément ce qui le rend dangereux. Le bon réflexe : panneau Styles, identifier la règle gagnante, corriger le sélecteur ou l'ordre."
+    }
+  ]
+}

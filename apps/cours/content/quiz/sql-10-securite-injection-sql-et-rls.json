@@ -1,0 +1,49 @@
+{
+  "fiche": "sql-10-securite-injection-sql-et-rls",
+  "questions": [
+    {
+      "question": "Un formulaire de connexion naïf concatène la saisie : WHERE email = '<saisie>'. L'utilisateur tape ' OR '1'='1 — que renvoie la requête ?",
+      "choix": [
+        "Une erreur de syntaxe : les apostrophes sont invalides",
+        "Aucune ligne : cet email n'existe pas",
+        "Toutes les lignes de la table : la condition '1'='1' est toujours vraie",
+        "Uniquement la première ligne de la table"
+      ],
+      "bonne": 2,
+      "explication": "La saisie referme l'apostrophe et injecte OR '1'='1', une condition toujours vraie : le filtre est neutralisé et toute la table est renvoyée. La donnée a été interprétée comme du code — c'est la définition même de l'injection SQL, faille n°1 de l'OWASP."
+    },
+    {
+      "question": "Pourquoi une requête préparée empêche-t-elle structurellement l'injection SQL ?",
+      "choix": [
+        "Parce qu'elle supprime les apostrophes de la saisie utilisateur",
+        "Parce que la requête (avec des trous $1 ou ?) et les valeurs voyagent séparément : la saisie reste une donnée à comparer, jamais du code à exécuter",
+        "Parce qu'elle est chiffrée entre l'application et la base",
+        "Parce qu'elle limite la requête à une seule table"
+      ],
+      "bonne": 1,
+      "explication": "Le texte SQL est figé avant que les valeurs n'arrivent : ' OR '1'='1 devient un simple email bizarre qui ne matchera rien, pas une condition. Ce n'est pas un nettoyage de la saisie mais une séparation architecturale code/données — d'où « structurellement »."
+    },
+    {
+      "question": "Comment Venaball (Symfony/Doctrine) est-il protégé de l'injection SQL ?",
+      "choix": [
+        "MySQL bloque nativement toutes les injections depuis la version 8",
+        "Le pare-feu du serveur filtre les caractères dangereux",
+        "Symfony échappe automatiquement les apostrophes dans $_POST",
+        "Doctrine génère des requêtes préparées : avec ->setParameter(), la saisie n'est jamais concaténée dans le SQL — à condition de ne jamais concaténer soi-même, même en SQL natif"
+      ],
+      "bonne": 3,
+      "explication": "Le QueryBuilder et le DQL avec paramètres nommés (:email + setParameter) passent par des requêtes préparées PDO. La protection tombe uniquement si le développeur concatène lui-même des saisies dans du SQL natif : la règle est donc « toujours setParameter, jamais de concaténation »."
+    },
+    {
+      "question": "Dans Velito Compta, que produit ALTER TABLE depense ENABLE ROW LEVEL SECURITY; sans aucune policy créée ?",
+      "choix": [
+        "Plus aucune ligne n'est accessible via l'API : tout est interdit par défaut (default deny) tant qu'une policy n'autorise pas explicitement un accès",
+        "Rien ne change tant qu'on n'a pas redémarré la base",
+        "Les lignes restent lisibles par tous mais deviennent non modifiables",
+        "Seul le propriétaire de chaque ligne peut la lire, automatiquement"
+      ],
+      "bonne": 0,
+      "explication": "Activer le RLS sans policy ferme tout : c'est le principe default deny de ta fiche compta-rls-default-deny. Chaque droit doit ensuite être ouvert par une CREATE POLICY explicite (ex. USING (user_id = auth.uid())). Rien n'est automatique — et c'est voulu, comme le status pending de UserClubRole."
+    }
+  ]
+}

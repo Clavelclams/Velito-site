@@ -1,0 +1,49 @@
+{
+  "fiche": "sql-09-transactions-et-integrite",
+  "questions": [
+    {
+      "question": "Dans une transaction, deux écritures : l'UPDATE des XP de Jean (valide) puis un INSERT qui viole une contrainte NOT NULL. Que se passe-t-il au final ?",
+      "choix": [
+        "L'UPDATE est conservé, seul l'INSERT est annulé",
+        "Toute la transaction est annulée : même l'UPDATE valide n'est pas appliqué",
+        "La base corrige le NULL par une valeur par défaut et tout est validé",
+        "La transaction reste ouverte en attendant une correction manuelle"
+      ],
+      "bonne": 1,
+      "explication": "C'est l'Atomicité du sigle ACID : le bloc est tout ou rien. Une erreur sur n'importe quelle opération du bloc entraîne l'annulation de l'ensemble, y compris les opérations qui avaient réussi. C'est exactement ce qui protège d'un état incohérent à moitié écrit."
+    },
+    {
+      "question": "Que signifie le I de ACID (Isolation) ?",
+      "choix": [
+        "La base de données est isolée du réseau pendant les écritures",
+        "Chaque table est verrouillée en entier pendant toute transaction",
+        "Les données sont chiffrées pendant la transaction",
+        "Deux transactions simultanées ne se marchent pas dessus : chacune s'exécute comme si elle était seule"
+      ],
+      "bonne": 3,
+      "explication": "L'isolation gère la concurrence : si deux dirigeants Venaball valident la même demande au même instant, les verrous font que l'une des transactions attend l'autre et l'état final reste cohérent. Les niveaux d'isolation règlent la sévérité de cette protection."
+    },
+    {
+      "question": "Symfony valide déjà les données avec Assert\\NotBlank. Pourquoi garder AUSSI les contraintes NOT NULL et UNIQUE dans la base ?",
+      "choix": [
+        "Par tradition : les contraintes en base ne servent plus avec un ORM moderne",
+        "Parce que Doctrine refuse de générer une table sans contraintes",
+        "Parce que la contrainte en base protège même quand les données arrivent par une migration, un script ou un autre code : c'est la garantie ultime, le code applicatif donne juste de meilleurs messages",
+        "Pour accélérer les insertions"
+      ],
+      "bonne": 2,
+      "explication": "Les deux niveaux sont complémentaires : la validation Symfony offre des messages d'erreur clairs à l'utilisateur, la contrainte SQL est le filet de sécurité infranchissable, actif 24h/24 quel que soit le chemin d'écriture. Répondre « les deux, avec ces deux rôles » est la réponse attendue en jury."
+    },
+    {
+      "question": "La méthode valider() de UserClubRole modifie status, role, valideParUser et valideAt d'un coup. Pourquoi le flush() correspondant doit-il être transactionnel ?",
+      "choix": [
+        "Si le serveur plantait entre les écritures, on aurait un état incohérent, par exemple un membre actif sans trace de qui l'a validé — la transaction garantit tout ou rien",
+        "Parce que MySQL exige une transaction dès qu'on modifie plus de deux colonnes",
+        "Pour que les autres utilisateurs voient la modification plus vite",
+        "Parce que les colonnes de type date ne peuvent être écrites qu'en transaction"
+      ],
+      "bonne": 0,
+      "explication": "Ces quatre champs forment UNE décision métier indivisible : la validation d'une adhésion. Partiellement écrite, elle violerait les règles d'audit du projet. Bonne nouvelle : chaque flush() de Doctrine s'exécute déjà dans une transaction implicite — mais il faut savoir l'expliquer."
+    }
+  ]
+}

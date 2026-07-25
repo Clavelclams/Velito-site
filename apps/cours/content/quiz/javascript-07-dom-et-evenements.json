@@ -1,0 +1,49 @@
+{
+  "fiche": "javascript-07-dom-et-evenements",
+  "questions": [
+    {
+      "question": "Tu tapes document.querySelector(\"h1\").textContent = \"Test\" dans la console, puis tu recharges la page. Que vois-tu après le rechargement ?",
+      "choix": [
+        "Le titre d'origine : tu n'as modifié que le DOM en mémoire, pas les fichiers",
+        "\"Test\" : la modification est sauvegardée",
+        "Une page blanche",
+        "\"Test\" pendant quelques secondes, puis le titre d'origine"
+      ],
+      "bonne": 0,
+      "explication": "Le DOM est une représentation EN MÉMOIRE construite à partir du HTML à chaque chargement. Modifier le DOM change l'affichage immédiatement, mais ne touche jamais les fichiers sources : au rechargement, le navigateur reconstruit l'arbre depuis le HTML d'origine."
+    },
+    {
+      "question": "bouton.addEventListener(\"click\", maFonction);\nQuand maFonction est-elle exécutée ?",
+      "choix": [
+        "Immédiatement, une seule fois",
+        "Jamais : il manque les parenthèses",
+        "À chaque clic sur le bouton, c'est le navigateur qui l'appelle",
+        "Une seule fois, au premier clic"
+      ],
+      "bonne": 2,
+      "explication": "addEventListener CONFIE la fonction au navigateur sans l'exécuter — c'est pour ça qu'on passe maFonction sans parenthèses (la machine, pas son résultat). Le navigateur l'appellera lui-même à CHAQUE clic, tant que l'écouteur n'est pas retiré avec removeEventListener."
+    },
+    {
+      "question": "Dans un écouteur (e) => console.log(e.target.value), que représente e.target ?",
+      "choix": [
+        "La cible de navigation (l'URL)",
+        "L'élément de la page sur lequel l'événement s'est produit",
+        "Le nom de l'événement (\"input\", \"click\"...)",
+        "La fonction écouteur elle-même"
+      ],
+      "bonne": 1,
+      "explication": "e est l'objet qui décrit l'événement, et e.target pointe vers l'élément concerné — pour un champ texte, e.target.value donne son contenu actuel. C'est exactement ton onChange={(e) => setRequete(e.target.value)} dans RechercheFiches.tsx : à chaque frappe, on lit ce que contient le champ."
+    },
+    {
+      "question": "Comment le dashboard de ton site sait-il que tu viens de gagner de l'XP dans un quiz, alors que les deux composants ne s'appellent jamais directement ?",
+      "choix": [
+        "React re-vérifie le localStorage toutes les secondes",
+        "Le quiz recharge la page entière après chaque enregistrement",
+        "Ils partagent une variable globale mise à jour en direct",
+        "progression.ts émet un CustomEvent \"progression-maj\" que les composants écoutent via addEventListener"
+      ],
+      "bonne": 3,
+      "explication": "Après chaque sauvegarde, sauvegarder() fait window.dispatchEvent(new CustomEvent(\"progression-maj\")) — un cri dans toute la page. Les composants intéressés (dashboard, recherche) ont posé un addEventListener sur ce nom et se rafraîchissent en réaction. C'est le motif publish/subscribe : émetteur et écouteurs ne se connaissent pas."
+    }
+  ]
+}

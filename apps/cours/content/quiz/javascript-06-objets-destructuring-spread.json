@@ -1,0 +1,39 @@
+{
+  "fiche": "javascript-06-objets-destructuring-spread",
+  "questions": [
+    {
+      "question": "const p = { xp: 50, serie: { jours: 3 } };\nQue vaut p.serie.jours ?",
+      "choix": ["undefined", "{ jours: 3 }", "3", "Une erreur"],
+      "bonne": 2,
+      "explication": "Les objets s'imbriquent : p.serie est lui-même un objet, et on descend d'un niveau de plus avec .jours pour obtenir 3. p.serie tout seul aurait donné l'objet entier { jours: 3 }. C'est exactement la structure de ta progression dans localStorage."
+    },
+    {
+      "question": "Qu'affiche ce code ?\nconst meta = { titre: \"State\", bloc: 1 };\nconst fiche = { ...meta, bloc: 2 };\nconsole.log(fiche.bloc, meta.bloc);",
+      "choix": ["2 1", "1 1", "2 2", "1 2"],
+      "bonne": 0,
+      "explication": "Le spread copie d'abord tous les champs de meta dans le nouvel objet, puis bloc: 2 ÉCRASE la valeur copiée (le dernier écrit gagne). L'original meta n'est jamais modifié : c'est tout l'intérêt du spread — copier en modifiant, sans toucher la source. Réflexe central en React."
+    },
+    {
+      "question": "Dans function QuizFiche({ idQuiz, titre, questions }) { ... }, que font les accolades dans les paramètres ?",
+      "choix": [
+        "Elles créent un nouvel objet vide",
+        "C'est du destructuring : on extrait directement trois champs de l'objet props reçu",
+        "Elles rendent les trois paramètres optionnels",
+        "C'est une syntaxe TypeScript obligatoire"
+      ],
+      "bonne": 1,
+      "explication": "React passe UN seul argument au composant : l'objet props. Les accolades destructurent cet objet à l'arrivée : au lieu d'écrire props.idQuiz partout, on extrait idQuiz, titre et questions dès la signature. C'est du JavaScript pur, pas du TypeScript — tu le verras dans tous tes composants."
+    },
+    {
+      "question": "Pourquoi ton progression.ts fait-il JSON.stringify(p) avant localStorage.setItem ?",
+      "choix": [
+        "Pour chiffrer les données et les protéger",
+        "Pour compresser l'objet et gagner de la place",
+        "Par habitude, setItem accepterait l'objet directement",
+        "Parce que localStorage ne stocke QUE du texte : il faut convertir l'objet en chaîne JSON"
+      ],
+      "bonne": 3,
+      "explication": "localStorage est un stockage de TEXTE uniquement. Si tu lui donnes un objet directement, il stocke \"[object Object]\" — inutilisable. D'où l'aller-retour : stringify (objet → texte) à l'écriture, parse (texte → objet) à la lecture dans chargerProgression(). Ni chiffrement ni compression : juste une conversion de format."
+    }
+  ]
+}

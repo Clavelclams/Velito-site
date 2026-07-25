@@ -1,0 +1,49 @@
+{
+  "fiche": "sql-05-les-jointures",
+  "questions": [
+    {
+      "question": "Données : Jean a 2 rôles au MABB, Naomi 1 rôle à l'ASVEL, Emma aucun rôle. Que renvoie : SELECT u.prenom, ucr.role FROM u_test u INNER JOIN ucr_test ucr ON ucr.user_id = u.id; ?",
+      "choix": [
+        "4 lignes : Jean x2, Naomi, et Emma avec NULL",
+        "3 lignes : Jean x2 et Naomi — Emma n'apparaît pas",
+        "3 lignes : Jean, Naomi, Emma (une ligne chacun)",
+        "2 lignes : Jean et Naomi (les doublons sont fusionnés)"
+      ],
+      "bonne": 1,
+      "explication": "INNER JOIN ne garde que les correspondances des deux côtés : Emma, sans ligne dans le pivot, disparaît du résultat. Et Jean apparaît deux fois car chaque correspondance produit une ligne — une jointure multiplie les lignes, elle ne les fusionne pas."
+    },
+    {
+      "question": "Quelle est la différence entre INNER JOIN et LEFT JOIN ?",
+      "choix": [
+        "LEFT JOIN est plus rapide car il lit moins de lignes",
+        "INNER JOIN relie 2 tables maximum, LEFT JOIN en accepte davantage",
+        "LEFT JOIN garde toutes les lignes de la table de gauche, avec NULL à droite quand il n'y a pas de correspondance ; INNER JOIN ne garde que les correspondances",
+        "INNER JOIN exige des clés étrangères déclarées, LEFT JOIN non"
+      ],
+      "bonne": 2,
+      "explication": "C'est LA question de jury sur les jointures. INNER = intersection stricte ; LEFT = tout le côté gauche est préservé, les colonnes de droite passant à NULL en l'absence de correspondance. Le choix dépend de la question métier : « les users AVEC rôle » vs « TOUS les users, rôle éventuel »."
+    },
+    {
+      "question": "Comment lister les utilisateurs de Venaball qui n'ont AUCUN rôle dans aucun club ?",
+      "choix": [
+        "SELECT u.* FROM \"user\" u INNER JOIN user_club_role ucr ON ucr.user_id = u.id WHERE ucr.role = NULL;",
+        "SELECT u.* FROM \"user\" u WHERE u.id <> user_club_role.user_id;",
+        "SELECT u.* FROM user_club_role ucr LEFT JOIN \"user\" u ON u.id = ucr.user_id;",
+        "SELECT u.* FROM \"user\" u LEFT JOIN user_club_role ucr ON ucr.user_id = u.id WHERE ucr.id IS NULL;"
+      ],
+      "bonne": 3,
+      "explication": "Le motif classique « orphelins » : LEFT JOIN pour garder tous les users, puis WHERE ucr.id IS NULL pour ne conserver que ceux sans correspondance dans le pivot. Un INNER JOIN est impossible ici : il éliminerait justement les utilisateurs recherchés."
+    },
+    {
+      "question": "Dans la requête à 3 tables du cours, pourquoi doit-on écrire c.nom AS club dans le SELECT ?",
+      "choix": [
+        "Parce que user et club ont tous deux une colonne nom : l'alias distingue les deux dans le résultat",
+        "Parce que AS est obligatoire pour toute colonne provenant d'une jointure",
+        "Parce que nom est un mot réservé de PostgreSQL",
+        "Pour renommer physiquement la colonne dans la table club"
+      ],
+      "bonne": 0,
+      "explication": "u.nom (nom de famille) et c.nom (nom du club) porteraient le même intitulé dans le résultat : l'alias AS club lève l'ambiguïté à l'affichage. Il ne modifie rien en base — c'est purement cosmétique pour le résultat de la requête."
+    }
+  ]
+}

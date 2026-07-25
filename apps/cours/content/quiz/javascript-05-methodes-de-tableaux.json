@@ -1,0 +1,34 @@
+{
+  "fiche": "javascript-05-methodes-de-tableaux",
+  "questions": [
+    {
+      "question": "Qu'affiche ce code ?\nconst notes = [12, 5, 17, 8];\nconsole.log(notes.filter((n) => n >= 10));",
+      "choix": ["[12, 17]", "[5, 8]", "12", "true"],
+      "bonne": 0,
+      "explication": "filter est un tamis : il garde les éléments pour lesquels la fonction renvoie true, ici 12 et 17, et renvoie un NOUVEAU tableau. Si tu as répondu 12 tout seul, tu as confondu avec find, qui renvoie le premier élément trouvé."
+    },
+    {
+      "question": "const notes = [12, 5, 17];\nQue renvoie notes.find((n) => n > 10) ?",
+      "choix": ["[12, 17]", "17", "12", "true"],
+      "bonne": 2,
+      "explication": "find s'arrête au PREMIER élément qui passe le test et le renvoie tel quel : 12 vient avant 17. Il ne renvoie ni un tableau (ça c'est filter) ni un booléen (ça c'est some). Et s'il ne trouve rien, il renvoie undefined."
+    },
+    {
+      "question": "Un tableau de 5 éléments passe dans .map(). Combien d'éléments a le résultat ?",
+      "choix": ["Ça dépend de la fonction passée", "Toujours 5", "Entre 0 et 5", "1"],
+      "bonne": 1,
+      "explication": "map est une chaîne d'usine : chaque élément entre, est transformé, ressort — jamais supprimé, jamais ajouté. Taille identique garantie. C'est filter qui peut réduire la taille. Dans RechercheFiches.tsx, liste.map((fiche) => <li>...</li>) produit exactement une ligne d'affichage par fiche."
+    },
+    {
+      "question": "Dans ton RechercheFiches.tsx : f.themes.some((t) => normaliser(t).includes(q)). Quelle question ce code pose-t-il ?",
+      "choix": [
+        "Tous les thèmes de la fiche contiennent-ils le texte recherché ?",
+        "Combien de thèmes contiennent le texte recherché ?",
+        "Quel est le premier thème qui contient le texte recherché ?",
+        "Est-ce qu'AU MOINS UN thème de la fiche contient le texte recherché ?"
+      ],
+      "bonne": 3,
+      "explication": "some renvoie true dès qu'UN élément passe le test — il suffit qu'un seul thème matche pour que la fiche reste visible dans la recherche. « Tous » serait every, « combien » serait filter(...).length, « le premier » serait find. C'est ce some qui rend ta recherche tolérante."
+    }
+  ]
+}

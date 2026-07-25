@@ -1,0 +1,49 @@
+{
+  "fiche": "php-symfony-02-fonctions-et-typage-moderne",
+  "questions": [
+    {
+      "question": "Dans CategorieCalculator, la méthode ageReference(...) a le type de retour ?int. Qu'est-ce que cela signifie ?",
+      "choix": [
+        "Elle retourne un entier ou null",
+        "Elle retourne un entier optionnel qui vaut 0 par défaut",
+        "Elle peut retourner n'importe quel type",
+        "Elle retourne un entier négatif ou positif"
+      ],
+      "bonne": 0,
+      "explication": "Le ? devant un type signifie « ce type OU null ». Ici, si la joueuse n'a pas de date de naissance, la méthode renvoie null plutôt qu'un faux zéro. Le code appelant est ainsi forcé de gérer explicitement le cas « on ne sait pas »."
+    },
+    {
+      "question": "Qu'affiche ce code, inspiré d'ApiAuthController ?\n\n$data = ['email' => 'a@b.fr'];\n$appareil = $data['appareil'] ?? 'inconnu';\necho $appareil;",
+      "choix": [
+        "Une erreur « undefined array key »",
+        "Une chaîne vide",
+        "inconnu",
+        "null"
+      ],
+      "bonne": 2,
+      "explication": "L'opérateur ?? (null coalescing) renvoie la valeur de gauche si elle existe et n'est pas null, sinon celle de droite. La clé 'appareil' n'existe pas dans le tableau, donc on obtient 'inconnu', sans aucune erreur. C'est exactement le pattern utilisé dans le login de ton API."
+    },
+    {
+      "question": "Que fait l'opérateur ?-> dans $p->getSeance()?->getDate() (XpCalculator) ?",
+      "choix": [
+        "Il appelle getDate() deux fois pour vérifier",
+        "Il convertit le résultat en booléen",
+        "Il lève une exception si getSeance() renvoie null",
+        "Si getSeance() renvoie null, l'expression entière vaut null au lieu de planter"
+      ],
+      "bonne": 3,
+      "explication": "C'est l'opérateur nullsafe, équivalent du ?. de JavaScript. Sans lui, appeler getDate() sur null provoquerait une erreur fatale. Avec lui, la chaîne d'appels s'arrête proprement et renvoie null — pratique quand une présence est liée à une rencontre et pas à une séance."
+    },
+    {
+      "question": "Plusieurs fichiers de Venaball commencent par declare(strict_types=1);. Quel est l'effet de cette ligne ?",
+      "choix": [
+        "Elle active le mode debug de PHP",
+        "PHP refuse les conversions de type implicites : passer '10' à un paramètre int devient une erreur",
+        "Elle rend toutes les propriétés privées",
+        "Elle est obligatoire en PHP 8 pour utiliser les types"
+      ],
+      "bonne": 1,
+      "explication": "Sans strict_types, PHP tolère de convertir '10' (chaîne) en 10 (entier) en silence — un bug peut passer inaperçu. Avec strict_types=1, le contrat de types est vérifié à la lettre et l'erreur éclate immédiatement. Devant le jury, c'est un argument de rigueur : on préfère une erreur claire à un bug caché."
+    }
+  ]
+}

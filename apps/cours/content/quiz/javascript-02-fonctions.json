@@ -1,0 +1,39 @@
+{
+  "fiche": "javascript-02-fonctions",
+  "questions": [
+    {
+      "question": "Qu'affiche ce code ?\nconst doubler = (n) => n * 2;\nconsole.log(doubler(7));",
+      "choix": ["undefined", "14", "n * 2", "7"],
+      "bonne": 1,
+      "explication": "La fonction fléchée sans accolades a un return implicite : elle renvoie directement n * 2, donc 14. Pas besoin d'écrire le mot return dans cette forme courte — c'est justement son intérêt."
+    },
+    {
+      "question": "function saluer() { console.log(\"salut\") }\nconst r = saluer();\nQue vaut r ?",
+      "choix": ["\"salut\"", "La fonction saluer elle-même", "true", "undefined"],
+      "bonne": 3,
+      "explication": "console.log AFFICHE dans la console mais ne RENVOIE rien. Comme la fonction n'a pas de return, elle renvoie undefined, et c'est ça qui atterrit dans r. Afficher et renvoyer sont deux choses différentes — piège classique de débutant, et question classique de jury."
+    },
+    {
+      "question": "Quelle est la différence entre doubler et doubler(5) ?",
+      "choix": [
+        "doubler désigne la fonction elle-même, doubler(5) l'exécute avec 5 en argument",
+        "Aucune, les parenthèses sont optionnelles",
+        "doubler(5) crée une nouvelle fonction",
+        "doubler sans parenthèses provoque une erreur"
+      ],
+      "bonne": 0,
+      "explication": "Sans parenthèses, tu montres la machine ; avec parenthèses, tu la fais tourner. C'est fondamental en React : on passe souvent la fonction elle-même (onClick={repondre}) sans l'appeler, pour que React l'appelle plus tard au clic."
+    },
+    {
+      "question": "Dans ton QuizFiche.tsx : setBonnesReponses((n) => n + 1). Que passe-t-on à setBonnesReponses ?",
+      "choix": [
+        "Le nombre n + 1 déjà calculé",
+        "Le texte \"n + 1\"",
+        "Une FONCTION qui prend la valeur actuelle et renvoie cette valeur plus un",
+        "Rien, c'est une erreur de syntaxe"
+      ],
+      "bonne": 2,
+      "explication": "(n) => n + 1 est une fonction fléchée passée en argument. React l'appellera lui-même avec la valeur actuelle du compteur pour calculer la nouvelle. En JavaScript, une fonction est une valeur comme une autre : on peut la passer à une autre fonction — c'est le cœur du fonctionnement de React."
+    }
+  ]
+}

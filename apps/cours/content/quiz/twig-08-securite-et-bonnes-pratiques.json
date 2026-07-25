@@ -1,0 +1,49 @@
+{
+  "fiche": "twig-08-securite-et-bonnes-pratiques",
+  "questions": [
+    {
+      "question": "Une joueuse a mis <script>vol()</script> dans sa bio. Le template affiche {{ joueur.bio|raw }}. Que se passe-t-il ?",
+      "choix": [
+        "Twig détecte le script et l'échappe quand même",
+        "Le script s'exécute dans le navigateur des visiteurs : faille XSS, car |raw désactive l'échappement",
+        "Le texte s'affiche en clair comme sans |raw",
+        "Une erreur 500 est levée à la compilation du template"
+      ],
+      "bonne": 1,
+      "explication": "|raw dit explicitement à Twig de ne pas échapper : le HTML est envoyé brut et le navigateur exécute le script chez chaque visiteur du profil. C'est LA faille XSS type. Règle d'or : |raw uniquement sur du contenu maîtrisé par l'application, jamais sur une saisie utilisateur — sinon passer par un assainisseur (HtmlSanitizer) avant."
+    },
+    {
+      "question": "Question jury : « Comment Twig vous protège-t-il du XSS ? » Quelle est la meilleure réponse ?",
+      "choix": [
+        "Twig bloque les formulaires provenant d'autres sites grâce au jeton CSRF",
+        "Twig filtre les mots-clés dangereux comme script ou alert",
+        "Twig échappe automatiquement toutes les variables affichées : un script injecté devient du texte inoffensif au lieu de s'exécuter",
+        "Twig chiffre les données avant de les envoyer au navigateur"
+      ],
+      "bonne": 2,
+      "explication": "La bonne réponse tient en une phrase : échappement automatique par défaut, les caractères HTML des variables deviennent des entités, donc un script injecté s'affiche comme texte. Attention à ne pas confondre avec le CSRF, qui est une autre attaque protégée par le jeton de formulaire — le jury adore tester cette confusion."
+    },
+    {
+      "question": "Pourquoi écrire <a href=\"{{ path('app_joueur_fiche', { id: joueur.id }) }}\"> plutôt que <a href=\"/joueur/{{ joueur.id }}\"> ?",
+      "choix": [
+        "path() est obligatoire : les URL en dur provoquent une erreur Twig",
+        "path() échappe l'id contre les attaques XSS, pas l'URL en dur",
+        "path() met la page en cache automatiquement",
+        "path() génère l'URL depuis le nom de route : si le chemin change dans le contrôleur, tous les liens suivent sans rien casser"
+      ],
+      "bonne": 3,
+      "explication": "path() découple les liens des chemins réels : on référence le nom de la route (celui déclaré dans l'attribut #[Route] du contrôleur, comme 'api_pirb_profil' dans PirbApiController), et Symfony génère l'URL courante. Un chemin modifié = zéro lien cassé. L'URL en dur, elle, casse silencieusement le jour où la route change."
+    },
+    {
+      "question": "Quel est le bon outil pour chaque besoin : lien vers une page interne, image du dossier public/, lien absolu dans un email ?",
+      "choix": [
+        "path() pour le lien interne, asset() pour l'image, url() pour l'email",
+        "asset() pour les trois : c'est la fonction universelle",
+        "url() pour le lien interne, path() pour l'image, asset() pour l'email",
+        "Des chemins en dur : plus simples et plus rapides"
+      ],
+      "bonne": 0,
+      "explication": "Trois fonctions, trois usages : path() génère un chemin relatif depuis un nom de route, asset() gère les fichiers statiques de public/ (chemin correct quel que soit le déploiement + versionnage), et url() donne une URL absolue avec le domaine — indispensable dans un email où « même domaine » n'existe pas, comme pour les photos renvoyées à l'app mobile de Venaball."
+    }
+  ]
+}

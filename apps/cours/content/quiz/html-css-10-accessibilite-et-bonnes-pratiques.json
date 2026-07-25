@@ -1,0 +1,49 @@
+{
+  "fiche": "html-css-10-accessibilite-et-bonnes-pratiques",
+  "questions": [
+    {
+      "question": "Une image purement décorative (un motif de fond) est présente dans le HTML. Que faire de son attribut alt ?",
+      "choix": [
+        "Le remplir avec une description précise du motif",
+        "Le supprimer complètement, puisqu'il n'y a rien à décrire",
+        "Le laisser présent mais vide (alt=\"\") pour que le lecteur d'écran ignore l'image",
+        "Mettre alt=\"image\" pour signaler qu'il y a une image"
+      ],
+      "bonne": 2,
+      "explication": "alt=\"\" dit explicitement au lecteur d'écran « rien d'utile ici, passe » ; sans attribut alt du tout, certains lecteurs lisent le nom du fichier (« motif-fond-v2-final.png »), ce qui est pire que tout. Le piège « décrire quand même » part d'une bonne intention, mais encombrer l'écoute avec du décoratif fatigue l'utilisateur — on ne décrit que ce qui porte de l'information."
+    },
+    {
+      "question": "Pourquoi un <div onClick={...}> stylé en bouton pose-t-il un problème d'accessibilité qu'un vrai <button> n'a pas ?",
+      "choix": [
+        "Le div n'est ni focusable au clavier, ni activable avec Entrée, ni annoncé comme bouton par les lecteurs d'écran",
+        "Le div est plus lent à réagir au clic",
+        "Le div ne peut pas recevoir de classes Tailwind",
+        "Aucun problème : avec le bon CSS, les deux sont équivalents"
+      ],
+      "bonne": 0,
+      "explication": "Un <button> natif apporte gratuitement trois comportements : il entre dans le parcours Tab, il répond à Entrée/Espace, et il s'annonce « bouton » vocalement. Le div cliquable perd les trois. Le piège « équivalents avec du CSS » est le plus répandu : à la souris, rien ne les distingue — c'est le test au clavier de la pratique qui révèle la différence. D'où la règle : balise native d'abord, ARIA en complément seulement."
+    },
+    {
+      "question": "Dans LoginForm.tsx, le message d'erreur porte role=\"alert\". Qu'est-ce que ça change concrètement ?",
+      "choix": [
+        "Le message s'affiche en rouge automatiquement",
+        "Le lecteur d'écran annonce immédiatement le message dès son apparition, sans que l'utilisateur ait à le chercher",
+        "Le navigateur bloque le formulaire tant que l'erreur est affichée",
+        "Le message est envoyé dans la console du navigateur"
+      ],
+      "bonne": 1,
+      "explication": "Sans role=\"alert\", un utilisateur de lecteur d'écran qui vient de valider le formulaire ne sait pas qu'une erreur est apparue plus haut : il attendrait indéfiniment. role=\"alert\" interrompt la lecture pour annoncer le contenu. Le piège « rouge automatiquement » confond sens et style : la couleur vient de la classe CSS (text-cours-depense), le rôle ARIA ne touche jamais à l'apparence."
+    },
+    {
+      "question": "Que fait le bloc @media (prefers-reduced-motion: reduce) dans globals.css de ton site ?",
+      "choix": [
+        "Il réduit la taille des animations sur les petits écrans",
+        "Il accélère les animations pour les rendre moins visibles",
+        "Il désactive les animations quand la connexion est lente",
+        "Il coupe les animations pour les utilisateurs qui ont demandé moins de mouvement dans les réglages de leur système"
+      ],
+      "bonne": 3,
+      "explication": "prefers-reduced-motion est une préférence exprimée par l'utilisateur dans son système d'exploitation (souvent pour des troubles vestibulaires) ; le CSS peut l'écouter et couper pop, secousse et compagnie. Le piège « petits écrans » vient du réflexe media query = taille d'écran — mais les media queries interrogent bien plus que la largeur : préférences de mouvement, de contraste, de thème sombre. Tu l'as vérifié en forçant la préférence dans l'onglet Rendering."
+    }
+  ]
+}

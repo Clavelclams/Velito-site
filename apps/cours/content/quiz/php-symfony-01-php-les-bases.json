@@ -1,0 +1,49 @@
+{
+  "fiche": "php-symfony-01-php-les-bases",
+  "questions": [
+    {
+      "question": "Qu'affiche ce code PHP ?\n\n$prenom = 'Naomi';\necho 'Salut ' . $prenom;",
+      "choix": [
+        "Salut + Naomi",
+        "Une erreur, il faut utiliser +",
+        "Salut Naomi",
+        "Salut $prenom"
+      ],
+      "bonne": 2,
+      "explication": "En PHP la concaténation se fait avec le point, pas avec + comme en JavaScript. Le contenu de la variable $prenom est bien injecté, donc on obtient « Salut Naomi ». Avec +, PHP essaierait une addition numérique et ça planterait."
+    },
+    {
+      "question": "Dans SaisonService, on construit $saisons[] = $a . '-' . ($a + 1) dans une boucle. Si $a vaut 2025, quelle valeur est ajoutée au tableau ?",
+      "choix": [
+        "'2025-2026'",
+        "'2025-2025+1'",
+        "4051",
+        "'2025-' suivi d'une erreur"
+      ],
+      "bonne": 0,
+      "explication": "Les parenthèses forcent d'abord l'addition 2025 + 1 = 2026, puis le point concatène le tout en chaîne : '2025-2026'. C'est exactement comme ça que ton projet génère la liste des saisons disponibles sans rien coder en dur."
+    },
+    {
+      "question": "Quelle est la différence entre == et === en PHP ?",
+      "choix": [
+        "Aucune, ce sont deux écritures du même opérateur",
+        "== compare après conversion de type, === compare valeur ET type",
+        "=== ne fonctionne que sur les chaînes de caractères",
+        "== est réservé aux tableaux"
+      ],
+      "bonne": 1,
+      "explication": "Avec ==, '5' == 5 est vrai car PHP convertit les types avant de comparer — source classique de bugs. === exige que la valeur ET le type soient identiques. C'est pour cette raison que ton ClubVoter écrit $ucr->getRole() === $metaRole."
+    },
+    {
+      "question": "Dans User.php on trouve in_array($role, $this->rolesMembre). Que fait cette fonction ?",
+      "choix": [
+        "Elle ajoute $role à la fin du tableau",
+        "Elle trie le tableau par ordre alphabétique",
+        "Elle supprime $role du tableau s'il existe",
+        "Elle retourne true si $role est présent dans le tableau"
+      ],
+      "bonne": 3,
+      "explication": "in_array cherche une valeur dans un tableau et répond vrai ou faux. C'est l'outil qu'utilise hasRoleMembre() pour savoir si l'utilisateur possède un rôle vitrine donné. Pour ajouter un élément, on utiliserait plutôt $tableau[] = $valeur."
+    }
+  ]
+}

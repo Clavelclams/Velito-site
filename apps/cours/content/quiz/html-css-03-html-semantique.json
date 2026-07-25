@@ -1,0 +1,49 @@
+{
+  "fiche": "html-css-03-html-semantique",
+  "questions": [
+    {
+      "question": "Visuellement, <header> et <div> s'affichent exactement pareil. Alors à quoi sert le HTML sémantique ?",
+      "choix": [
+        "À rien de concret : c'est une convention esthétique entre développeurs",
+        "À donner du sens exploitable : lecteurs d'écran, moteurs de recherche et relecteurs du code savent le rôle de chaque bloc",
+        "À rendre la page plus rapide à charger",
+        "À appliquer automatiquement des styles par défaut plus jolis"
+      ],
+      "bonne": 1,
+      "explication": "La sémantique ne change rien au rendu — et c'est exactement ce qui la rend piégeuse : comme on ne « voit » pas la différence, on peut croire qu'elle est inutile. Mais un lecteur d'écran peut sauter au <main>, un moteur de recherche comprend la page, et toi tu relis ton code sans effort. Le bénéfice est pour ceux qui lisent le code sans le voir."
+    },
+    {
+      "question": "Dans EnTete.tsx, « Déconnexion » est un <button> alors que « Parcours » est un lien. Quelle est la règle qui justifie ce choix ?",
+      "choix": [
+        "Un <a> navigue vers ailleurs, un <button> déclenche une action sur place : se déconnecter est une action, pas une navigation",
+        "Les boutons sont plus faciles à styler en Tailwind que les liens",
+        "C'est une contrainte de Next.js : les actions serveur exigent un bouton",
+        "Aucune règle : les deux balises sont interchangeables si on ajoute un gestionnaire de clic"
+      ],
+      "bonne": 0,
+      "explication": "Le critère est le rôle : emmener ailleurs (lien) ou agir ici (bouton). La déconnexion déclenche une action côté serveur, donc bouton. La réponse « interchangeables avec un onclick » est le piège classique : un <div> ou un <a> détourné peut sembler marcher à la souris, mais perd le comportement clavier et l'annonce correcte aux lecteurs d'écran qu'un vrai <button> offre gratuitement."
+    },
+    {
+      "question": "Un titre <h2> te paraît trop gros visuellement à un endroit de la page. Que fais-tu ?",
+      "choix": [
+        "Je le remplace par un <h4>, qui est plus petit par défaut",
+        "Je le remplace par un <p> en gras",
+        "Je garde le <h2> si c'est le bon niveau dans le plan, et je réduis sa taille avec du CSS",
+        "Je le supprime : un titre trop gros n'est pas indispensable"
+      ],
+      "bonne": 2,
+      "explication": "Les h1–h6 sont des niveaux de plan, pas des tailles : sauter au h4 pour une raison visuelle casse la hiérarchie que suivent les lecteurs d'écran et les moteurs de recherche. Le piège est réel parce que les navigateurs associent effectivement une taille par défaut à chaque niveau — mais c'est justement le travail du CSS de corriger l'apparence sans toucher au sens."
+    },
+    {
+      "question": "Quelle affirmation sur <div> est correcte ?",
+      "choix": [
+        "Le HTML sémantique interdit d'utiliser <div>",
+        "<div> est réservé au JavaScript",
+        "<div> doit toujours porter une classe pour être valide",
+        "<div> reste le bon choix pour un regroupement purement technique (centrer, faire une grille) sans rôle nommable"
+      ],
+      "bonne": 3,
+      "explication": "La règle n'est pas « zéro div » mais « div par défaut seulement quand aucune balise porteuse de sens ne convient ». Ton propre code en est plein, à juste titre : les conteneurs de mise en page dans EnTete.tsx sont des div légitimes. Le piège « interdit » vient d'une lecture extrémiste de la leçon — la sémantique nomme les pièces qui ont un nom, elle n'oblige pas à en inventer."
+    }
+  ]
+}

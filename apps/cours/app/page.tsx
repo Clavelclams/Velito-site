@@ -8,9 +8,11 @@
 import Link from "next/link";
 import { listerFiches, listerProjets } from "@/lib/fiches/fiches";
 import { listerQuiz } from "@/lib/fiches/quiz";
+import { listerLecons, listerParcours } from "@/lib/fiches/parcours";
 import { COULEURS_BLOCS, NOMS_BLOCS } from "@/lib/fiches/blocs";
 import RechercheFiches from "@/app/components/RechercheFiches";
 import ProgressionDashboard from "@/app/components/ProgressionDashboard";
+import ContinuerParcours from "@/app/components/ContinuerParcours";
 
 /** Date cible du jury (à affiner quand la convocation AFPA arrive). */
 const DATE_JURY = new Date("2027-04-01T09:00:00+02:00");
@@ -19,6 +21,19 @@ export default function DashboardPage() {
   const fiches = listerFiches();
   const projets = listerProjets();
   const quiz = listerQuiz();
+
+  // Toutes les leçons dans l'ordre (parcours puis leçon) pour « Reprendre ».
+  const leconsOrdonnee = listerParcours().flatMap((p) =>
+    listerLecons(p.slug).map((l) => ({
+      id: l.id,
+      titre: l.titre,
+      parcours: p.slug,
+      parcoursTitre: p.titre,
+      icone: p.icone,
+      fichier: l.fichier,
+      ordre: l.ordre,
+    })),
+  );
   const joursRestants = Math.max(
     0,
     Math.ceil((DATE_JURY.getTime() - Date.now()) / 86_400_000),
@@ -54,6 +69,9 @@ export default function DashboardPage() {
         totalFiches={fiches.length}
         totalQuiz={quiz.length}
       />
+
+      {/* ---- La leçon du jour (première non faite, tous parcours) ---- */}
+      <ContinuerParcours lecons={leconsOrdonnee} />
 
       {/* ---- Répartition par bloc CDA ---- */}
       <section className="mb-10 grid gap-4 sm:grid-cols-3">

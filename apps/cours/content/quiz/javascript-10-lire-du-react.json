@@ -1,0 +1,49 @@
+{
+  "fiche": "javascript-10-lire-du-react",
+  "questions": [
+    {
+      "question": "const [choixFait, setChoixFait] = useState(null);\nQue contient exactement ce que renvoie useState ?",
+      "choix": [
+        "Un objet avec les clés value et setter",
+        "Un tableau de deux éléments : la valeur actuelle, puis la fonction pour la changer",
+        "Uniquement la valeur actuelle",
+        "Une promesse qui se résout avec la valeur"
+      ],
+      "bonne": 1,
+      "explication": "useState renvoie un TABLEAU [valeur, setter] qu'on destructure — d'où les crochets, alors que les props se destructurent avec des accolades (objet). null est la valeur de départ : « pas encore répondu ». Convention de nommage : x et setX."
+    },
+    {
+      "question": "Dans repondre(), pourquoi écrire setChoixFait(index) plutôt que choixFait = index ?",
+      "choix": [
+        "Les deux fonctionnent, le setter est juste plus lisible",
+        "choixFait = index serait plus rapide mais moins sûr",
+        "Seul le setter prévient React qu'il doit RÉ-EXÉCUTER le composant et redessiner l'écran ; une affectation directe ne déclenche rien",
+        "Parce que choixFait est un objet, pas une valeur simple"
+      ],
+      "bonne": 2,
+      "explication": "Le state ne se modifie JAMAIS directement : React ne verrait pas le changement et l'écran resterait figé (et la variable serait de toute façon écrasée au prochain rendu). Le setter note le changement, React ré-exécute QuizFiche, et le nouveau JSX — avec le feedback visible — remplace l'ancien. C'est LE mécanisme central de React."
+    },
+    {
+      "question": "Dans le JSX de QuizFiche : {choixFait !== null && ( <div>...feedback...</div> )}. Quand ce bloc s'affiche-t-il ?",
+      "choix": [
+        "Toujours, le && ne sert qu'à concaténer",
+        "Jamais : cette syntaxe est invalide en JSX",
+        "Seulement si choixFait vaut null",
+        "Seulement quand l'utilisateur a répondu : si choixFait est null, le && s'arrête et n'affiche rien"
+      ],
+      "bonne": 3,
+      "explication": "C'est l'affichage conditionnel : && n'évalue sa partie droite que si la gauche est vraie (leçon 3). Tant que choixFait est null (pas de réponse), la condition est fausse et React n'affiche rien ; dès que setChoixFait(index) passe, le composant se ré-exécute et le feedback apparaît."
+    },
+    {
+      "question": "Dans le useEffect de RechercheFiches.tsx, à quoi sert la fonction RETOURNÉE (return () => window.removeEventListener(...)) ?",
+      "choix": [
+        "C'est le nettoyage : React l'exécute quand le composant quitte l'écran, pour retirer l'écouteur d'événement",
+        "Elle est exécutée immédiatement après l'ajout de l'écouteur",
+        "Elle relance l'effet à chaque changement de progression",
+        "Elle renvoie la progression au composant parent"
+      ],
+      "bonne": 0,
+      "explication": "Un useEffect peut retourner une fonction de nettoyage, que React appelle au démontage du composant. Sans elle, chaque passage sur la page empilerait un nouvel addEventListener \"progression-maj\" — fuite mémoire et rafraîchissements en double. Poser ET retirer l'écouteur : le duo de la leçon 7, orchestré par React."
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "fiche": "javascript-08-asynchrone-promesses-fetch",
+  "questions": [
+    {
+      "question": "Qu'affiche ce code, et dans quel ordre ?\nasync function go() {\n  console.log(\"A\");\n  await new Promise((r) => setTimeout(r, 1000));\n  console.log(\"B\");\n}\ngo();\nconsole.log(\"C\");",
+      "choix": ["A, B, C", "A, C, puis B une seconde plus tard", "C, A, B", "A, puis B et C en même temps"],
+      "bonne": 1,
+      "explication": "await met en pause LA FONCTION go, pas le programme : dès que go atteint le await, la main revient au code appelant, qui affiche C. Une seconde plus tard, la promesse se tient et go reprend avec B. C'est exactement pour ça qu'une page reste fluide pendant un appel réseau."
+    },
+    {
+      "question": "await fetch(\"/api/inexistant\") reçoit une réponse 404 du serveur. Que se passe-t-il ?",
+      "choix": [
+        "La promesse est rejetée et on part dans le catch",
+        "fetch renvoie null",
+        "La promesse est TENUE : on reçoit une Response avec status 404, et c'est à nous de vérifier res.ok",
+        "Le navigateur affiche une page d'erreur"
+      ],
+      "bonne": 2,
+      "explication": "Piège classique : pour fetch, un 404 est un succès — le serveur a répondu. La promesse n'est rejetée que si le RÉSEAU échoue (serveur injoignable, coupure). D'où le réflexe if (!res.ok) throw..., que tu retrouves dans la méthode get de ton ApiPirbDataService.ts."
+    },
+    {
+      "question": "Pourquoi faut-il DEUX await pour lire du JSON ?\nconst res = await fetch(url);\nconst data = await res.json();",
+      "choix": [
+        "Le premier attend la réponse HTTP, le second attend la lecture et le décodage du corps en objet",
+        "C'est une redondance, un seul suffirait",
+        "Le second await relance la requête pour vérifier",
+        "res.json() est synchrone mais await le rend plus sûr"
+      ],
+      "bonne": 0,
+      "explication": "fetch se tient dès que les EN-TÊTES arrivent ; le corps, lui, peut encore être en train de se télécharger. res.json() est donc une seconde opération asynchrone : lire tout le corps puis le parser (le JSON.parse de la leçon 6, en version flux). Deux étapes, deux tickets, deux await."
+    },
+    {
+      "question": "Dans ApiPirbDataService.ts : await new Promise((r) => setTimeout(r, 300 * essai)). À quoi sert cette ligne ?",
+      "choix": [
+        "À limiter la durée maximale d'un appel à 300 ms",
+        "À rafraîchir les données toutes les 300 ms",
+        "À accélérer les requêtes en les regroupant",
+        "À fabriquer une pause avant de RÉESSAYER un appel raté, avec un délai qui grandit à chaque tentative"
+      ],
+      "bonne": 3,
+      "explication": "C'est une promesse artisanale qui se tient toute seule après 300 × essai millisecondes : 300 ms au premier retry, 600 ms au second. Ton app attend donc de plus en plus longtemps entre les tentatives — un « backoff » qui évite de bombarder un serveur déjà en difficulté. Un vrai motif d'architecture réseau, dans ton propre code."
+    }
+  ]
+}

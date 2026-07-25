@@ -1,0 +1,49 @@
+{
+  "fiche": "sql-08-index-et-performance",
+  "questions": [
+    {
+      "question": "Sans index sur la colonne email, comment la base exécute-t-elle SELECT * FROM \"user\" WHERE email = 'jean@mabb.fr' sur 50 000 lignes ?",
+      "choix": [
+        "Elle s'arrête à la première ligne trouvée, donc c'est rapide en moyenne",
+        "Elle utilise automatiquement l'index de la clé primaire",
+        "Elle fait un scan séquentiel : lecture des 50 000 lignes une par une",
+        "Elle trie d'abord la table par email puis fait une recherche dichotomique"
+      ],
+      "bonne": 2,
+      "explication": "Sans index sur la colonne filtrée, la seule stratégie est le full table scan : tout lire et garder ce qui matche. L'index de la clé primaire ne sert à rien ici car on ne filtre pas sur id. C'est comme chercher un mot dans un livre sans index alphabétique."
+    },
+    {
+      "question": "Pourquoi ne pas créer un index sur TOUTES les colonnes de toutes les tables ?",
+      "choix": [
+        "Parce que les SGBD limitent le nombre d'index à 5 par table",
+        "Parce que chaque index doit être mis à jour à chaque INSERT/UPDATE/DELETE : trop d'index ralentit toutes les écritures et gonfle le disque",
+        "Parce qu'un index rend la table en lecture seule",
+        "Parce que les index ne fonctionnent que sur les colonnes numériques"
+      ],
+      "bonne": 1,
+      "explication": "Un index accélère les lectures mais taxe chaque écriture, puisque l'arbre doit être maintenu à jour. La règle : indexer les colonnes fréquemment utilisées dans WHERE, JOIN et ORDER BY, et seulement celles-là. C'est un arbitrage lecture/écriture à savoir justifier."
+    },
+    {
+      "question": "Dans ApiToken.php de Venaball, pourquoi l'index idx_api_token_hash sur token_hash est-il justifié ?",
+      "choix": [
+        "Parce que token_hash est la clé primaire de la table",
+        "Parce qu'un index est obligatoire sur toute colonne de type VARCHAR(64)",
+        "Pour empêcher deux jetons d'avoir le même hash",
+        "Parce que CHAQUE requête de l'app mobile PIRB cherche le jeton par son hash : sans index, chaque appel d'API scannerait toute la table"
+      ],
+      "bonne": 3,
+      "explication": "L'authentification par jeton fait un WHERE token_hash = ... à chaque requête API : c'est la colonne la plus sollicitée de la table, donc candidate idéale à l'index. L'unicité, elle, est déjà garantie par unique: true — l'index déclaré vise la performance de recherche."
+    },
+    {
+      "question": "EXPLAIN ANALYZE affiche « Seq Scan on gros_test » pour la requête WHERE email LIKE '%456@venaball.fr' alors qu'un index existe sur email. Pourquoi ?",
+      "choix": [
+        "Le motif commence par le joker % : sans connaître le début de la valeur, l'index (trié alphabétiquement) est inutilisable",
+        "EXPLAIN ANALYZE désactive toujours les index pour mesurer le pire cas",
+        "LIKE n'utilise jamais d'index, quel que soit le motif",
+        "L'index est corrompu et doit être reconstruit"
+      ],
+      "bonne": 0,
+      "explication": "Un index B-tree est comme un dictionnaire : il faut connaître le début du mot pour s'en servir. Avec un joker en tête de motif, la base ne sait pas où chercher et repasse en scan complet. Un LIKE 'membre123%' (joker à la fin), lui, peut utiliser l'index."
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "fiche": "javascript-01-variables-et-types",
+  "questions": [
+    {
+      "question": "Qu'affiche ce code ?\nconst xp = 20;\nxp = 50;\nconsole.log(xp);",
+      "choix": ["50", "20", "Une erreur : on ne peut pas réassigner une const", "undefined"],
+      "bonne": 2,
+      "explication": "Une boîte `const` est scellée : la ligne `xp = 50` déclenche un TypeError avant même d'arriver au console.log. Si tu veux une valeur qui change, c'est `let` qu'il faut. C'est exactement pour ça que ton barème XP dans progression.ts est en const : personne ne doit le modifier en cours de route."
+    },
+    {
+      "question": "Dans QuizFiche.tsx, choixFait démarre à null. Pourquoi null et pas undefined ?",
+      "choix": [
+        "Parce que null est plus rapide pour l'ordinateur",
+        "Parce que null exprime un vide VOLONTAIRE : « pas encore répondu » est une vraie information",
+        "Parce que undefined n'existe pas en TypeScript",
+        "Il n'y a aucune différence, c'est du hasard"
+      ],
+      "bonne": 1,
+      "explication": "undefined veut dire « personne n'a rien mis dans la boîte », null veut dire « on a mis exprès la valeur vide ». Ici c'est un choix de conception : null signale clairement que l'utilisateur n'a pas encore cliqué. La performance n'a rien à voir, et undefined existe bien en TypeScript."
+    },
+    {
+      "question": "Qu'affiche `Série de ${3 + 2} jours` (avec des backticks) ?",
+      "choix": [
+        "Série de ${3 + 2} jours",
+        "Série de 3 + 2 jours",
+        "Une erreur de syntaxe",
+        "Série de 5 jours"
+      ],
+      "bonne": 3,
+      "explication": "Entre backticks, tout ce qui est dans ${...} est CALCULÉ puis injecté dans le texte : 3 + 2 devient 5. Avec des guillemets simples ou doubles, tu aurais eu le texte brut avec ${} dedans — c'est le piège classique. Ta fonction aujourdhui() dans progression.ts utilise exactement ce mécanisme pour fabriquer la date."
+    },
+    {
+      "question": "Que renvoie typeof 12.5 ?",
+      "choix": ["\"number\"", "\"float\"", "\"decimal\"", "\"integer\""],
+      "bonne": 0,
+      "explication": "Contrairement à d'autres langages, JavaScript n'a qu'UN seul type pour tous les nombres : number, que ce soit 42 ou 12.5. Pas de float ni d'integer séparés. C'est une réponse courte et nette à sortir au jury si on te demande les types primitifs de JavaScript."
+    }
+  ]
+}

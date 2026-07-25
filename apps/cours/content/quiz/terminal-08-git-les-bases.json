@@ -1,0 +1,49 @@
+{
+  "fiche": "terminal-08-git-les-bases",
+  "questions": [
+    {
+      "question": "Qu'est-ce qu'un commit dans Git ?",
+      "choix": [
+        "Un envoi du code vers GitHub",
+        "Une photo complète du projet à un instant donné, enregistrée dans l'historique avec un message, un auteur et une date",
+        "Une sauvegarde automatique que Git fait toutes les heures",
+        "Une copie de secours du dossier node_modules"
+      ],
+      "bonne": 1,
+      "explication": "Un commit est un instantané de tous les fichiers suivis, rangé dans l'album (.git) avec sa légende — ton message en français —, son auteur et son identifiant unique. Rien n'est automatique : c'est toi qui déclenches la photo. L'envoi vers GitHub, c'est une autre commande (push), qu'on voit à la leçon suivante."
+    },
+    {
+      "question": "À quoi sert la zone de staging (là où `git add` place les fichiers) ?",
+      "choix": [
+        "À compresser les fichiers avant de les envoyer sur le serveur",
+        "À sauvegarder les fichiers dans le cloud en temps réel",
+        "À choisir précisément quelles modifications feront partie du prochain commit, pour composer des commits cohérents",
+        "À vérifier automatiquement que le code compile avant le commit"
+      ],
+      "bonne": 2,
+      "explication": "Le staging est la table de préparation entre ton chantier et l'album : seul ce que tu y as posé avec `git add` part dans la photo. Ça te permet, avec dix fichiers modifiés, de ne commiter que les deux qui concernent la même idée. Un commit = une idée, c'est ce qui rend un historique lisible."
+    },
+    {
+      "question": "Tu as modifié 3 fichiers, puis tapé `git add fichierA.php` et `git commit -m \"Correction du calcul\"`. Que contient le commit ?",
+      "choix": [
+        "Les 3 fichiers modifiés, car git commit embarque tout le projet modifié",
+        "Rien, car il fallait taper git add . avant",
+        "Les 3 fichiers, mais seul fichierA.php apparaît dans le message",
+        "Uniquement les modifications de fichierA.php ; les deux autres fichiers restent modifiés, hors de la photo"
+      ],
+      "bonne": 3,
+      "explication": "Le commit ne photographie que ce qui est sur la table de staging, donc uniquement fichierA.php. Les deux autres fichiers restent en état « modified » dans ton répertoire de travail — `git status` te les montrera toujours. C'est le comportement voulu : il te laisse découper ton travail en commits cohérents."
+    },
+    {
+      "question": "Pourquoi `git status` est-elle une commande que tu peux taper sans aucune crainte, autant de fois que tu veux ?",
+      "choix": [
+        "Parce qu'elle ne fait que lire et afficher l'état des fichiers (untracked, modified, staged) sans jamais rien modifier",
+        "Parce qu'elle annule automatiquement les erreurs précédentes",
+        "Parce qu'elle crée une sauvegarde à chaque exécution",
+        "Parce qu'elle ne fonctionne que si le projet n'a pas d'erreur"
+      ],
+      "bonne": 0,
+      "explication": "git status est une commande de pure lecture : elle compare tes trois zones (chantier, staging, dernier commit) et t'affiche le résultat, rien d'autre. C'est ta boussole avant et après chaque add ou commit. En bonus, elle suggère souvent la commande exacte pour défaire une étape."
+    }
+  ]
+}

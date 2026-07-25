@@ -1,0 +1,49 @@
+{
+  "fiche": "html-css-07-flexbox",
+  "questions": [
+    {
+      "question": "Sur quel élément pose-t-on display: flex pour ranger des éléments ?",
+      "choix": [
+        "Sur chaque élément à ranger, un par un",
+        "Sur le conteneur parent : ce sont ses enfants directs qui se rangent",
+        "Sur le body, une fois pour toute la page",
+        "Sur n'importe quel ancêtre, même lointain : flex se propage à toute la descendance"
+      ],
+      "bonne": 1,
+      "explication": "Flexbox, c'est l'étagère qui commande, pas les livres : display: flex sur le parent, et seuls ses enfants DIRECTS se rangent. Le piège « se propage à toute la descendance » est important à écarter : les petits-enfants ne sont pas concernés, c'est pour ça que le header de ton site imbrique un deuxième conteneur flex pour ranger les liens entre eux."
+    },
+    {
+      "question": "Dans EnTete.tsx, le header utilise justify-between (justify-content: space-between). Quel effet produit cette valeur ?",
+      "choix": [
+        "Tous les enfants sont centrés avec un espace égal autour de chacun",
+        "Les enfants sont collés à gauche avec un espace fixe entre eux",
+        "Le premier enfant est poussé à un bord, le dernier à l'autre, l'espace libre est réparti entre eux",
+        "Les enfants sont étirés pour occuper chacun la même largeur"
+      ],
+      "bonne": 2,
+      "explication": "space-between colle les extrémités aux bords et distribue le vide au milieu — exactement ce qui envoie le logo à gauche et le bouton Déconnexion à droite dans ton header. La confusion avec space-around (de l'espace autour de chaque enfant, y compris aux bords) est le grand classique : tu les as comparées en direct dans l'inspecteur à l'étape 2 de la pratique."
+    },
+    {
+      "question": "Tu passes un conteneur en flex-direction: column et soudain justify-content: center centre verticalement au lieu d'horizontalement. Pourquoi ?",
+      "choix": [
+        "C'est un bug connu de Flexbox avec les colonnes",
+        "justify-content agit sur l'axe principal, et en column l'axe principal devient vertical : les axes ont pivoté",
+        "En column, justify-content est ignoré et remplacé par align-items",
+        "Parce que le conteneur a forcément une hauteur fixe en column"
+      ],
+      "bonne": 1,
+      "explication": "justify-content ne connaît ni l'horizontal ni le vertical : il connaît l'axe principal, celui de la direction de rangement. En column, cet axe pointe vers le bas, donc justify-content distribue verticalement et align-items prend l'horizontal. C'est LE piège de Flexbox — « ça centre pas dans le bon sens » signifie presque toujours qu'on a oublié ce pivot."
+    },
+    {
+      "question": "Dans LoginForm.tsx, le formulaire utilise flex flex-col gap-4. Qu'apporte gap par rapport à des margins sur chaque champ ?",
+      "choix": [
+        "gap espace uniquement ENTRE les enfants, en une seule déclaration sur le parent, sans marge parasite aux extrémités",
+        "gap est purement décoratif, les margins restent nécessaires",
+        "gap ajoute de l'espace aussi avant le premier et après le dernier enfant",
+        "gap ne fonctionne qu'en direction column"
+      ],
+      "bonne": 0,
+      "explication": "Avec gap, le parent gère l'espacement : une ligne, aucun enfant à modifier, et pas de marge orpheline en début ou fin de liste. L'approche margin-bottom sur chaque enfant « marche » aussi, d'où la tentation — mais elle laisse une marge inutile après le dernier élément et éparpille la responsabilité sur tous les enfants. gap fonctionne en row comme en column, et aussi en Grid."
+    }
+  ]
+}

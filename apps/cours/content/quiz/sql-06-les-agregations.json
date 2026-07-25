@@ -1,0 +1,49 @@
+{
+  "fiche": "sql-06-les-agregations",
+  "questions": [
+    {
+      "question": "Quelle est la différence entre COUNT(*) et COUNT(ville) sur une table où certaines villes sont NULL ?",
+      "choix": [
+        "Aucune : les deux comptent toutes les lignes",
+        "COUNT(ville) provoque une erreur si une valeur est NULL",
+        "COUNT(*) compte toutes les lignes ; COUNT(ville) ignore les lignes où ville est NULL",
+        "COUNT(*) est plus lent car il lit toutes les colonnes"
+      ],
+      "bonne": 2,
+      "explication": "Les fonctions d'agrégation ignorent les NULL : COUNT(colonne) ne compte que les valeurs présentes, tandis que COUNT(*) compte les lignes elles-mêmes. Sur 5 membres dont 1 sans ville, COUNT(*) donne 5 et COUNT(ville) donne 4."
+    },
+    {
+      "question": "Que renvoie cette requête sur le mini-Venaball (MABB : COACH, PARENT, JOUEUR x2, BENEVOLE ; ASVEL : JOUEUR) ? SELECT c.nom, COUNT(*) FROM ucr_test ucr JOIN c_test c ON c.id = ucr.club_id GROUP BY c.nom;",
+      "choix": [
+        "Une seule ligne : le total de 6 rôles",
+        "Deux lignes : MABB 5 et ASVEL 1",
+        "Six lignes : une par rôle attribué",
+        "Une erreur : COUNT(*) exige une clause HAVING"
+      ],
+      "bonne": 1,
+      "explication": "GROUP BY c.nom fait une pile de lignes par club, puis COUNT(*) compte chaque pile : 5 rôles au MABB, 1 à l'ASVEL. Sans le GROUP BY, on aurait eu le total global de 6 en une seule ligne."
+    },
+    {
+      "question": "Pourquoi PostgreSQL rejette-t-il : SELECT c.nom, ucr.role, COUNT(*) FROM ucr_test ucr JOIN c_test c ON c.id = ucr.club_id GROUP BY c.nom; ?",
+      "choix": [
+        "Parce qu'on ne peut pas mélanger JOIN et GROUP BY dans la même requête",
+        "Parce que COUNT(*) doit toujours être la première colonne du SELECT",
+        "Parce que le GROUP BY devrait porter sur c.id, pas sur c.nom",
+        "Parce que ucr.role n'est ni dans le GROUP BY ni dans une fonction d'agrégation : dans un groupe « MABB » il y a plusieurs rôles, la base ne peut pas en choisir un"
+      ],
+      "bonne": 3,
+      "explication": "C'est la règle d'or : chaque colonne du SELECT doit être dans le GROUP BY ou agrégée. Le groupe MABB contient COACH, PARENT, JOUEUR... afficher UN role serait arbitraire. Les vieux MySQL le toléraient en choisissant au hasard — source de bugs célèbres, corrigée par ONLY_FULL_GROUP_BY."
+    },
+    {
+      "question": "Pour afficher les clubs ayant plus de 20 membres actifs, où placer chaque condition ?",
+      "choix": [
+        "status = 'active' dans le WHERE (filtre les lignes avant groupement) et COUNT(*) > 20 dans le HAVING (filtre les groupes après)",
+        "Les deux dans le WHERE, séparées par AND",
+        "Les deux dans le HAVING, car il y a un GROUP BY",
+        "COUNT(*) > 20 dans le WHERE et status = 'active' dans le HAVING"
+      ],
+      "bonne": 0,
+      "explication": "WHERE filtre les lignes, HAVING filtre les groupes : le statut est une propriété de chaque ligne (donc WHERE), le compte n'existe qu'après groupement (donc HAVING). Le WHERE ne peut pas contenir COUNT(*) car il s'exécute avant le GROUP BY."
+    }
+  ]
+}

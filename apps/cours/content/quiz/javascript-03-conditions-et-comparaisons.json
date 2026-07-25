@@ -1,0 +1,39 @@
+{
+  "fiche": "javascript-03-conditions-et-comparaisons",
+  "questions": [
+    {
+      "question": "Que vaut 5 === \"5\" ?",
+      "choix": ["true", "false", "5", "Une erreur"],
+      "bonne": 1,
+      "explication": "L'égalité stricte === compare la valeur ET le type sans aucune conversion : un number n'est jamais égal à un string. Avec == tu aurais eu true, car JavaScript aurait converti \"5\" en nombre — c'est exactement l'imprévisibilité qu'on veut éviter."
+    },
+    {
+      "question": "Qu'affiche ce code ?\nconst requete = \"\";\nif (requete) { console.log(\"recherche\") }\nelse { console.log(\"vide\") }",
+      "choix": ["recherche", "Une erreur : requete n'est pas un booléen", "Rien du tout", "vide"],
+      "bonne": 3,
+      "explication": "Un texte vide \"\" fait partie des six valeurs falsy : dans un if, il est traité comme false, donc c'est la branche else qui s'exécute. Un if accepte n'importe quelle valeur, pas seulement true/false — il la convertit en booléen."
+    },
+    {
+      "question": "Que vaut 0 ?? 10, et que vaut 0 || 10 ?",
+      "choix": [
+        "0 puis 10",
+        "10 puis 10",
+        "10 puis 0",
+        "0 puis 0"
+      ],
+      "bonne": 0,
+      "explication": "?? ne remplace la valeur QUE si elle est null ou undefined — 0 est une vraie valeur, donc 0 ?? 10 vaut 0. || remplace toute valeur falsy, et 0 est falsy, donc 0 || 10 vaut 10. Ton progression.ts utilise ?? justement pour qu'un score de 0 ne soit pas écrasé par la valeur de repli."
+    },
+    {
+      "question": "Dans ton QuizFiche.tsx : {parfait ? \"🏆\" : \"💪\"}. Comment se lit cette expression ?",
+      "choix": [
+        "Affiche toujours les deux emojis",
+        "Si parfait existe, le supprime, sinon le garde",
+        "Si parfait est vrai, donne 🏆, sinon donne 💪",
+        "Compare parfait avec 🏆"
+      ],
+      "bonne": 2,
+      "explication": "C'est un ternaire : condition ? valeurSiVrai : valeurSiFaux. Un if-else compressé en une seule expression qui PRODUIT une valeur — c'est pour ça qu'on peut le mettre directement dans du JSX. Tu le croiseras dans quasiment tous tes composants React."
+    }
+  ]
+}

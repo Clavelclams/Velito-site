@@ -1,0 +1,49 @@
+{
+  "fiche": "html-css-02-balises-et-structure-du-document",
+  "questions": [
+    {
+      "question": "Quelle est la différence fondamentale entre le contenu du <head> et celui du <body> ?",
+      "choix": [
+        "Le <head> contient le haut de la page (logo, menu), le <body> contient le reste",
+        "Le <head> est optionnel, le <body> est obligatoire",
+        "Le <head> contient des métadonnées invisibles (titre d'onglet, encodage, liens CSS), le <body> contient tout ce qui s'affiche",
+        "Le <head> est lu par le serveur, le <body> par le navigateur"
+      ],
+      "bonne": 2,
+      "explication": "Le <head> ce sont les coulisses : rien de ce qu'il contient ne s'affiche dans la page. Le piège numéro un est de confondre <head> avec l'en-tête visible du site — mais ça, c'est la balise <header>, qui vit dans le <body> (tu la verras à la leçon suivante). Ton EnTete.tsx est un <header>, pas un <head>."
+    },
+    {
+      "question": "Dans <img src=\"logo.png\" alt=\"Logo Velito\">, que sont src et alt exactement ?",
+      "choix": [
+        "Des balises enfants de img",
+        "Des attributs : des informations complémentaires écrites nom=\"valeur\" dans la balise ouvrante",
+        "Des propriétés CSS appliquées à l'image",
+        "Des variables JavaScript liées à l'image"
+      ],
+      "bonne": 1,
+      "explication": "Les attributs enrichissent une balise avec des paires nom=\"valeur\" placées dans la balise ouvrante : ici la source de l'image et son texte de remplacement. On peut hésiter avec les propriétés CSS car la syntaxe se ressemble vaguement, mais les propriétés CSS vivent dans une feuille de style avec la syntaxe propriete: valeur; — pas entre les chevrons d'une balise."
+    },
+    {
+      "question": "Dans ton projet, où se trouve la charpente <html>/<body> que reçoit le navigateur pour toutes les pages du site de cours ?",
+      "choix": [
+        "Nulle part : Next.js la génère de façon invisible et on ne peut pas la modifier",
+        "Dans chaque fichier de page, répétée à chaque fois",
+        "Dans le fichier globals.css",
+        "Dans app/layout.tsx : le layout racine écrit <html lang=\"fr\"> et <body>, et les pages s'injectent dedans"
+      ],
+      "bonne": 3,
+      "explication": "Le layout racine de Next.js EST la charpente HTML : tu peux ouvrir app/layout.tsx et voir <html lang=\"fr\"> écrit noir sur blanc. La réponse « invisible et non modifiable » est tentante parce qu'un framework donne l'impression de magie — c'est exactement cette impression que la leçon veut casser : la charpente est dans ton code, à un endroit précis."
+    },
+    {
+      "question": "Tu écris <p>Texte <strong>important</p></strong>. Quel est le problème ?",
+      "choix": [
+        "Aucun : le navigateur affichera le texte correctement, donc le code est valide",
+        "strong n'a pas le droit d'être dans un paragraphe",
+        "L'imbrication est cassée : strong ouvert dans p doit se fermer avant </p>, sinon l'arbre est incohérent",
+        "Il manque un attribut obligatoire sur strong"
+      ],
+      "bonne": 2,
+      "explication": "Les balises s'emboîtent comme des boîtes : celle ouverte en dernier se ferme en premier. Ici </p> ferme le paragraphe alors que strong est encore ouvert dedans. Le piège « ça s'affiche donc c'est valide » est réel : les navigateurs réparent silencieusement ce genre d'erreur, comme tu l'as vu en cassant test.html — mais l'arbre réparé n'est pas celui que tu croyais écrire, et c'est source de bugs CSS incompréhensibles."
+    }
+  ]
+}

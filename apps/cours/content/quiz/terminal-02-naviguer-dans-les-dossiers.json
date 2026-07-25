@@ -1,0 +1,49 @@
+{
+  "fiche": "terminal-02-naviguer-dans-les-dossiers",
+  "questions": [
+    {
+      "question": "Que fait la commande `cd ..` ?",
+      "choix": [
+        "Elle affiche le contenu du dossier parent",
+        "Elle supprime le dossier courant",
+        "Elle déplace le répertoire courant vers le dossier parent (elle remonte d'un cran)",
+        "Elle retourne au dossier personnel de l'utilisateur"
+      ],
+      "bonne": 2,
+      "explication": "`..` est le chemin relatif qui désigne le dossier parent, donc `cd ..` remonte d'un niveau dans l'arborescence. Si tu es dans `Velito-site\\apps\\cours`, un `cd ..\\..` te ramène à la racine du monorepo. À ne pas confondre avec `cd ~` qui, lui, retourne au dossier personnel."
+    },
+    {
+      "question": "Pourquoi faut-il écrire cd \"C:\\Users\\Velito Adventure\\Documents\" avec des guillemets ?",
+      "choix": [
+        "Parce que le chemin contient un espace : sans guillemets, le shell couperait le chemin en deux arguments distincts",
+        "Parce que PowerShell exige des guillemets autour de tous les chemins",
+        "Parce que les guillemets rendent la commande plus rapide",
+        "Parce que le disque C: est protégé en écriture"
+      ],
+      "bonne": 0,
+      "explication": "Le shell utilise l'espace pour séparer les arguments. Sans guillemets, il lirait `C:\\Users\\Velito` comme premier argument et `Adventure\\Documents` comme second, et la commande échouerait. C'est un piège quotidien avec ton dossier `Velito Adventure` — la tab-complétion ajoute d'ailleurs les guillemets pour toi."
+    },
+    {
+      "question": "Tu lances `npm run dev --workspace apps/cours` mais ça échoue car le workspace est introuvable. Quelle est la cause la plus probable ?",
+      "choix": [
+        "Le port 3007 est déjà occupé par un autre programme",
+        "npm n'est pas installé sur la machine",
+        "Le dossier apps/cours a été supprimé par npm",
+        "Tu n'es pas à la racine du monorepo : `apps/cours` est un chemin relatif, résolu depuis le répertoire courant"
+      ],
+      "bonne": 3,
+      "explication": "`apps/cours` est un chemin relatif : npm le cherche depuis l'endroit où tu te trouves. Si tu es dans un sous-dossier ou ailleurs, il ne trouve ni le package.json racine ni le workspace. Premier réflexe : `pwd` pour vérifier ta position, puis `cd` vers `C:\\Users\\Velito Adventure\\Documents\\Velito-site`."
+    },
+    {
+      "question": "En PowerShell, de quelle commande `ls` est-il l'alias ?",
+      "choix": [
+        "Get-Location",
+        "Get-ChildItem",
+        "List-Files",
+        "Get-Content"
+      ],
+      "bonne": 1,
+      "explication": "PowerShell fournit `ls` (et `dir`) comme alias de `Get-ChildItem`, qui liste le contenu d'un dossier. `Get-Location` correspond à `pwd`, et `Get-Content` à `cat`. Sur tes serveurs Linux, `ls` est la vraie commande bash — d'où l'intérêt de connaître les deux mondes."
+    }
+  ]
+}

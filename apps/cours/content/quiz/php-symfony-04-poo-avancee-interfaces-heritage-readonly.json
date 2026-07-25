@@ -1,0 +1,49 @@
+{
+  "fiche": "php-symfony-04-poo-avancee-interfaces-heritage-readonly",
+  "questions": [
+    {
+      "question": "Grâce à ClubAwareInterface, que dois-tu faire pour que ClubVoter protège une NOUVELLE entité (ex. une future entité Tournoi liée à un club) ?",
+      "choix": [
+        "Ajouter un nouveau case dans le match() du Voter",
+        "Créer un TournoiVoter dédié qui hérite de ClubVoter",
+        "Faire implémenter ClubAwareInterface à Tournoi (un getClub()), sans toucher au Voter",
+        "Déclarer Tournoi dans security.yaml"
+      ],
+      "bonne": 2,
+      "explication": "Le Voter ne connaît aucune entité concrète : il vérifie juste instanceof ClubAwareInterface puis appelle getClub(). C'est l'Open/Closed Principle — ouvert à l'extension (nouvelles entités), fermé à la modification (le Voter ne change pas). C'est écrit noir sur blanc dans le commentaire de ta classe."
+    },
+    {
+      "question": "Quelle phrase distingue correctement héritage et interface ?",
+      "choix": [
+        "L'héritage exprime « je suis un » (ClubVoter EST un Voter), l'interface exprime « je sais faire » (Equipe SAIT donner son club)",
+        "L'interface contient du code, l'héritage n'en contient pas",
+        "On ne peut implémenter qu'une seule interface mais hériter de plusieurs classes",
+        "Les deux sont interchangeables, c'est une question de style"
+      ],
+      "bonne": 0,
+      "explication": "C'est l'inverse pour la multiplicité : une classe PHP hérite d'UNE seule classe mais peut implémenter PLUSIEURS interfaces — ton User implémente d'ailleurs UserInterface ET PasswordAuthenticatedUserInterface. Et c'est l'interface qui ne contient que des signatures, pas de code."
+    },
+    {
+      "question": "Dans TenantResolver, les dépendances sont déclarées « private readonly » dans le constructeur. Que se passe-t-il si une méthode tente plus tard $this->clubRepository = autre chose ?",
+      "choix": [
+        "Ça fonctionne, readonly n'est qu'une convention de nommage",
+        "La nouvelle valeur est ignorée silencieusement",
+        "Le repository est cloné avant remplacement",
+        "PHP lève une erreur : une propriété readonly ne s'écrit qu'une fois, à la construction"
+      ],
+      "bonne": 3,
+      "explication": "readonly verrouille la propriété après sa première écriture dans le constructeur. L'objet est donc immuable dans ses dépendances : personne ne peut remplacer le repository en cours de route. C'est un gage de stabilité et un vrai argument de fiabilité devant le jury."
+    },
+    {
+      "question": "Pourquoi UserClubRole définit-il ROLE_COACH = 'COACH' en constante plutôt que d'écrire 'COACH' partout dans le code ?",
+      "choix": [
+        "Parce que Doctrine exige des constantes pour les colonnes de type string",
+        "Une typo devient quasi impossible : l'IDE complète UserClubRole::ROLE_COACH et isValidRole() valide contre la liste centralisée",
+        "Les constantes sont plus rapides à exécuter que les chaînes",
+        "C'est obligatoire depuis PHP 8.1"
+      ],
+      "bonne": 1,
+      "explication": "Centraliser les valeurs métier dans des constantes élimine les fautes de frappe ('COCH' ne compilerait nulle part) et donne un point unique de vérité : ROLES_DISPONIBLES. C'est le même service que rendrait un enum PHP 8.1 — une migration vers enum serait propre mais pas prioritaire, réponse honnête à donner au jury."
+    }
+  ]
+}

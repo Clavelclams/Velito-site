@@ -1,0 +1,49 @@
+{
+  "fiche": "html-css-08-grid-et-responsive",
+  "questions": [
+    {
+      "question": "Quand choisir Grid plutôt que Flexbox ?",
+      "choix": [
+        "Toujours : Grid est le remplaçant moderne de Flexbox",
+        "Quand on veut un vrai quadrillage en deux dimensions (lignes ET colonnes) ; Flexbox reste l'outil pour une rangée",
+        "Uniquement pour les tableaux de données chiffrées",
+        "Quand la page doit être responsive, car Flexbox ne l'est pas"
+      ],
+      "bonne": 1,
+      "explication": "Les deux coexistent : Flexbox range le long d'un axe (une barre de navigation, un formulaire empilé), Grid quadrille en deux dimensions (une galerie de cartes). Le piège « Grid remplace Flexbox » vient de sa sortie plus récente — mais ton propre site utilise les deux au bon endroit : flex dans EnTete.tsx, grid dans GrilleParcours.tsx. L'idée que Flexbox ne serait pas responsive est fausse : les deux se combinent avec les media queries."
+    },
+    {
+      "question": "Que signifie grid-template-columns: 2fr 1fr ?",
+      "choix": [
+        "Deux colonnes de 2px et 1px",
+        "Deux colonnes fixes de 200px et 100px",
+        "Deux colonnes qui se partagent l'espace disponible : la première prend deux tiers, la seconde un tiers",
+        "Une grille de 2 lignes et 1 colonne"
+      ],
+      "bonne": 2,
+      "explication": "fr = fraction de l'espace disponible : 2fr + 1fr = 3 parts, la première colonne en prend 2, soit deux tiers. L'avantage sur des pixels fixes : les colonnes s'adaptent à la largeur réelle du conteneur, quel que soit l'écran. Le piège « lignes et colonnes » confond template-columns (qui ne décrit QUE les colonnes) avec la forme générale de la grille — les lignes se créent automatiquement quand les cases se remplissent."
+    },
+    {
+      "question": "Que signifie exactement la classe Tailwind sm:grid-cols-2 dans GrilleParcours.tsx ?",
+      "choix": [
+        "2 colonnes uniquement sur les petits écrans (small)",
+        "2 colonnes à partir de 640px de large ; en dessous, la valeur par défaut (1 colonne) s'applique",
+        "2 colonnes avec un espacement réduit (small)",
+        "2 petites colonnes centrées"
+      ],
+      "bonne": 1,
+      "explication": "C'est LE piège Tailwind par excellence : sm: ne veut pas dire « sur mobile » mais « à partir du seuil sm (640px) et au-delà » — c'est du min-width, l'approche mobile-first. En dessous de 640px, c'est la classe sans préfixe qui règne (grid = 1 colonne). Tu as vu la bascule à exactement 640px en mode responsive : la media query générée est @media (min-width: 640px)."
+    },
+    {
+      "question": "Pourquoi l'approche mobile-first consiste-t-elle à styler d'abord le petit écran ?",
+      "choix": [
+        "Parce que le mobile est le cas le plus contraint : on part de la base simple et on enrichit pour les grands écrans, plutôt que de rabotter un design complexe",
+        "Parce que les media queries min-width ne fonctionnent pas sur ordinateur",
+        "Parce que Google pénalise les sites conçus pour ordinateur",
+        "Parce que le CSS mobile se charge plus vite"
+      ],
+      "bonne": 0,
+      "explication": "Partir du plus contraint force à hiérarchiser le contenu ; ajouter des colonnes quand la place arrive est simple et prévisible, alors que démonter un layout complexe pour le faire tenir sur 375px finit en rustines. Le distracteur Google est tentant car l'indexation mobile-first existe vraiment — mais c'est un critère de référencement, pas la raison technique de l'ordre d'écriture du CSS."
+    }
+  ]
+}

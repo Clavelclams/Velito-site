@@ -1,0 +1,49 @@
+{
+  "fiche": "sql-07-modelisation-du-besoin-au-schema",
+  "questions": [
+    {
+      "question": "Besoin métier : « un utilisateur peut avoir des rôles dans plusieurs clubs, et un club a plusieurs membres ». Comment traduire cette relation en tables ?",
+      "choix": [
+        "Ajouter une colonne club_id dans la table user",
+        "Ajouter une colonne user_id dans la table club",
+        "Créer une table de liaison contenant deux clés étrangères, user_id et club_id",
+        "Ajouter une colonne texte clubs dans user, avec les noms séparés par des virgules"
+      ],
+      "bonne": 2,
+      "explication": "Une relation N-N ne peut pas se stocker avec une seule clé étrangère : une FK dans user limiterait à un club par personne, et inversement. Il faut une troisième table — c'est exactement le rôle de user_club_role dans Venaball. La liste séparée par virgules est l'anti-modèle absolu."
+    },
+    {
+      "question": "Dans une relation 1-N (un club a plusieurs équipes), de quel côté se trouve la clé étrangère ?",
+      "choix": [
+        "Du côté 1 : la table club stocke la liste des ids d'équipes",
+        "Du côté N : chaque ligne de la table equipe porte un club_id",
+        "Des deux côtés, pour pouvoir naviguer dans les deux sens",
+        "Dans une table de liaison dédiée, comme pour une N-N"
+      ],
+      "bonne": 1,
+      "explication": "C'est toujours le côté « plusieurs » qui porte le renvoi : une équipe a UN club, donc une colonne club_id suffit. L'inverse est impossible — une colonne ne peut pas contenir « plusieurs » ids proprement. La table de liaison n'est nécessaire que pour les N-N."
+    },
+    {
+      "question": "Pourquoi le rôle (COACH, JOUEUR...) est-il stocké dans user_club_role et non dans la table user ?",
+      "choix": [
+        "Parce que la table user était déjà pleine de colonnes",
+        "Parce que les rôles changent trop souvent pour être dans user",
+        "Pour accélérer les jointures entre user et club",
+        "Parce que le rôle dépend du COUPLE utilisateur-club : Jean est COACH au MABB mais pourrait être JOUEUR ailleurs — l'attribut appartient à la relation"
+      ],
+      "bonne": 3,
+      "explication": "Un attribut se range là où il dépend entièrement de la clé : le rôle varie selon le club, donc il qualifie la relation, pas l'utilisateur seul. C'est le concept d'association N-N porteuse de données — user_club_role porte aussi status, roleDemande et l'audit de validation."
+    },
+    {
+      "question": "Que garantit la contrainte UniqueConstraint(columns: ['user_id', 'club_id', 'role']) de UserClubRole ?",
+      "choix": [
+        "Un même utilisateur ne peut pas avoir deux fois le même rôle dans le même club, mais peut cumuler des rôles différents",
+        "Un utilisateur ne peut avoir qu'un seul rôle par club",
+        "Un utilisateur ne peut appartenir qu'à un seul club",
+        "Chaque rôle ne peut être attribué qu'à une seule personne par club"
+      ],
+      "bonne": 0,
+      "explication": "L'unicité porte sur le TRIO complet : (Jean, MABB, COACH) ne peut exister qu'une fois, mais (Jean, MABB, PARENT) reste possible — c'est le besoin métier du cumul de rôles. Une unicité sur (user_id, club_id) seul aurait interdit ce cumul : le choix des colonnes de la contrainte EST la règle métier."
+    }
+  ]
+}

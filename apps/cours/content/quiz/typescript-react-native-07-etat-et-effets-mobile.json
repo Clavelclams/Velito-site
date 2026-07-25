@@ -1,0 +1,49 @@
+{
+  "fiche": "typescript-react-native-07-etat-et-effets-mobile",
+  "questions": [
+    {
+      "question": "Dans EcranHorsLigne.tsx, l'effet `useEffect(() => { if (!horsLigne) setIgnore(false); }, [horsLigne]);` s'exécute...",
+      "choix": [
+        "À chaque rendu du composant, sans exception",
+        "Une seule fois, au montage de l'écran",
+        "À chaque fois que la valeur de horsLigne change",
+        "Uniquement quand l'utilisatrice appuie sur un bouton"
+      ],
+      "bonne": 2,
+      "explication": "Le tableau de dépendances [horsLigne] fait tourner l'effet à chaque changement de cette valeur. Ici, dès que le réseau revient (horsLigne passe à false), on remet ignore à false : l'écran est réarmé pour la prochaine coupure. Un état qui en pilote un autre, c'est le rôle d'un effet."
+    },
+    {
+      "question": "Dans app/_layout.tsx, l'effet push retourne `() => abonnement.remove()`. Quand React appelle-t-il cette fonction ?",
+      "choix": [
+        "Immédiatement après l'enregistrement du push",
+        "Au démontage du composant, ou juste avant de relancer l'effet (changement de session.statut)",
+        "Jamais : c'est du code mort",
+        "À chaque notification reçue"
+      ],
+      "bonne": 1,
+      "explication": "La fonction retournée par un useEffect est sa fonction de nettoyage. React l'exécute quand le composant disparaît ou avant chaque relance de l'effet. Sans elle, chaque changement de session empilerait un écouteur de notifications supplémentaire — fuite classique."
+    },
+    {
+      "question": "Dans useAsyncData, à quoi sert le drapeau `let annule = false` remis à true dans le nettoyage ?",
+      "choix": [
+        "À annuler la requête HTTP côté serveur",
+        "À afficher un spinner plus longtemps",
+        "À forcer un re-fetch quand l'écran revient",
+        "À ignorer une réponse qui arrive APRÈS que l'écran a été quitté, pour ne pas faire de setState sur un composant démonté"
+      ],
+      "bonne": 3,
+      "explication": "Scénario mobile typique : l'écran lance son chargement (300 ms de latence, même en mock) et la joueuse change d'onglet avant la réponse. La promesse revient quand même ; grâce au drapeau, le `if (!annule)` ignore la réponse tardive au lieu d'appeler setState sur un écran démonté — avertissement React et fuite mémoire évités."
+    },
+    {
+      "question": "Que se passe-t-il quand un composant React retourne `null`, comme EcranHorsLigne quand le réseau est bon ?",
+      "choix": [
+        "Il ne rend rien à l'écran, mais reste monté et continue d'observer ses états",
+        "Il est détruit définitivement et ne pourra plus s'afficher",
+        "React lève une erreur attrapée par l'ErrorBoundary",
+        "Il affiche un écran noir plein cadre"
+      ],
+      "bonne": 0,
+      "explication": "Retourner null est la façon propre de dire « je ne m'affiche pas pour l'instant ». Le composant reste vivant : ses hooks (useNetworkState, useState) continuent de tourner, et dès que horsLigne repasse à true, il se raffiche tout seul. L'intro de _layout.tsx utilise exactement le même pattern."
+    }
+  ]
+}

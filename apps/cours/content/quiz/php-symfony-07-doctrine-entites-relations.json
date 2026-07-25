@@ -1,0 +1,49 @@
+{
+  "fiche": "php-symfony-07-doctrine-entites-relations",
+  "questions": [
+    {
+      "question": "Pourquoi le modèle Venaball utilise-t-il l'entité pivot UserClubRole plutôt qu'un simple ManyToMany direct entre User et Club ?",
+      "choix": [
+        "Parce que Doctrine 3 ne supporte plus le ManyToMany",
+        "Parce que le lien porte lui-même des données : rôle métier, statut de validation, dates, auditeur",
+        "Pour des raisons de performance des jointures MySQL",
+        "Parce qu'un User ne peut appartenir qu'à un seul Club"
+      ],
+      "bonne": 1,
+      "explication": "Un ManyToMany direct ne peut stocker QUE la liaison. Or ici le lien a une vie propre : le rôle (COACH, JOUEUR...), le workflow pending/active/rejected, qui a validé et quand. Dès que la relation porte des attributs, on la promeut en entité à part entière avec deux ManyToOne."
+    },
+    {
+      "question": "Ce code d'ApiAuthController : $em->persist($token); $em->flush(); — que fait précisément chaque appel ?",
+      "choix": [
+        "persist exécute l'INSERT, flush valide la transaction",
+        "persist valide les données, flush les met en cache",
+        "persist confie le nouvel objet à Doctrine (rien en base), flush exécute réellement le SQL",
+        "Les deux font la même chose, flush est un alias moderne"
+      ],
+      "bonne": 2,
+      "explication": "persist() met l'objet « dans le caddie » : Doctrine le suit, mais aucune requête ne part. flush() « passe à la caisse » : il calcule et exécute tous les INSERT/UPDATE en attente dans une transaction. On peut donc persister plusieurs objets et ne flusher qu'une fois — atomique et performant."
+    },
+    {
+      "question": "Dans UserClubRole, la relation vers User est déclarée avec onDelete: 'CASCADE'. Qu'arrive-t-il si on supprime un User ?",
+      "choix": [
+        "La suppression est refusée tant que le User a des rôles",
+        "Les UserClubRole gardent un user_id pointant vers un User disparu",
+        "Doctrine remplace user_id par null",
+        "La base supprime automatiquement toutes ses lignes user_club_role — pas de lignes orphelines"
+      ],
+      "bonne": 3,
+      "explication": "onDelete: 'CASCADE' est une règle appliquée par la base de données elle-même : supprimer le User entraîne la suppression de ses lignes de rôle. Ça garantit l'intégrité référentielle. Compare avec valideParUser qui utilise SET NULL : là on garde la ligne mais on efface la référence à l'auteur."
+    },
+    {
+      "question": "Dans User.php, pourquoi la propriété $id est-elle typée ?int et initialisée à null ?",
+      "choix": [
+        "Un User fraîchement créé avec new n'a pas encore d'id : c'est la base qui l'attribue au flush (GeneratedValue)",
+        "Parce que certains utilisateurs n'ont pas d'identifiant",
+        "C'est une convention de style sans effet réel",
+        "Pour permettre de changer l'id manuellement plus tard"
+      ],
+      "bonne": 0,
+      "explication": "Entre le new User() et le flush(), l'objet existe en mémoire sans identifiant : l'auto-incrément est calculé par la base au moment de l'INSERT. Le type ?int décrit honnêtement ces deux états de vie de l'objet. Après le flush, getId() renvoie l'entier définitif."
+    }
+  ]
+}
