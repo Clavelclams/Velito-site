@@ -36,7 +36,7 @@ export default async function PageParcours({
 
       <header className="anim-arrivee mb-8 mt-4 rounded-2xl border border-cours-border bg-cours-surface p-6">
         <p className="text-4xl">{parcours.icone}</p>
-        <h1 className="mt-2 text-3xl font-bold">{parcours.titre}</h1>
+        <h1 className="mt-2 text-2xl font-bold sm:text-3xl">{parcours.titre}</h1>
         <p className="mt-2 text-sm leading-relaxed text-cours-text-muted">
           {parcours.description}
         </p>

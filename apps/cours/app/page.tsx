@@ -49,13 +49,13 @@ export default function DashboardPage() {
       {/* ---- En-tête : le compte à rebours, TOUJOURS visible ---- */}
       <header className="mb-10 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Tableau de bord</h1>
+          <h1 className="text-2xl font-bold sm:text-3xl">Tableau de bord</h1>
           <p className="text-sm text-cours-text-muted">
             Révision CDA · {fiches.length} fiche{fiches.length > 1 ? "s" : ""}
           </p>
         </div>
         <div className="rounded-xl border border-cours-border bg-cours-surface px-5 py-3 text-center">
-          <p className="text-3xl font-bold tabular-nums text-cours-accent">
+          <p className="text-2xl font-bold sm:text-3xl tabular-nums text-cours-accent">
             J−{joursRestants}
           </p>
           <p className="text-xs uppercase tracking-wide text-cours-text-muted">

@@ -71,7 +71,7 @@ export default async function PageLecon({
           {parcours?.icone} Leçon {lecon.ordre}/{lecons.length} · {lecon.niveau}{" "}
           · ~{lecon.duree} min
         </p>
-        <h1 className="mt-1 text-3xl font-bold leading-tight">{lecon.titre}</h1>
+        <h1 className="mt-1 text-2xl font-bold leading-tight sm:text-3xl">{lecon.titre}</h1>
       </header>
 
       {sections.map((section, i) => {

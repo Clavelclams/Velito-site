@@ -51,9 +51,10 @@ export default function ContinuerParcours({
 
   return (
     <section className="anim-arrivee mb-10">
+      {/* Mobile : empilé (texte puis bouton pleine largeur) ; desktop : en ligne. */}
       <Link
         href={`/parcours/${prochaine.parcours}/${prochaine.fichier}`}
-        className="flex items-center justify-between gap-4 rounded-2xl border border-cours-accent/40 bg-cours-accent/5 p-5 transition-all hover:-translate-y-0.5 hover:border-cours-accent hover:shadow-lg"
+        className="flex flex-col gap-4 rounded-2xl border border-cours-accent/40 bg-cours-accent/5 p-5 transition-all hover:-translate-y-0.5 hover:border-cours-accent hover:shadow-lg sm:flex-row sm:items-center sm:justify-between"
       >
         <div className="flex items-center gap-4">
           <span className="text-3xl">{prochaine.icone}</span>
@@ -65,7 +66,7 @@ export default function ContinuerParcours({
             <p className="mt-0.5 font-bold">{prochaine.titre}</p>
           </div>
         </div>
-        <span className="shrink-0 rounded-xl bg-cours-accent px-4 py-2 text-sm font-bold text-white">
+        <span className="shrink-0 rounded-xl bg-cours-accent px-4 py-2 text-center text-sm font-bold text-white sm:w-auto">
           Reprendre →
         </span>
       </Link>

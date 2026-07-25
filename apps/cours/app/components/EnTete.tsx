@@ -33,25 +33,30 @@ export default function EnTete() {
 
   return (
     <header className="sticky top-0 z-10 border-b border-cours-border bg-cours-surface/95 backdrop-blur">
-      <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-5">
+      {/* Sur mobile (<640px) : marges réduites et labels texte masqués (les
+          emojis restent cliquables) pour tenir sur UNE ligne — sinon le header
+          wrappe et la barre de lecture (position fixe dessous) se décale. */}
+      <div className="mx-auto flex max-w-4xl items-center justify-between px-3 py-3 sm:px-4">
+        <div className="flex items-center gap-3 sm:gap-5">
           <Link
             href="/"
-            className="font-bold tracking-tight transition-colors hover:text-cours-accent"
+            className="whitespace-nowrap font-bold tracking-tight transition-colors hover:text-cours-accent"
           >
             Velito Cours
           </Link>
           <Link
             href="/parcours"
+            aria-label="Parcours"
             className="text-sm font-medium text-cours-text-muted transition-colors hover:text-cours-accent"
           >
-            📚 Parcours
+            📚<span className="hidden sm:inline"> Parcours</span>
           </Link>
           <Link
             href="/revision"
+            aria-label="Révision du jour"
             className="text-sm font-medium text-cours-text-muted transition-colors hover:text-cours-accent"
           >
-            🎯 Révision
+            🎯<span className="hidden sm:inline"> Révision</span>
           </Link>
         </div>
 

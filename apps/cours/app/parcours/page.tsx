@@ -20,7 +20,7 @@ export default function ParcoursPage() {
       </Link>
 
       <header className="mb-8 mt-4">
-        <h1 className="text-3xl font-bold">Parcours 📚</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">Parcours 📚</h1>
         <p className="mt-1 max-w-2xl text-sm leading-relaxed text-cours-text-muted">
           Les technos de ta stack, reprises depuis zéro jusqu&apos;au niveau
           « défendable au jury ». Une leçon par jour : le cours, la mise en

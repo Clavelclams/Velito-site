@@ -32,7 +32,7 @@ export default function RevisionPage() {
       </Link>
 
       <header className="mb-8 mt-4">
-        <h1 className="text-3xl font-bold">Révision du jour 🎯</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">Révision du jour 🎯</h1>
         <p className="mt-1 text-sm text-cours-text-muted">
           10 questions tirées au hasard dans tes {pool.length} questions, tous
           projets confondus. Chaque erreur vient avec son explication — c'est

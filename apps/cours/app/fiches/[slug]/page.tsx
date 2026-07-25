@@ -67,7 +67,7 @@ export default async function FichePage({
       <header
         className={`anim-arrivee mb-8 mt-4 rounded-2xl border-l-4 ${accent.bordure} bg-cours-surface p-6 shadow-sm`}
       >
-        <h1 className="text-3xl font-bold leading-tight">{fiche.titre}</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl leading-tight">{fiche.titre}</h1>
         <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
           <span
             className={`rounded-full px-2.5 py-1 font-semibold ${accent.fond} ${accent.texte}`}
