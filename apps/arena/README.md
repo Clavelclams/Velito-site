@@ -1,40 +1,53 @@
-# ARENA — Webapp tournois (arena.velito.fr)
+# ARENA — Velito Tournois
 
-Hub de gestion de tournois esport amateur. V1 = MVP resserré ciblé sur le
-tournoi VEA de la rentrée 2026.
+Hub de tournois esport amateur. Brackets, scores validés, résultats qui ne se
+perdent plus. App du monorepo Velito — `arena.velito.fr` — port dev **3003**.
 
-**📋 Document de référence dev : `Application/arena-store/ARENA_CADRAGE_V1.md`**
-(scope V1, décisions, corrections vs la spec de mars, roadmap).
-La vision long terme reste dans `CDC/arena/ARENA_SPEC_COMPLETE_V1.pdf`.
+## État d'avancement
 
-## État actuel (24/07/2026)
+- ✅ **S1** — Algo bracket élimination simple (`lib/bracket.ts`, pur, 13 tests
+  vitest) + schéma SQL (`sql/001_arena_schema_v1.sql`, 7 tables + RLS).
+- ✅ **S2** — Supabase branché (SSO cookie `.velito.fr`, même pattern que le
+  hub) + flux orga complet : créer un tournoi, inscriptions/check-in jour J,
+  démarrage (génération du bracket en base), saisie puis validation des scores
+  (double étape), progression automatique des gagnants, logs d'audit.
+- ✅ **S3** — Page publique `/t/[qr_token]` (bracket en direct, refresh auto
+  15 s), QR code imprimable (`/admin/tournois/[id]/qr`), export JSON public
+  (`/api/export/[qr_token]`), page prévention statique (`/prevention`).
+- ⬜ **S4** — Durcissement : comptes joueurs (auth hub), multi-orgas, imports
+  start.gg (V2). Voir `ARENA_CADRAGE_V1.md` (dossier Application/arena-store).
 
-| Élément | Statut |
-|---|---|
-| `lib/bracket.ts` | ✅ Algo élimination simple, testé (13 tests Vitest) |
-| `lib/bracket.test.ts` | ✅ `npx vitest run apps/arena/lib` (installer vitest si absent : `npm i -D vitest`) |
-| `sql/001_arena_schema_v1.sql` | 🟡 Draft à relire puis passer en migration Supabase |
-| Routes / UI | ⬜ À construire (S2-S3) |
+## Architecture (à savoir défendre)
 
-## Ce qui est volontairement différent de la spec de mars 2026
+- **Server Components + Server Actions uniquement** — pas de route API custom
+  pour le flux orga, pas de state client. Un seul composant `"use client"` :
+  `AutoRefresh` (polling de la page publique).
+- **Sécurité en 3 couches** : (1) chaque Server Action commence par
+  `requireStaff()` ; (2) les écritures passent par le client `service_role`
+  server-only APRÈS ce contrôle ; (3) la RLS Postgres reste active en filet
+  (lecture publique = tournois non-BROUILLON seulement).
+- **Logique métier isolée** : `lib/bracket.ts` est pur (zéro dépendance,
+  zéro I/O), testé par `lib/bracket.test.ts`. Les actions orchestrent, elles ne
+  décident pas.
+- **Traçabilité** : toute action sensible écrit dans `arena_logs`
+  (qui/quoi/quand + ancien/nouveau score) — utile en litige ET pour les
+  bilans d'activité VEA.
 
-1. **Pas de table BracketNode** — le parent d'un match `(round, position)` se
-   calcule : `(round + 1, floor(position / 2))`. Une table en moins, zéro sync.
-2. **Supabase SQL direct** (comme VEA/Interactive), pas le Prisma racine
-   (legacy MySQL, ne pas toucher).
-3. **Auth = SSO cookie `.velito.fr` existant**, pas de middleware Bearer custom.
-4. Trois bugs de l'algo de la spec corrigés (double-bye, shuffle biaisé,
-   égalité non gérée) — détails en tête de `lib/bracket.ts`.
-
-## Dev
+## Dev local
 
 ```bash
-npm run dev        # port 3003
-npx vitest run apps/arena/lib   # tests bracket (depuis la racine du monorepo)
+npm install               # à la racine du monorepo
+cp .env.example .env.local  # puis remplir (mêmes valeurs que le hub)
+npm run dev               # http://localhost:3003
+npm run test              # 13 tests bracket
 ```
 
-## Scope V1 (rappel anti-dérive)
+Prérequis : `sql/001_arena_schema_v1.sql` exécuté dans Supabase + seed d'une
+organisation et d'un membre ADMIN (voir le cadrage).
 
-Tournoi → inscriptions/check-in QR → bracket élim simple → scores validés →
-page publique temps réel → export JSON. Prévention en contenu statique.
-**Tout le reste est V2** (badges, dépenses, autres formats, API publique, imports, app native).
+## Pièges connus
+
+- Le monorepo active `noUncheckedIndexedAccess` : `tableau[i]` est typé
+  `T | undefined` → pas de swap destructuré, pas d'index sans garde.
+- Les `NEXT_PUBLIC_*` marquées Sensitive sur Vercel arrivent vides au runtime →
+  toujours lire `SUPABASE_URL` (runtime) en priorité (leçon du bug devis VENA).

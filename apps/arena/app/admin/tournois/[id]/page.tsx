@@ -104,6 +104,21 @@ export default async function PageTournoi({
                 {tournoi.statut}
               </span>
             </p>
+            <p className="mt-1 text-sm">
+              <a
+                href={`/t/${tournoi.qr_token}`}
+                className="text-arena-lilac underline hover:text-white"
+              >
+                Page publique
+              </a>
+              {" · "}
+              <a
+                href={`/admin/tournois/${tournoi.id}/qr`}
+                className="text-arena-lilac underline hover:text-white"
+              >
+                QR code à imprimer
+              </a>
+            </p>
           </div>
 
           <div className="flex gap-2">

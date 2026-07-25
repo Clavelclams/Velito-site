@@ -55,10 +55,11 @@ export default async function ArenaHome() {
         ) : (
           <ul className="space-y-3">
             {tournois.map((t) => (
-              <li
-                key={t.id}
-                className="rounded-lg border border-arena-border bg-arena-surface p-4"
-              >
+              <li key={t.id}>
+                <a
+                  href={`/t/${t.qr_token}`}
+                  className="block rounded-lg border border-arena-border bg-arena-surface p-4 transition-colors hover:border-arena-violet/50"
+                >
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="font-bold">{t.titre}</p>
@@ -82,6 +83,7 @@ export default async function ArenaHome() {
                     {LABELS[t.statut] ?? t.statut}
                   </span>
                 </div>
+                </a>
               </li>
             ))}
           </ul>
@@ -90,6 +92,10 @@ export default async function ArenaHome() {
 
       <footer className="mt-16 text-center text-xs text-gray-600">
         Un projet Velito — Amiens ·{" "}
+        <a href="/prevention" className="underline hover:text-gray-400">
+          Esport responsable
+        </a>{" "}
+        ·{" "}
         <a href="/admin" className="underline hover:text-gray-400">
           Espace orga
         </a>
