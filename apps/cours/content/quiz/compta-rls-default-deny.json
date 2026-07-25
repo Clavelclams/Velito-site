@@ -1,0 +1,60 @@
+{
+  "fiche": "compta-rls-default-deny",
+  "questions": [
+    {
+      "question": "Velito Compta doit cloisonner les données de VEA et de VENA. Pourquoi la Row Level Security a-t-elle été préférée à des clauses where entite_id = X dans chaque requête ?",
+      "choix": [
+        "Parce que la RLS rend les requêtes plus rapides en supprimant les filtres",
+        "Parce qu'un where oublié dans UNE seule requête suffirait à faire fuiter des données : la RLS déplace la garantie du code applicatif (discipline humaine) vers la base (structure), qui applique le filtre à chaque requête",
+        "Parce que supabase-js ne permet pas d'écrire des clauses where",
+        "Parce que les clauses where sont vulnérables à l'injection SQL"
+      ],
+      "bonne": 1,
+      "explication": "Le where dans chaque requête fonctionne… tant que personne n'en oublie un : c'est une garantie par discipline, fragile à chaque nouvelle requête. La RLS inverse la responsabilité — Postgres filtre lui-même, même les requêtes qu'on n'a pas encore écrites. Le distracteur de l'injection SQL est tentant car il sonne « sécurité », mais l'injection se traite par les requêtes paramétrées ; ce n'est pas le problème que la RLS résout ici."
+    },
+    {
+      "question": "Que signifie « default deny » : que se passe-t-il quand on active la RLS sur une table SANS avoir encore écrit de policy ?",
+      "choix": [
+        "Les lectures restent ouvertes mais les écritures sont bloquées",
+        "La table reste accessible normalement jusqu'à la première policy",
+        "Plus rien ne passe : aucune ligne n'est visible ni modifiable tant qu'une policy ne l'autorise pas explicitement",
+        "Postgres refuse d'activer la RLS tant qu'aucune policy n'existe"
+      ],
+      "bonne": 2,
+      "explication": "C'est l'inversion de logique qui fait la valeur de la RLS : le défaut est le refus, et chaque accès doit être explicitement autorisé par une policy — l'oubli d'une policy prive d'accès au lieu d'ouvrir une fuite. Le distracteur « accessible jusqu'à la première policy » décrit ce qu'un débutant suppose (et ce serait un défaut dangereux) : c'est exactement l'inverse du comportement réel."
+    },
+    {
+      "question": "Dans une policy RLS, quelle est la différence entre USING et WITH CHECK, et quel est le risque si on omet WITH CHECK ?",
+      "choix": [
+        "USING s'applique aux administrateurs, WITH CHECK aux utilisateurs normaux",
+        "USING filtre les lectures, WITH CHECK les accélère via un index",
+        "WITH CHECK est un alias facultatif de USING, sans différence de comportement",
+        "USING filtre ce qu'on peut LIRE ou modifier, WITH CHECK valide ce qu'on ÉCRIT : sans WITH CHECK, on pourrait insérer une ligne chez quelqu'un d'autre sans pouvoir la relire — une écriture sale quand même"
+      ],
+      "bonne": 3,
+      "explication": "Les deux clauses couvrent deux directions : USING contrôle les lignes existantes qu'on atteint, WITH CHECK contrôle les lignes nouvelles ou modifiées qu'on tente d'écrire. L'omission de WITH CHECK crée un trou contre-intuitif — impossible de relire la ligne insérée chez autrui, mais l'insertion a bien pollué ses données. Le distracteur « alias facultatif » est le piège : Postgres réutilise effectivement USING par défaut dans certains cas, ce qui entretient la confusion, mais les rôles sont distincts."
+    },
+    {
+      "question": "Le repository de Velito Compta exécute select * from entite sans AUCUN filtre, et ne reçoit pourtant que les entités de l'utilisateur connecté. Comment est-ce possible ?",
+      "choix": [
+        "Postgres applique lui-même les policies à chaque requête : elles remontent la chaîne de propriété jusqu'à proprietaire_id = auth.uid(), l'uuid extrait du JWT de l'utilisateur connecté",
+        "supabase-js ajoute automatiquement un where entite_id côté client avant l'envoi",
+        "Le middleware Next.js réécrit la requête SQL avant de la transmettre",
+        "Un trigger Postgres supprime les lignes des autres utilisateurs du résultat"
+      ],
+      "bonne": 0,
+      "explication": "Le filtrage vit DANS le moteur de la base : la policy est évaluée par Postgres pour chaque ligne, en s'appuyant sur l'identité portée par le JWT (auth.uid()). Le distracteur supabase-js est le plus tentant car « la magie » semble venir du client — mais un filtre côté client serait contournable par n'importe quelle requête directe, alors que la RLS tient même face à une requête volontairement malveillante, comme le prouvent les 18 assertions du harnais PGlite."
+    },
+    {
+      "question": "Question type jury : « Si la RLS protège tout, pourquoi gardez-vous aussi des contrôles dans l'application (middleware, liste blanche, messages d'erreur) ? »",
+      "choix": [
+        "Parce que la RLS ne fonctionne pas sur les requêtes d'insertion",
+        "Par précaution : les contrôles applicatifs seront retirés une fois la RLS suffisamment testée",
+        "Défense en profondeur : la RLS protège les DONNÉES, les contrôles applicatifs servent l'expérience (redirections, messages propres) — et si une faille apparaît à un étage, l'autre reste le rempart ; aucun étage ne fait confiance à celui du dessus",
+        "Parce que la RLS ralentit trop les requêtes pour être utilisée seule"
+      ],
+      "bonne": 2,
+      "explication": "Chaque étage a un rôle propre : la RLS garantit qu'aucune donnée ne fuit, mais elle ne sait ni rediriger vers /login ni afficher un message d'erreur lisible — et réciproquement, le middleware seul serait contournable. Le distracteur « on les retirera plus tard » est le piège conceptuel : la défense en profondeur n'est pas une redondance temporaire mais un principe permanent, où la coexistence des couches est voulue."
+    }
+  ]
+}

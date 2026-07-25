@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import EnTete from "@/app/components/EnTete";
 
 /** Espace personnel : pas d'indexation (la vraie protection = middleware). */
 export const metadata: Metadata = {
@@ -16,6 +17,8 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className="min-h-screen bg-cours-bg text-cours-text antialiased">
+        {/* Header commun (masqué sur /login — voir EnTete.tsx). */}
+        <EnTete />
         {children}
       </body>
     </html>

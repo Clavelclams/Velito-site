@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-tests-anti-idor",
+  "questions": [
+    {
+      "question": "Une joueuse connectée ouvre /seances/42 (sa séance), puis tape /seances/43 dans la barre d'adresse et voit la séance d'une autre équipe. Comment s'appelle cette faille et quelle en est la cause ?",
+      "choix": [
+        "Une injection SQL : l'id 43 est injecté dans la requête",
+        "Un XSS : l'URL modifiée exécute du script dans le navigateur",
+        "Un CSRF : la requête a été forgée à l'insu de la joueuse",
+        "Une IDOR : le serveur charge l'objet demandé sans vérifier qu'il appartient bien à l'utilisatrice"
+      ],
+      "bonne": 3,
+      "explication": "L'IDOR (Insecure Direct Object Reference) est l'une des failles web les plus courantes : l'authentification est correcte, c'est l'autorisation sur l'objet qui manque. Le distracteur « injection SQL » est le réflexe fréquent (« un id manipulé dans l'URL = injection »), mais ici la requête est parfaitement légitime techniquement — le problème n'est pas la syntaxe SQL, c'est l'absence de contrôle d'appartenance."
+    },
+    {
+      "question": "Pourquoi Clavel écrit-il des tests qui vérifient un REFUS (assertResponseStatusCodeSame(403)) plutôt que seulement des tests qui vérifient que « ça marche » ?",
+      "choix": [
+        "Parce que les tests de refus sont plus rapides à exécuter",
+        "Parce qu'un oubli de vérification d'appartenance ne fait planter aucun test « positif » : seul un test qui affirme le blocage détecte la faille",
+        "Parce que PHPUnit recommande de tester d'abord les cas d'erreur",
+        "Parce que les tests de succès sont déjà couverts par les tests unitaires"
+      ],
+      "bonne": 1,
+      "explication": "C'est le renversement de perspective clé : une IDOR ne casse rien pour l'utilisateur légitime, donc tous les tests « ça marche » restent verts pendant que la faille est béante. Le distracteur « couverts par les unitaires » est piégeux car les unitaires prouvent bien la logique du Voter — mais ils ne prouvent pas que le Voter est appelé sur cette route : seul le test fonctionnel de refus le garantit."
+    },
+    {
+      "question": "Les tests anti-IDOR de Venaball sont des tests fonctionnels (WebTestCase) et non des tests unitaires. Qu'est-ce que cela apporte de plus ?",
+      "choix": [
+        "Une vraie requête HTTP traverse le firewall, le routing, le contrôleur ET le Voter : on prouve le comportement réel de bout en bout, pas seulement la logique d'une classe isolée",
+        "Les tests fonctionnels s'exécutent plus vite que les tests unitaires",
+        "Les tests fonctionnels ne nécessitent pas de base de données",
+        "WebTestCase permet de tester l'app mobile Expo directement"
+      ],
+      "bonne": 0,
+      "explication": "Un test unitaire du ClubVoter prouve que le Voter refuse — mais pas qu'il est branché sur la route. Le test fonctionnel prouve que toute la chaîne bloque réellement, y compris la config du firewall par host (d'où l'appel sur pirb.localhost). Le distracteur « plus rapides » est l'inverse de la réalité : les fonctionnels sont plus lents, c'est justement le prix accepté pour la fidélité au comportement réel."
+    },
+    {
+      "question": "Chaque test IDOR s'exécute dans une transaction annulée en tearDown(). Que se passerait-il sans cette technique ?",
+      "choix": [
+        "Les tests s'exécuteraient deux fois plus lentement",
+        "Les assertions 403 ne fonctionneraient plus",
+        "Les données seedées par chaque test s'accumuleraient en base : les tests se pollueraient entre eux et deviendraient non rejouables",
+        "PHPUnit refuserait de lancer les tests fonctionnels"
+      ],
+      "bonne": 2,
+      "explication": "Le rollback garantit que chaque test part d'une base propre : isolation et rejouabilité, deux propriétés indispensables pour qu'un échec signifie « bug » et pas « résidu du test précédent ». Le distracteur « plus lents » inverse le raisonnement : la transaction annulée est justement plus rapide que re-créer/vider la base entre chaque test — c'est un gain, pas un coût."
+    },
+    {
+      "question": "Question vicieuse du jury : « Votre test vérifie une séance. Qu'est-ce qui vous dit que les 87 autres contrôleurs ne sont pas troués ? » Quelle est la réponse de Clavel ?",
+      "choix": [
+        "La couverture de code est à 100 %, donc toutes les routes sont testées",
+        "Rien ne le garantit à 100 % ; la réponse tient en trois temps : la conception (ClubVoter + ClubAwareInterface comme chemin par défaut, API mobile sans {id} donc sûre par construction), l'audit route par route qui a trouvé SEC-0009, et l'outillage (PirbIdorTestCase mutualisée pour étendre la couverture à bas coût)",
+        "Les autres contrôleurs utilisent le même code, donc s'ils étaient troués le test de la séance échouerait",
+        "Symfony vérifie automatiquement l'appartenance des entités chargées par ParamConverter"
+      ],
+      "bonne": 1,
+      "explication": "Commencer par « rien ne le garantit à 100 % » est la marque de maturité que le jury cherche — puis on montre la défense en profondeur : conception, audit, outillage. Le distracteur « couverture à 100 % » est un piège classique : la couverture mesure les lignes exécutées, pas les scénarios d'attaque testés — une route peut être couverte à 100 % par des tests positifs et rester troulée face à une IDOR."
+    }
+  ]
+}

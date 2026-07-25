@@ -1,0 +1,60 @@
+{
+  "fiche": "compta-getuser-vs-getsession",
+  "questions": [
+    {
+      "question": "Quelle est la différence fondamentale entre getSession() et getUser() avec Supabase Auth côté serveur ?",
+      "choix": [
+        "getSession() lit le cookie local et fait confiance à son contenu ; getUser() revalide le jeton auprès du serveur Supabase à chaque appel",
+        "getSession() fonctionne côté client et getUser() uniquement côté serveur",
+        "getUser() renvoie plus d'informations de profil que getSession()",
+        "getSession() est dépréciée et getUser() la remplace à fonctionnalité identique"
+      ],
+      "bonne": 0,
+      "explication": "Toute la fiche tient dans cette distinction : getSession() restitue une déclaration du client (le cookie), getUser() obtient une preuve vérifiée par le serveur d'authentification, au prix d'un aller-retour réseau. Le distracteur « dépréciée » est tentant car Supabase affiche effectivement des avertissements incitant à préférer getUser(), mais la différence n'est pas cosmétique : c'est une différence de niveau de confiance."
+    },
+    {
+      "question": "Pourquoi un cookie de session ne peut-il PAS servir de preuve d'identité pour une décision de sécurité ?",
+      "choix": [
+        "Parce qu'un cookie est limité à 4 Ko, trop petit pour contenir une identité complète",
+        "Parce qu'un cookie vient du client : comme un champ de formulaire, il peut être forgé ou périmé — c'est une déclaration, pas une preuve vérifiée",
+        "Parce que les cookies sont bloqués par défaut dans les navigateurs récents",
+        "Parce qu'un cookie est envoyé en clair sur le réseau, même en HTTPS"
+      ],
+      "bonne": 1,
+      "explication": "C'est le même principe que la validation serveur des formulaires : on ne fait jamais confiance à ce qui vient du client, et un cookie VIENT du client. Le distracteur du « clair sur le réseau » est séduisant car il sonne technique, mais il est faux en HTTPS — et surtout il rate le point : même transmis de façon sécurisée, le contenu du cookie reste une donnée que le client contrôle."
+    },
+    {
+      "question": "Scénario : un attaquant présente un cookie de session forgé au middleware de Velito Compta. Que se passe-t-il selon que le middleware décide avec getSession() ou avec getUser() ?",
+      "choix": [
+        "Dans les deux cas il est bloqué, car Supabase signe les cookies",
+        "Dans les deux cas il passe, car le middleware ne peut pas vérifier un cookie",
+        "Avec getSession(), le contenu du cookie risque d'être cru et l'accès accordé ; avec getUser(), la revalidation auprès du serveur Supabase rejette le jeton invalide et l'accès est refusé",
+        "Avec getUser() il passe car l'appel réseau expire, avec getSession() il est bloqué"
+      ],
+      "bonne": 2,
+      "explication": "C'est exactement le scénario qui justifie la règle du middleware : toute décision laisser passer / bloquer / rediriger se prend sur getUser(), parce que seule la revalidation serveur détecte un jeton forgé ou périmé. Le distracteur « les cookies sont signés donc tout va bien » est le plus dangereux : il donne une fausse assurance et incite à décider sur une lecture locale — précisément ce que la fiche interdit."
+    },
+    {
+      "question": "Question type jury : « Un appel réseau à chaque requête pour getUser(), ce n'est pas un problème de performance ? » Quelle est la bonne réponse, et quelle est la MAUVAISE solution si le trafic explosait ?",
+      "choix": [
+        "Bonne réponse : mettre getUser() en cache une heure ; mauvaise solution : le désactiver",
+        "Bonne réponse : c'est un arbitrage assumé sécurité/latence sur un outil interne à faible trafic ; si le trafic explosait, on vérifierait la signature du JWT localement avec la clé publique — la mauvaise réponse serait de repasser à getSession()",
+        "Bonne réponse : getUser() est en réalité plus rapide que getSession() grâce au cache de Supabase",
+        "Bonne réponse : ne protéger que les pages les plus sensibles pour limiter les appels"
+      ],
+      "bonne": 1,
+      "explication": "Le jury attend un arbitrage chiffré et une piste d'évolution correcte : quelques dizaines de millisecondes acceptées aujourd'hui, et demain une vérification cryptographique locale du JWT qui garde une preuve sans aller-retour. Le distracteur du cache d'une heure est tentant car il « résout » la latence, mais il recrée le problème de getSession() : pendant une heure, on ferait confiance à une identité non revérifiée."
+    },
+    {
+      "question": "Dans Velito Compta, y a-t-il un usage légitime restant pour getSession() ?",
+      "choix": [
+        "Oui : protéger les routes du back-office, moins sensibles que les données",
+        "Oui : servir de solution de repli quand le serveur Supabase est injoignable",
+        "Non : getSession() est interdite partout dans le projet",
+        "Oui, au mieux : de l'affichage non sensible (par exemple montrer un nom dans l'interface), jamais une décision de sécurité"
+      ],
+      "bonne": 3,
+      "explication": "La règle n'est pas « getSession() est bannie » mais « aucune décision de sécurité sur getSession() » : pour de l'affichage cosmétique, une donnée non vérifiée est acceptable car une falsification n'ouvre aucun accès. Le distracteur du repli en cas de panne est le piège classique : basculer sur une vérification faible quand la vérification forte échoue, c'est offrir à un attaquant un moyen de contourner la sécurité en provoquant la panne."
+    }
+  ]
+}

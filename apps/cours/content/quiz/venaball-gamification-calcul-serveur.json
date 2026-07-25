@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-gamification-calcul-serveur",
+  "questions": [
+    {
+      "question": "Une joueuse maligne intercepte les requêtes de l'app avec un proxy et tente de forger un appel pour se donner 10 000 XP. Pourquoi est-ce impossible dans Venaball ?",
+      "choix": [
+        "L'app mobile chiffre ses requêtes avec une clé secrète intégrée au binaire",
+        "Il n'existe aucun endpoint pour déclarer de l'XP : le serveur calcule tout depuis les présences pointées par le coach, une donnée que la joueuse ne contrôle pas",
+        "Le serveur détecte les proxys et bannit l'adresse IP",
+        "L'XP est plafonné à 100 points par jour, ce qui limite la triche"
+      ],
+      "bonne": 1,
+      "explication": "La règle d'or : le client ne fait qu'afficher, jamais compter. Il n'y a tout simplement pas de surface d'attaque — aucune route n'accepte de l'XP en entrée. Le distracteur « chiffrement dans l'app » est le piège classique : tout secret embarqué dans un client mobile peut être extrait par rétro-ingénierie, on ne peut jamais faire confiance au client."
+    },
+    {
+      "question": "Clavel décide de passer le bonus de streak de 20 à 30 XP. Que se passe-t-il pour les joueuses grâce au choix de ne jamais stocker l'XP ?",
+      "choix": [
+        "Il faut lancer un script de migration pour recalculer les totaux stockés",
+        "Seules les nouvelles présences bénéficient du nouveau barème, l'historique garde l'ancien",
+        "Tout le monde voit son XP mis à jour immédiatement, car il est recalculé à la volée depuis la table Presence à chaque demande",
+        "Les niveaux sont réinitialisés à zéro pour repartir sur une base saine"
+      ],
+      "bonne": 2,
+      "explication": "Pas de stockage = pas de désynchronisation possible : la table Presence est la single source of truth et le barème vit en constantes dans XpCalculator. Le distracteur « script de migration » est exactement ce qu'il aurait fallu faire avec un total stocké — c'est tout l'intérêt du choix : ce problème n'existe pas."
+    },
+    {
+      "question": "La méthode syncBadges() de BadgeChecker est appelée après chaque pointage de présence, parfois dix fois pour la même joueuse. Pourquoi cela ne crée-t-il jamais de badge en double ?",
+      "choix": [
+        "Un verrou en base empêche deux appels simultanés",
+        "Les badges sont stockés dans un tableau PHP dédupliqué avant insertion",
+        "L'app mobile filtre les doublons à l'affichage",
+        "La méthode est idempotente : elle vérifie l'existence du couple code+saison avant chaque persist"
+      ],
+      "bonne": 3,
+      "explication": "L'idempotence — le même appel répété produit le même état — est la propriété qui rend syncBadges() rappelable sans risque à n'importe quel moment. Le distracteur « filtrage à l'affichage » est le piège du débutant : masquer les doublons côté client laisse la base sale et le bug intact, on corrige à la source, pas au symptôme."
+    },
+    {
+      "question": "Le jury attaque : « Recalculer tout l'XP à chaque requête, ça va s'écrouler avec 1 000 joueuses, non ? » Quelle est la défense de Clavel ?",
+      "choix": [
+        "Une joueuse a moins de 200 présences (quelques millisecondes de calcul, par joueuse connectée, pas en masse) ; optimiser maintenant serait payer pour un problème inexistant, et le plan (cache Redis, compteurs) ne toucherait qu'un seul endroit : XpCalculator",
+        "Le serveur OVH sera upgradé quand le club grossira, c'est un problème d'infrastructure",
+        "C'est vrai, il faudra stocker l'XP dès que possible pour anticiper",
+        "Les joueuses inactives sont archivées chaque saison, ce qui limite le volume"
+      ],
+      "bonne": 0,
+      "explication": "C'est la règle d'ingénierie assumée : ne pas payer aujourd'hui le coût d'une optimisation prématurée, tout en ayant le plan écrit pour le jour où le besoin arrive — et l'architecture (tout passe par l'unique XpCalculator) rend cette optimisation locale. Le distracteur « stocker dès maintenant » est tentant car il semble prévoyant, mais il introduit tout de suite le vrai risque : un compteur désynchronisé qui affiche faux et tue la crédibilité de la gamification."
+    },
+    {
+      "question": "Un salarié du club effectue une mission avec estBenevole=false. Pourquoi cette mission n'alimente-t-elle pas son XP bénévolat ?",
+      "choix": [
+        "Parce que les salariés n'ont pas de compte sur l'app mobile",
+        "Parce que compter le travail rémunéré comme du bénévolat dévaloriserait les vrais bénévoles ; les missions salariées alimentent un axe séparé",
+        "Parce que le RGPD interdit de gamifier l'activité des salariés",
+        "Parce que l'XP bénévolat est réservé aux joueuses mineures"
+      ],
+      "bonne": 1,
+      "explication": "C'est une subtilité métier défendable devant le jury : la gamification porte un sens, et mélanger travail payé et engagement bénévole fausserait la reconnaissance des seconds. Le distracteur RGPD est plausible car le règlement encadre bien le suivi des salariés, mais ici la raison est purement métier — savoir distinguer une contrainte légale d'un choix produit, c'est exactement ce qu'attend le jury."
+    }
+  ]
+}

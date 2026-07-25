@@ -1,0 +1,60 @@
+{
+  "fiche": "pirb-push-expo-bout-en-bout",
+  "questions": [
+    {
+      "question": "Dans la chaîne push de Pirb, à quoi sert la table push_token côté serveur Symfony ?",
+      "choix": [
+        "À stocker le contenu des notifications déjà envoyées pour l'historique",
+        "À conserver le mot de passe d'API d'Expo pour signer les envois",
+        "À rattacher chaque jeton d'appareil Expo à un compte : quand le coach convoque, le serveur sait vers quels appareils envoyer via ExpoPushService",
+        "À mettre en file d'attente les notifications en cas de panne d'Expo"
+      ],
+      "bonne": 2,
+      "explication": "Le jeton Expo identifie un appareil ; la table push_token fait le lien appareil ↔ compte, ce qui permet au serveur de cibler les bonnes joueuses au moment de la convocation. Le distracteur de l'historique est plausible car un écran de notifications existe bien dans l'app, mais c'est un autre besoin : push_token ne stocke que l'adressage, pas les messages."
+    },
+    {
+      "question": "Pourquoi enregistrerPush() est-elle rappelée à CHAQUE ouverture de session, alors que le jeton a déjà été envoyé au serveur la première fois ?",
+      "choix": [
+        "Parce que le serveur supprime les jetons toutes les 24 heures par sécurité",
+        "Parce qu'un jeton peut changer (réinstallation, restauration de l'appareil) : on réenregistre systématiquement, et l'opération est idempotente côté serveur donc sans danger",
+        "Pour vérifier que la permission de notification n'a pas été révoquée dans les réglages",
+        "Parce qu'Expo exige un battement de cœur régulier pour maintenir le jeton actif"
+      ],
+      "bonne": 1,
+      "explication": "Un jeton n'est pas éternel : réinstallation ou restauration en génèrent un nouveau, et un serveur qui garde l'ancien envoie des notifications dans le vide. Le réenregistrement systématique est le prix d'un push qui arrive vraiment — et il est inoffensif parce qu'il est idempotent côté serveur. Le distracteur sur la permission est tentant car la fonction vérifie effectivement le statut, mais ce n'est pas la raison du rappel à chaque ouverture : c'est la fraîcheur du jeton."
+    },
+    {
+      "question": "Il manque encore le projectId EAS, et Expo Go ne supporte plus le push. Que fait enregistrerPush() dans cette situation, et pourquoi ce choix de conception ?",
+      "choix": [
+        "Elle lève une exception attrapée par l'error boundary, qui affiche l'écran de crash",
+        "Elle affiche une alerte invitant l'utilisatrice à mettre à jour l'app",
+        "Elle bascule automatiquement sur un système de notifications locales en attendant",
+        "Elle retourne silencieusement sans rien faire : le push est un confort, pas une dépendance — un prérequis absent n'est pas un bug et ne doit jamais casser l'app"
+      ],
+      "bonne": 3,
+      "explication": "Le service est écrit pour ne jamais lever d'erreur : si le statut n'est pas granted ou si le projectId manque, on retourne, et l'app continue exactement comme si le push n'existait pas. Le distracteur de l'error boundary est le piège : faire planter le rendu de toute l'app pour une fonctionnalité optionnelle serait l'inverse de la résilience recherchée — l'échec silencieux est ici un choix délibéré et documenté."
+    },
+    {
+      "question": "Une joueuse se déconnecte de Pirb sur un téléphone partagé, et sa petite sœur se connecte avec son propre compte. Quel risque retirerPush() prévient-il à la déconnexion ?",
+      "choix": [
+        "Sans désinscription, l'appareil resterait rattaché au premier compte et continuerait de recevoir ses convocations — des données d'un autre compte livrées au mauvais utilisateur",
+        "Sans désinscription, le serveur refuserait la connexion du deuxième compte sur le même appareil",
+        "Sans désinscription, les deux comptes recevraient les notifications en double",
+        "Sans désinscription, le jeton Expo expirerait et bloquerait le push pour tous les comptes du téléphone"
+      ],
+      "bonne": 0,
+      "explication": "Le jeton identifie l'appareil, pas la personne : tant qu'il est rattaché au compte A côté serveur, l'appareil reçoit les notifications de A, même si B est désormais connecté. C'est une question de sécurité des données, pas de confort. Le distracteur des doublons est tentant car il semble logique, mais le vrai problème est plus grave : la fuite d'informations d'un compte vers un autre utilisateur."
+    },
+    {
+      "question": "Question type jury : « Vous dites que la chaîne push est complète, mais vous ne l'avez jamais vue fonctionner sur un vrai téléphone. Comment pouvez-vous l'affirmer ? » Quelle est la réponse la plus solide ?",
+      "choix": [
+        "Le code compile et le typecheck passe, ce qui prouve que la chaîne fonctionnera",
+        "Les tests unitaires du service push simulent Apple et Google, ce qui équivaut à un test réel",
+        "Assumer la distinction entre « codé » et « validé en conditions réelles » : le test est bloqué par un prérequis administratif identifié (compte développeur Apple), et le code est conçu pour que ce blocage ne coûte rien en attendant",
+        "C'est du code standard d'Expo, largement utilisé, donc il n'y a pas besoin de le tester"
+      ],
+      "bonne": 2,
+      "explication": "Le jury ne cherche pas une certitude impossible, il teste la lucidité : la bonne réponse nomme le blocage (Expo Go sans push depuis le SDK 53, development build exigeant un compte Apple pas encore créé), le classe comme administratif et non technique, et montre que l'app vit sans push d'ici là. Le distracteur du typecheck est le piège central : compiler prouve la forme du code, jamais son comportement de bout en bout sur APNs et FCM."
+    }
+  ]
+}

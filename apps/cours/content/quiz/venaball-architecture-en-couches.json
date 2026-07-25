@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-architecture-en-couches",
+  "questions": [
+    {
+      "question": "Tu ajoutes un endpoint API qui doit renvoyer le niveau XP d'une joueuse. Fidèle à l'architecture de Venaball, où écris-tu le calcul du niveau ?",
+      "choix": [
+        "Dans le contrôleur API, puisque c'est lui qui reçoit la requête et connaît le format JSON attendu",
+        "Dans l'entité Presence, au plus près des données",
+        "Dans un service dédié (XpCalculator) que le contrôleur se contente d'injecter et d'appeler",
+        "Dans le repository, sous forme de requête SQL qui agrège directement les points"
+      ],
+      "bonne": 2,
+      "explication": "Le principe de Venaball est « un contrôleur ne calcule rien » : il orchestre et sérialise, la logique vit dans des services injectés. Mettre le calcul dans le contrôleur est le réflexe le plus tentant du débutant (le code marche pareil !), mais il devient alors intestable sans HTTP et impossible à réutiliser par le web ET l'API mobile."
+    },
+    {
+      "question": "Quand Clavel a construit l'API mobile de Venaball, il n'a réécrit aucune logique métier. Qu'est-ce qui a rendu cela possible ?",
+      "choix": [
+        "Les contrôleurs API injectent exactement les mêmes services que les pages web : une seule source de vérité métier (ADR-0007)",
+        "L'app mobile recopie le code des pages web dans son propre projet Expo",
+        "Un module de génération de code produit automatiquement les endpoints à partir des pages Twig",
+        "L'API mobile interroge directement la base de données sans passer par Symfony"
+      ],
+      "bonne": 0,
+      "explication": "C'est LE bénéfice concret de la couche service : le web et l'API sont deux « portes d'entrée » différentes vers les mêmes services (SaisonService, XpCalculator...). Le distracteur « recopier le code côté mobile » est la vraie erreur classique : elle crée deux versions de la logique qui divergent au premier changement de règle."
+    },
+    {
+      "question": "Le 1er juillet arrive : la FFBB bascule sur la nouvelle saison sportive. Que se passe-t-il dans Venaball ?",
+      "choix": [
+        "Un administrateur doit changer la saison courante dans un écran de configuration",
+        "Il faut déployer une nouvelle version avec la saison mise à jour en constante",
+        "Chaque module (Manager, espace joueuse, API) bascule à sa propre date, configurée séparément",
+        "La bascule est automatique et simultanée partout, car tout le monolithe injecte le même SaisonService qui calcule la saison à partir de la date"
+      ],
+      "bonne": 3,
+      "explication": "SaisonService est la source de vérité unique : la saison est calculée (mois >= 7 → nouvelle saison), pas stockée ni codée en dur, donc aucun déploiement ni saisie manuelle. Le distracteur « constante à déployer » est tentant car c'était justement la situation d'avant : la saison codée en dur à plusieurs endroits, avec le risque d'en oublier un."
+    },
+    {
+      "question": "Le jury demande : « Quatre domaines bien séparés (Core, Sport, Pirb, Vitrine)... pourquoi un monolithe et pas des microservices ? » Quelle est la défense de Clavel ?",
+      "choix": [
+        "Les microservices sont une technologie trop récente pour un hébergement OVH",
+        "Les microservices résolvent des problèmes qu'il n'a pas (équipes multiples, scalabilité différenciée) et coûteraient cher en temps de dev seul et en infra ; le monolithe modulaire donne la modularité sans le coût réseau",
+        "C'est un choix provisoire : la migration vers des microservices est planifiée avant le passage devant le jury",
+        "Symfony ne permet pas de faire des microservices, seul le monolithe est possible"
+      ],
+      "bonne": 1,
+      "explication": "C'est un arbitrage documenté (ADR-0001) : on choisit une architecture pour les problèmes qu'on a réellement, pas pour suivre la mode. Le distracteur « migration planifiée » est piégeux car il sonne prudent, mais il sous-entend que le monolithe est un défaut à corriger — alors que la vraie réponse assume le choix et note que les namespaces de domaines constituent déjà la frontière de découpe si le besoin arrive."
+    },
+    {
+      "question": "Pourquoi CategorieCalculator peut-il être testé en pur PHPUnit, sans base de données ni serveur web ?",
+      "choix": [
+        "Parce que PHPUnit embarque sa propre base de données en mémoire",
+        "Parce que les tests fonctionnels de Venaball couvrent déjà la partie base de données",
+        "Parce que ce service ne dépend de rien d'autre que ses entrées : c'est de la logique métier pure, isolée dans sa couche",
+        "Parce que Symfony simule automatiquement les requêtes SQL pendant les tests"
+      ],
+      "bonne": 2,
+      "explication": "C'est le second grand bénéfice des couches : en isolant la logique dans des services sans dépendances, on obtient des tests rapides et hors ligne. Le distracteur « base en mémoire » est plausible car cette technique existe (SQLite in-memory), mais elle sert aux tests d'intégration — ici on n'en a simplement pas besoin, car le service ne touche jamais la base."
+    }
+  ]
+}

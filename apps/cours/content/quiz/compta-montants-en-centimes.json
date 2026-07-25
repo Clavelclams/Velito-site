@@ -1,0 +1,60 @@
+{
+  "fiche": "compta-montants-en-centimes",
+  "questions": [
+    {
+      "question": "En JavaScript, 0.1 + 0.2 donne 0.30000000000000004. Pourquoi est-ce un problème GRAVE en comptabilité, alors que l'écart semble microscopique ?",
+      "choix": [
+        "Parce que l'affichage de ce nombre casse la mise en page des tableaux",
+        "Parce que ces micro-erreurs s'accumulent au fil des opérations et finissent par produire des soldes faux",
+        "Parce que Postgres refuse d'insérer un nombre avec autant de décimales",
+        "Parce que la comparaison avec 0.3 lève une exception à l'exécution"
+      ],
+      "bonne": 1,
+      "explication": "Une erreur d'un dix-millième de centime est invisible sur une opération, mais une comptabilité en enchaîne des milliers : les écarts se cumulent et le solde final devient faux — inacceptable pour un outil de gestion. Le distracteur de l'affichage est tentant car c'est là qu'on VOIT le problème en premier, mais on peut arrondir un affichage ; on ne peut pas rattraper un solde qui a dérivé."
+    },
+    {
+      "question": "Question type jury : « Pourquoi pas numeric(12,2) dans Postgres, puisqu'il est exact aussi ? » Quel est l'argument décisif dans la stack de Velito Compta ?",
+      "choix": [
+        "numeric est trop lent pour les agrégations de bilans",
+        "numeric arrondit à 2 décimales, ce qui perd les fractions de centime",
+        "numeric est exact DANS Postgres, mais supabase-js le renvoie en string pour préserver la précision — et en JS, \"10\" + \"5\" donne \"105\" : le risque serait déplacé de la base vers le code client. L'entier en centimes est le seul type exact de bout en bout",
+        "numeric n'est pas supporté par supabase-js"
+      ],
+      "bonne": 2,
+      "explication": "L'argument n'est pas la base seule mais la chaîne complète : un type exact côté Postgres qui devient une chaîne côté client crée un nouveau piège, la concaténation silencieuse au lieu de l'addition. Le raisonnement à retenir pour le jury : évaluer un choix de type dans TOUTE la stack, pas dans un seul étage. Le distracteur de la lenteur est plausible (numeric est effectivement plus lent que bigint) mais ce n'est pas l'argument décisif ici."
+    },
+    {
+      "question": "Un utilisateur saisit « 12,50 » dans le formulaire. Que renvoie parseFloat(\"12,50\"), et pourquoi eurosVersCentimes() n'utilise-t-elle pas cette approche ?",
+      "choix": [
+        "parseFloat renvoie NaN car la virgule n'est pas un caractère numérique",
+        "parseFloat renvoie 12,5 correctement, mais la fonction maison est plus rapide",
+        "parseFloat renvoie 1250 en interprétant la virgule comme séparateur de milliers",
+        "parseFloat renvoie 12 : il s'arrête à la virgule et perd silencieusement les 50 centimes ; eurosVersCentimes() découpe la chaîne en partie entière et partie décimale et ne fait que des opérations entières"
+      ],
+      "bonne": 3,
+      "explication": "parseFloat ne connaît que le point décimal : « 12,50 » devient 12, une perte SILENCIEUSE de 50 centimes par saisie — le pire type de bug, celui qui ne plante pas. Le distracteur NaN est le piège principal : un débutant s'attend à une erreur bruyante qu'il pourrait attraper, alors que le vrai danger est justement qu'il n'y a aucune erreur. D'où le parsing manuel de la chaîne, couvert par 23 tests unitaires."
+    },
+    {
+      "question": "Même en passant par un nombre correct, pourquoi convertir 12.10 euros en centimes via 12.10 * 100 est-il dangereux ?",
+      "choix": [
+        "Parce que 12.10 * 100 vaut 1209.999… en flottant binaire : tronqué en entier, cela donnerait 1209 centimes au lieu de 1210",
+        "Parce que la multiplication par 100 dépasse la capacité du type number",
+        "Parce que JavaScript convertit implicitement le résultat en chaîne de caractères",
+        "Parce que l'opérateur * n'accepte pas de mélanger décimales et entiers"
+      ],
+      "bonne": 0,
+      "explication": "12.10 n'a pas de représentation binaire exacte, donc le multiplier par 100 produit 1209.999… : selon la troncature, on stocke un centime de moins. C'est pour cela qu'eurosVersCentimes() ne passe JAMAIS par un flottant, même temporairement : elle travaille sur la chaîne et ne fait que des opérations entières. Le distracteur de la capacité est tentant car 2^53 est cité dans la fiche, mais cette limite est à ~90 000 milliards d'euros — très loin de 12,10 €."
+    },
+    {
+      "question": "La conversion centimes ↔ euros n'existe qu'à UN seul endroit du code : lib/services/montants.ts. Quel est l'intérêt de cette centralisation ?",
+      "choix": [
+        "Elle permet de changer de devise en modifiant une seule constante",
+        "Elle réduit la taille du bundle en évitant la duplication de code",
+        "Elle est imposée par l'architecture de Next.js pour les fonctions serveur",
+        "Une logique délicate écrite une seule fois peut être testée à fond (23 tests sur les cas limites) ; dupliquée dans chaque écran, chaque copie serait une occasion de réintroduire le bug parseFloat ou le bug du flottant"
+      ],
+      "bonne": 3,
+      "explication": "Le vrai bénéfice est la maîtrise du risque : la conversion est le point exact où les pièges (virgule, flottant) se concentrent, donc on l'isole dans la couche métier et on la blinde de tests — chaque écran consomme une fonction sûre au lieu de refaire le calcul. Le distracteur de la devise est plausible car la centralisation aiderait effectivement, mais ce n'est pas la motivation : c'est la testabilité d'une logique dangereuse."
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "fiche": "cours-server-actions-pont",
+  "questions": [
+    {
+      "question": "Qu'est-ce qu'une server action dans Next.js, et qu'est-ce qui la distingue d'une route API classique ?",
+      "choix": [
+        "Une fonction marquée \"use server\" qui s'exécute uniquement côté serveur mais qu'un composant client appelle comme une fonction normale — Next.js fabrique l'appel HTTP tout seul, sans route API à écrire",
+        "Une fonction qui s'exécute côté client mais avec les droits du serveur",
+        "Un composant serveur qui rend du HTML en réponse à un formulaire",
+        "Une route API générée automatiquement à partir du nom du fichier"
+      ],
+      "bonne": 0,
+      "explication": "La server action supprime le boilerplate d'une route API dédiée : on importe la fonction, on l'appelle, et le transport HTTP est géré par le framework — mais l'exécution reste strictement côté serveur. Le distracteur « côté client avec les droits du serveur » est le contresens dangereux à éviter absolument devant un jury : le code de l'action ne part JAMAIS dans le bundle navigateur, c'est précisément son intérêt sécurité."
+    },
+    {
+      "question": "En cas d'échec de connexion, l'action renvoie « Identifiants invalides » et jamais « cet email n'existe pas ». Pourquoi cette distinction est-elle un enjeu de sécurité ?",
+      "choix": [
+        "Un message trop long ralentirait la réponse et faciliterait les attaques par timing",
+        "Le message détaillé pourrait contenir des caractères exploitables en injection",
+        "Un message qui révèle si l'email existe permettrait l'énumération de comptes : un attaquant testerait des milliers d'adresses pour constituer une liste de comptes valides à cibler ensuite",
+        "Les messages détaillés sont interdits par le RGPD"
+      ],
+      "bonne": 2,
+      "explication": "Distinguer « email inconnu » de « mot de passe faux » transforme le formulaire de connexion en oracle : chaque tentative confirme ou infirme l'existence d'un compte, matière première du phishing et du credential stuffing. La réponse neutre coûte un peu d'ergonomie mais ferme cet oracle. Le distracteur RGPD est tentant car il y a bien un enjeu de données personnelles, mais le mécanisme précis est l'énumération — c'est ce terme que le jury attend."
+    },
+    {
+      "question": "Que se passe-t-il si on place redirect() de Next.js à l'intérieur d'un bloc try/catch dans une server action ?",
+      "choix": [
+        "La redirection est exécutée deux fois, une par le try et une par Next.js",
+        "redirect() fonctionne en LANÇANT une exception spéciale que Next.js intercepte : le catch l'avale et la redirection n'a jamais lieu — il doit rester hors du bloc try/catch",
+        "Rien de particulier : redirect() renvoie une valeur de retour classique",
+        "Le try/catch est ignoré car redirect() termine le processus serveur"
+      ],
+      "bonne": 1,
+      "explication": "C'est un piège d'implémentation réel : redirect() ne « retourne » pas, il throw une exception interne que le framework attrape plus haut pour déclencher la redirection. Un catch générique l'intercepte avant Next.js, et l'utilisateur reste sur place sans erreur visible — un bug silencieux. Le distracteur « valeur de retour classique » correspond à l'intuition naturelle de tout débutant, et c'est exactement pourquoi ce piège est si fréquent."
+    },
+    {
+      "question": "Question type jury : « Une server action est appelable en HTTP : qu'est-ce qui empêche quelqu'un de l'appeler directement, hors de votre interface ? »",
+      "choix": [
+        "Next.js signe chaque appel avec un jeton propre au formulaire d'origine",
+        "Le middleware bloque tous les appels qui ne viennent pas d'une page du site",
+        "Le CORS empêche tout appel qui ne provient pas du même domaine",
+        "Rien, et c'est prévu : toute fonction exposée au client doit se défendre seule — validation refaite côté serveur dans l'action, déconnexion inoffensive hors contexte, et protection réelle en amont (middleware) et en aval (règles d'accès en base). Chaque couche valide, aucune ne suppose que la précédente l'a fait"
+      ],
+      "bonne": 3,
+      "explication": "La bonne posture est d'accepter la prémisse : oui, l'action est un point d'entrée HTTP public, donc elle est conçue pour être appelée hostile — validation serveur systématique, jamais confiance au formulaire. Le distracteur CORS est le plus tentant car il sonne juste, mais le CORS ne contraint que les navigateurs : un curl ou un script l'ignore totalement. Répondre « le CORS me protège » devant un jury serait une vraie faute."
+    },
+    {
+      "question": "Pourquoi le cas 429 (rate limit) est-il traité à part dans le flux de connexion, au lieu d'afficher le message générique d'échec ?",
+      "choix": [
+        "Parce que le code 429 provoque un crash de Supabase s'il n'est pas intercepté",
+        "Parce qu'afficher « Identifiants invalides » sur un 429 pousserait l'utilisateur à retaper son mot de passe en boucle — chaque tentative prolongeant son propre blocage",
+        "Parce que le 429 signale une attaque en cours qu'il faut escalader à l'administrateur",
+        "Pour rediriger l'utilisateur vers une page d'attente avec un compte à rebours"
+      ],
+      "bonne": 1,
+      "explication": "Un 429 signifie « trop de tentatives, patientez » : si l'app le déguise en « identifiants invalides », l'utilisateur croit s'être trompé, réessaie aussitôt… et entretient son propre blocage — un cercle vicieux d'UX. Le message doit dire d'attendre. Le distracteur de l'attaque à escalader est plausible car le rate limiting sert bien à freiner les attaques, mais un 429 vient le plus souvent d'un utilisateur légitime qui tâtonne : le traiter comme une alerte serait disproportionné."
+    }
+  ]
+}

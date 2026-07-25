@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-rgpd-anonymisation-vs-suppression",
+  "questions": [
+    {
+      "question": "Une utilisatrice demande la suppression de son compte (art. 17 RGPD). Pourquoi Venaball anonymise-t-il sa ligne User au lieu de la supprimer physiquement ?",
+      "choix": [
+        "Parce que la suppression physique est interdite par le RGPD",
+        "Parce qu'un DELETE casserait toutes les clés étrangères (présences, stats, convocations) et donc l'historique du club ; l'art. 17 §3 autorise la conservation pseudonymisée à des fins d'archivage",
+        "Parce que la base MySQL de l'hébergement OVH ne supporte pas les suppressions en cascade",
+        "Pour pouvoir restaurer le compte si l'utilisatrice change d'avis"
+      ],
+      "bonne": 1,
+      "explication": "Le choix est à la fois technique (intégrité référentielle : feuilles de match et comptabilité pointent vers ce compte) et juridique (l'exception d'archivage de l'art. 17 §3 le couvre explicitement). Le distracteur « pour restaurer le compte » est le contresens à éviter absolument : après anonymisation, la ré-identification doit être impossible — garder de quoi restaurer serait précisément une violation du droit à l'effacement."
+    },
+    {
+      "question": "Après passage du RgpdAnonymizer, que reste-t-il du compte de l'utilisatrice en base ?",
+      "choix": [
+        "Rien : la ligne User est vidée puis supprimée après un délai de 30 jours",
+        "Tout le profil, mais chiffré avec une clé détenue par le dirigeant du club",
+        "L'email en clair pour l'audit, le reste anonymisé",
+        "Un email deleted-{id}@anonyme.local, l'identité « Anonyme Utilisateur », téléphone et date de naissance à null, photo supprimée du disque, rôles supprimés en dur — et un simple hash de l'ancien email dans le log d'audit"
+      ],
+      "bonne": 3,
+      "explication": "L'anonymisation est chirurgicale : la ligne subsiste pour l'intégrité référentielle, mais tout identifiant direct disparaît, y compris le fichier photo physique — pas seulement son chemin en base. Le distracteur « email en clair pour l'audit » est le piège réaliste : le besoin d'audit existe, mais il est couvert par un hash, justement pour ne pas conserver la donnée identifiante en clair."
+    },
+    {
+      "question": "Question vicieuse du jury : « L'ID est conservé et les stats restent liées : c'est de la pseudonymisation, donc toujours des données personnelles, non ? » Quelle est la réponse de Clavel ?",
+      "choix": [
+        "Non, dès que le nom est retiré, ce ne sont plus des données personnelles au sens du RGPD",
+        "C'est vrai, et c'est une non-conformité qu'il faudra corriger en supprimant aussi les stats",
+        "Le code assume le terme « pseudonymisé » ; juridiquement, le critère est la ré-identification par des moyens raisonnables : sans nom, email, téléphone, date de naissance ni photo, l'ID seul ne relie plus à personne hors de la base — et savoir nommer précisément ce qui est anonymisé, pseudonymisé ou masqué est exactement ce que le RGPD demande",
+        "La question ne se pose pas car les stats sont agrégées au niveau de l'équipe"
+      ],
+      "bonne": 2,
+      "explication": "La force de la réponse est d'accepter la distinction au lieu de la nier : le commentaire du code parle bien de « forme pseudonymisée », et Clavel connaît le même compromis ailleurs (l'anonymat du feedback de séance, « réel mais faible par design »). Le distracteur « plus des données personnelles sans le nom » est l'erreur de débutant la plus répandue : un identifiant indirect (ID + croisements possibles) peut suffire à ré-identifier, c'est tout l'enjeu du critère des moyens raisonnables."
+    },
+    {
+      "question": "Que produit RgpdExporter, et quel(s) droit(s) du RGPD sert-il ?",
+      "choix": [
+        "Un JSON complet de tout ce que l'app détient sur l'utilisateur (profil, rôles, logs de connexion, demandes de reset), hors données purement techniques comme les hashs de tokens — au titre du droit d'accès et de la portabilité (art. 15 et 20)",
+        "Un PDF signé électroniquement attestant la suppression du compte — au titre du droit à l'effacement (art. 17)",
+        "Une copie de sauvegarde de la base envoyée à la CNIL — au titre de l'obligation de notification",
+        "Un export CSV des statistiques d'équipe — au titre du droit de rectification (art. 16)"
+      ],
+      "bonne": 0,
+      "explication": "L'exporteur est le miroir de l'anonymiseur : l'un sert l'effacement, l'autre l'accès et la portabilité. Noter l'exclusion des données techniques (hash de token) : elles concernent la sécurité du système, pas la personne, et les exporter créerait même un risque. Le distracteur « envoi à la CNIL » confond les droits des personnes avec les obligations vis-à-vis de l'autorité de contrôle — deux chapitres différents du règlement."
+    },
+    {
+      "question": "Les décharges de sorties concernent des données de mineures. Pourquoi sont-elles stockées hors de public/ et servies via un contrôleur + Voter (RGPD-0010) ?",
+      "choix": [
+        "Pour économiser l'espace disque du dossier public",
+        "Parce que le dossier public/ est vidé à chaque déploiement",
+        "Parce qu'un fichier dans public/ est servi par le serveur web à quiconque connaît (ou devine) son URL, sans aucun contrôle d'accès ; passer par un contrôleur permet de vérifier les droits avant chaque téléchargement",
+        "Parce que les fichiers PDF ne peuvent pas être servis depuis public/"
+      ],
+      "bonne": 2,
+      "explication": "Tout ce qui est dans public/ échappe à Symfony : ni firewall, ni Voter, juste une URL à deviner — inacceptable pour des données de mineures. Le contrôleur réintroduit la chaîne d'autorisation. C'est aussi pour ça que l'audit de juillet (sept uploaders sur huit encore dans public/) est cité comme priorité absolue avant l'ouverture à d'autres clubs : Clavel connaît l'écart entre le pattern correct et l'état réel de son code."
+    }
+  ]
+}

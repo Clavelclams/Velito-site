@@ -1,0 +1,60 @@
+{
+  "fiche": "pirb-couche-donnees-interface",
+  "questions": [
+    {
+      "question": "L'API Symfony de Pirb n'existait pas encore quand le développement de l'app mobile a commencé. Quelle stratégie a permis de développer tous les écrans sans attendre le serveur ?",
+      "choix": [
+        "Coder les écrans avec des fetch vers une API de test publique, puis remplacer les URL à la fin",
+        "Définir une interface TypeScript (le contrat PirbDataService) et développer les écrans contre une implémentation mock qui la respecte",
+        "Développer d'abord toute l'API Symfony, puis commencer l'app mobile une fois les endpoints stables",
+        "Stocker des fichiers JSON statiques dans l'app et les remplacer par des fetch écran par écran"
+      ],
+      "bonne": 1,
+      "explication": "Les écrans dépendent d'un contrat abstrait (l'interface PirbDataService), pas d'une source concrète : le mock et l'API en sont deux implémentations interchangeables. Le distracteur des fichiers JSON à remplacer « écran par écran » est tentant car c'est le réflexe débutant, mais il oblige justement à modifier chaque écran au moment de brancher l'API — exactement ce que l'interface évite."
+    },
+    {
+      "question": "Le jour où l'API est prête, que faut-il modifier dans le code de Pirb pour basculer toute l'app du mock vers les vraies données ?",
+      "choix": [
+        "Chaque écran, pour remplacer l'import du mock par l'import du service API",
+        "L'interface PirbDataService, pour y ajouter les URL des endpoints réels",
+        "Les types de src/types/pirb.ts, pour les aligner sur les réponses HTTP",
+        "Une seule ligne : la variable d'environnement lue par la factory src/services/data/index.ts"
+      ],
+      "bonne": 3,
+      "explication": "Le choix de l'implémentation est centralisé dans la factory : EXPO_PUBLIC_DATA_SOURCE=api suffit, et aucun écran n'est touché. C'est la conséquence directe de l'inversion de dépendance (le D de SOLID). Croire qu'il faut changer les imports dans chaque écran est l'erreur classique quand on n'a pas de point d'instanciation unique — c'est précisément le problème que la factory résout."
+    },
+    {
+      "question": "Dans le mock, getProfil() renvoie des données déjà en mémoire, donc instantanées. Pourquoi la méthode est-elle quand même déclarée asynchrone (Promise) dès le départ ?",
+      "choix": [
+        "Pour que le contrat soit identique entre mock et API : quand le réseau arrive, la signature ne change pas et aucun écran n'est à réécrire",
+        "Parce que TypeScript impose que toutes les méthodes d'une interface soient asynchrones",
+        "Pour simuler la lenteur du réseau et tester les écrans de chargement",
+        "Parce que React Native interdit les fonctions synchrones dans les services"
+      ],
+      "bonne": 0,
+      "explication": "Si le mock était synchrone, brancher l'API (forcément asynchrone) aurait changé la signature des méthodes et forcé la réécriture de tous les appels dans les écrans : l'asynchrone d'emblée, c'est anticiper le réseau dans le contrat. Le distracteur « simuler la lenteur » est plausible car on peut effectivement ajouter des délais dans un mock, mais ce n'est pas la raison du choix — c'est la stabilité de la signature qui compte."
+    },
+    {
+      "question": "Question type jury : « Votre mock et votre API peuvent diverger. Qu'est-ce qui vous garantit que les deux implémentations respectent vraiment le même contrat ? »",
+      "choix": [
+        "Une revue de code manuelle avant chaque livraison compare les deux fichiers",
+        "Rien, c'est un risque accepté : le mock ne sert qu'en démonstration",
+        "La compilation TypeScript : les deux classes déclarent implements PirbDataService, donc toute méthode manquante ou de signature différente fait échouer tsc --noEmit",
+        "Des tests end-to-end lancent l'app deux fois, une en mode mock et une en mode API, et comparent les rendus"
+      ],
+      "bonne": 2,
+      "explication": "Le mot-clé implements fait vérifier la conformité structurelle par le compilateur : c'est une garantie automatique, à chaque typecheck, pas une discipline humaine. La limite assumée : le typage garantit la forme, pas la sémantique des données — d'où des types calqués sur le backend réel, et des tests de contrat cités comme piste d'amélioration. Le distracteur « rien, risque accepté » est tentant parce que la fiche assume une limite, mais elle ne renonce pas à la garantie de compilation."
+    },
+    {
+      "question": "Certains domaines (social, carte) n'ont pas encore d'endpoint côté serveur. Que se passe-t-il quand un écran demande ces données en mode API ?",
+      "choix": [
+        "L'écran affiche l'état d'erreur standard fourni par useAsyncData",
+        "ApiPirbDataService délègue ces appels à un mock interne : l'écran reçoit des données réalistes sans savoir qu'elles ne viennent pas du serveur",
+        "La factory bascule automatiquement toute l'app en mode mock",
+        "La requête part quand même et le retry réessaie trois fois avant d'abandonner"
+      ],
+      "bonne": 1,
+      "explication": "C'est la stratégie hybride documentée : private fallback = new MockPirbDataService() dans ApiPirbDataService, invisible pour les écrans, qui permet une app complète même avec une API partielle. Le distracteur « erreur standard » est la réaction qu'aurait une implémentation naïve qui appelle un endpoint inexistant — le fallback existe justement pour éviter ce trou dans l'expérience."
+    }
+  ]
+}

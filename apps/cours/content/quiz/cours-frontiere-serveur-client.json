@@ -1,0 +1,53 @@
+{
+  "fiche": "cours-frontiere-serveur-client",
+  "questions": [
+    {
+      "question": "Pourquoi lib/fiches/fiches.ts ne doit-il JAMAIS être importé dans un composant \"use client\" ?",
+      "choix": [
+        "Parce qu'il utilise node:fs, qui n'existe pas dans le navigateur",
+        "Parce que les composants client sont plus lents",
+        "Parce que gray-matter est une dépendance serveur payante",
+        "Parce que Next.js interdit tout import entre dossiers lib/ et app/"
+      ],
+      "bonne": 0,
+      "explication": "fs lit le disque du SERVEUR. Un navigateur n'a pas accès au système de fichiers : le bundler refuse (ou casse) dès qu'un module client tire node:fs. C'est pour ça que le Server Component lit les données et les passe en props.",
+      "piege": ""
+    },
+    {
+      "question": "Que fait exactement « import type { FicheMeta } » par rapport à « import { FicheMeta } » ?",
+      "choix": [
+        "Rien, c'est purement du style",
+        "L'import est effacé à la compilation : seul le type TypeScript traverse, jamais le code du module",
+        "Il importe le type ET le code, mais en lecture seule",
+        "Il rend l'interface accessible globalement sans import"
+      ],
+      "bonne": 1,
+      "explication": "Le mot-clé type garantit que l'import disparaît au build : aucun code de fiches.ts (donc aucun fs) ne part dans le bundle navigateur. Sans lui, le bundler tenterait d'embarquer le module entier.",
+      "piege": ""
+    },
+    {
+      "question": "Le dashboard passe FicheMeta[] (sans le corps Markdown) au composant de recherche. Pourquoi ce choix ?",
+      "choix": [
+        "Le corps Markdown est chiffré et illisible côté client",
+        "Le filtrage ne porte que sur titre et thèmes : envoyer les corps gonflerait la page pour rien",
+        "React ne sait pas afficher du Markdown",
+        "gray-matter supprime automatiquement le contenu"
+      ],
+      "bonne": 1,
+      "explication": "On n'envoie au client QUE ce dont il a besoin : les métadonnées suffisent pour filtrer. Les corps complets seraient du poids mort dans le HTML — et à grande échelle, un vrai problème de performance.",
+      "piege": ""
+    },
+    {
+      "question": "Si demain il y avait 5 000 fiches, quelle serait l'évolution correcte ?",
+      "choix": [
+        "Mettre le filtrage dans un useEffect pour le rendre plus rapide",
+        "Basculer vers une recherche côté serveur paginée — en ne réécrivant que la couche d'accès isolée",
+        "Charger les fiches dans localStorage au premier visit",
+        "Passer tout le site en \"use client\""
+      ],
+      "bonne": 1,
+      "explication": "C'est tout l'intérêt d'avoir isolé l'accès aux données dans lib/fiches/ : le jour où le volume explose, on remplace cette seule couche (recherche serveur, base de données…) sans toucher aux composants.",
+      "piege": ""
+    }
+  ]
+}

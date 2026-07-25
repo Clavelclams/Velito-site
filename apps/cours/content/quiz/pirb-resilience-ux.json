@@ -1,0 +1,60 @@
+{
+  "fiche": "pirb-resilience-ux",
+  "questions": [
+    {
+      "question": "Une erreur JavaScript est levée dans le gestionnaire onPress d'un bouton de Pirb. L'error boundary global (EcranCrash) va-t-il l'attraper ?",
+      "choix": [
+        "Oui : l'error boundary est exporté depuis le layout racine, donc il couvre toute l'app",
+        "Non : un error boundary n'attrape que les erreurs de RENDU, pas les gestionnaires d'événements ni le code asynchrone — ces cas sont couverts par les try/catch de useAsyncData et de la couche données",
+        "Oui, mais uniquement en mode développement (__DEV__)",
+        "Non, sauf si le bouton est dans un écran des onglets (tabs)"
+      ],
+      "bonne": 1,
+      "explication": "C'est une limite fondamentale des error boundaries React, commentée dans EcranCrash.tsx : ils n'interceptent que les erreurs survenues pendant le rendu. Le distracteur « il couvre toute l'app » est le piège naturel — il couvre bien toute l'app, mais seulement pour un type d'erreur. D'où la complémentarité des trois filets : boundary pour le rendu, try/catch pour l'asynchrone et les événements."
+    },
+    {
+      "question": "Au démarrage de l'app, isInternetReachable de Network.useNetworkState() vaut null pendant un instant. Pourquoi EcranHorsLigne ne bascule-t-il en mode hors-ligne QUE sur un false explicite ?",
+      "choix": [
+        "Parce que null signifie « le système ne s'est pas encore prononcé » : le traiter comme une panne ferait clignoter l'écran hors-ligne à chaque démarrage, même avec du réseau",
+        "Parce que null indique une connexion lente mais fonctionnelle",
+        "Parce que comparer null à false lèverait une erreur TypeScript",
+        "Parce que le mode hors-ligne consomme trop de mémoire pour être affiché au démarrage"
+      ],
+      "bonne": 0,
+      "explication": "null n'est ni « connecté » ni « déconnecté » : c'est « indéterminé ». Un test naïf du genre if (!isInternetReachable) traiterait null comme une panne et afficherait l'écran hors-ligne un instant à chaque lancement — le clignotement que la fiche documente. Le distracteur « connexion lente » est tentant car on aimerait que l'API soit si expressive, mais null ne porte aucune information de qualité de réseau."
+    },
+    {
+      "question": "La couche API de Pirb fait 3 essais avec backoff sur certaines erreurs. Pourquoi ne réessaie-t-elle JAMAIS sur un 401 ou un autre 4xx ?",
+      "choix": [
+        "Parce que les 4xx sont trop rapides à revenir pour laisser le temps d'un backoff",
+        "Parce que le serveur bannit les clients qui répètent une requête refusée",
+        "Parce que retry sur les 4xx doublerait le trafic sur le serveur mutualisé OVH",
+        "Parce qu'un 4xx est une vraie erreur (requête invalide, session expirée) : la rejouer à l'identique redonnera le même refus, contrairement à une erreur transitoire (coupure, timeout, 5xx) qui peut réussir au second essai"
+      ],
+      "bonne": 3,
+      "explication": "Le retry ne se justifie que pour les erreurs TRANSITOIRES : un serveur qui hoquette peut répondre au deuxième essai, mais un 401 restera un 401 tant que la session est invalide — le bon traitement est d'invalider la session, pas d'insister. Le distracteur du trafic est plausible (c'est un vrai souci sur mutualisé) mais ce n'est pas le critère : c'est la nature déterministe ou transitoire de l'erreur qui décide."
+    },
+    {
+      "question": "Question type jury : « Vous faites du retry automatique : si la requête qui a échoué était une écriture, vous risquez de l'exécuter deux fois, non ? » Comment Pirb écarte-t-il ce risque ?",
+      "choix": [
+        "Chaque écriture porte un identifiant unique que le serveur déduplique",
+        "Le retry attend la fin de la requête précédente avant de rejouer, ce qui empêche les doublons",
+        "Le retry est implémenté dans la méthode privée get<T>(), donc il ne s'applique qu'aux lectures ; les écritures ne sont rejouables que si elles sont idempotentes (comme l'enregistrement du jeton push), et le marquage « lu » est un POST séparé, jamais un effet de bord d'un GET",
+        "Les écritures sont désactivées quand le réseau est instable"
+      ],
+      "bonne": 2,
+      "explication": "Le critère défendable devant un jury : on ne rejoue automatiquement que ce qui est sûr à rejouer — les GET par nature, et les écritures uniquement si elles sont idempotentes. L'architecture le garantit structurellement puisque le retry vit dans get<T>(). Le distracteur de l'identifiant unique décrit une vraie technique (clé d'idempotence), séduisante car elle existe dans l'industrie, mais ce n'est pas la solution retenue dans Pirb."
+    },
+    {
+      "question": "Le hook useAsyncData impose à chaque écran la forme { data, loading, error } plus un reload(). Quel problème ce choix évite-t-il ?",
+      "choix": [
+        "Il empêche deux écrans de charger les mêmes données en parallèle",
+        "Il met les réponses en cache pour économiser le réseau",
+        "Il rend inutile l'error boundary global",
+        "Il empêche qu'un écran oublie un des trois états d'un chargement : sans lui, un développeur qui code « le cas qui marche » livre un écran qui affiche du vide en cas de lenteur et plante en cas d'erreur"
+      ],
+      "bonne": 3,
+      "explication": "Tout chargement réseau a trois issues possibles — en cours, réussi, échoué — et l'oubli classique du débutant est de ne coder que le succès. Le hook rend les trois états inévitables dans la signature même. Le distracteur du cache est tentant car des hooks célèbres comme react-query font les deux, mais useAsyncData vise la discipline des états, pas l'optimisation réseau ; et il complète l'error boundary sans le remplacer."
+    }
+  ]
+}

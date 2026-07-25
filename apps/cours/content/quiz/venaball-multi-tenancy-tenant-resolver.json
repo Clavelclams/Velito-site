@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-multi-tenancy-tenant-resolver",
+  "questions": [
+    {
+      "question": "Pour héberger plusieurs clubs, Venaball a choisi une seule base avec une colonne club_id sur chaque table métier plutôt qu'une base par club (ADR-0003). Quel est le prix à payer de ce choix ?",
+      "choix": [
+        "Des performances dégradées, car toutes les données sont mélangées",
+        "L'impossibilité d'avoir un utilisateur membre de deux clubs",
+        "Une vigilance absolue : chaque requête doit être filtrée par club côté serveur, sans filet automatique",
+        "Un coût d'hébergement plus élevé chez OVH"
+      ],
+      "bonne": 2,
+      "explication": "Tout choix d'architecture a un prix, et le jury attend qu'on le nomme : ici, l'isolation ne repose plus sur des bases séparées mais sur la discipline du code — un filtre club_id oublié est une fuite. Le distracteur « performances » est le réflexe intuitif (« mélangé = lent »), mais avec des index sur club_id ce n'est pas le vrai enjeu ; le vrai enjeu est la sécurité de l'isolation."
+    },
+    {
+      "question": "Un utilisateur malveillant réussit à écrire active_club_id = 7 dans sa session, alors qu'il n'est membre que du club 3. Que se passe-t-il à sa prochaine requête ?",
+      "choix": [
+        "Il accède au club 7 : la session est une donnée de confiance côté serveur",
+        "Le serveur renvoie une erreur 500 car la session est corrompue",
+        "Il est déconnecté et son compte est suspendu automatiquement",
+        "Le TenantResolver revérifie son appartenance, ignore la valeur forgée et nettoie la session : il ne voit jamais le club 7"
+      ],
+      "bonne": 3,
+      "explication": "Le point de sécurité clé du TenantResolver : il ne fait jamais confiance à la session, il revérifie l'appartenance à chaque lecture — et c'est prouvé par le test testSessionForgeeVersUnAutreClubEstIgnoree. Le distracteur « la session est de confiance » est le piège le plus dangereux : la session est bien stockée côté serveur, mais son contenu a pu être posé à un moment où les droits étaient différents (rôle retiré, bug, manipulation) — d'où la revalidation systématique."
+    },
+    {
+      "question": "Un agent du support Venaball doit intervenir dans un club dont il n'est pas membre. Comment le système gère-t-il ce cas ?",
+      "choix": [
+        "Seul un ROLE_SUPER_ADMIN peut entrer dans n'importe quel club sans y être membre — une exception explicite, commentée dans le code",
+        "Le support demande au dirigeant du club de lui créer un compte membre temporaire",
+        "Le support se connecte directement à la base de données pour intervenir",
+        "N'importe quel administrateur peut basculer sur n'importe quel club"
+      ],
+      "bonne": 0,
+      "explication": "L'exception super-admin est volontairement unique, explicite et commentée : c'est une porte assumée et auditée, pas une faille. Le distracteur « compte membre temporaire » semble prudent, mais il polluerait les données du club (un faux membre) et laisserait des accès à révoquer manuellement — l'exception codée est plus propre et plus traçable."
+    },
+    {
+      "question": "Question vicieuse du jury : « Si un développeur oublie le filtre club_id dans une nouvelle requête, qu'est-ce qui l'arrête ? » Quelle est la réponse honnête de Clavel ?",
+      "choix": [
+        "Rien, mais ce cas ne peut pas arriver car Clavel est le seul développeur du projet",
+        "Doctrine détecte automatiquement les requêtes sans filtre club_id et les rejette",
+        "Rien d'automatique au niveau SQL — c'est la limite assumée du pattern (RT-0001) ; les garde-fous sont en couches : ClubVoter, tests anti-IDOR, et un audit qui recense les entités encore en isolation implicite",
+        "Une revue de code obligatoire bloque toute requête non filtrée avant la mise en production"
+      ],
+      "bonne": 2,
+      "explication": "Le jury teste la lucidité : la bonne réponse commence par « rien d'automatique » puis montre la défense en profondeur et la connaissance précise de ses limites (l'audit de juillet). Le distracteur « Doctrine détecte » est piégeux car un filtre Doctrine global existe bel et bien comme évolution possible — mais il n'est pas en place, notamment parce que le super-admin cross-club le complique ; le présenter comme actif serait un mensonge démontable."
+    },
+    {
+      "question": "Quelle évolution technique permettrait d'injecter le filtre club_id automatiquement dans toutes les requêtes, et pourquoi Clavel ne l'a-t-il pas encore mise en place ?",
+      "choix": [
+        "Un trigger SQL sur chaque table ; abandonné car l'hébergement mutualisé OVH ne le permet pas",
+        "Un middleware HTTP qui réécrit les URLs ; abandonné car incompatible avec l'API mobile",
+        "Une vue SQL par club ; abandonné car trop de vues à maintenir",
+        "Un filtre Doctrine global ; pas encore fait car le cas du super-admin cross-club le complique"
+      ],
+      "bonne": 3,
+      "explication": "Le filtre Doctrine global ajoute la condition club_id à toutes les requêtes sur les entités concernées — c'est la contractualisation automatique de l'isolation. Le jury apprécie qu'on sache expliquer une évolution ET la raison de son report : le super-admin doit justement échapper au filtre, ce qui demande un mécanisme d'activation/désactivation propre. Les distracteurs sont des techniques réelles mais qui ne correspondent ni au code ni à la justification documentée."
+    }
+  ]
+}

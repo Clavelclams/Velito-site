@@ -1,0 +1,60 @@
+{
+  "fiche": "pirb-eas-deploiement-store",
+  "questions": [
+    {
+      "question": "Pourquoi le profil development d'eas.json (avec developmentClient: true) est-il indispensable dans Pirb, alors qu'Expo Go permet déjà de tester l'app ?",
+      "choix": [
+        "Parce qu'Expo Go est payant au-delà d'un certain nombre de lancements",
+        "Parce qu'Expo Go ne supporte ni les notifications push ni les vrais tests caméra : seul un development build permet de les tester",
+        "Parce que Google Play exige que tous les tests passent par un build EAS",
+        "Parce qu'Expo Go ne fonctionne pas avec TypeScript en mode strict"
+      ],
+      "bonne": 1,
+      "explication": "Le push distant a été retiré d'Expo Go depuis le SDK 53 et certaines capacités natives comme la caméra ne s'y testent pas en conditions réelles : le development build est le seul moyen de valider ces fonctionnalités. Le distracteur sur Google Play est plausible car les stores imposent bien des formats de build, mais cela concerne le profil production, pas le besoin de tester en développement."
+    },
+    {
+      "question": "L'audit store de Pirb avait identifié un risque : builder par erreur une version branchée sur le mock, et livrer de fausses données aux utilisatrices. Comment ce risque a-t-il été rendu impossible ?",
+      "choix": [
+        "EXPO_PUBLIC_DATA_SOURCE=api et l'URL de l'API sont inscrits en dur dans les trois profils d'eas.json : quel que soit le profil buildé, la source est verrouillée",
+        "Une checklist manuelle avant chaque build rappelle de vérifier la variable d'environnement",
+        "Le code du mock est supprimé du dépôt avant chaque build de production",
+        "Un script de CI bloque le build si le mot « mock » apparaît dans le code"
+      ],
+      "bonne": 0,
+      "explication": "Le verrou est structurel : la configuration de build elle-même fixe la source de données, donc l'erreur humaine n'a plus de prise. La checklist manuelle est le distracteur tentant car c'est la première réponse qui vient — mais une checklist repose sur la discipline, et l'audit cherchait justement à rendre l'erreur impossible, pas improbable. Supprimer le mock casserait le mode démo, qui reste utile."
+    },
+    {
+      "question": "Que se passe-t-il si on soumet à Apple une app qui accède à la caméra sans texte de permission (NSCameraUsageDescription) expliquant l'usage ?",
+      "choix": [
+        "L'app est acceptée mais la caméra est désactivée à distance par Apple",
+        "L'app est acceptée avec un avertissement affiché à l'utilisateur",
+        "Apple affiche un texte de permission générique par défaut",
+        "L'app est rejetée à la review : Apple refuse toute utilisation de la caméra sans explication lisible par l'utilisateur"
+      ],
+      "bonne": 3,
+      "explication": "L'explication de permission est une exigence bloquante de la review Apple, d'où le texte rédigé dans app.json en langage humain (« rien n'est filmé, rien n'est envoyé »). Le distracteur du texte générique est tentant car Android a longtemps été plus permissif, mais côté iOS l'absence de description est un motif de rejet, pas un cas géré par défaut."
+    },
+    {
+      "question": "Question type jury : « Votre app est en grande partie des WebView : Apple rejette les web wrappers (guideline 4.2). Qu'est-ce qui vous fait croire que vous passerez la review ? » Quelle est la meilleure défense, fidèle au dossier Pirb ?",
+      "choix": [
+        "Les WebView sont autorisées tant que le contenu affiché appartient au même éditeur que l'app",
+        "Un chantier de nativisation mesuré : de 8 WebView sur 8 entrées à 2 sur 10, des écrans clés natifs, un easter egg 100 % offline comme preuve, et un plan 1.1 pour nativiser le dernier gros morceau (caméra)",
+        "Apple ne contrôle que les apps payantes, et Pirb est gratuite",
+        "Le passage par EAS Build garantit la conformité aux guidelines Apple"
+      ],
+      "bonne": 1,
+      "explication": "La bonne réponse est un argument chiffré (2 vraies WebView de contenu sur 10 entrées) plus une trajectoire crédible (module natif vision-camera + TFLite en 1.1) : le jury attend un risque identifié soi-même et traité, pas nié. Le premier distracteur est séduisant car il ressemble à une vraie règle Apple, mais la guideline 4.2 vise l'expérience « pas assez native », indépendamment du propriétaire du contenu."
+    },
+    {
+      "question": "Quelle est la différence entre les profils preview et production dans l'eas.json de Pirb, et pourquoi ce choix ?",
+      "choix": [
+        "preview produit un APK installable directement pour les testeuses ; production produit un app-bundle (.aab), le format exigé par Google Play, avec incrément automatique du numéro de build",
+        "preview build en mode mock pour les démos ; production build en mode API",
+        "preview est réservé à iOS via TestFlight ; production couvre Android",
+        "preview désactive la signature du binaire pour accélérer le build ; production la réactive"
+      ],
+      "bonne": 0,
+      "explication": "Un .aab ne s'installe pas directement sur un téléphone (c'est Google Play qui en dérive les APK), d'où un profil preview qui sort un APK partageable aux testeuses, et un profil production au format exigé par le store avec autoIncrement. Le distracteur mock/API est le piège principal : justement non — les trois profils, preview compris, verrouillent EXPO_PUBLIC_DATA_SOURCE=api, c'est tout l'objet de l'audit."
+    }
+  ]
+}

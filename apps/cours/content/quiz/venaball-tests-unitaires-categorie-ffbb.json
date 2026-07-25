@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-tests-unitaires-categorie-ffbb",
+  "questions": [
+    {
+      "question": "Pourquoi CategorieCalculator est-il le candidat idéal pour un test unitaire ?",
+      "choix": [
+        "Parce que c'est le fichier le plus court du projet",
+        "Parce que la FFBB impose de tester les règles de catégorie",
+        "Parce que c'est de la logique métier pure sans aucune dépendance : il prend une date de naissance et une saison, il rend une catégorie — testable en millisecondes, hors ligne, sans base",
+        "Parce que les catégories changent chaque saison, donc les tests doivent être relancés souvent"
+      ],
+      "bonne": 2,
+      "explication": "Le test unitaire vérifie une classe isolée, et l'isolation est maximale quand la classe ne dépend que de ses entrées — pas de base, pas de serveur, pas d'horloge cachée. Le distracteur « relancés souvent » est séduisant car le passage de saison est bien le sujet du service, mais il confond la raison de tester (la logique est critique) avec la facilité de tester (la pureté du service)."
+    },
+    {
+      "question": "Une joueuse est née en 2013. Selon la règle FFBB encodée dans le service, quelle est sa catégorie pour la saison 2026-2027 ?",
+      "choix": [
+        "U13, car 2026 − 2013 = 13",
+        "U15, car l'âge de référence est l'année de FIN de saison moins l'année de naissance : 2027 − 2013 = 14",
+        "U14, car on prend l'âge réel au 1er juillet",
+        "Cela dépend de son mois de naissance dans l'année"
+      ],
+      "bonne": 1,
+      "explication": "La règle FFBB prend l'année de FIN de saison (2027), pas l'année de début : 2027 − 2013 = 14, donc U15. Le distracteur « 2026 − 2013 = 13 → U13 » est LE piège : utiliser l'année de début décale toutes les catégories d'un an — exactement le bug d'un an sur une tranche que les huit assertions du test détecteraient immédiatement. Et le mois de naissance ne compte pas : seule l'année entre dans le calcul."
+    },
+    {
+      "question": "Pourquoi le DataProvider du test insiste-t-il sur les BORNES (âge 15 → U15, âge 16 → U18, âge 18 → U18, âge 19 → Senior) plutôt que sur des âges « au milieu » des tranches ?",
+      "choix": [
+        "Parce que les bugs de classification vivent aux frontières : une erreur d'un décalage (>= au lieu de >) passe inaperçue au milieu d'une tranche mais bascule une joueuse dans la mauvaise catégorie exactement à la borne",
+        "Parce que PHPUnit exige un cas de test par valeur de constante",
+        "Parce que les joueuses aux âges limites sont plus nombreuses dans le club",
+        "Parce que les bornes sont les seuls cas documentés par la FFBB"
+      ],
+      "bonne": 0,
+      "explication": "C'est un principe général du test : les erreurs de comparaison (off-by-one, >= vs >) ne se voient qu'aux frontières — au milieu d'une tranche, un calcul légèrement faux donne quand même la bonne réponse. Le cas « même joueuse née en 2016 : U11 en 2026-2027, U13 la saison suivante » teste la borne dans le temps, cœur du passage de saison automatique. Les distracteurs invoquent des contraintes externes qui n'existent pas."
+    },
+    {
+      "question": "Une joueuse n'a pas de date de naissance renseignée dans Venaball. Que fait le système quand le coach veut l'aligner sur un match ?",
+      "choix": [
+        "Il bloque l'alignement tant que la date n'est pas saisie, par sécurité",
+        "Il lui attribue automatiquement la catégorie Senior par défaut",
+        "Il estime son âge à partir de sa catégorie de la saison précédente",
+        "Il ne bloque jamais : « l'incertitude ne bloque pas, le coach tranche » — c'est un choix produit assumé et testé (testSansDateDeNaissanceOnNeBloqueJamais)"
+      ],
+      "bonne": 3,
+      "explication": "C'est un choix produit encodé dans un test : l'outil informe, le coach décide — bloquer sur une donnée manquante paralyserait l'usage réel en club. Le distracteur « bloquer par sécurité » est tentant car il semble rigoureux, mais il confond rigueur du calcul et rigidité de l'outil ; le test montre au jury que même les décisions produit, pas seulement les maths, sont vérifiées."
+    },
+    {
+      "question": "Question vicieuse du jury : « Votre test vérifie du code que vous avez écrit vous-même. S'il encode une règle FFBB fausse, le test passe quand même. Il sert à quoi ? » Quelle est la parade de Clavel ?",
+      "choix": [
+        "Les tests ont été relus et validés par un arbitre officiel de la FFBB",
+        "C'est vrai, et c'est pour cela que les tests fonctionnels prennent le relais sur cette règle",
+        "Admettre la limite, puis la parade triple : la règle est en clair dans la docblock avec des exemples vérifiables contre les textes fédéraux, les noms de cas en français métier font du test une spécification exécutable relisible par la secrétaire du club, et le test protège surtout la NON-RÉGRESSION lors des refactorings futurs",
+        "Le test compare les résultats à une API officielle de la FFBB, donc la règle ne peut pas être fausse"
+      ],
+      "bonne": 2,
+      "explication": "Un test vérifie la conformité à une spécification, pas la vérité de la spécification — l'admettre d'emblée désamorce la question. La vraie valeur du test est la non-régression : refactorer le calcul avec une erreur d'un an ferait échouer huit assertions immédiatement, au lieu de partir silencieusement en prod avec une U15 engagée en U13. Le distracteur « tests fonctionnels » est piégeux : ils héritent exactement de la même limite, ils vérifient aussi le code contre la compréhension de son auteur."
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "fiche": "pirb-session-token-securise",
+  "questions": [
+    {
+      "question": "Pourquoi Pirb stocke-t-il le jeton Bearer dans expo-secure-store plutôt que dans AsyncStorage ?",
+      "choix": [
+        "Parce qu'AsyncStorage est limité à quelques kilo-octets, trop peu pour un jeton",
+        "Parce qu'expo-secure-store synchronise le jeton entre les appareils de l'utilisatrice",
+        "Parce qu'expo-secure-store s'appuie sur le coffre-fort chiffré du système (Keychain iOS, Keystore Android), alors qu'AsyncStorage est un stockage en clair lisible",
+        "Parce qu'AsyncStorage est effacé à chaque mise à jour de l'app"
+      ],
+      "bonne": 2,
+      "explication": "Un jeton valable 30 jours équivaut à un accès au compte : le laisser dans un fichier en clair, c'est le donner à quiconque accède au stockage de l'app. SecureStore délègue le chiffrement au système, protégé par le verrouillage de l'appareil. Le distracteur de la taille est plausible car AsyncStorage a effectivement des limites pratiques, mais un jeton est minuscule — le vrai critère ici est la confidentialité, pas la capacité."
+    },
+    {
+      "question": "La session de Pirb est un store SANS React (état + abonnés + useSyncExternalStore par-dessus). Quel besoin concret ce découplage sert-il ?",
+      "choix": [
+        "Il permet de tester les composants React sans mock",
+        "Il évite de charger React au démarrage pour accélérer le lancement",
+        "Il permet d'utiliser Redux plus tard sans réécriture",
+        "Il permet à la couche données (ApiPirbDataService), qui n'est pas un composant React, de lire le jeton et d'invalider la session sur un 401 sans dépendre de React"
+      ],
+      "bonne": 3,
+      "explication": "Une classe de service HTTP ne peut pas appeler un hook React : si la session vivait dans un contexte React, la couche données ne pourrait ni lire le jeton ni signaler une expiration proprement. Le store autonome expose getToken() et invaliderSession() à tout le code, et useSession() n'est qu'un adaptateur pour les composants. Le distracteur des tests est séduisant car le découplage aide effectivement à tester, mais ce n'est pas le besoin qui a motivé le choix."
+    },
+    {
+      "question": "Le jeton d'une joueuse expire pendant qu'elle utilise l'app : l'API répond 401. Que se passe-t-il, étape par étape ?",
+      "choix": [
+        "L'app tente un re-login silencieux avec l'email et le mot de passe stockés dans le coffre",
+        "ApiPirbDataService appelle invaliderSession(), qui détruit le jeton local ; le statut passe à « deconnectee » et la garde du layout racine raffiche l'écran de connexion",
+        "Le retry de la couche API rejoue la requête trois fois avant d'afficher une erreur",
+        "L'écran affiche l'état error de useAsyncData et propose un bouton Réessayer"
+      ],
+      "bonne": 1,
+      "explication": "Le 401 est traité comme un signal de session morte : destruction du jeton, changement de statut, et la garde racine fait le reste — l'app retombe d'elle-même sur la connexion. Le distracteur du re-login silencieux est le piège important : il supposerait de stocker le mot de passe, ce que Pirb refuse explicitement — c'est la joueuse qui détient son mot de passe, pas l'app. Et le retry ne s'applique jamais à un 401, qui n'est pas une erreur transitoire."
+    },
+    {
+      "question": "Question type jury : « Vous stockez un jeton valable 30 jours sur le téléphone : si le téléphone est volé, le voleur a accès au compte pendant 30 jours, non ? » Quelle réponse tient la route ?",
+      "choix": [
+        "Le jeton est chiffré par le Keychain/Keystore donc protégé par le verrouillage de l'appareil ; il est révocable côté serveur (un 401 détruit la copie locale) ; et 30 jours est un compromis assumé — exiger le mot de passe à chaque ouverture ferait abandonner l'app",
+        "Le risque est nul car le jeton est régénéré à chaque ouverture de l'app",
+        "C'est une faille connue, corrigée en passant à des jetons de 24 heures dans la prochaine version",
+        "Le jeton ne donne accès qu'à des données publiques, donc le vol est sans conséquence"
+      ],
+      "bonne": 0,
+      "explication": "La bonne réponse combine trois arguments : protection technique (coffre chiffré + verrouillage), maîtrise serveur (le serveur reste maître de la validité et peut révoquer), et arbitrage sécurité/usage assumé — le standard des apps grand public. Le distracteur des jetons de 24 heures est tentant car « plus court = plus sûr », mais il concède une faille inexistante et détruit l'expérience utilisateur : le jury préfère un compromis défendu à une surenchère non réfléchie."
+    },
+    {
+      "question": "Au démarrage de l'app, chargerSession() relit le coffre sécurisé. Quel comportement cela produit-il pour la joueuse ?",
+      "choix": [
+        "L'app redemande systématiquement le mot de passe et pré-remplit l'email trouvé dans le coffre",
+        "L'app envoie l'email et le mot de passe stockés pour rouvrir une session neuve",
+        "Si un jeton est présent, la joueuse est directement considérée comme connectée, sans re-login ; sinon, la garde affiche l'écran de connexion",
+        "L'app démarre toujours déconnectée et la session ne se restaure qu'au premier appel API réussi"
+      ],
+      "bonne": 2,
+      "explication": "Le jeton persistant dans le coffre EST la session : le relire au démarrage suffit à restaurer l'état connecté, sans rien demander. Le distracteur « envoie l'email et le mot de passe stockés » est le piège récurrent de cette fiche : le mot de passe n'est jamais conservé par l'app — seuls le jeton et l'email le sont, et c'est le serveur qui tranchera via un éventuel 401 si le jeton n'est plus valide."
+    }
+  ]
+}

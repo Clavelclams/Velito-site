@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-push-notifications-expo",
+  "questions": [
+    {
+      "question": "Un coach convoque 12 joueuses pour un match, mais l'API d'Expo est totalement en panne à ce moment-là. Que se passe-t-il dans Venaball ?",
+      "choix": [
+        "La convocation est refusée avec un message d'erreur : le coach doit réessayer plus tard",
+        "La convocation est enregistrée normalement ; l'échec du push est attrapé par un try/catch et loggé en erreur",
+        "La convocation est enregistrée mais marquée « en attente » jusqu'au retour d'Expo",
+        "Le serveur bascule automatiquement sur un envoi direct vers Apple et Google"
+      ],
+      "bonne": 1,
+      "explication": "C'est la règle 1, écrite en tête de classe : un push ne doit JAMAIS faire échouer l'action métier — une notification ratée est un désagrément, une convocation perdue est un bug. Le distracteur « marquée en attente » est séduisant car il semble plus robuste, mais il couplerait quand même l'état du métier à la disponibilité d'un tiers ; ici, la convocation est complète et valide, le push n'est qu'une couche au-dessus."
+    },
+    {
+      "question": "Expo répond « DeviceNotRegistered » pour le jeton d'une joueuse. Que fait ExpoPushService et pourquoi ?",
+      "choix": [
+        "Il réessaie trois fois avant d'abandonner, au cas où c'est temporaire",
+        "Il marque la joueuse comme inactive dans le club",
+        "Il supprime le jeton en base : l'app a été désinstallée, sinon la table grossit à l'infini et on envoie dans le vide à chaque convocation",
+        "Il envoie un email à la joueuse pour lui demander de réinstaller l'app"
+      ],
+      "bonne": 2,
+      "explication": "C'est la règle 2, l'hygiène des données : DeviceNotRegistered signifie que ce jeton ne joindra plus jamais personne, le garder est du gaspillage à chaque envoi futur. Le distracteur « réessayer trois fois » est le bon réflexe pour une erreur transitoire (timeout, panne), mais DeviceNotRegistered est une erreur définitive — savoir distinguer les deux est exactement ce que le jury veut entendre."
+    },
+    {
+      "question": "Pourquoi ExpoPushService envoie-t-il les notifications par lots de 100 avec array_chunk plutôt qu'une requête HTTP par joueuse ?",
+      "choix": [
+        "Parce qu'Expo facture au nombre de requêtes",
+        "Pour que les joueuses reçoivent la notification exactement en même temps",
+        "Parce que PHP ne peut pas faire plus de 100 appels réseau dans un script",
+        "Pour l'efficacité réseau : l'API accepte 100 messages par requête, donc convoquer 12 joueuses fait 1 appel au lieu de 12 — crucial quand l'appel est porté par la requête HTTP du coach sur un mutualisé OVH"
+      ],
+      "bonne": 3,
+      "explication": "Chaque appel réseau coûte de la latence, et ici c'est le coach qui attend derrière son écran (d'où aussi le timeout de 8 secondes). Regrouper en lots divise le nombre d'allers-retours. Le distracteur « en même temps » est plausible mais faux : la simultanéité de réception n'est de toute façon pas garantie par Expo — l'enjeu est le coût réseau côté serveur, pas la synchronisation côté téléphones."
+    },
+    {
+      "question": "Question vicieuse du jury : « Si le push échoue et que vous loggez seulement, la joueuse rate sa convocation et personne ne le sait. C'est acceptable ? » Quelle est la réponse de Clavel ?",
+      "choix": [
+        "Oui, car le push n'est pas le canal unique : la convocation vit en base, visible sur le web et dans l'app, et le mail part en parallèle ; l'échec est silencieux côté utilisateur mais pas côté exploitation, chaque cas est loggé avec son motif",
+        "Non, c'est une limite connue : un système de retry automatique est prévu en phase 2",
+        "Oui, car statistiquement Expo est disponible 99,9 % du temps",
+        "Non, mais bloquer la convocation en cas d'échec aurait été pire, donc c'est le moins mauvais choix"
+      ],
+      "bonne": 0,
+      "explication": "Le push est un accélérateur au-dessus de canaux durables (base, espace web, notifications in-app, ConvocationMailerService) — c'est pour ça qu'il a le droit d'échouer. Et « personne ne le sait » est faux : trois niveaux de log distinguent l'absence d'appareil (info), le refus ciblé (warning) et la panne (error). Le distracteur « le moins mauvais choix » est piégeux car il concède le point au jury alors que l'architecture est réellement solide, pas un pis-aller."
+    },
+    {
+      "question": "Pourquoi Venaball passe-t-il par l'API d'Expo plutôt que de parler directement à APNs (Apple) et FCM (Google) ?",
+      "choix": [
+        "Expo est le seul service compatible avec l'hébergement mutualisé OVH",
+        "Les notifications Expo arrivent plus vite que celles d'APNs et FCM",
+        "Parler direct signifierait deux protocoles, deux systèmes de certificats, deux fois les bugs ; Expo fait le pont, et tout est confiné dans ExpoPushService : migrer un jour ne changerait que ce fichier",
+        "APNs et FCM sont payants alors qu'Expo est gratuit"
+      ],
+      "bonne": 2,
+      "explication": "Deux arguments : la simplicité (un seul intermédiaire au lieu de deux intégrations complexes) et le confinement (le service externe est isolé dans une seule classe, donc remplaçable sans toucher le reste du code). Le distracteur « payants vs gratuit » est tentant car le coût compte pour une petite structure, mais APNs et FCM sont gratuits aussi — la vraie économie est en complexité et en temps de dev, pas en euros."
+    }
+  ]
+}

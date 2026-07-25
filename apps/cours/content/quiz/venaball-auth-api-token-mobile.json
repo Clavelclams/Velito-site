@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-auth-api-token-mobile",
+  "questions": [
+    {
+      "question": "La table ApiToken de Venaball fuite suite à une injection SQL. Pourquoi l'attaquant ne peut-il pas utiliser les jetons volés pour se connecter à l'API ?",
+      "choix": [
+        "La base ne contient que le hash SHA-256 des jetons : le clair n'a été montré qu'une fois au client et n'est jamais stocké",
+        "Les jetons sont chiffrés avec une clé stockée dans le fichier .env",
+        "Les jetons sont liés à l'adresse IP du téléphone, donc inutilisables ailleurs",
+        "Le firewall Symfony bloque toute connexion venant d'un appareil inconnu"
+      ],
+      "bonne": 0,
+      "explication": "C'est exactement la même logique que pour les mots de passe : on stocke une empreinte non réversible, pas le secret. Le distracteur « chiffrement avec clé » est tentant car il semble plus sécurisé, mais le chiffrement est réversible : si l'attaquant obtient aussi la clé, tout tombe — alors qu'un hash de jeton aléatoire n'est pas rejouable, point."
+    },
+    {
+      "question": "Question vicieuse du jury : « Vous hashez les mots de passe en bcrypt mais les jetons API en SHA-256. N'est-ce pas incohérent ? » Quelle est la bonne réponse ?",
+      "choix": [
+        "Si, c'est une dette technique : il faudrait passer les jetons en argon2 dès la phase 2",
+        "SHA-256 est plus récent que bcrypt, donc plus sûr",
+        "Non : un mot de passe est faible et devinable, donc il faut un hachage lent ; un jeton de 256 bits d'entropie est hors de portée du brute-force, et un hash rapide est nécessaire car il est recalculé à chaque requête API",
+        "Les deux algorithmes sont interchangeables, c'est Symfony qui a choisi par défaut"
+      ],
+      "bonne": 2,
+      "explication": "Le choix du hachage dépend de la menace : bcrypt/argon2 ralentissent le brute-force des mots de passe humains ; random_bytes(32) rend le brute-force mathématiquement impossible, donc SHA-256 suffit ET évite des dizaines de millisecondes d'argon2 à chaque appel API. Le distracteur « dette technique » est piégeux car avouer une faiblesse semble honnête devant un jury — mais ici ce serait avouer une faute qui n'existe pas."
+    },
+    {
+      "question": "Une joueuse perd son téléphone. Grâce au choix du jeton opaque (ADR-0010), que peut faire Venaball qu'un JWT classique ne permettrait pas sans mécanisme supplémentaire ?",
+      "choix": [
+        "Renvoyer automatiquement un nouveau jeton sur le nouveau téléphone",
+        "Chiffrer les données de l'app à distance",
+        "Localiser le téléphone via le dernier appel API",
+        "Révoquer le jeton immédiatement en supprimant sa ligne en base : la prochaine requête du téléphone volé est refusée"
+      ],
+      "bonne": 3,
+      "explication": "Un jeton opaque est validé en base à chaque requête : supprimer la ligne = révocation instantanée. Un JWT est auto-porteur et signé : il reste valide jusqu'à son expiration, sauf à maintenir une liste noire — ce qui annule justement son avantage « stateless ». C'est le cœur de l'ADR-0010, avec le bonus zéro dépendance grâce à l'authenticator access_token natif de Symfony."
+    },
+    {
+      "question": "Quand un jeton est inconnu, expiré ou orphelin, l'API renvoie toujours le même message : « Jeton d'accès invalide ou expiré ». Pourquoi ne pas préciser la cause exacte ?",
+      "choix": [
+        "Pour simplifier la traduction de l'app en plusieurs langues",
+        "Pour ne pas donner d'oracle à un attaquant : distinguer « jeton inconnu » de « jeton expiré » lui confirmerait quels jetons ont existé",
+        "Parce que Symfony ne permet qu'un seul message d'erreur par firewall",
+        "Parce que l'app mobile ignore de toute façon le contenu des messages d'erreur"
+      ],
+      "bonne": 1,
+      "explication": "Un message d'erreur différencié est une fuite d'information : l'attaquant peut sonder l'API et apprendre lesquels de ses essais correspondent à de vrais jetons passés. Le distracteur « l'app ignore le message » est tentant car techniquement vrai côté UI — mais la sécurité ne se raisonne pas selon le client légitime, elle se raisonne selon l'attaquant qui lit les réponses brutes."
+    },
+    {
+      "question": "Les endpoints /api/pirb/* de Venaball n'ont volontairement aucun paramètre {id} dans l'URL. Quel risque cette conception élimine-t-elle par construction ?",
+      "choix": [
+        "Les injections SQL, puisqu'aucun paramètre n'entre dans les requêtes",
+        "Les attaques par déni de service sur l'API",
+        "L'IDOR : impossible de demander les données d'une autre joueuse, chaque endpoint sert uniquement le porteur du jeton",
+        "Le vol de session par interception du cookie"
+      ],
+      "bonne": 2,
+      "explication": "Sans {id} à manipuler, il n'y a rien à forger : l'identité vient du jeton, pas de l'URL — l'isolation est garantie par construction, pas par une vérification à ne pas oublier. Le distracteur « injection SQL » est séduisant car « pas de paramètre = pas d'injection » sonne logique, mais l'injection se combat par les requêtes préparées, pas par le design des routes ; ici c'est bien l'accès aux objets d'autrui qui est visé."
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "fiche": "cours-ssg-contre-cookies",
+  "questions": [
+    {
+      "question": "Que se serait-il passé si l'appel à cookies() pour vérifier la session avait été placé dans le layout racine de Velito Cours ?",
+      "choix": [
+        "Rien de particulier : Next.js aurait mis le résultat en cache au build",
+        "Seule la page d'accueil serait devenue dynamique",
+        "Comme le layout racine enveloppe TOUTES les pages, un seul appel à cookies() aurait converti tout le site en rendu dynamique à la demande — la mort du SSG pour un simple bouton",
+        "Next.js aurait levé une erreur de build, cookies() étant interdit dans un layout"
+      ],
+      "bonne": 2,
+      "explication": "Le danger vient de la position : un layout racine s'applique à toutes les routes, donc son mode de rendu contamine tout le site. Lire cookies() force le rendu dynamique, et les fiches pré-générées auraient été régénérées à chaque requête. Le distracteur « erreur de build » est tentant car on aimerait que Next.js protège de ce genre d'erreur — mais l'appel est parfaitement légal, il dégrade juste silencieusement la performance : c'est ça qui le rend piégeux."
+    },
+    {
+      "question": "Pourquoi lire cookies() rend-il forcément le rendu dynamique dans Next.js ? Quelle est la logique derrière cette règle ?",
+      "choix": [
+        "Parce que les cookies sont chiffrés et que le déchiffrement est trop lent pour le build",
+        "Parce qu'un cookie n'existe qu'au moment d'une requête d'un visiteur : au build, il n'y a aucune requête, donc aucun cookie à lire — une page qui en dépend ne peut pas être pré-générée",
+        "Parce que Next.js considère tout accès aux en-têtes HTTP comme une faille de sécurité",
+        "Parce que cookies() déclenche une revalidation du cache toutes les 60 secondes"
+      ],
+      "bonne": 1,
+      "explication": "Ce n'est pas une limitation arbitraire mais une impossibilité logique : le SSG produit les pages AVANT toute visite, or un cookie est une donnée attachée à la requête d'un visiteur précis. Une page dont le contenu dépend du cookie doit donc être rendue au moment de la requête. Comprendre cette logique (plutôt que mémoriser la règle) permet de la généraliser : headers(), searchParams… tout ce qui dépend de la requête a le même effet."
+    },
+    {
+      "question": "Quelle solution a permis au header de se masquer sur /login sans sacrifier le SSG ?",
+      "choix": [
+        "Vérifier la session dans le middleware et injecter le header conditionnellement",
+        "Dupliquer le layout : un layout avec header et un layout sans, pour /login",
+        "Lire les cookies dans un Route Handler séparé appelé par le header",
+        "Un composant client (EnTete.tsx) qui utilise usePathname() pour se masquer selon l'URL : aucune lecture de session, donc aucun impact sur le mode de rendu"
+      ],
+      "bonne": 3,
+      "explication": "Le besoin réel n'était pas « savoir si l'utilisateur est connecté » mais « ne pas afficher le header sur /login » : l'URL suffit, et usePathname() est une information purement client qui ne touche pas au rendu serveur. C'est la leçon de la fiche : requalifier le besoin avant de choisir l'outil. Le distracteur de la duplication de layout est tentant car il marcherait, mais il crée deux structures à maintenir pour un problème qui se règle en une condition."
+    },
+    {
+      "question": "Comment PROUVER que l'ajout du header n'a pas dégradé le mode de rendu du site ?",
+      "choix": [
+        "En lisant la sortie du build Next.js, qui marque chaque route : /fiches/[slug] toujours en ● (SSG), le dashboard en ○ (statique), seul /login en ƒ (dynamique)",
+        "En vérifiant que le site s'affiche toujours correctement en production",
+        "En comparant le temps de réponse des pages avant et après avec un chronomètre",
+        "En vérifiant qu'aucune erreur n'apparaît dans la console du navigateur"
+      ],
+      "bonne": 0,
+      "explication": "La sortie du build est la preuve objective : Next.js y déclare le mode de rendu exact de chaque route, et c'est vérifiable à chaque build — l'argument mesurable qu'un jury attend. Le distracteur du chronomètre est séduisant car la performance est bien l'enjeu final, mais une mesure de latence est bruitée et indirecte : une page dynamique rapide masquerait la régression, alors que le symbole de route la révèle sans ambiguïté."
+    },
+    {
+      "question": "Question type jury : « Un utilisateur non connecté voit donc le bouton Déconnexion si le middleware le laisse passer ? » Quelle est la réponse correcte ?",
+      "choix": [
+        "Non, car le header vérifie la session avant d'afficher le bouton",
+        "Le middleware ne le laisse justement jamais passer : toute route non publique sans session est redirigée vers /login avant le rendu ; et même si le bouton s'affichait, il déconnecterait une session inexistante — l'affichage est du confort, l'autorisation est dans le middleware",
+        "Oui, c'est une faille connue qui sera corrigée en rendant le header serveur",
+        "Non, car le bouton Déconnexion est masqué par CSS pour les visiteurs anonymes"
+      ],
+      "bonne": 1,
+      "explication": "La question du jury cherche à faire avouer que le header serait une couche de sécurité : la bonne réponse refuse cette prémisse. La protection est en amont (middleware default-deny + liste blanche) et l'action derrière le bouton est inoffensive hors contexte — deux responsabilités, deux endroits. Le premier distracteur est le piège central : affirmer que le header vérifie la session contredirait tout le choix architectural de la fiche (il ne lit justement AUCUNE session)."
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "fiche": "pirb-expo-router-navigation",
+  "questions": [
+    {
+      "question": "Dans Pirb, les onglets vivent dans un dossier nommé (tabs), avec des parenthèses. Quel est l'effet de ces parenthèses dans expo-router ?",
+      "choix": [
+        "Elles créent un groupe : le dossier organise les fichiers mais n'apparaît pas dans l'URL — l'écran stats est accessible via /stats, pas /(tabs)/stats",
+        "Elles marquent le dossier comme privé : ses écrans ne sont accessibles qu'après connexion",
+        "Elles indiquent une route dynamique dont le nom est fourni à l'exécution",
+        "Elles excluent le dossier du build de production"
+      ],
+      "bonne": 0,
+      "explication": "Les parenthèses créent un groupe de routes purement organisationnel, invisible dans l'URL : on structure le code sans polluer les chemins. Le distracteur « route dynamique » est le piège classique car une syntaxe spéciale existe bien pour ça, mais ce sont les crochets ([id]), pas les parenthèses — deux conventions différentes qu'un débutant confond facilement."
+    },
+    {
+      "question": "Pourquoi la garde de connexion de Pirb est-elle posée dans app/_layout.tsx (le layout racine) plutôt que vérifiée dans chaque écran ?",
+      "choix": [
+        "Parce qu'expo-router interdit les vérifications de session dans les écrans",
+        "Parce que le layout racine est le seul fichier à pouvoir lire le stockage sécurisé",
+        "Parce qu'une garde au-dessus de toutes les routes ne peut pas être oubliée : sans session, le layout retourne l'écran de connexion et la navigation n'est même pas montée",
+        "Pour améliorer les performances : une seule vérification au lieu d'une par écran"
+      ],
+      "bonne": 2,
+      "explication": "Une vérification par écran repose sur la discipline : chaque nouvel écran est une occasion d'oublier la garde. Au niveau racine, si la session manque, la Stack n'est jamais rendue — il n'existe littéralement aucun écran à atteindre. Le distracteur performance est plausible (c'est un petit bénéfice réel) mais ce n'est pas l'argument : c'est la robustesse structurelle qui justifie le choix devant un jury."
+    },
+    {
+      "question": "Une joueuse tape sur une notification push de convocation, et l'app s'ouvre directement sur l'écran des convocations. Quelle propriété d'expo-router rend cela simple dans Pirb ?",
+      "choix": [
+        "Le préchargement automatique de tous les écrans au démarrage",
+        "Chaque fichier étant une route avec un chemin, le deep linking est natif : le service push fait router.push('/convocations') à partir de la charge utile de la notification",
+        "La synchronisation automatique entre les notifications système et la barre d'onglets",
+        "Un fichier central de configuration qui mappe chaque type de notification vers un écran"
+      ],
+      "bonne": 1,
+      "explication": "Avec la navigation par fichiers, chaque écran a d'office une URL : router vers /convocations depuis ecouterTapNotification() est une ligne, sans configuration supplémentaire — c'est un des bénéfices « gratuits » du choix d'expo-router. Le distracteur du fichier central de mapping décrit ce qu'il faudrait construire à la main avec une navigation configurée manuellement : exactement le code d'assemblage que la convention évite."
+    },
+    {
+      "question": "Question type jury : « Avec la navigation par fichiers, n'importe qui peut taper une URL et arriver sur un écran privé, non ? » Où se trouve la VRAIE protection des données dans Pirb ?",
+      "choix": [
+        "Dans le chiffrement des URL par expo-router, qui rend les routes privées non devinables",
+        "Dans la garde du layout racine, qui suffit à elle seule à protéger les données",
+        "Dans le groupe (tabs), qui masque les routes sensibles de l'URL",
+        "Côté serveur : chaque requête part avec le jeton Bearer et c'est Symfony qui autorise ou refuse — un 401 invalide la session ; la navigation cache, le serveur protège"
+      ],
+      "bonne": 3,
+      "explication": "La sécurité côté client n'est jamais qu'un confort : même si un écran s'affichait, il n'obtiendrait aucune donnée sans jeton valide, car l'autorisation est décidée par le serveur à chaque requête. Le distracteur de la garde racine est le plus tentant — elle existe et elle est utile — mais elle ne fait que cacher l'UI : la réponse attendue par le jury distingue « cacher » (client) et « protéger » (serveur)."
+    },
+    {
+      "question": "La décision D-02 du dossier d'architecture retient expo-router plutôt que React Navigation configuré à la main. Quel est l'argument principal de ce choix ?",
+      "choix": [
+        "expo-router est le seul routeur compatible avec les notifications push",
+        "React Navigation n'est plus maintenu par la communauté",
+        "Moins de code d'assemblage à écrire et maintenir : la convention par fichiers rend la navigation lisible en ouvrant le dossier app/, et c'est le standard actuel d'Expo",
+        "expo-router est nettement plus performant au rendu des transitions"
+      ],
+      "bonne": 2,
+      "explication": "C'est le principe « convention plutôt que configuration » : l'arborescence EST la navigation, donc moins de code d'assemblage, moins de bugs possibles, et une lisibilité immédiate. Le distracteur « React Navigation n'est plus maintenu » est faux mais tentant : expo-router est d'ailleurs construit au-dessus de React Navigation — le choix porte sur la couche de convention, pas sur un abandon de la bibliothèque sous-jacente."
+    }
+  ]
+}

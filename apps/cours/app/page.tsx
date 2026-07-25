@@ -1,51 +1,40 @@
 /**
  * Dashboard — Server Component.
  * Compte à rebours jusqu'au jury + état du stock de fiches par bloc CDA
- * + liste des fiches groupées par projet. Tout est calculé côté serveur
- * à partir des fichiers Markdown (voir lib/fiches/fiches.ts).
+ * + projets + fiches filtrables. La LECTURE des Markdown reste ici (serveur,
+ * via lib/fiches/fiches.ts) ; seul le FILTRAGE interactif est délégué au
+ * composant client RechercheFiches, qui reçoit les métadonnées en props.
  */
 import Link from "next/link";
 import { listerFiches, listerProjets } from "@/lib/fiches/fiches";
+import { listerQuiz } from "@/lib/fiches/quiz";
+import { COULEURS_BLOCS, NOMS_BLOCS } from "@/lib/fiches/blocs";
+import RechercheFiches from "@/app/components/RechercheFiches";
+import ProgressionDashboard from "@/app/components/ProgressionDashboard";
 
 /** Date cible du jury (à affiner quand la convocation AFPA arrive). */
 const DATE_JURY = new Date("2027-04-01T09:00:00+02:00");
 
-const NOMS_BLOCS: Record<1 | 2 | 3, string> = {
-  1: "Bloc 1 · Développer",
-  2: "Bloc 2 · Concevoir",
-  3: "Bloc 3 · Déployer",
-};
-
-const COULEURS_BLOCS: Record<1 | 2 | 3, string> = {
-  1: "bg-cours-bloc1",
-  2: "bg-cours-bloc2",
-  3: "bg-cours-bloc3",
-};
-
 export default function DashboardPage() {
   const fiches = listerFiches();
   const projets = listerProjets();
+  const quiz = listerQuiz();
   const joursRestants = Math.max(
     0,
     Math.ceil((DATE_JURY.getTime() - Date.now()) / 86_400_000),
   );
 
-  // Regroupements pour l'affichage (calculs simples, côté serveur)
+  // Compteur par bloc CDA (sur TOUTES les fiches — les stats globales ne
+  // bougent pas quand on filtre la liste en dessous).
   const parBloc = { 1: 0, 2: 0, 3: 0 } as Record<1 | 2 | 3, number>;
-  const parProjet = new Map<string, typeof fiches>();
-  for (const f of fiches) {
-    parBloc[f.bloc] += 1;
-    const liste = parProjet.get(f.projet) ?? [];
-    liste.push(f);
-    parProjet.set(f.projet, liste);
-  }
+  for (const f of fiches) parBloc[f.bloc] += 1;
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
       {/* ---- En-tête : le compte à rebours, TOUJOURS visible ---- */}
       <header className="mb-10 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Velito Cours</h1>
+          <h1 className="text-3xl font-bold">Tableau de bord</h1>
           <p className="text-sm text-cours-text-muted">
             Révision CDA · {fiches.length} fiche{fiches.length > 1 ? "s" : ""}
           </p>
@@ -59,6 +48,12 @@ export default function DashboardPage() {
           </p>
         </div>
       </header>
+
+      {/* ---- Ma progression (XP, série, révision du jour) ---- */}
+      <ProgressionDashboard
+        totalFiches={fiches.length}
+        totalQuiz={quiz.length}
+      />
 
       {/* ---- Répartition par bloc CDA ---- */}
       <section className="mb-10 grid gap-4 sm:grid-cols-3">
@@ -111,7 +106,7 @@ export default function DashboardPage() {
         </section>
       )}
 
-      {/* ---- Fiches par projet ---- */}
+      {/* ---- Fiches : recherche + filtres (composant client) ---- */}
       {fiches.length === 0 ? (
         <div className="rounded-xl border border-cours-border bg-cours-surface p-8 text-center text-sm text-cours-text-muted">
           Aucune fiche pour l&apos;instant. Colle le contenu de{" "}
@@ -120,35 +115,10 @@ export default function DashboardPage() {
           <code>content/fiches/</code>.
         </div>
       ) : (
-        [...parProjet.entries()].map(([projet, liste]) => (
-          <section key={projet} className="mb-8">
-            <h2 className="mb-3 text-lg font-bold capitalize">
-              {projet}{" "}
-              <span className="text-sm font-normal text-cours-text-muted">
-                · {liste.length}
-              </span>
-            </h2>
-            <ul className="space-y-2">
-              {liste.map((fiche) => (
-                <li key={fiche.slug}>
-                  <Link
-                    href={`/fiches/${fiche.slug}`}
-                    className="flex items-center gap-3 rounded-lg border border-cours-border bg-cours-surface px-4 py-3 transition-colors hover:border-cours-accent"
-                  >
-                    <span
-                      className={`h-2.5 w-2.5 shrink-0 rounded-full ${COULEURS_BLOCS[fiche.bloc]}`}
-                      title={NOMS_BLOCS[fiche.bloc]}
-                    />
-                    <span className="flex-1 font-medium">{fiche.titre}</span>
-                    <span className="text-xs text-cours-text-muted">
-                      {fiche.themes.slice(0, 2).join(" · ")}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))
+        <RechercheFiches
+          fiches={fiches}
+          slugsAvecQuiz={quiz.map((q) => q.fiche)}
+        />
       )}
     </div>
   );

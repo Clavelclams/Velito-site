@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-voters-autorisation-par-club",
+  "questions": [
+    {
+      "question": "Question vicieuse du jury : « Pourquoi ne pas avoir simplement utilisé les rôles Symfony (ROLE_COACH) et la role_hierarchy de security.yaml ? » Quelle est la réponse de Clavel ?",
+      "choix": [
+        "Parce que la role_hierarchy est dépréciée dans les versions récentes de Symfony",
+        "Parce qu'un rôle Symfony est global : ROLE_COACH rendrait l'utilisateur coach dans TOUS les clubs — exactement la fuite inter-club à empêcher (RT-0009) ; les rôles métier vivent donc en base dans UserClubRole, rattachés à un club, avec horodatage et statut",
+        "Parce que les rôles Symfony ne peuvent pas être vérifiés dans les templates Twig",
+        "Parce que les Voters sont obligatoires dès qu'on a plus de trois rôles"
+      ],
+      "bonne": 1,
+      "explication": "Le rôle Symfony est attaché à l'utilisateur, pas au couple (utilisateur, club) : il ne peut pas exprimer « coach ICI mais pas LÀ ». Les rôles en base apportent en bonus l'audit (qui a quel rôle, depuis quand) et la suspension sans suppression. Le distracteur « déprécié » est le piège du faux argument technique : la role_hierarchy fonctionne très bien — elle est simplement inadaptée au besoin, et confondre les deux devant un jury coûte cher."
+    },
+    {
+      "question": "Un dirigeant n'a pas encore validé la demande de rôle COACH d'un nouvel utilisateur : son UserClubRole est en statut « pending ». Que peut faire cet utilisateur dans le club ?",
+      "choix": [
+        "Il a un accès en lecture seule le temps de la validation",
+        "Il a tous les droits de coach, la validation n'étant qu'une formalité administrative",
+        "Rien : le ClubVoter exige isStatusActive(), un rôle pending ne donne AUCUN droit",
+        "Il peut voir les équipes mais pas les données des joueuses"
+      ],
+      "bonne": 2,
+      "explication": "C'est le workflow pending/active/rejected : tant qu'un dirigeant n'a pas validé, le rôle existe en base mais est inerte — la vérification isStatusActive() dans hasMetaRole() l'exclut de tous les votes. Le distracteur « lecture seule » est plausible car beaucoup d'apps font ça, mais ce serait déjà une fuite : n'importe qui pourrait demander un rôle coach et lire des données de mineures en attendant le refus."
+    },
+    {
+      "question": "Tu crées une nouvelle entité Tournoi qui doit être protégée par club. Que dois-tu faire pour que le ClubVoter la protège ?",
+      "choix": [
+        "Ajouter un cas Tournoi dans le switch du ClubVoter",
+        "Créer un TournoiVoter dédié qui recopie la logique du ClubVoter",
+        "Ajouter la vérification manuellement dans chaque contrôleur qui manipule des tournois",
+        "Lui faire implémenter ClubAwareInterface : le Voter remontera au club via getClub(), sans qu'on touche au Voter — c'est l'Open/Closed Principle"
+      ],
+      "bonne": 3,
+      "explication": "Le Voter accepte n'importe quelle entité qui implémente ClubAwareInterface : la protection s'étend par ajout (l'interface sur l'entité), jamais par modification du Voter — Open/Closed Principle, écrit noir sur blanc dans le commentaire de classe. Le distracteur « TournoiVoter dédié » est le réflexe compréhensible (« un Voter par entité »), mais dupliquer la logique d'appartenance club crée autant de versions à maintenir et à trouer."
+    },
+    {
+      "question": "Un utilisateur est COACH dans le club A. Il demande CLUB_COACH sur une équipe du club B. Que décide le ClubVoter, et comment ce comportement est-il garanti dans le temps ?",
+      "choix": [
+        "ACCESS_DENIED : hasMetaRole() vérifie le couple (rôle, club), et le test unitaire testCoachDuClubANeVotePasPourLeClubB verrouille ce comportement contre les régressions",
+        "ACCESS_GRANTED : le rôle COACH suffit, peu importe le club",
+        "ACCESS_DENIED, sauf si les deux clubs sont dans le même département FFBB",
+        "Le Voter s'abstient et laisse le contrôleur décider"
+      ],
+      "bonne": 0,
+      "explication": "Toute la valeur du modèle ADR-0006 est là : le droit n'existe que dans le couple (rôle, club) — être coach « quelque part » ne donne rien « ailleurs ». Et l'affirmation ne repose pas sur la confiance mais sur un test unitaire nommé qui rejouera ce scénario à chaque build. Le distracteur « s'abstient » est piégeux car l'abstention est un vrai mécanisme des Voters Symfony — mais ici le ClubVoter supporte l'attribut, donc il vote, et il vote non."
+    },
+    {
+      "question": "Pourquoi l'attribut CLUB_SECRETARIAT (dirigeant + secrétaire uniquement) existe-t-il, alors que CLUB_COACH couvre déjà l'encadrement ?",
+      "choix": [
+        "Parce que les secrétaires ne peuvent pas avoir le rôle COACH en base",
+        "Pour des raisons de performance : le secrétariat interroge la base plus souvent",
+        "Parce que la FFBB impose un rôle informatique distinct pour les secrétaires",
+        "Parce que les contacts de mineures ne sont pas ouverts aux coachs : les attributs graduent l'accès, et certaines données exigent un cercle plus restreint que l'encadrement sportif"
+      ],
+      "bonne": 3,
+      "explication": "C'est le principe du moindre privilège appliqué au métier : un coach a besoin des données sportives, pas des coordonnées personnelles des familles — données sensibles quand il s'agit de mineures. La gradation des attributs (MEMBER, COACH, STAFF, ADMIN, SECRETARIAT...) permet d'exprimer ces cercles. Le distracteur « la FFBB impose » est tentant car le projet regorge de vraies règles fédérales, mais ici c'est un choix de protection des données propre à Venaball."
+    }
+  ]
+}
