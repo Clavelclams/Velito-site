@@ -38,9 +38,10 @@ export default function EnTete() {
           wrappe et la barre de lecture (position fixe dessous) se décale. */}
       <div className="mx-auto flex max-w-4xl items-center justify-between px-3 py-3 sm:px-4">
         <div className="flex items-center gap-3 sm:gap-5">
+          {/* Le nom en dégradé indigo→violet : bg-clip-text peint le texte avec le fond. */}
           <Link
             href="/"
-            className="whitespace-nowrap font-bold tracking-tight transition-colors hover:text-cours-accent"
+            className="whitespace-nowrap bg-gradient-to-r from-cours-accent to-cours-bloc2 bg-clip-text font-bold tracking-tight text-transparent"
           >
             Velito Cours
           </Link>

@@ -9,7 +9,7 @@ import Link from "next/link";
 import { listerFiches, listerProjets } from "@/lib/fiches/fiches";
 import { listerQuiz } from "@/lib/fiches/quiz";
 import { listerLecons, listerParcours } from "@/lib/fiches/parcours";
-import { COULEURS_BLOCS, NOMS_BLOCS } from "@/lib/fiches/blocs";
+import { ACCENTS_BLOCS, COULEURS_BLOCS, NOMS_BLOCS } from "@/lib/fiches/blocs";
 import RechercheFiches from "@/app/components/RechercheFiches";
 import ProgressionDashboard from "@/app/components/ProgressionDashboard";
 import ContinuerParcours from "@/app/components/ContinuerParcours";
@@ -54,11 +54,12 @@ export default function DashboardPage() {
             Révision CDA · {fiches.length} fiche{fiches.length > 1 ? "s" : ""}
           </p>
         </div>
-        <div className="rounded-xl border border-cours-border bg-cours-surface px-5 py-3 text-center">
-          <p className="text-2xl font-bold sm:text-3xl tabular-nums text-cours-accent">
+        {/* Le compte à rebours = LE point focal : carte gradient, blanc sur couleur. */}
+        <div className="rounded-2xl bg-gradient-to-br from-cours-accent to-cours-bloc2 px-6 py-4 text-center text-white shadow-lg shadow-cours-accent/25">
+          <p className="text-2xl font-bold sm:text-3xl tabular-nums">
             J−{joursRestants}
           </p>
-          <p className="text-xs uppercase tracking-wide text-cours-text-muted">
+          <p className="text-xs uppercase tracking-wide text-white/80">
             avant le jury
           </p>
         </div>
@@ -75,16 +76,19 @@ export default function DashboardPage() {
 
       {/* ---- Répartition par bloc CDA ---- */}
       <section className="mb-10 grid gap-4 sm:grid-cols-3">
-        {([1, 2, 3] as const).map((bloc) => (
+        {([1, 2, 3] as const).map((bloc, i) => (
           <div
             key={bloc}
-            className="rounded-xl border border-cours-border bg-cours-surface p-4"
+            className={`anim-arrivee rounded-xl border border-cours-border border-l-4 ${ACCENTS_BLOCS[bloc].bordureGauche} bg-cours-surface p-4 transition-all hover:-translate-y-0.5 hover:shadow-md`}
+            style={{ animationDelay: `${i * 80}ms` }}
           >
             <div className="flex items-center gap-2">
               <span className={`h-3 w-3 rounded-full ${COULEURS_BLOCS[bloc]}`} />
               <p className="text-sm font-semibold">{NOMS_BLOCS[bloc]}</p>
             </div>
-            <p className="mt-2 text-2xl font-bold tabular-nums">{parBloc[bloc]}</p>
+            <p className={`mt-2 text-3xl font-bold tabular-nums ${ACCENTS_BLOCS[bloc].texte}`}>
+              {parBloc[bloc]}
+            </p>
             <p className="text-xs text-cours-text-muted">fiches</p>
           </div>
         ))}

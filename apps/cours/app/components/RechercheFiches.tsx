@@ -16,7 +16,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { FicheMeta } from "@/lib/fiches/fiches";
-import { COULEURS_BLOCS, NOMS_BLOCS } from "@/lib/fiches/blocs";
+import { ACCENTS_BLOCS, COULEURS_BLOCS, NOMS_BLOCS } from "@/lib/fiches/blocs";
 import { chargerProgression, type Progression } from "@/lib/progression";
 
 /** Minuscules + sans accents : « sécurité » matche « securite ». */
@@ -201,12 +201,9 @@ export default function RechercheFiches({
                     <li key={fiche.slug}>
                       <Link
                         href={`/fiches/${fiche.slug}`}
-                        className="flex items-center gap-3 rounded-lg border border-cours-border bg-cours-surface px-4 py-3 transition-all hover:-translate-y-0.5 hover:border-cours-accent hover:shadow-md"
+                        className={`flex items-center gap-3 rounded-lg border border-cours-border border-l-4 ${ACCENTS_BLOCS[fiche.bloc].bordureGauche} bg-cours-surface px-4 py-3 transition-all hover:-translate-y-0.5 hover:border-cours-accent hover:shadow-md`}
+                        title={NOMS_BLOCS[fiche.bloc]}
                       >
-                        <span
-                          className={`h-2.5 w-2.5 shrink-0 rounded-full ${COULEURS_BLOCS[fiche.bloc]}`}
-                          title={NOMS_BLOCS[fiche.bloc]}
-                        />
                         <span className="flex-1 font-medium">
                           {fiche.titre}
                         </span>

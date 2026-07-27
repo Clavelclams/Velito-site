@@ -134,7 +134,7 @@ export default function QuizFiche({
       </div>
       <div className="mb-5 h-1.5 overflow-hidden rounded-full bg-cours-border">
         <div
-          className="h-full rounded-full bg-cours-accent transition-all duration-500"
+          className="h-full rounded-full bg-gradient-to-r from-cours-accent to-cours-bloc2 transition-all duration-500"
           style={{ width: `${((indexQuestion + (choixFait !== null ? 1 : 0)) / questions.length) * 100}%` }}
         />
       </div>

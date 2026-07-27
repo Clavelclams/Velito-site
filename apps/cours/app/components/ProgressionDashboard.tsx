@@ -59,7 +59,9 @@ export default function ProgressionDashboard({
       <div className="flex flex-wrap gap-6">
         {stats.map((s) => (
           <div key={s.label} className="flex items-center gap-2.5">
-            <span className="text-2xl">{s.icone}</span>
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-cours-accent/10 text-xl">
+              {s.icone}
+            </span>
             <div>
               <p className="text-xl font-bold leading-none tabular-nums">{s.valeur}</p>
               <p className="mt-0.5 text-xs text-cours-text-muted">{s.label}</p>
@@ -70,7 +72,7 @@ export default function ProgressionDashboard({
       {totalQuiz > 0 && (
         <Link
           href="/revision"
-          className="rounded-xl bg-cours-accent px-5 py-2.5 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-cours-accent-hover hover:shadow-lg"
+          className="rounded-xl bg-gradient-to-r from-cours-accent to-cours-bloc2 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-cours-accent/20 transition-all hover:-translate-y-0.5 hover:shadow-lg"
         >
           🎯 Révision du jour
         </Link>

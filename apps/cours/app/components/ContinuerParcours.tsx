@@ -66,7 +66,7 @@ export default function ContinuerParcours({
             <p className="mt-0.5 font-bold">{prochaine.titre}</p>
           </div>
         </div>
-        <span className="shrink-0 rounded-xl bg-cours-accent px-4 py-2 text-center text-sm font-bold text-white sm:w-auto">
+        <span className="shrink-0 rounded-xl bg-gradient-to-r from-cours-accent to-cours-bloc2 px-4 py-2 text-center text-sm font-bold text-white shadow-md shadow-cours-accent/20 sm:w-auto">
           Reprendre →
         </span>
       </Link>

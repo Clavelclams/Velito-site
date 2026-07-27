@@ -41,7 +41,9 @@ export default function GrilleParcours({
               className="block rounded-2xl border border-cours-border bg-cours-surface p-5 transition-all hover:-translate-y-0.5 hover:border-cours-accent hover:shadow-lg"
             >
               <div className="flex items-start justify-between gap-3">
-                <span className="text-3xl">{p.icone}</span>
+                <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-cours-accent/10 text-2xl">
+                  {p.icone}
+                </span>
                 {terminee && (
                   <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-700">
                     Terminé 🏆
@@ -54,7 +56,7 @@ export default function GrilleParcours({
               </p>
               <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-cours-border">
                 <div
-                  className="h-full rounded-full bg-cours-accent transition-all duration-700"
+                  className="h-full rounded-full bg-gradient-to-r from-cours-accent to-cours-bloc2 transition-all duration-700"
                   style={{ width: `${pourcent}%` }}
                 />
               </div>

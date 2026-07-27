@@ -30,21 +30,24 @@ export const COULEURS_BLOCS: Record<1 | 2 | 3, string> = {
  */
 export const ACCENTS_BLOCS: Record<
   1 | 2 | 3,
-  { texte: string; fond: string; bordure: string }
+  { texte: string; fond: string; bordure: string; bordureGauche: string }
 > = {
   1: {
     texte: "text-cours-bloc1",
     fond: "bg-cours-bloc1/10",
     bordure: "border-cours-bloc1",
+    bordureGauche: "border-l-cours-bloc1",
   },
   2: {
     texte: "text-cours-bloc2",
     fond: "bg-cours-bloc2/10",
     bordure: "border-cours-bloc2",
+    bordureGauche: "border-l-cours-bloc2",
   },
   3: {
     texte: "text-cours-bloc3",
     fond: "bg-cours-bloc3/10",
     bordure: "border-cours-bloc3",
+    bordureGauche: "border-l-cours-bloc3",
   },
 };
