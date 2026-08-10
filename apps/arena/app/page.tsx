@@ -20,7 +20,8 @@ export default async function ArenaHome() {
   try {
     const supabase = await createClient();
     const { data } = await supabase
-      .from("arena_tournois")
+      .schema("arena")
+      .from("tournois")
       .select("*")
       .neq("statut", "BROUILLON")
       .order("date_debut", { ascending: false })

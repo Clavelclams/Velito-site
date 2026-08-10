@@ -8,7 +8,7 @@
  */
 import { notFound } from "next/navigation";
 import QRCode from "qrcode";
-import { getContexteStaff } from "@/lib/arena/auth";
+import { estStaffDe, getContexteStaff } from "@/lib/arena/auth";
 import { getServiceClient } from "@/lib/supabase/service";
 import type { Tournoi } from "@/lib/arena/types";
 
@@ -23,13 +23,14 @@ export default async function PageQR({
 
   const db = getServiceClient();
   const { data } = await db
-    .from("arena_tournois")
+    .schema("arena")
+    .from("tournois")
     .select("*")
     .eq("id", id)
-    .eq("organisation_id", ctx.organisation.id)
     .maybeSingle();
   if (!data) notFound();
   const tournoi = data as Tournoi;
+  if (!estStaffDe(ctx, tournoi.organisation_id)) notFound();
 
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://arena.velito.fr";
   const urlPublique = `${base}/t/${tournoi.qr_token}`;

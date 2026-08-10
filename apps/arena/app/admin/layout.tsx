@@ -8,13 +8,33 @@
  * Les Server Actions re-vérifient de leur côté (requireStaff) : la sécurité
  * ne repose JAMAIS uniquement sur l'UI.
  */
-import { getContexteStaff } from "@/lib/arena/auth";
+import { configSupabasePresente, getContexteStaff } from "@/lib/arena/auth";
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Cas 1 — app pas encore branchée à sa base (env absente) : état prévisible,
+  // écran explicite. Convention écosystème : messages d'erreur DISTINGUÉS,
+  // jamais un écran générique qui rend l'incident indiagnosticable.
+  if (!configSupabasePresente()) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-24 text-center">
+        <h1 className="text-2xl font-black">
+          Espace orga<span className="text-arena-violet">.</span>
+        </h1>
+        <p className="mt-4 text-gray-400">
+          L&apos;application n&apos;est pas encore reliée à sa base de données.
+        </p>
+        <p className="mt-2 text-sm text-gray-500">
+          Pour l&apos;administrateur : variables d&apos;environnement Supabase
+          manquantes sur ce déploiement (voir <code>.env.example</code>).
+        </p>
+      </div>
+    );
+  }
+
   const ctx = await getContexteStaff();
 
   if (!ctx) {
@@ -47,7 +67,10 @@ export default async function AdminLayout({
     <div className="mx-auto max-w-4xl px-4 py-8">
       <header className="mb-8 flex items-center justify-between border-b border-arena-border pb-4">
         <a href="/admin/tournois" className="font-black">
-          ARENA <span className="text-gray-500">· {ctx.organisation.nom}</span>
+          ARENA{" "}
+          <span className="text-gray-500">
+            · {ctx.organisations.map((o) => o.name).join(" · ")}
+          </span>
         </a>
         <a href="/" className="text-sm text-gray-400 hover:text-white">
           Site public →

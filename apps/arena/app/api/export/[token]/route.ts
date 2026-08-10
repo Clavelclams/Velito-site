@@ -20,7 +20,8 @@ export async function GET(
   const supabase = await createClient();
 
   const { data: tournoiData } = await supabase
-    .from("arena_tournois")
+    .schema("arena")
+    .from("tournois")
     .select("*")
     .eq("qr_token", token)
     .maybeSingle();
@@ -31,11 +32,13 @@ export async function GET(
 
   const [{ data: partData }, { data: matchsData }] = await Promise.all([
     supabase
-      .from("arena_participations")
-      .select("*, joueur:arena_joueurs(pseudo)")
+      .schema("arena")
+      .from("participations")
+      .select("*, joueur:joueurs(pseudo)")
       .eq("tournoi_id", tournoi.id),
     supabase
-      .from("arena_matchs")
+      .schema("arena")
+      .from("matchs")
       .select("*")
       .eq("tournoi_id", tournoi.id)
       .order("round", { ascending: true })

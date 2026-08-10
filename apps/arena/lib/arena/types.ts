@@ -1,7 +1,7 @@
 /**
- * Types des tables ARENA (miroir de sql/001_arena_schema_v1.sql).
- * En V2 on pourra les générer automatiquement (supabase gen types),
- * pour l'instant des interfaces manuelles suffisent et restent lisibles.
+ * Types des tables ARENA (miroir de sql/001_arena_schema_v1.sql, schéma `arena.`)
+ * + types du modèle de droits partagé (shared.organizations / user_permissions).
+ * En V2 on pourra les générer automatiquement (supabase gen types).
  */
 
 export type StatutTournoi =
@@ -18,25 +18,28 @@ export type StatutMatch =
   | "LITIGIEUX"
   | "VALIDE";
 
+/** Scope hiérarchique de shared.user_permissions (owner > editor > viewer). */
+export type ScopePartage = "owner" | "editor" | "viewer";
+
+/** Ligne de shared.organizations (colonnes utilisées par arena). */
 export interface Organisation {
   id: string;
-  nom: string;
   slug: string;
-  logo_url: string | null;
+  name: string;
 }
 
-export interface MembreOrga {
-  id: string;
-  organisation_id: string;
-  user_id: string;
-  role: "ADMIN" | "STAFF";
+/** Organisation + le rôle que l'utilisateur courant y détient. */
+export interface OrganisationAvecRole extends Organisation {
+  scope: ScopePartage;
 }
 
 export interface Joueur {
   id: string;
   user_id: string | null;
   pseudo: string;
-  age_confirme: boolean;
+  annee_naissance: number | null;
+  est_mineur: boolean;
+  profil_public: boolean;
   anonymise: boolean;
 }
 
