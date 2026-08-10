@@ -17,10 +17,38 @@ export interface ContexteStaff {
 }
 
 /**
+ * La config Supabase est-elle présente dans l'environnement ?
+ *
+ * Pourquoi ce helper : une env manquante est un ÉTAT PRÉVISIBLE du déploiement
+ * (app pas encore branchée), pas un bug. On le détecte AVANT de créer un
+ * client, pour afficher un écran explicite au lieu de laisser une exception
+ * remonter en erreur 500 (cause de l'incident /admin du 10/08/2026).
+ */
+export function configSupabasePresente(): boolean {
+  return Boolean(
+    (process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL) &&
+      (process.env.SUPABASE_ANON_KEY ??
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+  );
+}
+
+/**
  * Retourne le contexte staff de l'utilisateur connecté, ou null.
  * V1 = mono-orga : on prend la première organisation dont il est membre.
+ *
+ * Ne lève JAMAIS d'exception pour un problème de config ou de réseau : un
+ * layout qui rend une page publique d'accès ne doit pas pouvoir produire une
+ * 500. On logge côté serveur (visible dans les Runtime Logs Vercel) et on
+ * retourne null → l'UI affiche l'écran de connexion / configuration.
  */
 export async function getContexteStaff(): Promise<ContexteStaff | null> {
+  if (!configSupabasePresente()) {
+    console.error(
+      "[arena/auth] Config Supabase absente : SUPABASE_URL / SUPABASE_ANON_KEY non définies."
+    );
+    return null;
+  }
+
   const supabase = await createClient();
 
   const {
