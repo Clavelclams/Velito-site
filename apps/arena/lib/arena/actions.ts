@@ -7,7 +7,7 @@
  *  - Chaque action = requireStaff() PUIS écriture via service_role PUIS log.
  *  - Les règles métier vivent dans des modules purs et testés :
  *    lib/bracket.ts (bracket) et lib/arena/transitions.ts (cycle de vie).
- *  - Toute action sensible écrit dans arena_logs (traçabilité + audit).
+ *  - Toute action sensible écrit dans arena.logs (traçabilité + audit).
  *
  * GESTION D'ERREURS "JOUR J" :
  *  En production, une exception non gérée dans une Server Action affiche une
@@ -20,7 +20,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getServiceClient } from "../supabase/service";
-import { requireStaff } from "./auth";
+import { estStaffDe, requireStaff, type ContexteStaff } from "./auth";
 import { genererBracketEliminationSimple, progresserGagnant } from "../bracket";
 import { estStatutTournoi, transitionAutorisee } from "./transitions";
 import type { MatchRow, Tournoi } from "./types";
@@ -55,7 +55,7 @@ async function log(
   detail?: Record<string, unknown>
 ) {
   const db = getServiceClient();
-  await db.from("arena_logs").insert({
+  await db.schema("arena").from("logs").insert({
     acteur_id: acteurId,
     action,
     tournoi_id: tournoiId,
@@ -64,20 +64,26 @@ async function log(
   });
 }
 
-/** Charge un tournoi et vérifie qu'il appartient bien à l'orga du staff. */
+/**
+ * Charge un tournoi et vérifie qu'il appartient à L'UNE des organisations
+ * dont l'utilisateur est staff (modèle multi-orga de shared.user_permissions).
+ */
 async function chargerTournoiDeLOrga(
   tournoiId: string,
-  organisationId: string
+  ctx: ContexteStaff
 ): Promise<Tournoi> {
   const db = getServiceClient();
   const { data, error } = await db
-    .from("arena_tournois")
+    .schema("arena").from("tournois")
     .select("*")
     .eq("id", tournoiId)
-    .eq("organisation_id", organisationId)
     .single();
-  if (error || !data) throw new Error("Tournoi introuvable pour ton organisation.");
-  return data as Tournoi;
+  if (error || !data) throw new Error("Tournoi introuvable.");
+  const tournoi = data as Tournoi;
+  if (!estStaffDe(ctx, tournoi.organisation_id)) {
+    throw new Error("Tournoi introuvable pour tes organisations.");
+  }
+  return tournoi;
 }
 
 // ---------- Tournois ----------
@@ -102,10 +108,15 @@ export async function creerTournoi(formData: FormData) {
       throw new Error("Le nombre max de joueurs doit être entre 2 et 128.");
     }
 
+    // V1 : le tournoi est créé pour la PREMIÈRE organisation du staff.
+    // (Sélecteur multi-orga = amélioration future, remontée pas codée.)
+    const orga = ctx.organisations[0];
+    if (!orga) throw new Error("Aucune organisation associée à ton compte.");
+
     const { data, error } = await db
-      .from("arena_tournois")
+      .schema("arena").from("tournois")
       .insert({
-        organisation_id: ctx.organisation.id,
+        organisation_id: orga.id,
         titre,
         jeu,
         date_debut: new Date(dateDebut).toISOString(),
@@ -132,13 +143,13 @@ export async function changerStatutTournoi(formData: FormData) {
     const nouveau = String(formData.get("statut"));
 
     if (!estStatutTournoi(nouveau)) throw new Error("Statut inconnu.");
-    const tournoi = await chargerTournoiDeLOrga(tournoiId, ctx.organisation.id);
+    const tournoi = await chargerTournoiDeLOrga(tournoiId, ctx);
     if (!transitionAutorisee(tournoi.statut, nouveau)) {
       throw new Error(`Transition ${tournoi.statut} → ${nouveau} non autorisée.`);
     }
 
     await db
-      .from("arena_tournois")
+      .schema("arena").from("tournois")
       .update({ statut: nouveau, updated_at: new Date().toISOString() })
       .eq("id", tournoiId);
 
@@ -168,14 +179,14 @@ export async function ajouterJoueurStaff(formData: FormData) {
     const pseudo = String(formData.get("pseudo") ?? "").trim();
 
     if (pseudo.length < 2) throw new Error("Pseudo trop court (2 caractères min).");
-    const tournoi = await chargerTournoiDeLOrga(tournoiId, ctx.organisation.id);
+    const tournoi = await chargerTournoiDeLOrga(tournoiId, ctx);
     if (tournoi.statut !== "OUVERT" && tournoi.statut !== "BROUILLON") {
       throw new Error("Les inscriptions sont fermées (tournoi démarré ou clos).");
     }
 
     // Joueur existant ? Sinon création.
     const { data: existant } = await db
-      .from("arena_joueurs")
+      .schema("arena").from("joueurs")
       .select("id")
       .eq("pseudo", pseudo)
       .maybeSingle();
@@ -183,7 +194,7 @@ export async function ajouterJoueurStaff(formData: FormData) {
     let joueurId = existant?.id as string | undefined;
     if (!joueurId) {
       const { data: cree, error } = await db
-        .from("arena_joueurs")
+        .schema("arena").from("joueurs")
         .insert({ pseudo })
         .select("id")
         .single();
@@ -191,7 +202,7 @@ export async function ajouterJoueurStaff(formData: FormData) {
       joueurId = cree.id;
     }
 
-    const { error: errPart } = await db.from("arena_participations").insert({
+    const { error: errPart } = await db.schema("arena").from("participations").insert({
       tournoi_id: tournoiId,
       joueur_id: joueurId,
       check_in: true,
@@ -217,10 +228,10 @@ export async function toggleCheckIn(formData: FormData) {
     const participationId = String(formData.get("participation_id"));
     const versEtat = String(formData.get("vers")) === "true";
 
-    await chargerTournoiDeLOrga(tournoiId, ctx.organisation.id);
+    await chargerTournoiDeLOrga(tournoiId, ctx);
 
     await db
-      .from("arena_participations")
+      .schema("arena").from("participations")
       .update({
         check_in: versEtat,
         check_in_at: versEtat ? new Date().toISOString() : null,
@@ -243,14 +254,14 @@ export async function demarrerTournoi(formData: FormData) {
     const ctx = await requireStaff();
     const db = getServiceClient();
 
-    const tournoi = await chargerTournoiDeLOrga(tournoiId, ctx.organisation.id);
+    const tournoi = await chargerTournoiDeLOrga(tournoiId, ctx);
     if (tournoi.statut !== "OUVERT") {
       throw new Error("Le tournoi doit être OUVERT pour démarrer.");
     }
 
     // Seuls les joueurs check-in participent au bracket (les absents sont exclus).
     const { data: participations } = await db
-      .from("arena_participations")
+      .schema("arena").from("participations")
       .select("joueur_id")
       .eq("tournoi_id", tournoiId)
       .eq("check_in", true);
@@ -265,7 +276,7 @@ export async function demarrerTournoi(formData: FormData) {
     // Algo pur et testé (lib/bracket.ts) → lignes prêtes à insérer.
     const matchs = genererBracketEliminationSimple(joueurIds);
 
-    const { error } = await db.from("arena_matchs").insert(
+    const { error } = await db.schema("arena").from("matchs").insert(
       matchs.map((m) => ({
         tournoi_id: tournoiId,
         round: m.round,
@@ -280,7 +291,7 @@ export async function demarrerTournoi(formData: FormData) {
     if (error) throw new Error(`Génération du bracket impossible : ${error.message}`);
 
     await db
-      .from("arena_tournois")
+      .schema("arena").from("tournois")
       .update({ statut: "EN_COURS", updated_at: new Date().toISOString() })
       .eq("id", tournoiId);
 
@@ -306,7 +317,7 @@ export async function saisirScore(formData: FormData) {
     const scoreJ1 = Number(formData.get("score_j1"));
     const scoreJ2 = Number(formData.get("score_j2"));
 
-    await chargerTournoiDeLOrga(tournoiId, ctx.organisation.id);
+    await chargerTournoiDeLOrga(tournoiId, ctx);
 
     if (
       !Number.isInteger(scoreJ1) ||
@@ -322,7 +333,7 @@ export async function saisirScore(formData: FormData) {
     }
 
     const { data: match } = await db
-      .from("arena_matchs")
+      .schema("arena").from("matchs")
       .select("*")
       .eq("id", matchId)
       .eq("tournoi_id", tournoiId)
@@ -336,7 +347,7 @@ export async function saisirScore(formData: FormData) {
 
     const ancien = { score_j1: m.score_j1, score_j2: m.score_j2 };
     await db
-      .from("arena_matchs")
+      .schema("arena").from("matchs")
       .update({
         score_j1: scoreJ1,
         score_j2: scoreJ2,
@@ -371,10 +382,10 @@ export async function validerScore(formData: FormData) {
     const db = getServiceClient();
     const matchId = String(formData.get("match_id"));
 
-    await chargerTournoiDeLOrga(tournoiId, ctx.organisation.id);
+    await chargerTournoiDeLOrga(tournoiId, ctx);
 
     const { data: matchsData } = await db
-      .from("arena_matchs")
+      .schema("arena").from("matchs")
       .select("*")
       .eq("tournoi_id", tournoiId);
     const matchs = (matchsData ?? []) as MatchRow[];
@@ -400,7 +411,7 @@ export async function validerScore(formData: FormData) {
     );
 
     await db
-      .from("arena_matchs")
+      .schema("arena").from("matchs")
       .update({
         statut: "VALIDE",
         gagnant_id: prog.gagnantId,
@@ -417,7 +428,7 @@ export async function validerScore(formData: FormData) {
       );
       if (parent) {
         await db
-          .from("arena_matchs")
+          .schema("arena").from("matchs")
           .update(
             prog.parent.slot === "joueur1"
               ? { joueur1_id: prog.gagnantId }

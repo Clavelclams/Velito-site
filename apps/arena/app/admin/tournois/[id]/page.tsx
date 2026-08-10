@@ -9,7 +9,7 @@
  * NOTE Next 16 : `params` est une Promise dans les routes dynamiques → await.
  */
 import { notFound } from "next/navigation";
-import { getContexteStaff } from "@/lib/arena/auth";
+import { estStaffDe, getContexteStaff } from "@/lib/arena/auth";
 import { getServiceClient } from "@/lib/supabase/service";
 import {
   ajouterJoueurStaff,
@@ -48,23 +48,27 @@ export default async function PageTournoi({
   const db = getServiceClient();
 
   const { data: tournoiData } = await db
-    .from("arena_tournois")
+    .schema("arena")
+    .from("tournois")
     .select("*")
     .eq("id", id)
-    .eq("organisation_id", ctx.organisation.id)
     .maybeSingle();
   if (!tournoiData) notFound();
   const tournoi = tournoiData as Tournoi;
+  // Contrôle d'appartenance : le tournoi doit être à l'une de SES orgas.
+  if (!estStaffDe(ctx, tournoi.organisation_id)) notFound();
 
   const { data: partData } = await db
-    .from("arena_participations")
-    .select("*, joueur:arena_joueurs(*)")
+    .schema("arena")
+    .from("participations")
+    .select("*, joueur:joueurs(*)")
     .eq("tournoi_id", id)
     .order("created_at", { ascending: true });
   const participations = (partData ?? []) as Participation[];
 
   const { data: matchsData } = await db
-    .from("arena_matchs")
+    .schema("arena")
+    .from("matchs")
     .select("*")
     .eq("tournoi_id", id)
     .order("round", { ascending: true })

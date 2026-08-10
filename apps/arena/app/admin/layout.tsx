@@ -67,7 +67,10 @@ export default async function AdminLayout({
     <div className="mx-auto max-w-4xl px-4 py-8">
       <header className="mb-8 flex items-center justify-between border-b border-arena-border pb-4">
         <a href="/admin/tournois" className="font-black">
-          ARENA <span className="text-gray-500">· {ctx.organisation.nom}</span>
+          ARENA{" "}
+          <span className="text-gray-500">
+            · {ctx.organisations.map((o) => o.name).join(" · ")}
+          </span>
         </a>
         <a href="/" className="text-sm text-gray-400 hover:text-white">
           Site public →

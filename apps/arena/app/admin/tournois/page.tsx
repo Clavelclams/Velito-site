@@ -15,9 +15,13 @@ export default async function ListeTournois() {
 
   const db = getServiceClient();
   const { data } = await db
-    .from("arena_tournois")
+    .schema("arena")
+    .from("tournois")
     .select("*")
-    .eq("organisation_id", ctx.organisation.id)
+    .in(
+      "organisation_id",
+      ctx.organisations.map((o) => o.id)
+    )
     .order("date_debut", { ascending: false });
 
   const tournois = (data ?? []) as Tournoi[];
