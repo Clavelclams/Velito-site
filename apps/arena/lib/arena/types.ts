@@ -43,12 +43,14 @@ export interface Joueur {
   anonymise: boolean;
 }
 
+export type FormatTournoi = "ELIMINATION_SIMPLE" | "DOUBLE_ELIMINATION";
+
 export interface Tournoi {
   id: string;
   organisation_id: string;
   titre: string;
   jeu: string;
-  format: "ELIMINATION_SIMPLE";
+  format: FormatTournoi;
   statut: StatutTournoi;
   date_debut: string;
   lieu: string | null;
@@ -70,6 +72,9 @@ export interface Participation {
 export interface MatchRow {
   id: string;
   tournoi_id: string;
+  /** W = tableau principal, L = rattrapage, GF = grande finale.
+   *  Absent (undefined) sur les lignes d'avant la migration 002 = 'W'. */
+  bracket?: "W" | "L" | "GF";
   round: number;
   position: number;
   joueur1_id: string | null;

@@ -4,10 +4,66 @@
  * dans chaque page (le bug classique : on corrige l'un, on oublie l'autre).
  */
 
+import type { MatchRow } from "./types";
+
 /** Nom humain d'un round : "Finale", "Demi-finales", "Quarts de finale", "Round N". */
 export function nomRound(round: number, nbRounds: number): string {
   if (round === nbRounds) return "Finale";
   if (round === nbRounds - 1) return "Demi-finales";
   if (round === nbRounds - 2) return "Quarts de finale";
   return `Round ${round}`;
+}
+
+/**
+ * Le match qui décide du champion : la Grande finale en double élimination,
+ * le match du dernier round en élimination simple.
+ */
+export function matchFinal(matchs: MatchRow[]): MatchRow | undefined {
+  if (matchs.length === 0) return undefined;
+  const gf = matchs.find((m) => m.bracket === "GF");
+  if (gf) return gf;
+  const nbRounds = Math.max(...matchs.map((m) => m.round));
+  return matchs.find((m) => m.round === nbRounds);
+}
+
+/**
+ * Groupes d'affichage ordonnés — même rendu pour l'admin et la page publique.
+ * Simple : un groupe par round ("Quarts", "Demi-finales", "Finale").
+ * Double : Tableau principal → Rattrapage → Grande finale.
+ */
+export function grouperMatchsParSection(
+  matchs: MatchRow[]
+): { titre: string; matchs: MatchRow[] }[] {
+  if (matchs.length === 0) return [];
+  const tri = (a: MatchRow, b: MatchRow) => a.round - b.round || a.position - b.position;
+  const estDouble = matchs.some((m) => m.bracket === "GF");
+
+  if (!estDouble) {
+    const nbRounds = Math.max(...matchs.map((m) => m.round));
+    const groupes: { titre: string; matchs: MatchRow[] }[] = [];
+    for (let r = 1; r <= nbRounds; r++) {
+      const liste = matchs.filter((m) => m.round === r).sort(tri);
+      if (liste.length) groupes.push({ titre: nomRound(r, nbRounds), matchs: liste });
+    }
+    return groupes;
+  }
+
+  const w = matchs.filter((m) => (m.bracket ?? "W") === "W");
+  const l = matchs.filter((m) => m.bracket === "L");
+  const gf = matchs.filter((m) => m.bracket === "GF");
+  const groupes: { titre: string; matchs: MatchRow[] }[] = [];
+
+  const kW = Math.max(...w.map((m) => m.round));
+  for (let r = 1; r <= kW; r++) {
+    const liste = w.filter((m) => m.round === r).sort(tri);
+    if (liste.length)
+      groupes.push({ titre: `Tableau principal — ${nomRound(r, kW)}`, matchs: liste });
+  }
+  const kL = l.length ? Math.max(...l.map((m) => m.round)) : 0;
+  for (let r = 1; r <= kL; r++) {
+    const liste = l.filter((m) => m.round === r).sort(tri);
+    if (liste.length) groupes.push({ titre: `Rattrapage — Round ${r}`, matchs: liste });
+  }
+  if (gf.length) groupes.push({ titre: "Grande finale", matchs: gf });
+  return groupes;
 }

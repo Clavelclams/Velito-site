@@ -26,7 +26,7 @@ import type {
   Participation,
   Tournoi,
 } from "@/lib/arena/types";
-import { nomRound } from "@/lib/arena/affichage";
+import { grouperMatchsParSection, matchFinal } from "@/lib/arena/affichage";
 import BandeauErreur from "@/components/BandeauErreur";
 
 const btn =
@@ -84,9 +84,8 @@ export default async function PageTournoi({
   const pseudo = (jid: string | null) =>
     jid ? (pseudos.get(jid) ?? "?") : "—";
 
-  const nbRounds = matchs.length ? Math.max(...matchs.map((m) => m.round)) : 0;
   const nbCheckIn = participations.filter((p) => p.check_in).length;
-  const finale = matchs.find((m) => m.round === nbRounds);
+  const finale = matchFinal(matchs);
   const champion =
     tournoi.statut !== "BROUILLON" && finale?.statut === "VALIDE"
       ? pseudo(finale.gagnant_id)
@@ -255,15 +254,13 @@ export default async function PageTournoi({
           </h2>
 
           <div className="space-y-6">
-            {Array.from({ length: nbRounds }, (_, i) => i + 1).map((round) => (
-              <div key={round}>
+            {grouperMatchsParSection(matchs).map((groupe) => (
+              <div key={groupe.titre}>
                 <h3 className="mb-2 text-sm font-bold text-arena-lilac">
-                  {nomRound(round, nbRounds)}
+                  {groupe.titre}
                 </h3>
                 <ul className="space-y-2">
-                  {matchs
-                    .filter((m) => m.round === round)
-                    .map((m) => (
+                  {groupe.matchs.map((m) => (
                       <li
                         key={m.id}
                         className="rounded-lg border border-arena-border bg-arena-surface p-3"

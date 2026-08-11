@@ -22,7 +22,13 @@ import { redirect } from "next/navigation";
 import { getServiceClient } from "../supabase/service";
 import { estStaffDe, requireStaff, type ContexteStaff } from "./auth";
 import { genererBracketEliminationSimple, progresserGagnant } from "../bracket";
+import {
+  genererBracketDoubleElimination,
+  progresserDouble,
+  type DestinationDouble,
+} from "../bracket-double";
 import { attribuerBadgesTournoi } from "./badges";
+import { normaliserJeu } from "./jeux";
 import { estStatutTournoi, transitionAutorisee } from "./transitions";
 import type { MatchRow, Tournoi } from "./types";
 
@@ -95,7 +101,13 @@ export async function creerTournoi(formData: FormData) {
     const db = getServiceClient();
 
     const titre = String(formData.get("titre") ?? "").trim();
-    const jeu = String(formData.get("jeu") ?? "").trim();
+    // Normalisation du jeu : "street fighter 6" → "Street Fighter 6" (données
+    // propres pour regrouper les joueurs par jeu — leçon du tournoi test).
+    const jeu = normaliserJeu(String(formData.get("jeu") ?? ""));
+    const format = String(formData.get("format") ?? "ELIMINATION_SIMPLE");
+    if (format !== "ELIMINATION_SIMPLE" && format !== "DOUBLE_ELIMINATION") {
+      throw new Error("Format de tournoi inconnu.");
+    }
     const dateDebut = String(formData.get("date_debut") ?? "");
     const lieu = String(formData.get("lieu") ?? "").trim() || null;
     const maxJoueursRaw = String(formData.get("max_joueurs") ?? "").trim();
@@ -120,6 +132,7 @@ export async function creerTournoi(formData: FormData) {
         organisation_id: orga.id,
         titre,
         jeu,
+        format,
         date_debut: new Date(dateDebut).toISOString(),
         lieu,
         max_joueurs: maxJoueurs,
@@ -291,11 +304,38 @@ export async function demarrerTournoi(formData: FormData) {
       );
     }
 
+    // Génération du bracket AVANT le verrou : les moteurs sont purs et peuvent
+    // REFUSER (ex: double élim avec un effectif ≠ 4/8/16/32). On ne verrouille
+    // le tournoi qu'une fois certain d'avoir des matchs à insérer.
+    let lignes: Record<string, unknown>[];
+    if (tournoi.format === "DOUBLE_ELIMINATION") {
+      lignes = genererBracketDoubleElimination(joueurIds).map((m) => ({
+        tournoi_id: tournoiId,
+        bracket: m.bracket,
+        round: m.round,
+        position: m.position,
+        joueur1_id: m.joueur1Id,
+        joueur2_id: m.joueur2Id,
+        is_bye: m.isBye,
+        gagnant_id: m.gagnantId,
+        statut: "A_JOUER",
+      }));
+    } else {
+      lignes = genererBracketEliminationSimple(joueurIds).map((m) => ({
+        tournoi_id: tournoiId,
+        round: m.round,
+        position: m.position,
+        joueur1_id: m.joueur1Id,
+        joueur2_id: m.joueur2Id,
+        is_bye: m.isBye,
+        gagnant_id: m.gagnantId,
+        statut: m.isBye ? "VALIDE" : "A_JOUER",
+      }));
+    }
+
     // ANTI DOUBLE-CLIC (trouvaille d'audit Lot 0) : transition ATOMIQUE.
-    // On passe le tournoi EN_COURS *avant* de générer le bracket, avec une
-    // condition sur l'ancien statut. Si deux clics arrivent en même temps,
-    // un seul UPDATE matche la condition — l'autre ne modifie 0 ligne et
-    // s'arrête là. C'est Postgres qui arbitre, pas le code applicatif.
+    // UPDATE conditionné sur l'ancien statut — si deux clics arrivent en même
+    // temps, un seul matche la condition. C'est Postgres qui arbitre.
     const { data: verrou } = await db
       .schema("arena")
       .from("tournois")
@@ -307,21 +347,7 @@ export async function demarrerTournoi(formData: FormData) {
       throw new Error("Le tournoi a déjà été démarré (double-clic ?).");
     }
 
-    // Algo pur et testé (lib/bracket.ts) → lignes prêtes à insérer.
-    const matchs = genererBracketEliminationSimple(joueurIds);
-
-    const { error } = await db.schema("arena").from("matchs").insert(
-      matchs.map((m) => ({
-        tournoi_id: tournoiId,
-        round: m.round,
-        position: m.position,
-        joueur1_id: m.joueur1Id,
-        joueur2_id: m.joueur2Id,
-        is_bye: m.isBye,
-        gagnant_id: m.gagnantId,
-        statut: m.isBye ? "VALIDE" : "A_JOUER",
-      }))
-    );
+    const { error } = await db.schema("arena").from("matchs").insert(lignes);
     if (error) {
       // L'insertion du bracket a échoué : on relâche le verrou (retour OUVERT)
       // pour ne pas laisser un tournoi EN_COURS sans matchs.
@@ -335,7 +361,8 @@ export async function demarrerTournoi(formData: FormData) {
 
     await log(ctx.userId, "TOURNOI_DEMARRE", tournoiId, null, {
       nb_joueurs: joueurIds.length,
-      nb_matchs: matchs.length,
+      nb_matchs: lignes.length,
+      format: tournoi.format,
     });
 
     revalidatePath(`/admin/tournois/${tournoiId}`);
@@ -465,7 +492,7 @@ export async function validerScore(formData: FormData) {
     const db = getServiceClient();
     const matchId = String(formData.get("match_id"));
 
-    await chargerTournoiDeLOrga(tournoiId, ctx);
+    const tournoi = await chargerTournoiDeLOrga(tournoiId, ctx);
 
     const { data: matchsData } = await db
       .schema("arena").from("matchs")
@@ -478,53 +505,85 @@ export async function validerScore(formData: FormData) {
       throw new Error("Le score doit d'abord être saisi avant validation.");
     }
 
-    const nbRounds = Math.max(...matchs.map((x) => x.round));
+    const validerMatch = (gagnantId: string) =>
+      db
+        .schema("arena").from("matchs")
+        .update({
+          statut: "VALIDE",
+          gagnant_id: gagnantId,
+          valide_par: ctx.userId,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", matchId);
 
-    // L'algo pur décide du gagnant et de sa destination — testé unitairement.
-    const prog = progresserGagnant(
-      {
-        round: m.round,
-        position: m.position,
-        joueur1Id: m.joueur1_id,
-        joueur2Id: m.joueur2_id,
-        scoreJ1: m.score_j1 ?? 0,
-        scoreJ2: m.score_j2 ?? 0,
-      },
-      nbRounds
-    );
-
-    await db
-      .schema("arena").from("matchs")
-      .update({
-        statut: "VALIDE",
-        gagnant_id: prog.gagnantId,
-        valide_par: ctx.userId,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", matchId);
-
-    // Placement du gagnant dans le match parent (si pas la finale).
-    if (prog.parent) {
-      const parent = matchs.find(
+    /** Place un joueur dans le slot d'un match cible (identifié par bracket/round/position). */
+    const placer = async (dest: DestinationDouble, joueurId: string) => {
+      const cible = matchs.find(
         (x) =>
-          x.round === prog.parent!.round && x.position === prog.parent!.position
+          (x.bracket ?? "W") === dest.bracket &&
+          x.round === dest.round &&
+          x.position === dest.position
       );
-      if (parent) {
-        await db
-          .schema("arena").from("matchs")
-          .update(
-            prog.parent.slot === "joueur1"
-              ? { joueur1_id: prog.gagnantId }
-              : { joueur2_id: prog.gagnantId }
-          )
-          .eq("id", parent.id);
-      }
-    }
+      if (!cible) return;
+      await db
+        .schema("arena").from("matchs")
+        .update(
+          dest.slot === "joueur1"
+            ? { joueur1_id: joueurId }
+            : { joueur2_id: joueurId }
+        )
+        .eq("id", cible.id);
+    };
 
-    await log(ctx.userId, "MATCH_VALIDE", tournoiId, matchId, {
-      gagnant_id: prog.gagnantId,
-      finale: prog.parent === null,
-    });
+    if (tournoi.format === "DOUBLE_ELIMINATION") {
+      // k = profondeur du tableau principal (rounds du bracket W).
+      const k = Math.max(
+        ...matchs.filter((x) => (x.bracket ?? "W") === "W").map((x) => x.round)
+      );
+      const prog = progresserDouble(
+        {
+          bracket: m.bracket ?? "W",
+          round: m.round,
+          position: m.position,
+          joueur1Id: m.joueur1_id,
+          joueur2Id: m.joueur2_id,
+          scoreJ1: m.score_j1 ?? 0,
+          scoreJ2: m.score_j2 ?? 0,
+        },
+        k
+      );
+      await validerMatch(prog.gagnantId);
+      if (prog.destGagnant) await placer(prog.destGagnant, prog.gagnantId);
+      if (prog.destPerdant) await placer(prog.destPerdant, prog.perdantId);
+      await log(ctx.userId, "MATCH_VALIDE", tournoiId, matchId, {
+        gagnant_id: prog.gagnantId,
+        finale: prog.destGagnant === null,
+      });
+    } else {
+      const nbRounds = Math.max(...matchs.map((x) => x.round));
+      const prog = progresserGagnant(
+        {
+          round: m.round,
+          position: m.position,
+          joueur1Id: m.joueur1_id,
+          joueur2Id: m.joueur2_id,
+          scoreJ1: m.score_j1 ?? 0,
+          scoreJ2: m.score_j2 ?? 0,
+        },
+        nbRounds
+      );
+      await validerMatch(prog.gagnantId);
+      if (prog.parent) {
+        await placer(
+          { bracket: "W", ...prog.parent },
+          prog.gagnantId
+        );
+      }
+      await log(ctx.userId, "MATCH_VALIDE", tournoiId, matchId, {
+        gagnant_id: prog.gagnantId,
+        finale: prog.parent === null,
+      });
+    }
 
     revalidatePath(`/admin/tournois/${tournoiId}`);
   } catch (e) {

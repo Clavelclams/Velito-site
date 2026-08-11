@@ -5,6 +5,7 @@
  * en base et redirige vers la page du tournoi.
  */
 import { creerTournoi } from "@/lib/arena/actions";
+import { JEUX_SUGGERES } from "@/lib/arena/jeux";
 import BandeauErreur from "@/components/BandeauErreur";
 
 const inputCls =
@@ -40,13 +41,40 @@ export default async function NouveauTournoi({
           <label htmlFor="jeu" className="mb-1 block text-sm text-gray-400">
             Jeu *
           </label>
+          {/* datalist = autocomplétion native (zéro JS) adossée à une liste
+              maîtrisée → données propres, mais saisie libre toujours possible
+              pour un jeu hors liste. Normalisation finale côté serveur. */}
           <input
             id="jeu"
             name="jeu"
             required
+            list="jeux-suggeres"
             placeholder="Street Fighter 6, Rocket League…"
             className={inputCls}
           />
+          <datalist id="jeux-suggeres">
+            {JEUX_SUGGERES.map((j) => (
+              <option key={j} value={j} />
+            ))}
+          </datalist>
+        </div>
+
+        <div>
+          <label htmlFor="format" className="mb-1 block text-sm text-gray-400">
+            Format *
+          </label>
+          <select id="format" name="format" required className={inputCls}>
+            <option value="ELIMINATION_SIMPLE">
+              Élimination simple (tout effectif)
+            </option>
+            <option value="DOUBLE_ELIMINATION">
+              Double élimination (exactement 4, 8, 16 ou 32 joueurs)
+            </option>
+          </select>
+          <p className="mt-1 text-xs text-gray-600">
+            Double élimination : une défaite ne sort pas du tournoi — le
+            rattrapage offre une seconde chance jusqu&apos;en grande finale.
+          </p>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
