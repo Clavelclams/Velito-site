@@ -15,6 +15,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
+// remark-gfm : active les tableaux, listes de tâches et liens auto du
+// Markdown "GitHub" — le Markdown de base ne connaît pas les tableaux.
+import remarkGfm from "remark-gfm";
 import { getFiche, listerFiches } from "@/lib/fiches/fiches";
 import { getQuiz } from "@/lib/fiches/quiz";
 import { ACCENTS_BLOCS, NOMS_BLOCS } from "@/lib/fiches/blocs";
@@ -106,7 +109,7 @@ export default async function FichePage({
               <p className="mb-3 text-sm font-bold uppercase tracking-wide text-cours-accent">
                 🎙️ À dire au jury — mot pour mot
               </p>
-              <ReactMarkdown>{section.corps}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{section.corps}</ReactMarkdown>
             </aside>
           );
         }
@@ -121,7 +124,7 @@ export default async function FichePage({
               <p className="mb-3 text-sm font-bold uppercase tracking-wide text-cours-bloc3">
                 ⚠️ La question vicieuse du jury
               </p>
-              <ReactMarkdown>{section.corps}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{section.corps}</ReactMarkdown>
             </aside>
           );
         }
@@ -134,7 +137,7 @@ export default async function FichePage({
                 {section.titre}
               </h2>
             )}
-            <ReactMarkdown>{section.corps}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{section.corps}</ReactMarkdown>
           </article>
         );
       })}

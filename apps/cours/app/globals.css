@@ -36,6 +36,16 @@
   .fiche-contenu blockquote {
     @apply mb-4 border-l-4 border-cours-accent/40 pl-4 italic text-cours-text-muted;
   }
+
+  .fiche-contenu table {
+    @apply mb-4 w-full border-collapse overflow-hidden rounded-lg text-sm;
+  }
+  .fiche-contenu th {
+    @apply border border-cours-border bg-cours-accent/5 px-3 py-2 text-left font-semibold;
+  }
+  .fiche-contenu td {
+    @apply border border-cours-border bg-cours-surface px-3 py-2 align-top;
+  }
   .fiche-contenu strong {
     @apply font-bold;
   }

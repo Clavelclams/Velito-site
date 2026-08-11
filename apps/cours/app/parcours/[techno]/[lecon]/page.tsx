@@ -8,6 +8,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
+// remark-gfm : active les tableaux, listes de tâches et liens auto du
+// Markdown "GitHub" — le Markdown de base ne connaît pas les tableaux.
+import remarkGfm from "remark-gfm";
 import {
   getLecon,
   listerLecons,
@@ -87,7 +90,7 @@ export default async function PageLecon({
               <p className="mb-3 text-sm font-bold uppercase tracking-wide text-emerald-700">
                 🛠️ Mise en pratique — dans TES projets
               </p>
-              <ReactMarkdown>{section.corps}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{section.corps}</ReactMarkdown>
             </aside>
           );
         }
@@ -99,7 +102,7 @@ export default async function PageLecon({
                 {section.titre}
               </h2>
             )}
-            <ReactMarkdown>{section.corps}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{section.corps}</ReactMarkdown>
           </article>
         );
       })}

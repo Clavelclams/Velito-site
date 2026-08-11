@@ -5,6 +5,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
+// remark-gfm : active les tableaux, listes de tâches et liens auto du
+// Markdown "GitHub" — le Markdown de base ne connaît pas les tableaux.
+import remarkGfm from "remark-gfm";
 import { getProjet, listerProjets } from "@/lib/fiches/fiches";
 
 export function generateStaticParams() {
@@ -57,7 +60,7 @@ export default async function ProjetPage({
       </header>
 
       <article className="fiche-contenu">
-        <ReactMarkdown>{projet.contenu}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{projet.contenu}</ReactMarkdown>
       </article>
     </div>
   );
