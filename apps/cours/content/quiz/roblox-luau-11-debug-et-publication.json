@@ -1,0 +1,49 @@
+{
+  "fiche": "roblox-luau-11-debug-et-publication",
+  "questions": [
+    {
+      "question": "L'Output affiche : « Workspace.Part.Script:7: attempt to index nil with 'FindFirstChild' ». Que t'apprend ce message ?",
+      "choix": [
+        "Le script Workspace.Part.Script a planté ligne 7 : l'objet sur lequel on appelle FindFirstChild n'existe pas (il vaut nil)",
+        "FindFirstChild est déprécié et doit être remplacé par WaitForChild",
+        "La ligne 7 contient un caractère invalide",
+        "Le script a trouvé 7 objets nil dans le Workspace"
+      ],
+      "bonne": 0,
+      "explication": "Une erreur Luau donne trois infos : où (le chemin du script, cliquable), quelle ligne (:7) et quoi (attempt to index nil = l'objet avant l'appel n'existe pas). C'est ta « Cannot read properties of null » de JS. Lis-la toujours en entier avant de toucher au code : le remède est souvent un chemin à corriger ou un « if objet then » à ajouter."
+    },
+    {
+      "question": "Ton script s'arrête quelque part sans erreur visible. Quelle est la méthode de debug la plus efficace pour un débutant ?",
+      "choix": [
+        "Réécrire le script de zéro, c'est plus rapide que chercher",
+        "Supprimer la moitié du code et relancer au hasard",
+        "Semer des print aux étapes clés : le dernier print affiché te dit où ça casse",
+        "Attendre que Roblox publie un correctif"
+      ],
+      "bonne": 2,
+      "explication": "La méthode des print : un message à chaque étape, tu lances, tu regardes jusqu'où ça va — le dernier affiché localise la casse. Complète avec print(typeof(variable)) pour connaître un type et objet:GetFullName() pour vérifier un chemin. Ce n'est pas élégant, mais c'est redoutablement efficace et tout le monde le fait, comme le console.log en JS."
+    },
+    {
+      "question": "Sécurité : pourquoi les modèles gratuits du Toolbox sont-ils dangereux ?",
+      "choix": [
+        "Ils sont souvent trop lourds et font laguer le jeu",
+        "Beaucoup contiennent des backdoors : des scripts cachés qui donnent le contrôle de ton jeu à quelqu'un d'autre — comme un package npm vérolé",
+        "Ils sont protégés par copyright et font bannir ton compte",
+        "Ils ne fonctionnent qu'en mode Play"
+      ],
+      "bonne": 1,
+      "explication": "C'est de la supply chain attack : tu importes une dépendance, elle exécute du code chez toi avec tous les droits. Les modèles gratuits du Toolbox sont un vecteur d'attaque connu, avec des Scripts cachés aux noms innocents. Si tu en prends un, ouvre-le dans l'Explorer et inspecte chaque script à l'intérieur — un audit de dépendances, version manuelle."
+    },
+    {
+      "question": "En test 2 joueurs, un effet censé être partagé n'apparaît que dans une seule fenêtre client. Qu'est-ce que ça révèle ?",
+      "choix": [
+        "Un problème de connexion entre les deux fenêtres de test",
+        "Le deuxième client n'a pas fini de charger la map",
+        "C'est le comportement normal d'un Script serveur",
+        "Le code est dans un LocalScript alors qu'il devait être côté serveur : l'effet n'existe que chez un joueur"
+      ],
+      "bonne": 3,
+      "explication": "Un LocalScript n'agit que sur la copie locale d'un joueur : les autres ne voient rien, car le serveur — la seule source de vérité répliquée à tous — n'est pas au courant. Le test multijoueur est le seul moyen de repérer cette erreur de séparation serveur/client avant publication. Le serveur décide, le client affiche : jusque dans ton dernier test."
+    }
+  ]
+}

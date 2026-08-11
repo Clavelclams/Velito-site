@@ -1,0 +1,49 @@
+{
+  "fiche": "roblox-luau-08-remoteevents",
+  "questions": [
+    {
+      "question": "Dans l'analogie web, un RemoteEvent correspond à…",
+      "choix": [
+        "Un cookie de session partagé entre client et serveur",
+        "Un appel fetch() du client vers une route serveur : le client envoie une demande, le serveur la traite et la valide",
+        "Une balise script chargée depuis un CDN",
+        "Une requête SQL directe du client vers la base"
+      ],
+      "bonne": 1,
+      "explication": "Le RemoteEvent est le canal officiel client → serveur : FireServer() côté client, OnServerEvent côté serveur. C'est ton fetch vers une API Route, et il vit dans ReplicatedStorage pour être visible des deux côtés. Comme sur le web, tout ce qui arrive par ce canal doit être validé côté serveur."
+    },
+    {
+      "question": "Pourquoi ce code serveur est-il une faille béante ?\n\nevenement.OnServerEvent:Connect(function(player, montant)\n\tdonnerArgent(player, montant)\nend)",
+      "choix": [
+        "Parce que OnServerEvent ne peut pas recevoir d'argument",
+        "Parce que donnerArgent doit être appelée avec deux-points",
+        "Parce que le serveur fait confiance au montant envoyé par le client : un exploiteur envoie 999999999 et gagne",
+        "Parce qu'il manque un task.wait avant de donner l'argent"
+      ],
+      "bonne": 2,
+      "explication": "N'importe quel joueur peut déclencher n'importe quel RemoteEvent avec n'importe quels arguments — ton LocalScript propre n'est pas une protection, comme un formulaire HTML n'empêche personne d'attaquer ton endpoint avec curl. Le client doit exprimer une intention (« je veux un bonus »), jamais une valeur : le montant est fixé par le serveur, qui valide tout. Même logique qu'une requête SQL préparée."
+    },
+    {
+      "question": "Côté serveur, que reçoit toujours OnServerEvent en premier argument ?",
+      "choix": [
+        "Le joueur expéditeur, ajouté automatiquement par Roblox — le client ne peut pas mentir dessus",
+        "Le premier argument passé à FireServer par le client",
+        "Le timestamp de l'envoi",
+        "Le RemoteEvent lui-même"
+      ],
+      "bonne": 0,
+      "explication": "Roblox identifie lui-même l'expéditeur et le passe en premier argument : c'est comme une session authentifiée côté serveur. Le client ne choisit pas qui il prétend être — pas de « je suis l'admin » dans le payload. Les arguments passés à FireServer arrivent seulement après ce player automatique."
+    },
+    {
+      "question": "Un exploiteur spamme ton RemoteEvent 1000 fois par seconde. Quelle est la bonne parade ?",
+      "choix": [
+        "Supprimer le RemoteEvent et tout gérer en LocalScript",
+        "Ajouter un délai dans le LocalScript qui envoie la demande",
+        "Renommer le RemoteEvent régulièrement pour le cacher",
+        "Un rate limit côté serveur : mémoriser le dernier usage par joueur et refuser si c'est trop tôt"
+      ],
+      "bonne": 3,
+      "explication": "Toute protection placée dans le LocalScript est contournable : l'exploiteur appelle FireServer directement, sans passer par ton code. La seule parade fiable est côté serveur : enregistrer l'heure du dernier usage par UserId et ignorer les demandes trop rapprochées — le rate limiting que tu connais des API web. C'est exactement ce que fait le script du super-saut."
+    }
+  ]
+}

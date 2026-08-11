@@ -1,0 +1,49 @@
+{
+  "fiche": "roblox-luau-09-script-piege-decortique",
+  "questions": [
+    {
+      "question": "Sans le verrou dejaTouche, que se passe-t-il quand un joueur marche sur le piège à 25 dégâts ?",
+      "choix": [
+        "Rien, Touched ne se déclenche qu'une fois par contact",
+        "Il meurt quasi instantanément : le moteur physique déclenche Touched des dizaines de fois par seconde",
+        "Le script plante avec « attempt to index nil »",
+        "Il perd exactement 25 PV, mais avec une seconde de retard"
+      ],
+      "bonne": 1,
+      "explication": "Touched n'est pas un événement unique : chaque micro-collision entre le pied et la surface le redéclenche, des dizaines de fois par seconde. Sans verrou : -25, -25, -25, -25 en 0,1 seconde, mort instantanée. Le verrou (debounce) limite à un déclenchement par seconde — le même pattern qu'en JS sur les événements scroll, resize ou input."
+    },
+    {
+      "question": "Pourquoi remonter avec autrePartie.Parent avant de chercher le Humanoid ?",
+      "choix": [
+        "Parce que Parent renvoie directement le Humanoid",
+        "Parce que Touched renvoie toujours le Workspace",
+        "Pour vérifier que la partie touchée est bien ancrée",
+        "Parce que Touched fournit un membre du corps (LeftFoot, RightHand…), jamais le personnage entier : le Humanoid est dans le Model parent"
+      ],
+      "bonne": 3,
+      "explication": "Ce qui touche le piège, c'est un pied ou une main — un enfant du Model personnage. Comme un event.target qui pointe sur le span cliqué et pas sur la carte entière, on remonte d'un cran avec .Parent pour atteindre le personnage, puis on y cherche le Humanoid. C'est de la navigation d'arbre, exactement comme parentElement dans le DOM."
+    },
+    {
+      "question": "Pourquoi préférer FindFirstChildWhichIsA(\"Humanoid\") à FindFirstChild(\"Humanoid\") ?",
+      "choix": [
+        "Il cherche par type et non par nom : ça marche même si l'objet a été renommé",
+        "Il est plus rapide car il ignore la hiérarchie",
+        "Il attend que l'objet apparaisse au lieu de renvoyer nil",
+        "Il crée le Humanoid s'il n'existe pas"
+      ],
+      "bonne": 0,
+      "explication": "FindFirstChild cherche un objet par son nom ; FindFirstChildWhichIsA cherche par sa classe (son type d'Instance). Chercher par type est plus robuste : un Humanoid renommé reste un Humanoid. C'est aussi le test qui filtre tout ce que Touched laisse passer (cailloux, débris, balles) : s'il y a un Humanoid, c'est un personnage ; sinon on ignore."
+    },
+    {
+      "question": "Pourquoi écrit-on piege.Touched:Connect(auContact) sans parenthèses après auContact ?",
+      "choix": [
+        "Les parenthèses sont optionnelles en Luau, c'est une convention de style",
+        "Parce que auContact n'a pas de paramètres",
+        "On passe la fonction elle-même à Connect ; avec auContact(), on l'exécuterait immédiatement et on passerait son résultat (nil) à Connect",
+        "Pour éviter que le debounce ne se déclenche à l'initialisation"
+      ],
+      "bonne": 2,
+      "explication": "Connect attend une référence de fonction à appeler plus tard, à chaque contact. auContact() avec parenthèses exécute la fonction tout de suite et donne sa valeur de retour (nil) à Connect — le branchement ne se fait jamais. C'est exactement la même erreur classique qu'en JS avec addEventListener(\"click\", maFonction())."
+    }
+  ]
+}

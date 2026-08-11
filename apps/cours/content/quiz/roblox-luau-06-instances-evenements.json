@@ -1,0 +1,49 @@
+{
+  "fiche": "roblox-luau-06-instances-evenements",
+  "questions": [
+    {
+      "question": "Pourquoi ce code casse-t-il ?\n\nlocal part = workspace.Plateforme1\npart.Destroy()",
+      "choix": [
+        "Destroy n'existe pas, il faut utiliser Remove",
+        "On ne peut pas détruire un objet du Workspace",
+        "Il manque un argument à Destroy",
+        "Destroy est une méthode : il faut deux-points, part:Destroy()"
+      ],
+      "bonne": 3,
+      "explication": "La règle : point pour les propriétés et les enfants (part.Size), deux-points pour les méthodes (part:Destroy()). Le deux-points passe automatiquement l'objet lui-même en premier argument — l'équivalent du this implicite en JS. Avec le point, cet argument manque et le code plante. C'est l'erreur n°1 du débutant."
+    },
+    {
+      "question": "Quelle est la différence entre FindFirstChild et WaitForChild ?",
+      "choix": [
+        "FindFirstChild renvoie nil si l'objet n'existe pas (pour tester) ; WaitForChild bloque le script jusqu'à ce que l'objet apparaisse (pour attendre)",
+        "FindFirstChild cherche par type, WaitForChild par nom",
+        "WaitForChild est déprécié au profit de FindFirstChild",
+        "FindFirstChild ne fonctionne que côté serveur"
+      ],
+      "bonne": 0,
+      "explication": "FindFirstChild sert à tester l'existence : « if part:FindFirstChild(\"X\") then ». WaitForChild attend que l'objet arrive — indispensable côté client où le chargement est progressif, comme un await sur un fetch. Choisir le mauvais donne soit un nil inattendu, soit un script qui attend pour rien."
+    },
+    {
+      "question": "Tu lances Play et toute ta map tombe dans le vide. Quelle propriété as-tu oubliée ?",
+      "choix": [
+        "CanCollide = true, qui rend les Parts solides",
+        "Transparency = 0, qui rend les Parts visibles",
+        "Anchored = true : sans ancrage, une Part subit la gravité et tombe dès le lancement",
+        "Material = Neon, qui fixe les Parts au sol"
+      ],
+      "bonne": 2,
+      "explication": "Anchored = true fige une Part dans l'espace : elle ignore la gravité. Sans ça, toute ta construction s'effondre au premier lancement — le fameux symptôme « ma map a disparu ». Toute plateforme fixe doit être ancrée, c'est un réflexe à prendre dès la pose de la première Part."
+    },
+    {
+      "question": "Que fait ce code ?\n\npart.Touched:Connect(function(autrePartie)\n\tprint(autrePartie.Name)\nend)",
+      "choix": [
+        "Il vérifie en boucle si la Part est touchée, 60 fois par seconde",
+        "Il branche une fonction sur l'événement Touched : à chaque contact, Roblox l'appelle avec la partie qui a touché — comme un addEventListener",
+        "Il déclenche immédiatement un contact sur la Part",
+        "Il supprime la Part au premier contact"
+      ],
+      "bonne": 1,
+      "explication": "C'est le modèle événementiel, identique à ton addEventListener JS : tu déclares une réaction, le moteur t'appelle quand l'événement survient, avec les infos du contexte (ici la Part entrée en contact). Attention pour la suite : Touched se déclenche pour n'importe quel contact et des dizaines de fois par seconde — d'où le debounce de la leçon 9."
+    }
+  ]
+}

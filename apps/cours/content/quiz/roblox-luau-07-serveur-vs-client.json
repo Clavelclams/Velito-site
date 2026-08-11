@@ -1,0 +1,49 @@
+{
+  "fiche": "roblox-luau-07-serveur-vs-client",
+  "questions": [
+    {
+      "question": "Pourquoi ce code est-il une catastrophe s'il est dans un LocalScript ?\n\nargentDuJoueur = argentDuJoueur + 100",
+      "choix": [
+        "Parce que l'opérateur + ne fonctionne pas dans un LocalScript",
+        "Parce qu'il manque le mot-clé local devant la variable",
+        "Parce qu'un LocalScript tourne sur la machine du joueur : il peut modifier cette valeur à volonté et devenir millionnaire",
+        "Parce que les LocalScripts ne peuvent pas manipuler de nombres"
+      ],
+      "bonne": 2,
+      "explication": "Un LocalScript s'exécute chez le joueur, qui peut exécuter du code arbitraire sur sa propre machine — comme n'importe qui peut modifier ton JS dans les DevTools. Toute donnée qui compte (argent, score, vie) doit vivre et être modifiée côté serveur, dans un Script. Le manque de local est un vrai défaut aussi, mais ce n'est pas lui qui rend le joueur millionnaire."
+    },
+    {
+      "question": "Quelle est la règle d'or de la sécurité Roblox ?",
+      "choix": [
+        "Le serveur décide, le client affiche : toute donnée décisive vit et se modifie sur le serveur",
+        "Chiffrer tous les LocalScripts pour empêcher leur lecture",
+        "Mettre le maximum de code côté client pour soulager le serveur",
+        "Interdire les RemoteEvents, trop dangereux"
+      ],
+      "bonne": 0,
+      "explication": "C'est LE concept central du parcours : argent, score, inventaire, vie, progression se gèrent sur le serveur ; le client ne fait qu'afficher et demander. Exactement ton réflexe PHP de ne jamais faire confiance à un input caché, ou tes policies Supabase qui tranchent côté base quoi que raconte le front. On ne peut pas empêcher le client de tricher chez lui — on peut faire en sorte que ça ne serve à rien."
+    },
+    {
+      "question": "Qu'est-ce qui a sa place dans un LocalScript ?",
+      "choix": [
+        "La sauvegarde des données du joueur",
+        "L'interface, la caméra, les entrées clavier et les effets purement cosmétiques",
+        "Le calcul des dégâts infligés aux autres joueurs",
+        "Le montant d'argent gagné par le joueur"
+      ],
+      "bonne": 1,
+      "explication": "Le client n'est pas inutile, il est indispensable pour la réactivité : UI, caméra, entrées, effets visuels et sonores décoratifs. La ligne de partage : tout ce qui est cosmétique ou réactif va au client, rien de ce qui est décisif. Dégâts, argent et sauvegarde sont des décisions de serveur."
+    },
+    {
+      "question": "En test « 2 Players », un LocalScript qui fait un print s'exécute combien de fois, et où voit-on les messages ?",
+      "choix": [
+        "Une seule fois, dans la fenêtre serveur",
+        "Deux fois, les deux messages dans la fenêtre serveur",
+        "Quatre fois, une par combinaison client/serveur",
+        "Une fois par joueur : chaque fenêtre client affiche son propre message"
+      ],
+      "bonne": 3,
+      "explication": "Un LocalScript est copié et exécuté chez chaque joueur : deux joueurs, deux exécutions, chacune visible dans sa fenêtre client. Le Script serveur, lui, tourne une seule fois et voit tous les joueurs. Le test multijoueur est le seul moyen de vérifier physiquement cette séparation — le mode Play simple est trompeur car tout tourne sur ta machine."
+    }
+  ]
+}

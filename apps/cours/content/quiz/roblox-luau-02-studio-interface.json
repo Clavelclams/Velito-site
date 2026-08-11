@@ -1,0 +1,49 @@
+{
+  "fiche": "roblox-luau-02-studio-interface",
+  "questions": [
+    {
+      "question": "Tu as passé 20 minutes à placer des plateformes, tu appuies sur Stop… et tout a disparu. Pourquoi ?",
+      "choix": [
+        "Studio a crashé silencieusement et perdu la sauvegarde",
+        "Tu as construit pendant le mode Play : toutes les modifications faites en test sont annulées au Stop",
+        "Les Parts n'étaient pas Anchored et sont tombées dans le vide",
+        "Tu as oublié de faire Ctrl+S avant de tester"
+      ],
+      "bonne": 1,
+      "explication": "Play lance une copie de ton jeu : tout ce que tu y modifies est jeté au Stop, exactement comme des modifications faites dans les DevTools qui disparaissent au rechargement de la page. On ne construit jamais en mode Play — vérifie toujours que tu es bien en mode édition avant de placer quoi que ce soit."
+    },
+    {
+      "question": "Quelle est la différence entre Play et Run ?",
+      "choix": [
+        "Play teste côté client uniquement, Run teste côté serveur uniquement",
+        "Play sauvegarde avant de lancer, Run non",
+        "Play te fait apparaître avec ton personnage dans le jeu, Run lance le jeu sans personnage",
+        "Aucune, ce sont deux raccourcis pour la même action"
+      ],
+      "bonne": 2,
+      "explication": "Play (F5) lance serveur + client et fait apparaître ton personnage. Run fait tourner le jeu sans toi : pratique pour vérifier la physique ou observer des scripts serveur sans être dans la partie. Dans les deux cas, Stop annule les modifications faites pendant le test."
+    },
+    {
+      "question": "Ton script affiche un message avec print, mais tu ne vois rien nulle part. Quel panneau as-tu oublié d'ouvrir ?",
+      "choix": [
+        "L'Output (View → Output), la console de Studio",
+        "Properties, qui affiche les logs de l'objet sélectionné",
+        "L'Explorer, qui liste les messages des scripts",
+        "La Viewport, où les print s'affichent en surimpression"
+      ],
+      "bonne": 0,
+      "explication": "L'Output est la console de Studio : c'est là qu'arrivent tes print, tes warn et surtout tes erreurs. C'est l'équivalent de la console JS ou de tes logs Symfony. Garde-la toujours ouverte — une erreur que tu ne vois pas, c'est une heure de recherche perdue."
+    },
+    {
+      "question": "Dans l'analogie avec les outils web, l'Explorer de Studio correspond à…",
+      "choix": [
+        "L'onglet Network des DevTools",
+        "Le terminal intégré de VS Code",
+        "L'onglet Styles des DevTools",
+        "L'inspecteur DOM : l'arborescence de tous les objets du jeu"
+      ],
+      "bonne": 3,
+      "explication": "L'Explorer affiche l'arbre complet de ton jeu, avec les relations parents-enfants, exactement comme l'inspecteur DOM affiche la structure de ta page. C'est ta zone la plus importante. Properties, lui, joue le rôle du panneau Styles pour l'objet sélectionné."
+    }
+  ]
+}

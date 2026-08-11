@@ -1,0 +1,49 @@
+{
+  "fiche": "roblox-luau-01-cest-quoi-roblox",
+  "questions": [
+    {
+      "question": "Techniquement, un jeu Roblox c'est avant tout…",
+      "choix": [
+        "Un fichier 3D exécuté uniquement sur la machine du joueur",
+        "Une application client-serveur temps réel, comme un site web",
+        "Un programme qui tourne entièrement sur les serveurs Roblox",
+        "Une vidéo interactive préconstruite dans Studio"
+      ],
+      "bonne": 1,
+      "explication": "Un jeu Roblox reprend exactement l'architecture web : des clients (les joueurs) qui affichent, un serveur qui fait autorité, un DataStore en guise de base de données. La seule différence avec ton site PHP/MySQL, c'est le rythme : on synchronise des positions 60 fois par seconde au lieu d'envoyer des formulaires."
+    },
+    {
+      "question": "Dans l'analogie avec le web, à quoi correspond Roblox Studio ?",
+      "choix": [
+        "À ton hébergeur, comme Vercel",
+        "À ta base de données MySQL",
+        "À VS Code + un navigateur + un serveur local, réunis en une application",
+        "Au langage de programmation, comme PHP"
+      ],
+      "bonne": 2,
+      "explication": "Studio est l'éditeur tout-en-un : tu y construis la map, tu écris le code et tu testes ton jeu au même endroit. L'hébergement, ce sont les serveurs Roblox ; le langage, c'est Luau. Trois briques, trois rôles distincts."
+    },
+    {
+      "question": "Parmi ces tâches, laquelle reste À TA CHARGE quand tu développes un jeu Roblox ?",
+      "choix": [
+        "La logique et les règles du jeu",
+        "Le rendu 3D avec OpenGL ou WebGL",
+        "La synchronisation réseau des positions entre joueurs",
+        "Le lancement de serveurs quand des joueurs arrivent"
+      ],
+      "bonne": 0,
+      "explication": "Roblox gère la 3D, la physique, le réseau, les personnages et l'hébergement à ta place. Ton travail se concentre sur la couche métier : les règles du jeu — comme ce que tu écrirais dans un contrôleur Symfony. C'est ce qui permet de sortir un jeu jouable en deux semaines."
+    },
+    {
+      "question": "Combien coûtent Roblox Studio, la publication et l'hébergement d'un jeu ?",
+      "choix": [
+        "Studio est gratuit, mais l'hébergement est facturé au nombre de joueurs",
+        "Un abonnement mensuel est requis pour publier",
+        "Studio coûte une licence unique, le reste est gratuit",
+        "Rien : tout est gratuit, Roblox se rémunère sur les Robux dépensés dans les jeux"
+      ],
+      "bonne": 3,
+      "explication": "Studio, la publication et l'hébergement sont entièrement gratuits, même avec des milliers de joueurs. Le modèle économique de Roblox repose sur une commission prélevée sur les Robux dépensés dans les jeux. Ton seul investissement, c'est ton temps."
+    }
+  ]
+}

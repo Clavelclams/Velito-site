@@ -1,0 +1,49 @@
+{
+  "fiche": "roblox-luau-05-les-tables",
+  "questions": [
+    {
+      "question": "Que fait ce code ?\n\nlocal armes = {\"Épée\", \"Arc\", \"Bouclier\"}\nprint(armes[0])",
+      "choix": [
+        "Il affiche Épée, le premier élément",
+        "Il plante avec une erreur d'index hors limites",
+        "Il affiche nil : en Luau les listes commencent à l'index 1, et lire une case vide ne provoque aucune erreur",
+        "Il affiche Bouclier, car 0 boucle sur la fin du tableau"
+      ],
+      "bonne": 2,
+      "explication": "Le premier élément est armes[1], pas armes[0]. Pire : armes[0] ne déclenche aucune erreur, il renvoie silencieusement nil, et ton bug explosera trois lignes plus loin. C'est le piège n°1 pour qui vient du web, où tableau[0] est un réflexe."
+    },
+    {
+      "question": "Quand utiliser ipairs plutôt que pairs pour parcourir une table ?",
+      "choix": [
+        "ipairs pour les listes numérotées (ordre garanti 1, 2, 3…), pairs pour les dictionnaires à clés nommées",
+        "ipairs est plus rapide mais ne marche que côté serveur",
+        "pairs pour les listes, ipairs pour les dictionnaires",
+        "Peu importe, les deux donnent toujours le même résultat"
+      ],
+      "bonne": 0,
+      "explication": "ipairs parcourt les index 1, 2, 3… dans l'ordre et s'arrête au premier trou : parfait pour les listes. pairs parcourt toutes les clés mais sans ordre garanti : c'est l'outil des dictionnaires, comme les clés d'un objet JS dont on ne présume jamais l'ordre. Utiliser ipairs sur un dictionnaire ne renvoie rien du tout."
+    },
+    {
+      "question": "Que vaut inventaire[2].degats dans ce code ?\n\nlocal inventaire = {\n\t{nom = \"Épée\", degats = 25},\n\t{nom = \"Arc\", degats = 15}\n}",
+      "choix": [
+        "25, car l'index 2 désigne le premier élément",
+        "nil, car on ne peut pas imbriquer des tables",
+        "Une erreur : il faut écrire inventaire[2][\"degats\"]()",
+        "15 : inventaire[2] est la table de l'Arc, et .degats lit sa clé"
+      ],
+      "bonne": 3,
+      "explication": "inventaire[2] renvoie la deuxième table (l'Arc, index 2 car on part de 1), puis .degats lit la clé degats : 15. Une table imbriquée, c'est ton JSON ou ton tableau associatif PHP multidimensionnel. Au passage, inventaire[2][\"degats\"] aurait aussi marché : point et crochets sont équivalents pour lire une clé."
+    },
+    {
+      "question": "Pourquoi décrire les plateformes d'un obby dans une table de configuration lue par une boucle, plutôt que les coder une par une ?",
+      "choix": [
+        "Parce que Roblox interdit de créer plus de trois Parts à la main",
+        "On sépare les données de la logique : ajouter une plateforme = ajouter une ligne de données, comme un seed de BDD",
+        "Parce que les tables sont plus rapides que l'Explorer",
+        "Pour que les joueurs puissent modifier la map en jeu"
+      ],
+      "bonne": 1,
+      "explication": "C'est le principe de séparation données/logique : la table décrit (positions, couleurs), la boucle construit. Ajouter une plateforme devient une ligne de données au lieu d'un bloc de code dupliqué — le même réflexe que tes fixtures ou ton seed de base de données. C'est aussi ce format de table que tu enverras au DataStore en leçon 10."
+    }
+  ]
+}

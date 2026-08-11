@@ -1,0 +1,49 @@
+{
+  "fiche": "roblox-luau-04-luau-les-bases",
+  "questions": [
+    {
+      "question": "Que fait ce code Luau ?\n\nlocal x = 0\nif x then\n\tprint(\"A\")\nelse\n\tprint(\"B\")\nend",
+      "choix": [
+        "Il affiche B, car 0 est faux comme en JS et PHP",
+        "Il affiche A, car en Luau seuls false et nil sont faux : 0 est vrai",
+        "Il plante, car if attend un booléen strict",
+        "Il n'affiche rien, car x n'est pas initialisé"
+      ],
+      "bonne": 1,
+      "explication": "Piège majeur pour qui vient du web : en Luau, seuls false et nil sont considérés comme faux. 0 et la chaîne vide sont vrais, contrairement à JS et PHP. C'est pour ça que « if variable then » teste l'existence d'une valeur, pas sa non-nullité numérique."
+    },
+    {
+      "question": "Comment écrit-on « différent de » en Luau ?",
+      "choix": [
+        "!== comme en JavaScript strict",
+        "<> comme dans certains SQL",
+        "~= (tilde égal)",
+        "!= comme en JS et PHP"
+      ],
+      "bonne": 2,
+      "explication": "Luau utilise ~= là où JS et PHP utilisent !=. Dans la même famille de pièges : not au lieu de !, and/or au lieu de &&/||, et end au lieu des accolades pour fermer un bloc. Note-les maintenant, ça t'évitera deux heures de galère."
+    },
+    {
+      "question": "Pourquoi faut-il TOUJOURS écrire local devant une variable ?",
+      "choix": [
+        "Sans local, la variable devient globale et accessible partout, source de bugs intraçables",
+        "Sans local, la variable est en lecture seule",
+        "Sans local, le script refuse de compiler",
+        "local rend la variable plus rapide à lire par le moteur"
+      ],
+      "bonne": 0,
+      "explication": "Sans local, ta variable devient globale : deux scripts peuvent s'écraser mutuellement la même valeur sans que tu comprennes pourquoi. C'est l'équivalent d'oublier let en JS. Le code compile et « marche »… jusqu'au bug impossible à traquer."
+    },
+    {
+      "question": "Pourquoi utiliser task.wait() plutôt que l'ancien wait() qu'on voit dans les vieux tutos ?",
+      "choix": [
+        "wait() ne fonctionne que côté client",
+        "task.wait() bloque tout le jeu, ce qui est plus prévisible",
+        "Les deux sont identiques, c'est une question de style",
+        "wait() est imprécis et déprécié ; task.wait() est la version moderne et précise"
+      ],
+      "bonne": 3,
+      "explication": "L'ancien wait() est imprécis et déprécié — sa présence dans un tuto est d'ailleurs un bon signe que le tuto est périmé. task.wait(n) suspend uniquement le script courant (sa coroutine) pendant que le reste du jeu continue de tourner, contrairement à un blocage global."
+    }
+  ]
+}

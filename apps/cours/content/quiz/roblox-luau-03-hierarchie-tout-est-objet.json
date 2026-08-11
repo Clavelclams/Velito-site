@@ -1,0 +1,49 @@
+{
+  "fiche": "roblox-luau-03-hierarchie-tout-est-objet",
+  "questions": [
+    {
+      "question": "Quel parallèle correct peut-on faire entre l'Explorer de Roblox et le web ?",
+      "choix": [
+        "L'Explorer est une base de données relationnelle comme MySQL",
+        "L'Explorer est un arbre d'objets avec parents et enfants, comme le DOM",
+        "L'Explorer liste les requêtes réseau comme l'onglet Network",
+        "L'Explorer est un gestionnaire de paquets comme npm"
+      ],
+      "bonne": 1,
+      "explication": "L'Explorer est un arbre : game à la racine, des Services, puis des objets imbriqués les uns dans les autres. C'est exactement la logique du DOM, et on y navigue avec .Parent, :FindFirstChild() et :WaitForChild() comme on le ferait avec parentElement ou querySelector en JS."
+    },
+    {
+      "question": "Quels Services sont INACCESSIBLES aux joueurs (donc sûrs pour ta logique sensible) ?",
+      "choix": [
+        "Workspace et ReplicatedStorage",
+        "StarterGui et StarterPlayer",
+        "ServerScriptService et ServerStorage",
+        "Players et Lighting"
+      ],
+      "bonne": 2,
+      "explication": "ServerScriptService et ServerStorage restent côté serveur, invisibles des clients — comme ton code PHP ou ta clé service_role Supabase. Workspace, ReplicatedStorage et StarterGui sont répliqués chez chaque joueur, donc lisibles et exploitables par un joueur malveillant. L'emplacement d'un objet détermine qui y a accès."
+    },
+    {
+      "question": "Quelle est la différence entre un Script et un LocalScript ?",
+      "choix": [
+        "Un Script tourne côté serveur, un LocalScript tourne sur la machine du joueur",
+        "Un Script est en Luau, un LocalScript est en JavaScript",
+        "Un LocalScript ne peut pas utiliser d'événements",
+        "Un Script est plus rapide mais limité à 100 lignes"
+      ],
+      "bonne": 0,
+      "explication": "Même langage, mondes d'exécution différents : le Script s'exécute sur le serveur Roblox, le LocalScript sur la machine de chaque joueur. C'est comme ton middleware Next.js versus ton code navigateur. Cette distinction deviendra LE sujet central en leçon 7, car elle détermine ce qui peut être trafiqué."
+    },
+    {
+      "question": "Tu veux regrouper les 12 Parts de ton château pour garder un Explorer lisible. Quel objet utilises-tu ?",
+      "choix": [
+        "Un ModuleScript, fait pour regrouper des éléments",
+        "Un Humanoid, qui structure les objets complexes",
+        "Un LocalScript contenant les 12 Parts",
+        "Un Model, le conteneur qui regroupe des Parts comme une div structure du HTML"
+      ],
+      "bonne": 3,
+      "explication": "Le Model est le conteneur d'organisation : une maison = un Model contenant ses 40 Parts. Comme une div, il n'affiche rien par lui-même mais structure l'arbre. Et pense à tout renommer : dix Parts appelées « Part », c'est dix div sans classe — illisible et impossible à cibler en code."
+    }
+  ]
+}

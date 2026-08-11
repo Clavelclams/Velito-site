@@ -1,0 +1,49 @@
+{
+  "fiche": "roblox-luau-10-datastore",
+  "questions": [
+    {
+      "question": "Pourquoi pcall est-il OBLIGATOIRE autour de GetAsync et SetAsync ?",
+      "choix": [
+        "Parce que Roblox refuse de compiler un appel DataStore sans pcall",
+        "Un DataStore est un appel réseau qui peut échouer ; sans pcall (le try/catch de Luau), l'erreur stoppe le script qui gère TOUS les joueurs",
+        "Parce que pcall accélère les appels réseau",
+        "Parce que pcall chiffre les données avant l'envoi"
+      ],
+      "bonne": 1,
+      "explication": "GetAsync et SetAsync partent vers les serveurs Roblox : panne, latence ou quota peuvent les faire échouer, comme un fetch qui renvoie une 500. En Luau, une erreur non attrapée stoppe le script entier — et ce script gère les connexions de tous les joueurs : un seul échec, et tous les suivants perdent leur sauvegarde. pcall attrape l'erreur et te laisse prévoir un fallback propre."
+    },
+    {
+      "question": "Que se passe-t-il quand on crée un dossier nommé exactement « leaderstats » dans un joueur ?",
+      "choix": [
+        "Rien de spécial, c'est un nom comme un autre",
+        "Le joueur gagne accès aux commandes d'administration",
+        "Ses valeurs sont sauvegardées automatiquement dans le DataStore",
+        "Roblox le détecte par son nom et affiche automatiquement ses valeurs dans le classement à l'écran"
+      ],
+      "bonne": 3,
+      "explication": "C'est une convention magique, à la Symfony : respecte le nom exact « leaderstats » (minuscule comprise) et le classement en haut à droite est gratuit et instantané, avec les IntValue comme colonnes. Attention en revanche : l'affichage est automatique, la sauvegarde ne l'est pas — le DataStore reste ton travail."
+    },
+    {
+      "question": "Pourquoi ne faut-il PAS sauvegarder dans le DataStore à chaque pièce ramassée ?",
+      "choix": [
+        "Roblox impose des quotas de requêtes par minute : on sauvegarde à la déconnexion + auto-save toutes les 2-3 minutes",
+        "Parce que SetAsync efface les données précédentes des autres joueurs",
+        "Parce que chaque sauvegarde fait laguer tous les clients",
+        "Parce que le DataStore n'accepte qu'une écriture par session"
+      ],
+      "bonne": 0,
+      "explication": "Le DataStore est limité en requêtes par minute, proportionnellement au nombre de joueurs. Sauvegarder à chaque pièce, c'est l'équivalent d'un INSERT par frappe clavier — ton API rate-limiterait pareil. La stratégie standard : PlayerRemoving pour la déconnexion, plus une auto-sauvegarde périodique ; au pire, un crash coûte 2-3 minutes de progression."
+    },
+    {
+      "question": "Sécurité : pourquoi le compteur « Étapes » doit-il être incrémenté par un Script serveur et jamais par un LocalScript, avant d'être sauvegardé ?",
+      "choix": [
+        "Parce que les LocalScripts ne savent pas manipuler les IntValue",
+        "Parce que le classement ne s'affiche que si la valeur vient du serveur",
+        "La persistance hérite de la confiance de la donnée : une valeur gérée côté client peut être trafiquée, et on graverait la triche dans la base",
+        "Parce que le DataStore refuse les écritures déclenchées par un événement Touched"
+      ],
+      "bonne": 2,
+      "explication": "Le DataStore n'est accessible que côté serveur, mais si la valeur qu'il stocke était calculée côté client, tu sauvegarderais des données trafiquées — un exploiteur se mettrait 999 étapes avant même ta première sauvegarde. La règle d'or s'applique de bout en bout : le serveur décide la valeur, le serveur la persiste. Comme avec Supabase : le front ne parle jamais à la base sans policies."
+    }
+  ]
+}
