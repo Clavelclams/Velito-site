@@ -114,7 +114,10 @@ CREATE TABLE arena.matchs (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tournoi_id  uuid NOT NULL REFERENCES arena.tournois(id) ON DELETE CASCADE,
   round       int NOT NULL CHECK (round >= 1),
-  position    int NOT NULL CHECK (position >= 1),
+  -- position 0-BASED (0 = haut du bracket) : le moteur lib/bracket.ts repose
+  -- dessus (parent = floor(position/2), slot selon parité). Bug réel du
+  -- 11/08/2026 : une contrainte >= 1 avait cassé le démarrage en prod.
+  position    int NOT NULL CHECK (position >= 0),
   joueur1_id  uuid REFERENCES arena.joueurs(id),
   joueur2_id  uuid REFERENCES arena.joueurs(id),
   score_j1    int CHECK (score_j1 >= 0),
