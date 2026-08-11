@@ -14,8 +14,14 @@ perdent plus. App du monorepo Velito — `arena.velito.fr` — port dev **3003**
 - ✅ **S3** — Page publique `/t/[qr_token]` (bracket en direct, refresh auto
   15 s), QR code imprimable (`/admin/tournois/[id]/qr`), export JSON public
   (`/api/export/[qr_token]`), page prévention statique (`/prevention`).
-- ⬜ **S4** — Durcissement : comptes joueurs (auth hub), multi-orgas, imports
-  start.gg (V2). Voir `ARENA_CADRAGE_V1.md` (dossier Application/arena-store).
+- ✅ **Lot 0/1 (août 2026)** — Schéma `arena.` + droits `shared.user_permissions`
+  + verrous DB + écrans d'erreur distingués (voir `docs/ARENA_LOT0_AUDIT.md`).
+- ✅ **Lot 2/4 partiels** — Anti double-clic au démarrage (transition atomique),
+  litiges (`signalerLitige`), classement public `/classement` (barème 3/2/1,
+  `lib/arena/classement.ts` testé), profil joueur public `/joueurs/[pseudo]`
+  (« CV esport »), badges automatiques à la clôture (`lib/arena/badges.ts`).
+- ⬜ **Reste** — OIDC PKCE (Lot 1), double élim + poules (migration SQL formats
+  requise), page participant, imports Toornament/Challonge (Lot 3), API par clé.
 
 ## Architecture (à savoir défendre)
 

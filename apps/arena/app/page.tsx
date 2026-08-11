@@ -93,6 +93,10 @@ export default async function ArenaHome() {
 
       <footer className="mt-16 text-center text-xs text-gray-600">
         Un projet Velito — Amiens ·{" "}
+        <a href="/classement" className="underline hover:text-gray-400">
+          Classement
+        </a>{" "}
+        ·{" "}
         <a href="/prevention" className="underline hover:text-gray-400">
           Esport responsable
         </a>{" "}

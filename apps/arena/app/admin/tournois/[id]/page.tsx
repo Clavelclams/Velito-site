@@ -16,6 +16,7 @@ import {
   changerStatutTournoi,
   demarrerTournoi,
   saisirScore,
+  signalerLitige,
   toggleCheckIn,
   validerScore,
 } from "@/lib/arena/actions";
@@ -340,23 +341,52 @@ export default async function PageTournoi({
                                   </button>
                                 </form>
                                 {m.statut === "TERMINE" && (
-                                  <form action={validerScore}>
-                                    <input
-                                      type="hidden"
-                                      name="tournoi_id"
-                                      value={tournoi.id}
-                                    />
-                                    <input
-                                      type="hidden"
-                                      name="match_id"
-                                      value={m.id}
-                                    />
-                                    <button
-                                      className={`${btn} bg-arena-green/90 text-black hover:bg-arena-green`}
-                                    >
-                                      Valider
-                                    </button>
-                                  </form>
+                                  <>
+                                    <form action={validerScore}>
+                                      <input
+                                        type="hidden"
+                                        name="tournoi_id"
+                                        value={tournoi.id}
+                                      />
+                                      <input
+                                        type="hidden"
+                                        name="match_id"
+                                        value={m.id}
+                                      />
+                                      <button
+                                        className={`${btn} bg-arena-green/90 text-black hover:bg-arena-green`}
+                                      >
+                                        Valider
+                                      </button>
+                                    </form>
+                                    {/* Litige : à ouvrir AVANT validation (règlement §3) */}
+                                    <form action={signalerLitige}>
+                                      <input
+                                        type="hidden"
+                                        name="tournoi_id"
+                                        value={tournoi.id}
+                                      />
+                                      <input
+                                        type="hidden"
+                                        name="match_id"
+                                        value={m.id}
+                                      />
+                                      <button
+                                        title="Ouvrir un litige sur ce score (avant validation)"
+                                        className={`${btn} border border-arena-red/40 text-arena-red hover:bg-arena-red/10`}
+                                      >
+                                        ⚠
+                                      </button>
+                                    </form>
+                                  </>
+                                )}
+                                {m.statut === "LITIGIEUX" && (
+                                  <span
+                                    title="Litige ouvert — re-saisis le score arbitré puis valide"
+                                    className="rounded-full bg-arena-red/10 px-3 py-1 text-xs font-semibold text-arena-red"
+                                  >
+                                    ⚠ Litige
+                                  </span>
                                 )}
                               </>
                             ) : (
