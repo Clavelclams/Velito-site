@@ -22,6 +22,7 @@ import { redirect } from "next/navigation";
 import { getServiceClient } from "../supabase/service";
 import { estStaffDe, requireStaff, type ContexteStaff } from "./auth";
 import { genererBracketEliminationSimple, progresserGagnant } from "../bracket";
+import { attribuerBadgesTournoi } from "./badges";
 import { estStatutTournoi, transitionAutorisee } from "./transitions";
 import type { MatchRow, Tournoi } from "./types";
 
@@ -155,6 +156,23 @@ export async function changerStatutTournoi(formData: FormData) {
 
     if (nouveau === "TERMINE") {
       await log(ctx.userId, "TOURNOI_TERMINE", tournoiId, null);
+
+      // Attribution automatique des badges (best-effort, jamais bloquant).
+      const [{ data: matchsData }, { data: partData }] = await Promise.all([
+        db.schema("arena").from("matchs").select("*").eq("tournoi_id", tournoiId),
+        db
+          .schema("arena")
+          .from("participations")
+          .select("joueur_id")
+          .eq("tournoi_id", tournoiId)
+          .eq("check_in", true),
+      ]);
+      await attribuerBadgesTournoi(
+        db,
+        tournoiId,
+        (matchsData ?? []) as MatchRow[],
+        (partData ?? []).map((p) => p.joueur_id as string)
+      );
     }
 
     revalidatePath(`/admin/tournois/${tournoiId}`);
@@ -273,6 +291,22 @@ export async function demarrerTournoi(formData: FormData) {
       );
     }
 
+    // ANTI DOUBLE-CLIC (trouvaille d'audit Lot 0) : transition ATOMIQUE.
+    // On passe le tournoi EN_COURS *avant* de générer le bracket, avec une
+    // condition sur l'ancien statut. Si deux clics arrivent en même temps,
+    // un seul UPDATE matche la condition — l'autre ne modifie 0 ligne et
+    // s'arrête là. C'est Postgres qui arbitre, pas le code applicatif.
+    const { data: verrou } = await db
+      .schema("arena")
+      .from("tournois")
+      .update({ statut: "EN_COURS", updated_at: new Date().toISOString() })
+      .eq("id", tournoiId)
+      .eq("statut", "OUVERT")
+      .select("id");
+    if (!verrou || verrou.length === 0) {
+      throw new Error("Le tournoi a déjà été démarré (double-clic ?).");
+    }
+
     // Algo pur et testé (lib/bracket.ts) → lignes prêtes à insérer.
     const matchs = genererBracketEliminationSimple(joueurIds);
 
@@ -288,12 +322,16 @@ export async function demarrerTournoi(formData: FormData) {
         statut: m.isBye ? "VALIDE" : "A_JOUER",
       }))
     );
-    if (error) throw new Error(`Génération du bracket impossible : ${error.message}`);
-
-    await db
-      .schema("arena").from("tournois")
-      .update({ statut: "EN_COURS", updated_at: new Date().toISOString() })
-      .eq("id", tournoiId);
+    if (error) {
+      // L'insertion du bracket a échoué : on relâche le verrou (retour OUVERT)
+      // pour ne pas laisser un tournoi EN_COURS sans matchs.
+      await db
+        .schema("arena")
+        .from("tournois")
+        .update({ statut: "OUVERT", updated_at: new Date().toISOString() })
+        .eq("id", tournoiId);
+      throw new Error(`Génération du bracket impossible : ${error.message}`);
+    }
 
     await log(ctx.userId, "TOURNOI_DEMARRE", tournoiId, null, {
       nb_joueurs: joueurIds.length,
@@ -365,6 +403,51 @@ export async function saisirScore(formData: FormData) {
       { ancien, nouveau: { score_j1: scoreJ1, score_j2: scoreJ2 } }
     );
 
+    revalidatePath(`/admin/tournois/${tournoiId}`);
+  } catch (e) {
+    redirectionErreur(`/admin/tournois/${tournoiId}`, e);
+  }
+}
+
+/**
+ * Signale un litige sur un match (règlement §3 : « en cas de désaccord,
+ * le signaler AVANT la validation »). Le match passe LITIGIEUX : le score
+ * affiché n'est plus considéré fiable. Résolution = le staff re-saisit le
+ * score arbitré (retour TERMINE) puis valide. Tout est historisé.
+ */
+export async function signalerLitige(formData: FormData) {
+  const tournoiId = String(formData.get("tournoi_id"));
+  try {
+    const ctx = await requireStaff();
+    const db = getServiceClient();
+    const matchId = String(formData.get("match_id"));
+
+    await chargerTournoiDeLOrga(tournoiId, ctx);
+
+    const { data: match } = await db
+      .schema("arena")
+      .from("matchs")
+      .select("statut")
+      .eq("id", matchId)
+      .eq("tournoi_id", tournoiId)
+      .single();
+    if (!match) throw new Error("Match introuvable.");
+    if (match.statut === "VALIDE") {
+      throw new Error(
+        "Match déjà validé : un résultat validé est définitif (règlement §3)."
+      );
+    }
+    if (match.statut === "LITIGIEUX") {
+      throw new Error("Litige déjà ouvert sur ce match.");
+    }
+
+    await db
+      .schema("arena")
+      .from("matchs")
+      .update({ statut: "LITIGIEUX", updated_at: new Date().toISOString() })
+      .eq("id", matchId);
+
+    await log(ctx.userId, "LITIGE_OUVERT", tournoiId, matchId);
     revalidatePath(`/admin/tournois/${tournoiId}`);
   } catch (e) {
     redirectionErreur(`/admin/tournois/${tournoiId}`, e);

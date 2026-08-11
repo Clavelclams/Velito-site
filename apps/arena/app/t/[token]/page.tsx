@@ -147,14 +147,19 @@ export default async function PagePubliqueTournoi({
             </p>
           ) : (
             <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {participations.map((p) => (
-                <li
-                  key={p.id}
-                  className="rounded-lg border border-arena-border bg-arena-surface px-3 py-2 text-center text-sm font-semibold"
-                >
-                  {(p.joueur as Joueur | undefined)?.pseudo ?? "?"}
-                </li>
-              ))}
+              {participations.map((p) => {
+                const ps = (p.joueur as Joueur | undefined)?.pseudo;
+                return (
+                  <li key={p.id}>
+                    <a
+                      href={ps ? `/joueurs/${encodeURIComponent(ps)}` : "#"}
+                      className="block rounded-lg border border-arena-border bg-arena-surface px-3 py-2 text-center text-sm font-semibold transition-colors hover:border-arena-violet/50"
+                    >
+                      {ps ?? "?"}
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>
