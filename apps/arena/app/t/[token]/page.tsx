@@ -13,7 +13,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Joueur, MatchRow, Participation, Tournoi } from "@/lib/arena/types";
-import { nomRound } from "@/lib/arena/affichage";
+import { grouperMatchsParSection, matchFinal } from "@/lib/arena/affichage";
 import AutoRefresh from "./AutoRefresh";
 
 export default async function PagePubliqueTournoi({
@@ -57,8 +57,7 @@ export default async function PagePubliqueTournoi({
   }
   const pseudo = (jid: string | null) => (jid ? (pseudos.get(jid) ?? "?") : "—");
 
-  const nbRounds = matchs.length ? Math.max(...matchs.map((m) => m.round)) : 0;
-  const finale = matchs.find((m) => m.round === nbRounds);
+  const finale = matchFinal(matchs);
   const champion = finale?.statut === "VALIDE" ? pseudo(finale.gagnant_id) : null;
 
   return (
@@ -93,15 +92,13 @@ export default async function PagePubliqueTournoi({
 
       {matchs.length > 0 ? (
         <section className="space-y-6">
-          {Array.from({ length: nbRounds }, (_, i) => i + 1).map((round) => (
-            <div key={round}>
+          {grouperMatchsParSection(matchs).map((groupe) => (
+            <div key={groupe.titre}>
               <h2 className="mb-2 text-sm font-bold text-arena-lilac">
-                {nomRound(round, nbRounds)}
+                {groupe.titre}
               </h2>
               <ul className="space-y-2">
-                {matchs
-                  .filter((m) => m.round === round)
-                  .map((m) => (
+                {groupe.matchs.map((m) => (
                     <li
                       key={m.id}
                       className="flex items-center justify-between rounded-lg border border-arena-border bg-arena-surface px-4 py-3 text-sm"

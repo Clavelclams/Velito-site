@@ -51,6 +51,23 @@ describe("pointsDuTournoi", () => {
     expect(pts.size).toBe(2);
   });
 
+  it("double élimination : barème calé sur la Grande finale et le rattrapage", () => {
+    // 4 joueurs : A bat B et C en W ; B remonte le rattrapage, perd la GF.
+    const double: MatchRow[] = [
+      match({ round: 1, position: 1, bracket: "W", joueur1_id: "A", joueur2_id: "B", gagnant_id: "A", statut: "VALIDE" }),
+      match({ round: 1, position: 2, bracket: "W", joueur1_id: "C", joueur2_id: "D", gagnant_id: "C", statut: "VALIDE" }),
+      match({ round: 2, position: 1, bracket: "W", joueur1_id: "A", joueur2_id: "C", gagnant_id: "A", statut: "VALIDE" }),
+      match({ round: 1, position: 1, bracket: "L", joueur1_id: "B", joueur2_id: "D", gagnant_id: "B", statut: "VALIDE" }),
+      match({ round: 2, position: 1, bracket: "L", joueur1_id: "B", joueur2_id: "C", gagnant_id: "B", statut: "VALIDE" }),
+      match({ round: 1, position: 1, bracket: "GF", joueur1_id: "A", joueur2_id: "B", gagnant_id: "A", statut: "VALIDE" }),
+    ];
+    const pts = pointsDuTournoi(double);
+    expect(pts.get("A")).toBe(3); // champion (GF)
+    expect(pts.get("B")).toBe(2); // finaliste (GF)
+    expect(pts.get("C")).toBe(1); // 3e : perdant de la finale du rattrapage
+    expect(pts.get("D")).toBe(1); // 4e : perdant de la demi du rattrapage
+  });
+
   it("un bye en demi ne crédite personne", () => {
     const avecBye = [
       match({ round: 1, position: 1, joueur1_id: "A", joueur2_id: null, is_bye: true, gagnant_id: "A", statut: "VALIDE" }),
