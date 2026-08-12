@@ -68,6 +68,29 @@ describe("pointsDuTournoi", () => {
     expect(pts.get("D")).toBe(1); // 4e : perdant de la demi du rattrapage
   });
 
+  it("ignore les matchs de poule (régression du 12/08/2026)", () => {
+    // Reproduit le tournoi « Test poules 8 joueurs » joué en prod : 3 journées
+    // de poules (bracket 'P', round = numéro de JOURNÉE) puis une phase finale
+    // à élimination directe (bracket 'W', rounds 1 et 2).
+    // Avant correctif : Math.max(round) valait 3 (journée 3 de poule), la
+    // « finale » détectée était un match de poule, et la vraie championne
+    // n'apparaissait pas du tout au classement.
+    const avecPoules: MatchRow[] = [
+      match({ bracket: "P", poule: 1, round: 3, position: 0, joueur1_id: "Elias", joueur2_id: "Fanny", gagnant_id: "Fanny", statut: "VALIDE" }),
+      match({ bracket: "P", poule: 1, round: 3, position: 1, joueur1_id: "Dina", joueur2_id: "FannyG", gagnant_id: "Dina", statut: "VALIDE" }),
+      match({ bracket: "P", poule: 2, round: 3, position: 0, joueur1_id: "Aya", joueur2_id: "Hugo", gagnant_id: "Aya", statut: "VALIDE" }),
+      match({ bracket: "W", round: 1, position: 0, joueur1_id: "Fanny", joueur2_id: "Hugo", gagnant_id: "Fanny", statut: "VALIDE" }),
+      match({ bracket: "W", round: 1, position: 1, joueur1_id: "Aya", joueur2_id: "Elias", gagnant_id: "Aya", statut: "VALIDE" }),
+      match({ bracket: "W", round: 2, position: 0, joueur1_id: "Fanny", joueur2_id: "Aya", gagnant_id: "Aya", statut: "VALIDE" }),
+    ];
+    const pts = pointsDuTournoi(avecPoules);
+    expect(pts.get("Aya")).toBe(3); // championne
+    expect(pts.get("Fanny")).toBe(2); // finaliste
+    expect(pts.get("Hugo")).toBe(1); // demi-finaliste
+    expect(pts.get("Elias")).toBe(1); // demi-finaliste
+    expect(pts.size).toBe(4); // aucun point pour les éliminés en poule
+  });
+
   it("un bye en demi ne crédite personne", () => {
     const avecBye = [
       match({ round: 1, position: 1, joueur1_id: "A", joueur2_id: null, is_bye: true, gagnant_id: "A", statut: "VALIDE" }),

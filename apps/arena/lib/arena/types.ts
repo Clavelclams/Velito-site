@@ -65,6 +65,46 @@ export interface Tournoi {
   nb_poules?: number | null;
   nb_qualifies_par_poule?: number | null;
   phase_finale_generee?: boolean;
+  /** Verticale : esport ou sport physique (migration 004). */
+  discipline?: Discipline;
+  /** 1 = individuel, 2 = padel en double, 5 = five… (migration 004). */
+  taille_equipe?: number;
+}
+
+/** Les deux verticales d'ARENA. */
+export type Discipline = "ESPORT" | "SPORT";
+
+/**
+ * Équipe ÉPHÉMÈRE : elle n'existe que dans le cadre d'un tournoi.
+ * Décision actée le 12/08/2026 — au padel comme au five, les paires se
+ * recomposent à chaque session ; un roster persistant serait de la
+ * sur-ingénierie pour l'échelle visée.
+ */
+export interface Equipe {
+  id: string;
+  tournoi_id: string;
+  nom: string;
+  created_at?: string;
+  membres?: EquipeMembre[]; // jointure
+}
+
+export interface EquipeMembre {
+  tournoi_id: string;
+  equipe_id: string;
+  joueur_id: string;
+  joueur?: Joueur; // jointure
+}
+
+/**
+ * Note ELO d'un joueur, par discipline. JAMAIS exposée publiquement :
+ * la table est serveur-seule (RLS sans policy), l'ELO ne sert qu'à équilibrer
+ * les poules et les têtes de série côté staff.
+ */
+export interface EloJoueur {
+  joueur_id: string;
+  discipline: Discipline;
+  note: number;
+  nb_matchs: number;
 }
 
 export interface Participation {
@@ -94,4 +134,12 @@ export interface MatchRow {
   is_bye: boolean;
   gagnant_id: string | null;
   statut: StatutMatch;
+  /**
+   * Camps par ÉQUIPE (migration 004, module sport). Un match a soit des
+   * joueurs, soit des équipes, jamais les deux — la contrainte
+   * `matchs_camps_homogenes` l'impose en base.
+   */
+  equipe1_id?: string | null;
+  equipe2_id?: string | null;
+  equipe_gagnante_id?: string | null;
 }
