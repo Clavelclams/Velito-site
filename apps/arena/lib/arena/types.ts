@@ -113,6 +113,8 @@ export interface Participation {
   joueur_id: string;
   check_in: boolean;
   check_in_at: string | null;
+  /** Ordre de placement manuel (migration 005). null = ordre d'arrivée. */
+  ordre?: number | null;
   joueur?: Joueur; // jointure
 }
 

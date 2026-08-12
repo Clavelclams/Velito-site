@@ -16,13 +16,13 @@ export default function ErreurGlobale({
     <div className="mx-auto max-w-md px-4 py-24 text-center">
       <p className="text-4xl">😵</p>
       <h1 className="mt-4 text-xl font-bold">Quelque chose a cassé</h1>
-      <p className="mt-2 text-sm text-gray-400">
-        Réessaie — si ça persiste pendant un tournoi, préviens le staff ARENA
-        et continuez sur papier, les scores seront ressaisis après.
+      <p className="mt-2 text-sm text-arena-muted">
+        Réessaie. Si ça persiste pendant un tournoi, préviens le staff ARENA et
+        continuez sur papier : les scores seront ressaisis après.
       </p>
       <button
         onClick={reset}
-        className="mt-6 rounded-lg bg-arena-violet px-5 py-2.5 text-sm font-semibold text-white hover:bg-arena-violet/80"
+        className="mt-6 rounded-lg bg-arena-violet px-5 py-2.5 text-sm font-semibold text-white hover:bg-arena-violet-fonce"
       >
         Réessayer
       </button>

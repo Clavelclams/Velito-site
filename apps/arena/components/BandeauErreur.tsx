@@ -8,7 +8,7 @@ export default function BandeauErreur({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="mb-6 rounded-lg border border-arena-red/40 bg-arena-red/10 px-4 py-3 text-sm font-semibold text-arena-red"
+      className="mb-6 rounded-lg border border-arena-red/30 bg-arena-red-pale px-4 py-3 text-sm font-semibold text-arena-red"
     >
       ⚠️ {message}
     </div>

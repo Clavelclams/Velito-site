@@ -24,7 +24,7 @@ export default async function NouveauTournoi({
 
       <form action={creerTournoi} className="space-y-4">
         <div>
-          <label htmlFor="titre" className="mb-1 block text-sm text-gray-400">
+          <label htmlFor="titre" className="mb-1 block text-sm text-arena-muted">
             Titre *
           </label>
           <input
@@ -38,7 +38,7 @@ export default async function NouveauTournoi({
         </div>
 
         <div>
-          <label htmlFor="jeu" className="mb-1 block text-sm text-gray-400">
+          <label htmlFor="jeu" className="mb-1 block text-sm text-arena-muted">
             Jeu *
           </label>
           {/* datalist = autocomplétion native (zéro JS) adossée à une liste
@@ -60,7 +60,7 @@ export default async function NouveauTournoi({
         </div>
 
         <div>
-          <label htmlFor="format" className="mb-1 block text-sm text-gray-400">
+          <label htmlFor="format" className="mb-1 block text-sm text-arena-muted">
             Format *
           </label>
           <select id="format" name="format" required className={inputCls}>
@@ -74,25 +74,25 @@ export default async function NouveauTournoi({
               Poules + phase finale (tout le monde joue plusieurs matchs)
             </option>
           </select>
-          <p className="mt-1 text-xs text-gray-600">
-            Double élimination : une défaite ne sort pas du tournoi — le
-            rattrapage offre une seconde chance jusqu&apos;en grande finale.
-            Poules : chacun affronte tous les joueurs de sa poule, les
-            meilleurs disputent ensuite une phase finale à élimination directe.
+          <p className="mt-1 text-xs text-arena-faint">
+            Double élimination : une défaite ne sort pas du tournoi. Le rattrapage
+            offre une seconde chance jusqu&apos;en grande finale.
+            Poules : chacun affronte tous les joueurs de sa poule, puis les
+            meilleurs disputent une phase finale à élimination directe.
           </p>
         </div>
 
         {/* Config poules — toujours visible (zéro JS) mais ignorée par le
             serveur si un autre format est choisi. */}
         <fieldset className="rounded-lg border border-arena-border p-4">
-          <legend className="px-2 text-xs uppercase tracking-widest text-gray-500">
+          <legend className="px-2 text-xs uppercase tracking-widest text-arena-faint">
             Si format « poules »
           </legend>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label
                 htmlFor="nb_poules"
-                className="mb-1 block text-sm text-gray-400"
+                className="mb-1 block text-sm text-arena-muted"
               >
                 Nombre de poules
               </label>
@@ -105,7 +105,7 @@ export default async function NouveauTournoi({
                 defaultValue={2}
                 className={inputCls}
               />
-              <p className="mt-1 text-xs text-gray-600">
+              <p className="mt-1 text-xs text-arena-faint">
                 Un nombre pair évite que deux joueurs d&apos;une même poule se
                 croisent dès le premier tour.
               </p>
@@ -113,7 +113,7 @@ export default async function NouveauTournoi({
             <div>
               <label
                 htmlFor="nb_qualifies_par_poule"
-                className="mb-1 block text-sm text-gray-400"
+                className="mb-1 block text-sm text-arena-muted"
               >
                 Qualifiés par poule
               </label>
@@ -134,7 +134,7 @@ export default async function NouveauTournoi({
           <div>
             <label
               htmlFor="date_debut"
-              className="mb-1 block text-sm text-gray-400"
+              className="mb-1 block text-sm text-arena-muted"
             >
               Date et heure *
             </label>
@@ -149,7 +149,7 @@ export default async function NouveauTournoi({
           <div>
             <label
               htmlFor="max_joueurs"
-              className="mb-1 block text-sm text-gray-400"
+              className="mb-1 block text-sm text-arena-muted"
             >
               Joueurs max
             </label>
@@ -166,7 +166,7 @@ export default async function NouveauTournoi({
         </div>
 
         <div>
-          <label htmlFor="lieu" className="mb-1 block text-sm text-gray-400">
+          <label htmlFor="lieu" className="mb-1 block text-sm text-arena-muted">
             Lieu
           </label>
           <input
@@ -180,18 +180,18 @@ export default async function NouveauTournoi({
         <div className="flex gap-3 pt-2">
           <button
             type="submit"
-            className="rounded-lg bg-arena-violet px-5 py-2.5 text-sm font-semibold text-white hover:bg-arena-violet/80"
+            className="rounded-lg bg-arena-violet px-5 py-2.5 text-sm font-semibold text-white hover:bg-arena-violet-fonce"
           >
             Créer (en brouillon)
           </button>
           <a
             href="/admin/tournois"
-            className="rounded-lg border border-arena-border px-5 py-2.5 text-sm text-gray-400 hover:text-white"
+            className="rounded-lg border border-arena-border px-5 py-2.5 text-sm text-arena-muted hover:text-arena-ink"
           >
             Annuler
           </a>
         </div>
-        <p className="text-xs text-gray-600">
+        <p className="text-xs text-arena-faint">
           Le tournoi est créé en BROUILLON : il n&apos;apparaît pas sur le site
           public tant que tu n&apos;ouvres pas les inscriptions.
         </p>
