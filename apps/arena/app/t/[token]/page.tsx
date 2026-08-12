@@ -14,6 +14,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Joueur, MatchRow, Participation, Tournoi } from "@/lib/arena/types";
 import { grouperMatchsParSection, matchFinal } from "@/lib/arena/affichage";
+import ClassementsPoules from "@/components/ClassementsPoules";
 import AutoRefresh from "./AutoRefresh";
 
 export default async function PagePubliqueTournoi({
@@ -89,6 +90,14 @@ export default async function PagePubliqueTournoi({
           🏆 Champion : {champion}
         </p>
       )}
+
+      <div className="mb-8">
+        <ClassementsPoules
+          matchs={matchs}
+          pseudo={pseudo}
+          nbQualifies={tournoi.nb_qualifies_par_poule ?? 2}
+        />
+      </div>
 
       {matchs.length > 0 ? (
         <section className="space-y-6">

@@ -43,7 +43,10 @@ export interface Joueur {
   anonymise: boolean;
 }
 
-export type FormatTournoi = "ELIMINATION_SIMPLE" | "DOUBLE_ELIMINATION";
+export type FormatTournoi =
+  | "ELIMINATION_SIMPLE"
+  | "DOUBLE_ELIMINATION"
+  | "POULES_FINALE";
 
 export interface Tournoi {
   id: string;
@@ -58,6 +61,10 @@ export interface Tournoi {
   max_joueurs: number | null;
   qr_token: string;
   created_at: string;
+  /** Config POULES_FINALE (null pour les autres formats). */
+  nb_poules?: number | null;
+  nb_qualifies_par_poule?: number | null;
+  phase_finale_generee?: boolean;
 }
 
 export interface Participation {
@@ -72,9 +79,12 @@ export interface Participation {
 export interface MatchRow {
   id: string;
   tournoi_id: string;
-  /** W = tableau principal, L = rattrapage, GF = grande finale.
+  /** W = tableau principal, L = rattrapage, GF = grande finale, P = poules.
    *  Absent (undefined) sur les lignes d'avant la migration 002 = 'W'. */
-  bracket?: "W" | "L" | "GF";
+  bracket?: "W" | "L" | "GF" | "P";
+  /** Numéro de poule (1..G) pour bracket = 'P', null sinon. */
+  poule?: number | null;
+  /** Pour une poule, `round` est le numéro de JOURNÉE. */
   round: number;
   position: number;
   joueur1_id: string | null;
