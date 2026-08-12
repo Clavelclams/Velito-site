@@ -29,7 +29,14 @@ export async function attribuerBadgesTournoi(
   db: SupabaseClient,
   tournoiId: string,
   matchs: MatchRow[],
-  participantsCheckIn: string[]
+  participantsCheckIn: string[],
+  /**
+   * Composition des équipes pour un tournoi de sport. Sans elle, le vainqueur
+   * d'un tournoi de padel serait un identifiant d'ÉQUIPE, qu'on tenterait
+   * d'insérer dans badges_joueurs.joueur_id : la clé étrangère refuserait, et
+   * personne n'aurait son badge.
+   */
+  membresParEquipe?: Map<string, string[]>
 ): Promise<void> {
   try {
     // 1. Catalogue à jour (idempotent — ignoreDuplicates sur le code unique).
@@ -63,9 +70,13 @@ export async function attribuerBadgesTournoi(
     // On ne donne PAS "Finaliste" au champion : afficher les deux badges
     // ensemble ressemble à un bug côté joueur (constaté au test du 12/08).
     const pts = pointsDuTournoi(matchs);
-    for (const [joueurId, p] of pts) {
-      if (p >= 3) ajouter(joueurId, "CHAMPION");
-      else if (p === 2) ajouter(joueurId, "FINALISTE");
+    for (const [campId, p] of pts) {
+      // Un camp est un joueur (esport) ou une équipe (sport) : dans le second
+      // cas, les deux membres de la paire reçoivent le même badge.
+      for (const joueurId of membresParEquipe?.get(campId) ?? [campId]) {
+        if (p >= 3) ajouter(joueurId, "CHAMPION");
+        else if (p === 2) ajouter(joueurId, "FINALISTE");
+      }
     }
 
     if (attributions.length > 0) {

@@ -121,6 +121,56 @@ describe("calculerClassement", () => {
     expect(c.tournoisComptes).toBe(1);
   });
 
+  it("sport par équipes : les points vont à chaque membre de la paire", () => {
+    // Tournoi de padel à 4 paires. Les camps sont des ÉQUIPES : les colonnes
+    // joueur* restent nulles (contrainte matchs_camps_homogenes).
+    const eq = (p: {
+      round: number;
+      position: number;
+      e1: string;
+      e2: string;
+      gagnante: string;
+    }): MatchRow =>
+      match({
+        round: p.round,
+        position: p.position,
+        equipe1_id: p.e1,
+        equipe2_id: p.e2,
+        equipe_gagnante_id: p.gagnante,
+        statut: "VALIDE",
+      });
+
+    const padel = [
+      eq({ round: 1, position: 0, e1: "EQ_A", e2: "EQ_B", gagnante: "EQ_A" }),
+      eq({ round: 1, position: 1, e1: "EQ_C", e2: "EQ_D", gagnante: "EQ_C" }),
+      eq({ round: 2, position: 0, e1: "EQ_A", e2: "EQ_C", gagnante: "EQ_A" }),
+    ];
+
+    const membres = new Map([
+      ["EQ_A", ["clavel", "aya"]],
+      ["EQ_B", ["bilal", "cyril"]],
+      ["EQ_C", ["dina", "elias"]],
+      ["EQ_D", ["fanny", "gaspard"]],
+    ]);
+
+    const classement = calculerClassement([padel], membres);
+    const points = (id: string) =>
+      classement.find((l) => l.joueurId === id)?.points ?? 0;
+
+    // Les DEUX joueurs de la paire victorieuse marquent 3 points chacun.
+    expect(points("clavel")).toBe(3);
+    expect(points("aya")).toBe(3);
+    // Paire finaliste : 2 points chacun.
+    expect(points("dina")).toBe(2);
+    expect(points("elias")).toBe(2);
+    // Paire éliminée en demi-finale : 1 point chacun.
+    expect(points("bilal")).toBe(1);
+    expect(points("gaspard")).toBe(1);
+    // Aucun identifiant d'ÉQUIPE ne doit apparaître dans un classement de joueurs.
+    expect(classement.some((l) => l.joueurId.startsWith("EQ_"))).toBe(false);
+    expect(classement).toHaveLength(8);
+  });
+
   it("ignore les tournois sans finale validée", () => {
     const enCours = TOURNOI_4.map((m) =>
       m.round === 2 ? { ...m, statut: "A_JOUER" as const, gagnant_id: null } : m

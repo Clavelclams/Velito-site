@@ -36,7 +36,8 @@ export default async function PagePubliqueTournoi({
   if (!tournoiData) notFound();
   const tournoi = tournoiData as Tournoi;
 
-  const [{ data: partData }, { data: matchsData }] = await Promise.all([
+  const [{ data: partData }, { data: matchsData }, { data: equipesData }] =
+    await Promise.all([
     supabase
       .schema("arena")
       .from("participations")
@@ -49,6 +50,14 @@ export default async function PagePubliqueTournoi({
       .eq("tournoi_id", tournoi.id)
       .order("round", { ascending: true })
       .order("position", { ascending: true }),
+    // Équipes : requête inutile en esport, mais elle coûte moins cher qu'une
+    // condition qui obligerait à faire deux appels en série.
+    supabase
+      .schema("arena")
+      .from("equipes")
+      .select("id, nom, membres:equipes_membres(joueur_id)")
+      .eq("tournoi_id", tournoi.id)
+      .order("nom", { ascending: true }),
   ]);
 
   const participations = (partData ?? []) as Participation[];
@@ -58,10 +67,37 @@ export default async function PagePubliqueTournoi({
   for (const p of participations) {
     if (p.joueur) pseudos.set(p.joueur_id, (p.joueur as Joueur).pseudo);
   }
-  const pseudo = (jid: string | null) => (jid ? (pseudos.get(jid) ?? "?") : "À venir");
+  const equipes = (equipesData ?? []) as {
+    id: string;
+    nom: string;
+    membres: { joueur_id: string }[];
+  }[];
+  const nomsEquipes = new Map(equipes.map((e) => [e.id, e.nom]));
+
+  // Un identifiant de camp désigne un joueur (esport) ou une équipe (sport).
+  // On interroge les deux index : le reste de la page ignore la différence.
+  const pseudo = (jid: string | null) =>
+    jid ? (pseudos.get(jid) ?? nomsEquipes.get(jid) ?? "?") : "À venir";
+
+  /** Composition d'une équipe, affichée sous son nom sur la page publique. */
+  const membresDe = (equipeId: string | null) =>
+    equipeId
+      ? (equipes.find((e) => e.id === equipeId)?.membres ?? [])
+          .map((mb) => pseudos.get(mb.joueur_id) ?? "?")
+          .join(", ")
+      : "";
+
+  const camps = (m: MatchRow) => ({
+    c1: m.equipe1_id ?? m.joueur1_id,
+    c2: m.equipe2_id ?? m.joueur2_id,
+    gagnant: m.equipe_gagnante_id ?? m.gagnant_id,
+  });
 
   const finale = matchFinal(matchs);
-  const champion = finale?.statut === "VALIDE" ? pseudo(finale.gagnant_id) : null;
+  const champion =
+    finale?.statut === "VALIDE"
+      ? pseudo(finale.equipe_gagnante_id ?? finale.gagnant_id)
+      : null;
 
   return (
     <>
@@ -118,12 +154,17 @@ export default async function PagePubliqueTournoi({
                     >
                       <span
                         className={
-                          m.gagnant_id && m.gagnant_id === m.joueur1_id
+                          camps(m).gagnant && camps(m).gagnant === camps(m).c1
                             ? "font-bold text-arena-green"
                             : ""
                         }
                       >
-                        {pseudo(m.joueur1_id)}
+                        {pseudo(camps(m).c1)}
+                        {m.equipe1_id && (
+                          <span className="block text-xs font-normal text-arena-faint">
+                            {membresDe(m.equipe1_id)}
+                          </span>
+                        )}
                       </span>
                       <span className="mx-3 font-mono text-arena-muted">
                         {m.statut === "VALIDE" || m.statut === "TERMINE"
@@ -132,12 +173,17 @@ export default async function PagePubliqueTournoi({
                       </span>
                       <span
                         className={
-                          m.gagnant_id && m.gagnant_id === m.joueur2_id
+                          camps(m).gagnant && camps(m).gagnant === camps(m).c2
                             ? "font-bold text-arena-green"
                             : ""
                         }
                       >
-                        {m.is_bye ? "(bye)" : pseudo(m.joueur2_id)}
+                        {m.is_bye ? "(bye)" : pseudo(camps(m).c2)}
+                        {m.equipe2_id && (
+                          <span className="block text-xs font-normal text-arena-faint">
+                            {membresDe(m.equipe2_id)}
+                          </span>
+                        )}
                       </span>
                     </li>
                   ))}

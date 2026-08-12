@@ -101,6 +101,39 @@ async function chargerTournoiDeLOrga(
   return tournoi;
 }
 
+/**
+ * ARENA oppose soit des JOUEURS (esport, tournoi individuel), soit des ÉQUIPES
+ * (padel en double, five). Les DEUX cas partagent exactement le même moteur de
+ * bracket, parce que lib/bracket.ts et ses cousins travaillent sur des
+ * identifiants OPAQUES : ils ne savent pas, et n'ont pas besoin de savoir, ce
+ * que l'identifiant désigne.
+ *
+ * La seule différence vit ici : le nom des COLONNES où écrire ces
+ * identifiants. Plutôt que de dupliquer chaque fonction en version joueur et
+ * version équipe, on calcule les noms de colonnes une fois et on écrit
+ * `{ [cols.c1]: id }`. C'est le même code qui sert aux deux verticales, donc
+ * un correctif de bracket profite aux deux automatiquement.
+ */
+type ColonnesCamp = {
+  parEquipes: boolean;
+  c1: "joueur1_id" | "equipe1_id";
+  c2: "joueur2_id" | "equipe2_id";
+  gagnant: "gagnant_id" | "equipe_gagnante_id";
+};
+
+function colonnesCamp(tournoi: Tournoi): ColonnesCamp {
+  return (tournoi.taille_equipe ?? 1) > 1
+    ? { parEquipes: true, c1: "equipe1_id", c2: "equipe2_id", gagnant: "equipe_gagnante_id" }
+    : { parEquipes: false, c1: "joueur1_id", c2: "joueur2_id", gagnant: "gagnant_id" };
+}
+
+/** Les deux camps d'un match, quel que soit le type de tournoi. */
+function campsDuMatch(m: MatchRow, parEquipes: boolean) {
+  return parEquipes
+    ? { c1: m.equipe1_id ?? null, c2: m.equipe2_id ?? null, gagnant: m.equipe_gagnante_id ?? null }
+    : { c1: m.joueur1_id, c2: m.joueur2_id, gagnant: m.gagnant_id };
+}
+
 // ---------- Tournois ----------
 
 export async function creerTournoi(formData: FormData) {
@@ -220,20 +253,34 @@ export async function changerStatutTournoi(formData: FormData) {
       await log(ctx.userId, "TOURNOI_TERMINE", tournoiId, null);
 
       // Attribution automatique des badges (best-effort, jamais bloquant).
-      const [{ data: matchsData }, { data: partData }] = await Promise.all([
-        db.schema("arena").from("matchs").select("*").eq("tournoi_id", tournoiId),
-        db
-          .schema("arena")
-          .from("participations")
-          .select("joueur_id")
-          .eq("tournoi_id", tournoiId)
-          .eq("check_in", true),
-      ]);
+      const [{ data: matchsData }, { data: partData }, { data: equipesData }] =
+        await Promise.all([
+          db.schema("arena").from("matchs").select("*").eq("tournoi_id", tournoiId),
+          db
+            .schema("arena")
+            .from("participations")
+            .select("joueur_id")
+            .eq("tournoi_id", tournoiId)
+            .eq("check_in", true),
+          db
+            .schema("arena")
+            .from("equipes")
+            .select("id, membres:equipes_membres(joueur_id)")
+            .eq("tournoi_id", tournoiId),
+        ]);
+
+      const membresParEquipe = new Map(
+        ((equipesData ?? []) as { id: string; membres: { joueur_id: string }[] }[]).map(
+          (e) => [e.id, (e.membres ?? []).map((mb) => mb.joueur_id)]
+        )
+      );
+
       await attribuerBadgesTournoi(
         db,
         tournoiId,
         (matchsData ?? []) as MatchRow[],
-        (partData ?? []).map((p) => p.joueur_id as string)
+        (partData ?? []).map((p) => p.joueur_id as string),
+        membresParEquipe
       );
     }
 
@@ -347,9 +394,48 @@ export async function demarrerTournoi(formData: FormData) {
       .eq("check_in", true);
 
     const joueurIds = (participations ?? []).map((p) => p.joueur_id as string);
-    if (joueurIds.length < 2) {
+
+    // Les CONCURRENTS du bracket : des joueurs en esport, des équipes en sport.
+    const cols = colonnesCamp(tournoi);
+    let participantIds: string[] = joueurIds;
+
+    if (cols.parEquipes) {
+      const tailleAttendue = tournoi.taille_equipe ?? 2;
+      const { data: equipesData } = await db
+        .schema("arena")
+        .from("equipes")
+        .select("id, nom, membres:equipes_membres(joueur_id)")
+        .eq("tournoi_id", tournoiId)
+        .order("nom", { ascending: true });
+
+      const equipes = (equipesData ?? []) as {
+        id: string;
+        nom: string;
+        membres: { joueur_id: string }[];
+      }[];
+
+      // Une équipe incomplète fausserait tout le tournoi : autant refuser de
+      // démarrer et nommer les équipes fautives, plutôt que de générer un
+      // bracket que le staff devra défaire.
+      const incompletes = equipes.filter(
+        (e) => (e.membres ?? []).length !== tailleAttendue
+      );
+      if (incompletes.length > 0) {
+        throw new Error(
+          `Équipes incomplètes (${tailleAttendue} joueurs attendus) : ` +
+            incompletes
+              .map((e) => `${e.nom} (${(e.membres ?? []).length})`)
+              .join(", ")
+        );
+      }
+      participantIds = equipes.map((e) => e.id);
+    }
+
+    if (participantIds.length < 2) {
       throw new Error(
-        `Il faut au moins 2 joueurs check-in pour démarrer (actuellement ${joueurIds.length}).`
+        cols.parEquipes
+          ? `Il faut au moins 2 équipes complètes pour démarrer (actuellement ${participantIds.length}).`
+          : `Il faut au moins 2 joueurs check-in pour démarrer (actuellement ${participantIds.length}).`
       );
     }
 
@@ -361,40 +447,40 @@ export async function demarrerTournoi(formData: FormData) {
       // Phase 1 UNIQUEMENT : les matchs de poules. La phase finale sera
       // générée plus tard (genererPhaseFinale), quand les qualifiés seront
       // connus — c'est la spécificité structurante de ce format.
-      const poules = repartirEnPoules(joueurIds, tournoi.nb_poules ?? 2);
+      const poules = repartirEnPoules(participantIds, tournoi.nb_poules ?? 2);
       lignes = genererMatchsPoules(poules).map((m) => ({
         tournoi_id: tournoiId,
         bracket: "P",
         poule: m.poule,
         round: m.journee,
         position: m.position,
-        joueur1_id: m.joueur1Id,
-        joueur2_id: m.joueur2Id,
+        [cols.c1]: m.joueur1Id,
+        [cols.c2]: m.joueur2Id,
         is_bye: false,
-        gagnant_id: null,
+        [cols.gagnant]: null,
         statut: "A_JOUER",
       }));
     } else if (tournoi.format === "DOUBLE_ELIMINATION") {
-      lignes = genererBracketDoubleElimination(joueurIds).map((m) => ({
+      lignes = genererBracketDoubleElimination(participantIds).map((m) => ({
         tournoi_id: tournoiId,
         bracket: m.bracket,
         round: m.round,
         position: m.position,
-        joueur1_id: m.joueur1Id,
-        joueur2_id: m.joueur2Id,
+        [cols.c1]: m.joueur1Id,
+        [cols.c2]: m.joueur2Id,
         is_bye: m.isBye,
-        gagnant_id: m.gagnantId,
+        [cols.gagnant]: m.gagnantId,
         statut: "A_JOUER",
       }));
     } else {
-      lignes = genererBracketEliminationSimple(joueurIds).map((m) => ({
+      lignes = genererBracketEliminationSimple(participantIds).map((m) => ({
         tournoi_id: tournoiId,
         round: m.round,
         position: m.position,
-        joueur1_id: m.joueur1Id,
-        joueur2_id: m.joueur2Id,
+        [cols.c1]: m.joueur1Id,
+        [cols.c2]: m.joueur2Id,
         is_bye: m.isBye,
-        gagnant_id: m.gagnantId,
+        [cols.gagnant]: m.gagnantId,
         statut: m.isBye ? "VALIDE" : "A_JOUER",
       }));
     }
@@ -426,7 +512,8 @@ export async function demarrerTournoi(formData: FormData) {
     }
 
     await log(ctx.userId, "TOURNOI_DEMARRE", tournoiId, null, {
-      nb_joueurs: joueurIds.length,
+      nb_participants: participantIds.length,
+      par_equipes: cols.parEquipes,
       nb_matchs: lignes.length,
       format: tournoi.format,
     });
@@ -472,8 +559,16 @@ export async function saisirScore(formData: FormData) {
     if (!match) throw new Error("Match introuvable.");
     const m = match as MatchRow;
     if (m.statut === "VALIDE") throw new Error("Match déjà validé.");
-    if (!m.joueur1_id || !m.joueur2_id) {
-      throw new Error("Match incomplet : les deux joueurs ne sont pas encore connus.");
+    // On déduit les camps du match LUI-MÊME plutôt que de recharger le
+    // tournoi : la contrainte `matchs_camps_homogenes` garantit qu'un match
+    // porte soit deux joueurs, soit deux équipes, jamais un mélange. Une
+    // requête de moins pour une information déjà en main.
+    const camp1 = m.equipe1_id ?? m.joueur1_id;
+    const camp2 = m.equipe2_id ?? m.joueur2_id;
+    if (!camp1 || !camp2) {
+      throw new Error(
+        "Match incomplet : les deux adversaires ne sont pas encore connus."
+      );
     }
 
     const ancien = { score_j1: m.score_j1, score_j2: m.score_j2 };
@@ -521,6 +616,8 @@ export async function genererPhaseFinale(formData: FormData) {
     const db = getServiceClient();
     const tournoi = await chargerTournoiDeLOrga(tournoiId, ctx);
 
+    const cols = colonnesCamp(tournoi);
+
     if (tournoi.format !== "POULES_FINALE") {
       throw new Error("Ce tournoi n'est pas au format poules + finale.");
     }
@@ -550,15 +647,21 @@ export async function genererPhaseFinale(formData: FormData) {
     const classements: string[][] = [];
     for (const numero of numerosPoules) {
       const deLaPoule = matchsPoules.filter((m) => (m.poule ?? 1) === numero);
+      // « joueur » ici veut dire CONCURRENT : un joueur en esport, une équipe
+      // en sport. lib/poules.ts ne fait pas la différence, il classe des
+      // identifiants.
       const joueursPoule = [
         ...new Set(
-          deLaPoule.flatMap((m) => [m.joueur1_id, m.joueur2_id])
+          deLaPoule.flatMap((m) => {
+            const c = campsDuMatch(m, cols.parEquipes);
+            return [c.c1, c.c2];
+          })
         ),
       ].filter((j): j is string => j !== null);
 
       const resultats: ResultatPoule[] = deLaPoule.map((m) => ({
-        joueur1Id: m.joueur1_id,
-        joueur2Id: m.joueur2_id,
+        joueur1Id: campsDuMatch(m, cols.parEquipes).c1,
+        joueur2Id: campsDuMatch(m, cols.parEquipes).c2,
         scoreJ1: m.score_j1,
         scoreJ2: m.score_j2,
         valide: m.statut === "VALIDE",
@@ -605,10 +708,10 @@ export async function genererPhaseFinale(formData: FormData) {
         bracket: "W",
         round: m.round,
         position: m.position,
-        joueur1_id: m.joueur1Id,
-        joueur2_id: m.joueur2Id,
+        [cols.c1]: m.joueur1Id,
+        [cols.c2]: m.joueur2Id,
         is_bye: m.isBye,
-        gagnant_id: m.gagnantId,
+        [cols.gagnant]: m.gagnantId,
         statut: m.isBye ? "VALIDE" : "A_JOUER",
       }))
     );
@@ -701,19 +804,24 @@ export async function validerScore(formData: FormData) {
       throw new Error("Le score doit d'abord être saisi avant validation.");
     }
 
+    // Colonnes du camp : joueur ou équipe selon le tournoi. Tout ce qui suit
+    // est écrit une seule fois et sert aux deux verticales.
+    const cols = colonnesCamp(tournoi);
+    const camps = campsDuMatch(m, cols.parEquipes);
+
     const validerMatch = (gagnantId: string) =>
       db
         .schema("arena").from("matchs")
         .update({
           statut: "VALIDE",
-          gagnant_id: gagnantId,
+          [cols.gagnant]: gagnantId,
           valide_par: ctx.userId,
           updated_at: new Date().toISOString(),
         })
         .eq("id", matchId);
 
-    /** Place un joueur dans le slot d'un match cible (identifié par bracket/round/position). */
-    const placer = async (dest: DestinationDouble, joueurId: string) => {
+    /** Place un CAMP (joueur ou équipe) dans le slot d'un match cible. */
+    const placer = async (dest: DestinationDouble, campId: string) => {
       const cible = matchs.find(
         (x) =>
           (x.bracket ?? "W") === dest.bracket &&
@@ -725,8 +833,8 @@ export async function validerScore(formData: FormData) {
         .schema("arena").from("matchs")
         .update(
           dest.slot === "joueur1"
-            ? { joueur1_id: joueurId }
-            : { joueur2_id: joueurId }
+            ? { [cols.c1]: campId }
+            : { [cols.c2]: campId }
         )
         .eq("id", cible.id);
     };
@@ -739,7 +847,7 @@ export async function validerScore(formData: FormData) {
       // Match de POULE : aucun bracket à faire avancer. On fige le résultat,
       // le classement de la poule est recalculé à la lecture (lib/poules.ts).
       const gagnantId =
-        (m.score_j1 ?? 0) > (m.score_j2 ?? 0) ? m.joueur1_id : m.joueur2_id;
+        (m.score_j1 ?? 0) > (m.score_j2 ?? 0) ? camps.c1 : camps.c2;
       if (!gagnantId) throw new Error("Match de poule incomplet.");
       await validerMatch(gagnantId);
       await log(ctx.userId, "MATCH_VALIDE", tournoiId, matchId, {
@@ -756,8 +864,8 @@ export async function validerScore(formData: FormData) {
           bracket: bracketMatch,
           round: m.round,
           position: m.position,
-          joueur1Id: m.joueur1_id,
-          joueur2Id: m.joueur2_id,
+          joueur1Id: camps.c1,
+          joueur2Id: camps.c2,
           scoreJ1: m.score_j1 ?? 0,
           scoreJ2: m.score_j2 ?? 0,
         },
@@ -776,8 +884,8 @@ export async function validerScore(formData: FormData) {
         {
           round: m.round,
           position: m.position,
-          joueur1Id: m.joueur1_id,
-          joueur2Id: m.joueur2_id,
+          joueur1Id: camps.c1,
+          joueur2Id: camps.c2,
           scoreJ1: m.score_j1 ?? 0,
           scoreJ2: m.score_j2 ?? 0,
         },

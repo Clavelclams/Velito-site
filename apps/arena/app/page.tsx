@@ -100,11 +100,28 @@ export default async function ArenaHome() {
       .map((t) => t.id);
 
     if (idsTermines.length > 0) {
-      const { data: matchsData } = await supabase
-        .schema("arena")
-        .from("matchs")
-        .select("*")
-        .in("tournoi_id", idsTermines);
+      const [{ data: matchsData }, { data: equipesData }] = await Promise.all([
+        supabase.schema("arena").from("matchs").select("*").in("tournoi_id", idsTermines),
+        // Équipes des tournois de sport : elles portent le nom du vainqueur et
+        // la composition qui sert à redistribuer les points aux joueurs.
+        supabase
+          .schema("arena")
+          .from("equipes")
+          .select("id, nom, membres:equipes_membres(joueur_id)")
+          .in("tournoi_id", idsTermines),
+      ]);
+
+      const equipes = (equipesData ?? []) as {
+        id: string;
+        nom: string;
+        membres: { joueur_id: string }[];
+      }[];
+      const nomDuCamp = (campId: string) =>
+        infoJoueur.get(campId)?.pseudo ??
+        equipes.find((e) => e.id === campId)?.nom;
+      const membresParEquipe = new Map(
+        equipes.map((e) => [e.id, (e.membres ?? []).map((mb) => mb.joueur_id)])
+      );
 
       const parTournoi = new Map<string, MatchRow[]>();
       for (const m of (matchsData ?? []) as MatchRow[]) {
@@ -122,13 +139,17 @@ export default async function ArenaHome() {
       championParTournoi = new Map(
         [...parTournoi.entries()].flatMap(([tournoiId, matchs]) => {
           const finale = matchFinal(matchs);
-          const gagnant = finale?.statut === "VALIDE" ? finale.gagnant_id : null;
-          const pseudo = gagnant ? infoJoueur.get(gagnant)?.pseudo : undefined;
-          return pseudo ? [[tournoiId, pseudo] as [string, string]] : [];
+          // Le vainqueur est un joueur en esport, une équipe en sport.
+          const gagnant =
+            finale?.statut === "VALIDE"
+              ? (finale.equipe_gagnante_id ?? finale.gagnant_id)
+              : null;
+          const nom = gagnant ? nomDuCamp(gagnant) : undefined;
+          return nom ? [[tournoiId, nom] as [string, string]] : [];
         })
       );
 
-      podium = calculerClassement([...parTournoi.values()])
+      podium = calculerClassement([...parTournoi.values()], membresParEquipe)
         .filter((l) => infoJoueur.get(l.joueurId)?.profil_public !== false)
         .slice(0, 3)
         .map((l) => ({

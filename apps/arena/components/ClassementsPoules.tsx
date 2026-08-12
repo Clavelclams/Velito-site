@@ -15,6 +15,15 @@ interface Props {
 }
 
 export default function ClassementsPoules({ matchs, pseudo, nbQualifies }: Props) {
+  // Un match porte SOIT deux joueurs, SOIT deux équipes (contrainte
+  // `matchs_camps_homogenes` en base). On lit donc l'équipe d'abord, le
+  // joueur ensuite : le même composant sert au tournoi esport et au tournoi
+  // de padel, sans savoir lequel il affiche.
+  const camps = (m: MatchRow) => ({
+    c1: m.equipe1_id ?? m.joueur1_id,
+    c2: m.equipe2_id ?? m.joueur2_id,
+  });
+
   const matchsPoules = matchs.filter((m) => (m.bracket ?? "W") === "P");
   if (matchsPoules.length === 0) return null;
 
@@ -31,12 +40,14 @@ export default function ClassementsPoules({ matchs, pseudo, nbQualifies }: Props
         {numeros.map((numero) => {
           const deLaPoule = matchsPoules.filter((m) => (m.poule ?? 1) === numero);
           const joueurs = [
-            ...new Set(deLaPoule.flatMap((m) => [m.joueur1_id, m.joueur2_id])),
+            ...new Set(
+              deLaPoule.flatMap((m) => [camps(m).c1, camps(m).c2])
+            ),
           ].filter((j): j is string => j !== null);
 
           const resultats: ResultatPoule[] = deLaPoule.map((m) => ({
-            joueur1Id: m.joueur1_id,
-            joueur2Id: m.joueur2_id,
+            joueur1Id: camps(m).c1,
+            joueur2Id: camps(m).c2,
             scoreJ1: m.score_j1,
             scoreJ2: m.score_j2,
             valide: m.statut === "VALIDE",

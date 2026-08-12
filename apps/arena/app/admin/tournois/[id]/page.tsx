@@ -136,14 +136,25 @@ export default async function PageTournoi({
   for (const p of participations) {
     if (p.joueur) pseudos.set(p.joueur_id, (p.joueur as Joueur).pseudo);
   }
+  // Un identifiant de camp est soit un joueur, soit une équipe : on interroge
+  // les deux index. Le reste de la page n'a plus à savoir de quel type de
+  // tournoi il s'agit.
+  const nomsEquipes = new Map(equipes.map((e) => [e.id, e.nom]));
   const pseudo = (jid: string | null) =>
-    jid ? (pseudos.get(jid) ?? "?") : "À venir";
+    jid ? (pseudos.get(jid) ?? nomsEquipes.get(jid) ?? "?") : "À venir";
+
+  /** Les deux camps d'un match : équipes si présentes, joueurs sinon. */
+  const camps = (m: MatchRow) => ({
+    c1: m.equipe1_id ?? m.joueur1_id,
+    c2: m.equipe2_id ?? m.joueur2_id,
+    gagnant: m.equipe_gagnante_id ?? m.gagnant_id,
+  });
 
   const nbCheckIn = participations.filter((p) => p.check_in).length;
   const finale = matchFinal(matchs);
   const champion =
     tournoi.statut !== "BROUILLON" && finale?.statut === "VALIDE"
-      ? pseudo(finale.gagnant_id)
+      ? pseudo(finale.equipe_gagnante_id ?? finale.gagnant_id)
       : null;
 
   return (
@@ -448,26 +459,26 @@ export default async function PageTournoi({
                           <div className="text-sm">
                             <span
                               className={
-                                m.gagnant_id &&
-                                m.gagnant_id === m.joueur1_id
+                                camps(m).gagnant &&
+                                camps(m).gagnant === camps(m).c1
                                   ? "font-bold text-arena-green"
                                   : "font-semibold"
                               }
                             >
-                              {pseudo(m.joueur1_id)}
+                              {pseudo(camps(m).c1)}
                             </span>
                             <span className="mx-2 text-arena-faint">
                               {m.score_j1 ?? ""} vs {m.score_j2 ?? ""}
                             </span>
                             <span
                               className={
-                                m.gagnant_id &&
-                                m.gagnant_id === m.joueur2_id
+                                camps(m).gagnant &&
+                                camps(m).gagnant === camps(m).c2
                                   ? "font-bold text-arena-green"
                                   : "font-semibold"
                               }
                             >
-                              {m.is_bye ? "(bye)" : pseudo(m.joueur2_id)}
+                              {m.is_bye ? "(bye)" : pseudo(camps(m).c2)}
                             </span>
                           </div>
 
@@ -476,7 +487,7 @@ export default async function PageTournoi({
                               <span className="rounded-full bg-arena-green-pale px-3 py-1 text-xs font-semibold text-arena-green">
                                 Validé
                               </span>
-                            ) : m.joueur1_id && m.joueur2_id ? (
+                            ) : camps(m).c1 && camps(m).c2 ? (
                               <>
                                 <form
                                   action={saisirScore}

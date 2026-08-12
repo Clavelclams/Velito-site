@@ -34,13 +34,28 @@ export default async function PageClassement() {
 
     if (tournois && tournois.length > 0) {
       const ids = tournois.map((t) => (t as Pick<Tournoi, "id">).id);
-      const [{ data: matchsData }, { data: joueursData }] = await Promise.all([
-        supabase.schema("arena").from("matchs").select("*").in("tournoi_id", ids),
-        supabase
-          .schema("arena")
-          .from("joueurs")
-          .select("id, pseudo, profil_public"),
-      ]);
+      const [{ data: matchsData }, { data: joueursData }, { data: equipesData }] =
+        await Promise.all([
+          supabase.schema("arena").from("matchs").select("*").in("tournoi_id", ids),
+          supabase
+            .schema("arena")
+            .from("joueurs")
+            .select("id, pseudo, profil_public"),
+          // Compositions d'équipes : au padel, les points du tournoi vont à
+          // chaque membre de la paire vainqueur, pas à un identifiant d'équipe
+          // qui n'aurait aucun sens dans un classement de JOUEURS.
+          supabase
+            .schema("arena")
+            .from("equipes")
+            .select("id, membres:equipes_membres(joueur_id)")
+            .in("tournoi_id", ids),
+        ]);
+
+      const membresParEquipe = new Map(
+        ((equipesData ?? []) as { id: string; membres: { joueur_id: string }[] }[]).map(
+          (e) => [e.id, (e.membres ?? []).map((mb) => mb.joueur_id)]
+        )
+      );
 
       for (const j of (joueursData ?? []) as Pick<
         Joueur,
@@ -55,7 +70,7 @@ export default async function PageClassement() {
         liste.push(m);
         parTournoi.set(m.tournoi_id, liste);
       }
-      lignes = calculerClassement([...parTournoi.values()]).filter(
+      lignes = calculerClassement([...parTournoi.values()], membresParEquipe).filter(
         // Mode restreint mineurs : jamais dans un classement public.
         (l) => pseudos.get(l.joueurId)?.public !== false
       );
