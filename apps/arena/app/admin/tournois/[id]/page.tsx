@@ -198,7 +198,18 @@ export default async function PageTournoi({
         </h2>
 
         {(tournoi.statut === "BROUILLON" || tournoi.statut === "OUVERT") && (
-          <form action={ajouterJoueurStaff} className="mb-4 flex gap-2">
+          // La `key` change à chaque ajout : React démonte puis remonte le
+          // formulaire, ce qui vide le champ non contrôlé. Sans ça le pseudo
+          // précédent reste affiché et le staff écrit à la suite — bug réel
+          // constaté au test du 12/08/2026 (« Fanny » + « Gaspard » ont créé
+          // un joueur « FannyGaspard »). Alternative écartée : passer le champ
+          // en composant client avec useState, pour ne pas ajouter d'état
+          // client là où une clé suffit.
+          <form
+            key={`ajout-joueur-${participations.length}`}
+            action={ajouterJoueurStaff}
+            className="mb-4 flex gap-2"
+          >
             <input type="hidden" name="tournoi_id" value={tournoi.id} />
             <input
               name="pseudo"

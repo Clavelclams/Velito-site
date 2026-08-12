@@ -29,8 +29,18 @@ function perdantDe(m: MatchRow): string | null {
 }
 
 /** Résultat d'UN tournoi : qui marque combien (simple ET double élimination). */
-export function pointsDuTournoi(matchs: MatchRow[]): Map<string, number> {
+export function pointsDuTournoi(tousLesMatchs: MatchRow[]): Map<string, number> {
   const points = new Map<string, number>();
+
+  // Les matchs de POULE (bracket 'P') ne rapportent aucun point : seule la
+  // phase à élimination directe classe. Il faut les écarter AVANT tout calcul,
+  // car leur `round` est un numéro de JOURNÉE (1, 2, 3…), pas une profondeur
+  // de bracket. Les laisser fausse `Math.max(round)` et donc la détection de
+  // la finale.
+  // Bug réel constaté en prod le 12/08/2026 sur « Test poules 8 joueurs » :
+  // le vainqueur d'un match de la 3e journée de poule était sacré champion,
+  // et la vraie championne (Aya) n'apparaissait pas au classement.
+  const matchs = tousLesMatchs.filter((m) => (m.bracket ?? "W") !== "P");
   if (matchs.length === 0) return points;
 
   const ajouter = (joueurId: string | null, pts: number) => {
