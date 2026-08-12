@@ -24,7 +24,7 @@ export default function ClassementsPoules({ matchs, pseudo, nbQualifies }: Props
 
   return (
     <section>
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-gray-500">
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-arena-faint">
         Classements des poules
       </h2>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -48,15 +48,15 @@ export default function ClassementsPoules({ matchs, pseudo, nbQualifies }: Props
           return (
             <div
               key={numero}
-              className="rounded-lg border border-arena-border bg-arena-surface p-4"
+              className="rounded-lg border border-arena-border bg-arena-surface shadow-carte p-4"
             >
               <h3 className="mb-2 flex items-center justify-between text-sm font-bold text-arena-lilac">
                 Poule {lettrePoule(numero)}
                 <span
                   className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
                     terminee
-                      ? "bg-arena-green/10 text-arena-green"
-                      : "bg-white/5 text-gray-500"
+                      ? "bg-arena-green-pale text-arena-green"
+                      : "bg-arena-surface text-arena-faint"
                   }`}
                 >
                   {terminee ? "Terminée" : "En cours"}
@@ -64,7 +64,7 @@ export default function ClassementsPoules({ matchs, pseudo, nbQualifies }: Props
               </h3>
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-xs uppercase tracking-wider text-gray-500">
+                  <tr className="text-xs uppercase tracking-wider text-arena-faint">
                     <th className="pb-1 text-left font-medium">Joueur</th>
                     <th className="pb-1 text-right font-medium" title="Matchs joués">
                       J
@@ -86,23 +86,23 @@ export default function ClassementsPoules({ matchs, pseudo, nbQualifies }: Props
                       key={l.joueurId}
                       className={
                         i < nbQualifies
-                          ? "border-l-2 border-arena-green/60"
+                          ? "border-l-2 border-arena-green"
                           : "opacity-70"
                       }
                     >
                       <td className="py-1 pl-2 font-semibold">
                         {pseudo(l.joueurId)}
                       </td>
-                      <td className="py-1 text-right text-gray-400">{l.joues}</td>
+                      <td className="py-1 text-right text-arena-muted">{l.joues}</td>
                       <td className="py-1 text-right font-bold">{l.victoires}</td>
-                      <td className="py-1 text-right text-gray-400">
+                      <td className="py-1 text-right text-arena-muted">
                         {l.difference > 0 ? `+${l.difference}` : l.difference}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              <p className="mt-2 text-xs text-gray-600">
+              <p className="mt-2 text-xs text-arena-faint">
                 Les {nbQualifies} premiers sont qualifiés.
               </p>
             </div>

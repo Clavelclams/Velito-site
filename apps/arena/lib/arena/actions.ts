@@ -785,3 +785,101 @@ export async function validerScore(formData: FormData) {
     redirectionErreur(`/admin/tournois/${tournoiId}`, e);
   }
 }
+
+// ---------- Répartition des joueurs (glisser-déposer ou clic) ----------
+
+/**
+ * Enregistre l'ORDRE des inscrits et, le cas échéant, leur appartenance à une
+ * équipe. Appelée par le composant client `RepartitionJoueurs`.
+ *
+ * Trois choix à savoir défendre :
+ *
+ *  1. On reçoit la répartition COMPLÈTE, pas un déplacement isolé. Le serveur
+ *     n'a donc jamais à deviner un état intermédiaire, et si deux membres du
+ *     staff manipulent la même liste en même temps, le dernier gagne de façon
+ *     visible plutôt que de produire un mélange incohérent.
+ *
+ *  2. Elle RETOURNE un résultat au lieu de rediriger. Toutes les autres
+ *     actions redirigent avec ?erreur=... parce qu'elles sont déclenchées par
+ *     un <form> classique. Ici l'appel vient de JavaScript : rediriger ferait
+ *     perdre la position dans la page en plein tri. Le composant affiche le
+ *     message et revient à l'état précédent.
+ *
+ *  3. Elle est refusée dès que le tournoi est lancé. Réordonner des têtes de
+ *     série une fois le bracket généré ne changerait rien au bracket : ce
+ *     serait une action sans effet, donc un piège pour l'utilisateur.
+ */
+export async function enregistrerRepartition(
+  tournoiId: string,
+  repartition: { joueurId: string; colonneId: string | null; ordre: number }[]
+): Promise<{ ok: boolean; message?: string }> {
+  try {
+    const ctx = await requireStaff();
+    const tournoi = await chargerTournoiDeLOrga(tournoiId, ctx);
+
+    if (tournoi.statut !== "BROUILLON" && tournoi.statut !== "OUVERT") {
+      return {
+        ok: false,
+        message:
+          "Le tournoi est déjà lancé : l'ordre des joueurs n'a plus d'effet sur le bracket.",
+      };
+    }
+
+    const db = getServiceClient();
+
+    // 1. L'ordre d'affichage, une ligne à la fois. Le volume est de l'ordre
+    // de quelques dizaines de participants : une boucle est plus lisible
+    // qu'un upsert de masse, et le coût est négligeable.
+    for (const ligne of repartition) {
+      const { error } = await db
+        .schema("arena")
+        .from("participations")
+        .update({ ordre: ligne.ordre })
+        .eq("tournoi_id", tournoiId)
+        .eq("joueur_id", ligne.joueurId);
+      if (error) throw new Error(error.message);
+    }
+
+    // 2. Les équipes, seulement pour un tournoi par équipes. On repart de zéro
+    // à chaque enregistrement : supprimer puis réinsérer est ici plus sûr que
+    // de calculer un différentiel, car la contrainte UNIQUE (tournoi, joueur)
+    // rejetterait un déplacement fait dans le mauvais ordre.
+    if ((tournoi.taille_equipe ?? 1) > 1) {
+      const { error: erreurPurge } = await db
+        .schema("arena")
+        .from("equipes_membres")
+        .delete()
+        .eq("tournoi_id", tournoiId);
+      if (erreurPurge) throw new Error(erreurPurge.message);
+
+      const membres = repartition
+        .filter((l) => l.colonneId !== null)
+        .map((l) => ({
+          tournoi_id: tournoiId,
+          equipe_id: l.colonneId as string,
+          joueur_id: l.joueurId,
+        }));
+
+      if (membres.length > 0) {
+        const { error } = await db
+          .schema("arena")
+          .from("equipes_membres")
+          .insert(membres);
+        if (error) throw new Error(error.message);
+      }
+    }
+
+    await log(ctx.userId, "REPARTITION_MODIFIEE", tournoiId, null, {
+      nb_joueurs: repartition.length,
+      nb_places: repartition.filter((l) => l.colonneId !== null).length,
+    });
+
+    revalidatePath(`/admin/tournois/${tournoiId}`);
+    return { ok: true };
+  } catch (e) {
+    return {
+      ok: false,
+      message: e instanceof Error ? e.message : "Enregistrement impossible.",
+    };
+  }
+}

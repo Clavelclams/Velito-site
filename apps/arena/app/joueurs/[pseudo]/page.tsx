@@ -102,16 +102,16 @@ export default async function PageJoueur({
           ARENA · Profil joueur
         </p>
         <h1 className="mt-1 text-3xl font-black">{joueur.pseudo}</h1>
-        <p className="mt-3 flex gap-4 text-sm text-gray-400">
+        <p className="mt-3 flex gap-4 text-sm text-arena-muted">
           <span>
-            <span className="font-bold text-white">{points}</span> pts
+            <span className="font-bold text-arena-ink">{points}</span> pts
           </span>
           <span>
-            <span className="font-bold text-white">{titres}</span> titre
+            <span className="font-bold text-arena-ink">{titres}</span> titre
             {titres > 1 ? "s" : ""}
           </span>
           <span>
-            <span className="font-bold text-white">{historique.length}</span>{" "}
+            <span className="font-bold text-arena-ink">{historique.length}</span>{" "}
             tournoi{historique.length > 1 ? "s" : ""}
           </span>
         </p>
@@ -119,7 +119,7 @@ export default async function PageJoueur({
 
       {badges.length > 0 && (
         <section className="mb-8">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-gray-500">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-arena-faint">
             Badges
           </h2>
           <ul className="flex flex-wrap gap-2">
@@ -127,7 +127,7 @@ export default async function PageJoueur({
               <li
                 key={b.nom}
                 title={b.description ?? undefined}
-                className="rounded-full border border-arena-gold/40 bg-arena-gold/10 px-3 py-1 text-sm font-semibold text-arena-gold"
+                className="rounded-full border border-arena-gold/30 bg-arena-gold-pale px-3 py-1 text-sm font-semibold text-arena-gold"
               >
                 {b.nom}
               </li>
@@ -137,11 +137,11 @@ export default async function PageJoueur({
       )}
 
       <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-gray-500">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-arena-faint">
           Parcours
         </h2>
         {historique.length === 0 ? (
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-arena-faint">
             Aucun tournoi public pour l&apos;instant.
           </p>
         ) : (
@@ -150,16 +150,16 @@ export default async function PageJoueur({
               <li key={t.id}>
                 <a
                   href={`/t/${t.qr_token}`}
-                  className="flex items-center justify-between rounded-lg border border-arena-border bg-arena-surface px-4 py-3 transition-colors hover:border-arena-violet/50"
+                  className="flex items-center justify-between rounded-lg border border-arena-border bg-arena-surface shadow-carte px-4 py-3 transition-colors hover:border-arena-violet/50"
                 >
                   <span>
                     <span className="font-bold">{t.titre}</span>
-                    <span className="ml-2 text-sm text-gray-400">
+                    <span className="ml-2 text-sm text-arena-muted">
                       {t.jeu} ·{" "}
                       {new Date(t.date_debut).toLocaleDateString("fr-FR")}
                     </span>
                   </span>
-                  <span className="rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-gray-300">
+                  <span className="rounded-full bg-arena-surface px-3 py-1 text-xs font-semibold text-arena-muted">
                     {t.statut === "TERMINE" ? "Terminé" : t.statut}
                   </span>
                 </a>
@@ -169,12 +169,12 @@ export default async function PageJoueur({
         )}
       </section>
 
-      <footer className="mt-12 text-center text-xs text-gray-600">
-        <a href="/classement" className="underline hover:text-gray-400">
+      <footer className="mt-12 text-center text-xs text-arena-faint">
+        <a href="/classement" className="underline hover:text-arena-muted">
           Classement
         </a>{" "}
         ·{" "}
-        <a href="/" className="underline hover:text-gray-400">
+        <a href="/" className="underline hover:text-arena-muted">
           Tournois
         </a>
       </footer>

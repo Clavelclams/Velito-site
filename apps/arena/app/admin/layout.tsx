@@ -24,10 +24,10 @@ export default async function AdminLayout({
         <h1 className="text-2xl font-black">
           Espace orga<span className="text-arena-violet">.</span>
         </h1>
-        <p className="mt-4 text-gray-400">
+        <p className="mt-4 text-arena-muted">
           L&apos;application n&apos;est pas encore reliée à sa base de données.
         </p>
-        <p className="mt-2 text-sm text-gray-500">
+        <p className="mt-2 text-sm text-arena-faint">
           Pour l&apos;administrateur : variables d&apos;environnement Supabase
           manquantes sur ce déploiement (voir <code>.env.example</code>).
         </p>
@@ -45,19 +45,19 @@ export default async function AdminLayout({
         <h1 className="text-2xl font-black">
           Espace orga<span className="text-arena-violet">.</span>
         </h1>
-        <p className="mt-4 text-gray-400">
+        <p className="mt-4 text-arena-muted">
           Accès réservé au staff. Connecte-toi avec ton compte Velito, puis
           reviens ici.
         </p>
         <a
           href={hubLogin}
-          className="mt-6 inline-block rounded-lg bg-arena-violet px-5 py-2.5 font-semibold text-white hover:bg-arena-violet/80"
+          className="mt-6 inline-block rounded-lg bg-arena-violet px-5 py-2.5 font-semibold text-white hover:bg-arena-violet-fonce"
         >
           Se connecter via le hub
         </a>
-        <p className="mt-4 text-xs text-gray-600">
-          Connecté mais bloqué ? Ton compte n&apos;est pas encore membre staff —
-          demande à un admin ARENA.
+        <p className="mt-4 text-xs text-arena-faint">
+          Connecté mais bloqué ? Ton compte n&apos;est pas encore membre du staff.
+          Demande à un admin ARENA de t&apos;ajouter.
         </p>
       </div>
     );
@@ -65,14 +65,14 @@ export default async function AdminLayout({
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
-      <header className="mb-8 flex items-center justify-between border-b border-arena-border pb-4">
+      <header className="mb-8 flex flex-wrap items-center justify-between gap-3 border-b border-arena-border pb-4">
         <a href="/admin/tournois" className="font-black">
           ARENA{" "}
-          <span className="text-gray-500">
+          <span className="text-arena-faint">
             · {ctx.organisations.map((o) => o.name).join(" · ")}
           </span>
         </a>
-        <a href="/" className="text-sm text-gray-400 hover:text-white">
+        <a href="/" className="text-sm text-arena-muted hover:text-arena-ink">
           Site public →
         </a>
       </header>

@@ -12,7 +12,7 @@ import { calculerClassement } from "@/lib/arena/classement";
 import type { Joueur, MatchRow, Tournoi } from "@/lib/arena/types";
 
 export const metadata = {
-  title: "Classement — ARENA",
+  title: "Classement · ARENA",
   description:
     "Classement des joueurs ARENA : points cumulés sur les tournois esport (champion +3, finaliste +2, top 4 +1).",
 };
@@ -69,15 +69,15 @@ export default async function PageClassement() {
           ARENA · Esport
         </p>
         <h1 className="mt-1 text-3xl font-black">Classement</h1>
-        <p className="mt-2 text-sm text-gray-400">
+        <p className="mt-2 text-sm text-arena-muted">
           Points cumulés sur les tournois terminés : champion +3, finaliste +2,
           top 4 +1. Les résultats ne se perdent plus.
         </p>
       </header>
 
       {lignes.length === 0 ? (
-        <div className="rounded-lg border border-arena-border bg-arena-surface p-8 text-center text-gray-500">
-          Aucun tournoi terminé pour l&apos;instant — le classement naîtra avec
+        <div className="rounded-lg border border-arena-border bg-arena-surface shadow-carte p-8 text-center text-arena-faint">
+          Aucun tournoi terminé pour l&apos;instant. Le classement démarrera avec
           le premier champion.
         </div>
       ) : (
@@ -86,7 +86,7 @@ export default async function PageClassement() {
             <li key={l.joueurId}>
               <a
                 href={`/joueurs/${encodeURIComponent(pseudos.get(l.joueurId)?.pseudo ?? "")}`}
-                className="flex items-center justify-between rounded-lg border border-arena-border bg-arena-surface px-4 py-3 transition-colors hover:border-arena-violet/50"
+                className="flex items-center justify-between rounded-lg border border-arena-border bg-arena-surface shadow-carte px-4 py-3 transition-colors hover:border-arena-violet/50"
               >
                 <span className="flex items-center gap-3">
                   <span
@@ -95,7 +95,7 @@ export default async function PageClassement() {
                         ? "text-arena-gold"
                         : i < 3
                           ? "text-arena-lilac"
-                          : "text-gray-500"
+                          : "text-arena-faint"
                     }`}
                   >
                     #{i + 1}
@@ -109,8 +109,8 @@ export default async function PageClassement() {
                     </span>
                   )}
                 </span>
-                <span className="text-sm text-gray-400">
-                  <span className="font-bold text-white">{l.points}</span> pts ·{" "}
+                <span className="text-sm text-arena-muted">
+                  <span className="font-bold text-arena-ink">{l.points}</span> pts ·{" "}
                   {l.tournoisComptes} tournoi{l.tournoisComptes > 1 ? "s" : ""}
                 </span>
               </a>
@@ -119,8 +119,8 @@ export default async function PageClassement() {
         </ol>
       )}
 
-      <footer className="mt-12 text-center text-xs text-gray-600">
-        <a href="/" className="underline hover:text-gray-400">
+      <footer className="mt-12 text-center text-xs text-arena-faint">
+        <a href="/" className="underline hover:text-arena-muted">
           ← Retour aux tournois
         </a>
       </footer>

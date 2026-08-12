@@ -48,7 +48,7 @@ export default async function PageQR({
           ARENA · Velito
         </p>
         <h1 className="mt-1 text-2xl font-black">{tournoi.titre}</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-arena-faint">
           {tournoi.jeu} · {new Date(tournoi.date_debut).toLocaleDateString("fr-FR")}
         </p>
         {/* eslint-disable-next-line @next/next/no-img-element -- data URL générée serveur, next/image inutile ici */}
@@ -60,24 +60,24 @@ export default async function PageQR({
         <p className="mt-3 text-sm font-semibold">
           📱 Scanne pour suivre le bracket en direct
         </p>
-        <p className="mt-1 break-all text-xs text-gray-400">{urlPublique}</p>
+        <p className="mt-1 break-all text-xs text-arena-muted">{urlPublique}</p>
       </div>
 
       <div className="mt-6 flex justify-center gap-3 print:hidden">
         <a
           href={`/admin/tournois/${tournoi.id}`}
-          className="rounded-lg border border-arena-border px-4 py-2 text-sm text-gray-300 hover:text-white"
+          className="rounded-lg border border-arena-border px-4 py-2 text-sm text-arena-muted hover:text-arena-ink"
         >
           ← Retour au tournoi
         </a>
         <a
           href={urlPublique}
-          className="rounded-lg border border-arena-border px-4 py-2 text-sm text-gray-300 hover:text-white"
+          className="rounded-lg border border-arena-border px-4 py-2 text-sm text-arena-muted hover:text-arena-ink"
         >
           Voir la page publique
         </a>
       </div>
-      <p className="mt-3 text-xs text-gray-600 print:hidden">
+      <p className="mt-3 text-xs text-arena-faint print:hidden">
         Astuce : Ctrl+P pour imprimer cette page et l&apos;afficher à
         l&apos;entrée de la salle.
       </p>

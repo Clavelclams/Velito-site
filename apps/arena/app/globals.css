@@ -3,9 +3,48 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  /* Indique au navigateur que l'interface est claire : champs natifs, barres
+     de défilement et sélecteurs de date suivent automatiquement, sans une
+     ligne de CSS de plus. */
+  color-scheme: light;
 }
 
 body {
-  @apply bg-arena-bg text-gray-100 antialiased;
+  @apply bg-arena-bg text-arena-ink antialiased;
+}
+
+/* Anneau de focus visible et homogène. Beaucoup de sites le suppriment parce
+   qu'ils le trouvent laid : c'est exactement ce qui rend un site inutilisable
+   au clavier. On le garde, on le rend juste propre. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  @apply outline-none ring-2 ring-arena-violet ring-offset-2 ring-offset-arena-bg;
+}
+
+/* Cible tactile minimale de 44 px sur téléphone (recommandation WCAG 2.5.5).
+   Le jour J la saisie se fait debout, une main sur le téléphone : un bouton
+   de 28 px se rate une fois sur trois. */
+@media (max-width: 640px) {
+  button,
+  [role="button"] {
+    min-height: 44px;
+  }
+}
+
+/* Le glisser-déposer sélectionne le texte au passage et donne un rendu sale.
+   On neutralise la sélection uniquement sur les cartes déplaçables. */
+[draggable="true"] {
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+@media print {
+  /* Impression d'une feuille de match ou d'un QR code : on retire fonds et
+     navigation, on garde le contenu. Devenu gratuit avec un fond blanc. */
+  body {
+    @apply bg-white text-black;
+  }
+  .sans-impression {
+    display: none !important;
+  }
 }

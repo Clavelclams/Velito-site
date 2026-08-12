@@ -56,7 +56,7 @@ export default async function PagePubliqueTournoi({
   for (const p of participations) {
     if (p.joueur) pseudos.set(p.joueur_id, (p.joueur as Joueur).pseudo);
   }
-  const pseudo = (jid: string | null) => (jid ? (pseudos.get(jid) ?? "?") : "—");
+  const pseudo = (jid: string | null) => (jid ? (pseudos.get(jid) ?? "?") : "À venir");
 
   const finale = matchFinal(matchs);
   const champion = finale?.statut === "VALIDE" ? pseudo(finale.gagnant_id) : null;
@@ -70,14 +70,14 @@ export default async function PagePubliqueTournoi({
           ARENA · Velito
         </p>
         <h1 className="mt-1 text-3xl font-black">{tournoi.titre}</h1>
-        <p className="mt-2 text-sm text-gray-400">
+        <p className="mt-2 text-sm text-arena-muted">
           {tournoi.jeu} · {new Date(tournoi.date_debut).toLocaleString("fr-FR")}
           {tournoi.lieu ? ` · ${tournoi.lieu}` : ""}
         </p>
         <p className="mt-2 text-sm">
-          <span className="rounded-full bg-white/5 px-3 py-1 font-semibold text-gray-300">
+          <span className="rounded-full bg-arena-surface px-3 py-1 font-semibold text-arena-muted">
             {tournoi.statut === "EN_COURS"
-              ? "🔴 En cours — mise à jour automatique"
+              ? "🔴 En cours, mise à jour automatique"
               : tournoi.statut === "OUVERT"
                 ? "Inscriptions ouvertes"
                 : tournoi.statut}
@@ -86,7 +86,7 @@ export default async function PagePubliqueTournoi({
       </header>
 
       {champion && (
-        <p className="mb-8 rounded-lg border border-arena-gold/40 bg-arena-gold/10 p-4 text-center text-lg font-bold text-arena-gold">
+        <p className="mb-8 rounded-lg border border-arena-gold/30 bg-arena-gold-pale p-4 text-center text-lg font-bold text-arena-gold">
           🏆 Champion : {champion}
         </p>
       )}
@@ -110,7 +110,7 @@ export default async function PagePubliqueTournoi({
                 {groupe.matchs.map((m) => (
                     <li
                       key={m.id}
-                      className="flex items-center justify-between rounded-lg border border-arena-border bg-arena-surface px-4 py-3 text-sm"
+                      className="flex items-center justify-between rounded-lg border border-arena-border bg-arena-surface shadow-carte px-4 py-3 text-sm"
                     >
                       <span
                         className={
@@ -121,9 +121,9 @@ export default async function PagePubliqueTournoi({
                       >
                         {pseudo(m.joueur1_id)}
                       </span>
-                      <span className="mx-3 font-mono text-gray-400">
+                      <span className="mx-3 font-mono text-arena-muted">
                         {m.statut === "VALIDE" || m.statut === "TERMINE"
-                          ? `${m.score_j1 ?? "·"} — ${m.score_j2 ?? "·"}`
+                          ? `${m.score_j1 ?? "·"} - ${m.score_j2 ?? "·"}`
                           : "vs"}
                       </span>
                       <span
@@ -143,13 +143,13 @@ export default async function PagePubliqueTournoi({
         </section>
       ) : (
         <section>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-gray-500">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-arena-faint">
             Joueurs inscrits ({participations.length})
           </h2>
           {participations.length === 0 ? (
-            <p className="text-sm text-gray-500">
-              Pas encore d&apos;inscrits — le bracket apparaîtra ici au
-              lancement du tournoi.
+            <p className="text-sm text-arena-faint">
+              Pas encore d&apos;inscrits. Le bracket apparaîtra ici au lancement du
+              tournoi.
             </p>
           ) : (
             <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -159,7 +159,7 @@ export default async function PagePubliqueTournoi({
                   <li key={p.id}>
                     <a
                       href={ps ? `/joueurs/${encodeURIComponent(ps)}` : "#"}
-                      className="block rounded-lg border border-arena-border bg-arena-surface px-3 py-2 text-center text-sm font-semibold transition-colors hover:border-arena-violet/50"
+                      className="block rounded-lg border border-arena-border bg-arena-surface shadow-carte px-3 py-2 text-center text-sm font-semibold transition-colors hover:border-arena-violet/50"
                     >
                       {ps ?? "?"}
                     </a>
@@ -171,12 +171,12 @@ export default async function PagePubliqueTournoi({
         </section>
       )}
 
-      <footer className="mt-12 text-center text-xs text-gray-600">
-        <a href={`/api/export/${tournoi.qr_token}`} className="underline hover:text-gray-400">
+      <footer className="mt-12 text-center text-xs text-arena-faint">
+        <a href={`/api/export/${tournoi.qr_token}`} className="underline hover:text-arena-muted">
           Exporter les résultats (JSON)
         </a>
         {" · "}
-        <a href="/" className="underline hover:text-gray-400">
+        <a href="/" className="underline hover:text-arena-muted">
           Tous les tournois
         </a>
       </footer>
