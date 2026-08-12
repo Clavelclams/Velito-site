@@ -3,9 +3,17 @@
   "ui": "tui",
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**"],
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env*"
+      ],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**"
+      ],
       "env": [
         "NODE_ENV",
         "VERCEL",
@@ -18,13 +26,11 @@
         "NEXT_PUBLIC_INTERACTIVE_URL",
         "NEXT_PUBLIC_ARENA_URL",
         "NEXT_PUBLIC_PREVENTION_URL",
+        "NEXT_PUBLIC_COURS_URL",
         "SUPABASE_URL",
-        "SUPABASE_ANON_KEY",
         "NEXT_PUBLIC_SUPABASE_URL",
         "NEXT_PUBLIC_SUPABASE_ANON_KEY",
         "SUPABASE_SERVICE_ROLE_KEY",
-        "COOKIE_DOMAIN",
-        "NEXT_PUBLIC_HUB_LOGIN_URL",
         "DATABASE_URL",
         "OAUTH_ISSUER",
         "RESEND_API_KEY",
@@ -42,10 +48,14 @@
       ]
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "dependsOn": [
+        "^lint"
+      ]
     },
     "check-types": {
-      "dependsOn": ["^check-types"]
+      "dependsOn": [
+        "^check-types"
+      ]
     },
     "dev": {
       "cache": false,

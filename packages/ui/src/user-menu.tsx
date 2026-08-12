@@ -219,6 +219,21 @@ function ConnectedMenu({
             Mon compte Velito
           </a>
 
+          {/* Velito Cours — n'apparaît QUE si l'app définit NEXT_PUBLIC_COURS_URL.
+              Les NEXT_PUBLIC_* sont inlinées au build : pas de variable → le
+              bloc n'existe pas, les autres apps ne changent pas. L'accès réel
+              reste protégé par le middleware de cours (liste blanche) — ce
+              lien est de la navigation, pas une autorisation. */}
+          {process.env.NEXT_PUBLIC_COURS_URL && (
+            <a
+              role="menuitem"
+              href={process.env.NEXT_PUBLIC_COURS_URL}
+              className="block px-4 py-2.5 text-sm text-white/80 transition hover:bg-white/[0.06] hover:text-white"
+            >
+              🎓 Velito Cours
+            </a>
+          )}
+
           <div className="my-1 h-px bg-white/5" aria-hidden="true" />
 
           {/* Form logout — POST vers hub avec return=URL actuelle */}
