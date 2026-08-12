@@ -1,3 +1,6 @@
+import EnteteSite from "@/components/EnteteSite";
+import PiedSite from "@/components/PiedSite";
+
 /**
  * Règlement type des tournois ARENA — statique, comme la prévention.
  * Un règlement publié = un tournoi sérieux : les décisions d'arbitrage
@@ -11,7 +14,9 @@ export const metadata = {
 
 export default function PageReglement() {
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12">
+    <>
+      <EnteteSite />
+      <main className="mx-auto max-w-2xl px-4 py-12">
       <header className="mb-10">
         <p className="text-xs font-semibold uppercase tracking-widest text-arena-lilac">
           ARENA · Règlement type
@@ -94,11 +99,8 @@ export default function PageReglement() {
         </section>
       </div>
 
-      <footer className="mt-12 text-center text-xs text-arena-faint">
-        <a href="/" className="underline hover:text-arena-muted">
-          ← Retour aux tournois
-        </a>
-      </footer>
-    </div>
+      </main>
+      <PiedSite />
+    </>
   );
 }

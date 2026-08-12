@@ -1,3 +1,6 @@
+import EnteteSite from "@/components/EnteteSite";
+import PiedSite from "@/components/PiedSite";
+
 /**
  * Page prévention — contenu STATIQUE (décision du cadrage V1 : pas de module
  * dynamique, un contenu sérieux suffit et c'est un vrai plus pour les dossiers
@@ -12,7 +15,9 @@ export const metadata = {
 
 export default function PagePrevention() {
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12">
+    <>
+      <EnteteSite />
+      <main className="mx-auto max-w-2xl px-4 py-12">
       <header className="mb-10">
         <p className="text-xs font-semibold uppercase tracking-widest text-arena-lilac">
           ARENA · Esport responsable
@@ -89,11 +94,8 @@ export default function PagePrevention() {
         </section>
       </div>
 
-      <footer className="mt-12 text-center text-xs text-arena-faint">
-        <a href="/" className="underline hover:text-arena-muted">
-          ← Retour aux tournois
-        </a>
-      </footer>
-    </div>
+      </main>
+      <PiedSite />
+    </>
   );
 }

@@ -14,11 +14,13 @@ import { getServiceClient } from "@/lib/supabase/service";
 import {
   ajouterJoueurStaff,
   changerStatutTournoi,
+  creerEquipe,
   demarrerTournoi,
   enregistrerRepartition,
   genererPhaseFinale,
   saisirScore,
   signalerLitige,
+  supprimerEquipe,
   toggleCheckIn,
   validerScore,
 } from "@/lib/arena/actions";
@@ -323,6 +325,71 @@ export default async function PageTournoi({
             ))}
           </ul>
         )}
+
+        {/* ---------- Équipes (tournois sport) ----------
+            Créées vides puis remplies par glisser-déposer : le jour J les
+            équipes se forment au fil des arrivées, exiger une saisie complète
+            d'un coup bloquerait le staff jusqu'au dernier arrivant. */}
+        {estParEquipes &&
+          (tournoi.statut === "BROUILLON" || tournoi.statut === "OUVERT") && (
+            <div className="mt-6 border-t border-arena-border pt-6">
+              <h3 className="mb-3 text-sm font-semibold uppercase tracking-widest text-arena-faint">
+                Équipes ({equipes.length}) · {tournoi.taille_equipe} joueurs
+                chacune
+              </h3>
+
+              <form
+                key={`equipe-${equipes.length}`}
+                action={creerEquipe}
+                className="mb-4 flex flex-wrap gap-2"
+              >
+                <input type="hidden" name="tournoi_id" value={tournoi.id} />
+                <input
+                  name="nom"
+                  required
+                  maxLength={40}
+                  placeholder="Nom de l&apos;équipe (Les Kangourous…)"
+                  className={`${inputCls} min-w-[12rem] flex-1`}
+                />
+                <button
+                  className={`${btn} bg-arena-violet text-white hover:bg-arena-violet-fonce`}
+                >
+                  Ajouter une équipe
+                </button>
+              </form>
+
+              {equipes.length === 0 ? (
+                <p className="text-sm text-arena-faint">
+                  Crée d&apos;abord les équipes : le bracket les opposera entre
+                  elles, pas les joueurs un par un.
+                </p>
+              ) : (
+                <ul className="flex flex-wrap gap-2">
+                  {equipes.map((e) => (
+                    <li key={e.id}>
+                      <form
+                        action={supprimerEquipe}
+                        className="flex items-center gap-1.5 rounded-full border border-arena-border bg-arena-surface py-1 pl-3 pr-1.5 text-sm"
+                      >
+                        <input type="hidden" name="tournoi_id" value={tournoi.id} />
+                        <input type="hidden" name="equipe_id" value={e.id} />
+                        <span className="font-semibold">{e.nom}</span>
+                        <span className="text-arena-faint">
+                          {(e.membres ?? []).length}/{tournoi.taille_equipe}
+                        </span>
+                        <button
+                          title={`Supprimer l\u2019équipe ${e.nom}`}
+                          className="rounded-full px-2 text-arena-faint hover:text-arena-red"
+                        >
+                          ×
+                        </button>
+                      </form>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
 
         {/* ---------- Placement des joueurs ----------
             Visible uniquement tant que le bracket n'est pas généré : après le

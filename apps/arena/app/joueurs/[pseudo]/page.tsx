@@ -11,6 +11,8 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { pointsDuTournoi } from "@/lib/arena/classement";
 import type { Joueur, MatchRow, Tournoi } from "@/lib/arena/types";
+import EnteteSite from "@/components/EnteteSite";
+import PiedSite from "@/components/PiedSite";
 
 interface BadgeAffiche {
   nom: string;
@@ -96,7 +98,9 @@ export default async function PageJoueur({
     .sort((a, b) => (a.date_debut < b.date_debut ? 1 : -1));
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12">
+    <>
+      <EnteteSite />
+      <main className="mx-auto max-w-2xl px-4 py-12">
       <header className="mb-8">
         <p className="text-xs font-semibold uppercase tracking-widest text-arena-lilac">
           ARENA · Profil joueur
@@ -169,15 +173,8 @@ export default async function PageJoueur({
         )}
       </section>
 
-      <footer className="mt-12 text-center text-xs text-arena-faint">
-        <a href="/classement" className="underline hover:text-arena-muted">
-          Classement
-        </a>{" "}
-        ·{" "}
-        <a href="/" className="underline hover:text-arena-muted">
-          Tournois
-        </a>
-      </footer>
-    </div>
+      </main>
+      <PiedSite />
+    </>
   );
 }

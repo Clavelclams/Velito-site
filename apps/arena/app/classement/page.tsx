@@ -10,6 +10,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { calculerClassement } from "@/lib/arena/classement";
 import type { Joueur, MatchRow, Tournoi } from "@/lib/arena/types";
+import EnteteSite from "@/components/EnteteSite";
+import PiedSite from "@/components/PiedSite";
 
 export const metadata = {
   title: "Classement · ARENA",
@@ -63,7 +65,9 @@ export default async function PageClassement() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12">
+    <>
+      <EnteteSite />
+      <main className="mx-auto max-w-2xl px-4 py-12">
       <header className="mb-8">
         <p className="text-xs font-semibold uppercase tracking-widest text-arena-lilac">
           ARENA · Esport
@@ -119,11 +123,8 @@ export default async function PageClassement() {
         </ol>
       )}
 
-      <footer className="mt-12 text-center text-xs text-arena-faint">
-        <a href="/" className="underline hover:text-arena-muted">
-          ← Retour aux tournois
-        </a>
-      </footer>
-    </div>
+      </main>
+      <PiedSite />
+    </>
   );
 }

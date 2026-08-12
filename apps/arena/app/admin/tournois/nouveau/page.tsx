@@ -5,7 +5,7 @@
  * en base et redirige vers la page du tournoi.
  */
 import { creerTournoi } from "@/lib/arena/actions";
-import { JEUX_SUGGERES } from "@/lib/arena/jeux";
+import { DISCIPLINES } from "@/lib/arena/disciplines";
 import BandeauErreur from "@/components/BandeauErreur";
 
 const inputCls =
@@ -37,9 +37,67 @@ export default async function NouveauTournoi({
           />
         </div>
 
+        {/* Discipline : c'est elle qui décide si le tournoi est individuel
+            (esport) ou par équipes (padel, five). Deux boutons radio plutôt
+            qu'une liste déroulante : avec deux choix, une liste demande un clic
+            de plus et cache la moitié de l'information. */}
+        <fieldset>
+          <legend className="mb-1 block text-sm text-arena-muted">
+            Discipline *
+          </legend>
+          <div className="grid grid-cols-2 gap-3">
+            <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-arena-border p-3 has-[:checked]:border-arena-violet has-[:checked]:bg-arena-violet-pale">
+              <input
+                type="radio"
+                name="discipline"
+                value="ESPORT"
+                defaultChecked
+                className="mt-1"
+              />
+              <span>
+                <span className="block text-sm font-semibold">Esport</span>
+                <span className="block text-xs text-arena-faint">
+                  Jeu vidéo, tournoi individuel
+                </span>
+              </span>
+            </label>
+            <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-arena-border p-3 has-[:checked]:border-arena-violet has-[:checked]:bg-arena-violet-pale">
+              <input type="radio" name="discipline" value="SPORT" className="mt-1" />
+              <span>
+                <span className="block text-sm font-semibold">Sport physique</span>
+                <span className="block text-xs text-arena-faint">
+                  Padel, five, basket 3x3
+                </span>
+              </span>
+            </label>
+          </div>
+        </fieldset>
+
+        <div>
+          <label
+            htmlFor="taille_equipe"
+            className="mb-1 block text-sm text-arena-muted"
+          >
+            Si discipline « sport physique » : joueurs par équipe
+          </label>
+          <select id="taille_equipe" name="taille_equipe" defaultValue="2" className={inputCls}>
+            <option value="1">1 (individuel : tennis de table, badminton…)</option>
+            <option value="2">2 (padel en double, beach-volley)</option>
+            <option value="3">3 (basket 3x3)</option>
+            <option value="5">5 (five, football à 5)</option>
+            <option value="7">7 (football à 7)</option>
+            <option value="11">11 (football à 11)</option>
+          </select>
+          <p className="mt-1 text-xs text-arena-faint">
+            Ignoré si le tournoi est en esport. Au-delà d'un joueur par équipe,
+            le bracket oppose des ÉQUIPES : tu les composes ensuite depuis la
+            page du tournoi, en glissant les joueurs.
+          </p>
+        </div>
+
         <div>
           <label htmlFor="jeu" className="mb-1 block text-sm text-arena-muted">
-            Jeu *
+            Jeu ou discipline *
           </label>
           {/* datalist = autocomplétion native (zéro JS) adossée à une liste
               maîtrisée → données propres, mais saisie libre toujours possible
@@ -49,12 +107,14 @@ export default async function NouveauTournoi({
             name="jeu"
             required
             list="jeux-suggeres"
-            placeholder="Street Fighter 6, Rocket League…"
+            placeholder="Rocket League, Padel, Five…"
             className={inputCls}
           />
+          {/* La liste couvre maintenant les DEUX verticales : sans « Padel »
+              dans les suggestions, personne ne devine qu'ARENA sait le gérer. */}
           <datalist id="jeux-suggeres">
-            {JEUX_SUGGERES.map((j) => (
-              <option key={j} value={j} />
+            {DISCIPLINES.map((d) => (
+              <option key={d.jeu} value={d.jeu} />
             ))}
           </datalist>
         </div>

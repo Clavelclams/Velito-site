@@ -139,6 +139,20 @@ export async function creerTournoi(formData: FormData) {
         );
       }
     }
+    // --- Discipline et taille d'équipe (module sport, migration 004) ---
+    // Un tournoi esport reste individuel : la contrainte
+    // `tournois_discipline_taille_check` le garantit en base, on refuse ici
+    // en amont pour donner un message clair au lieu d'une erreur Postgres.
+    const discipline = String(formData.get("discipline") ?? "ESPORT");
+    if (discipline !== "ESPORT" && discipline !== "SPORT") {
+      throw new Error("Discipline inconnue (esport ou sport).");
+    }
+    const tailleEquipe =
+      discipline === "SPORT" ? Number(formData.get("taille_equipe") ?? 1) : 1;
+    if (!Number.isInteger(tailleEquipe) || tailleEquipe < 1 || tailleEquipe > 11) {
+      throw new Error("Taille d'équipe invalide (entre 1 et 11 joueurs).");
+    }
+
     const dateDebut = String(formData.get("date_debut") ?? "");
     const lieu = String(formData.get("lieu") ?? "").trim() || null;
     const maxJoueursRaw = String(formData.get("max_joueurs") ?? "").trim();
@@ -164,6 +178,8 @@ export async function creerTournoi(formData: FormData) {
         titre,
         jeu,
         format,
+        discipline,
+        taille_equipe: tailleEquipe,
         nb_poules: nbPoules,
         nb_qualifies_par_poule: nbQualifies,
         date_debut: new Date(dateDebut).toISOString(),
@@ -881,5 +897,91 @@ export async function enregistrerRepartition(
       ok: false,
       message: e instanceof Error ? e.message : "Enregistrement impossible.",
     };
+  }
+}
+
+// ---------- Équipes (module sport) ----------
+
+/**
+ * Crée une équipe vide dans un tournoi par équipes. Le staff la nomme, puis
+ * y glisse les joueurs depuis le bloc de répartition.
+ *
+ * Pourquoi une équipe VIDE d'abord, plutôt qu'un formulaire qui demanderait
+ * les quatre joueurs d'un coup : le jour J, les équipes se forment au fur et
+ * à mesure des arrivées. Imposer une saisie complète obligerait le staff à
+ * attendre que tout le monde soit là avant de commencer à saisir.
+ */
+export async function creerEquipe(formData: FormData) {
+  const tournoiId = String(formData.get("tournoi_id") ?? "");
+  try {
+    const ctx = await requireStaff();
+    const tournoi = await chargerTournoiDeLOrga(tournoiId, ctx);
+
+    if ((tournoi.taille_equipe ?? 1) < 2) {
+      throw new Error("Ce tournoi est individuel : il n'a pas d'équipes.");
+    }
+    if (tournoi.statut !== "BROUILLON" && tournoi.statut !== "OUVERT") {
+      throw new Error("Tournoi déjà lancé : la composition est figée.");
+    }
+
+    const nom = String(formData.get("nom") ?? "").trim().replace(/\s+/g, " ");
+    if (nom.length < 1 || nom.length > 40) {
+      throw new Error("Nom d'équipe : entre 1 et 40 caractères.");
+    }
+
+    const db = getServiceClient();
+    const { error } = await db
+      .schema("arena")
+      .from("equipes")
+      .insert({ tournoi_id: tournoiId, nom });
+
+    // 23505 = violation d'unicité. L'index UNIQUE (tournoi_id, nom) rend le
+    // doublon impossible en base ; on se contente de traduire le code Postgres
+    // en français plutôt que de faire un SELECT préalable, qui laisserait de
+    // toute façon passer deux créations simultanées.
+    if (error) {
+      throw new Error(
+        error.code === "23505"
+          ? `Une équipe s'appelle déjà « ${nom} » dans ce tournoi.`
+          : `Création impossible : ${error.message}`
+      );
+    }
+
+    await log(ctx.userId, "EQUIPE_CREEE", tournoiId, null, { nom });
+    revalidatePath(`/admin/tournois/${tournoiId}`);
+  } catch (e) {
+    redirectionErreur(`/admin/tournois/${tournoiId}`, e);
+  }
+}
+
+/**
+ * Supprime une équipe. Ses membres redeviennent « sans équipe » grâce au
+ * ON DELETE CASCADE de equipes_membres : rien à nettoyer côté application.
+ */
+export async function supprimerEquipe(formData: FormData) {
+  const tournoiId = String(formData.get("tournoi_id") ?? "");
+  try {
+    const ctx = await requireStaff();
+    const tournoi = await chargerTournoiDeLOrga(tournoiId, ctx);
+
+    if (tournoi.statut !== "BROUILLON" && tournoi.statut !== "OUVERT") {
+      throw new Error("Tournoi déjà lancé : la composition est figée.");
+    }
+
+    const equipeId = String(formData.get("equipe_id") ?? "");
+    const db = getServiceClient();
+    const { error } = await db
+      .schema("arena")
+      .from("equipes")
+      .delete()
+      .eq("id", equipeId)
+      .eq("tournoi_id", tournoiId); // ceinture et bretelles : jamais celle d'un autre tournoi
+
+    if (error) throw new Error(`Suppression impossible : ${error.message}`);
+
+    await log(ctx.userId, "EQUIPE_SUPPRIMEE", tournoiId, null, { equipe_id: equipeId });
+    revalidatePath(`/admin/tournois/${tournoiId}`);
+  } catch (e) {
+    redirectionErreur(`/admin/tournois/${tournoiId}`, e);
   }
 }

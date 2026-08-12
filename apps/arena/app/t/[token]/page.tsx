@@ -16,6 +16,8 @@ import type { Joueur, MatchRow, Participation, Tournoi } from "@/lib/arena/types
 import { grouperMatchsParSection, matchFinal } from "@/lib/arena/affichage";
 import ClassementsPoules from "@/components/ClassementsPoules";
 import AutoRefresh from "./AutoRefresh";
+import EnteteSite from "@/components/EnteteSite";
+import PiedSite from "@/components/PiedSite";
 
 export default async function PagePubliqueTournoi({
   params,
@@ -62,7 +64,9 @@ export default async function PagePubliqueTournoi({
   const champion = finale?.statut === "VALIDE" ? pseudo(finale.gagnant_id) : null;
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10">
+    <>
+      <EnteteSite />
+      <main className="mx-auto max-w-2xl px-4 py-10">
       {tournoi.statut === "EN_COURS" && <AutoRefresh />}
 
       <header className="mb-8 text-center">
@@ -171,15 +175,18 @@ export default async function PagePubliqueTournoi({
         </section>
       )}
 
-      <footer className="mt-12 text-center text-xs text-arena-faint">
-        <a href={`/api/export/${tournoi.qr_token}`} className="underline hover:text-arena-muted">
-          Exporter les résultats (JSON)
+      {/* Export brut : garanti par le règlement (« les résultats sont
+          exportables »). Utile aussi pour un bilan de subvention. */}
+      <p className="mt-12 text-center text-xs text-arena-faint">
+        <a
+          href={`/api/export/${tournoi.qr_token}`}
+          className="underline hover:text-arena-violet"
+        >
+          Exporter les résultats de ce tournoi (JSON)
         </a>
-        {" · "}
-        <a href="/" className="underline hover:text-arena-muted">
-          Tous les tournois
-        </a>
-      </footer>
-    </div>
+      </p>
+      </main>
+      <PiedSite />
+    </>
   );
 }

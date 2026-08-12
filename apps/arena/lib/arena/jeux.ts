@@ -8,18 +8,17 @@
  * La table référentielle arena.jeux (migration 002) prendra le relais en V2.
  */
 
-export const JEUX_SUGGERES = [
-  "Street Fighter 6",
-  "Tekken 8",
-  "Super Smash Bros. Ultimate",
-  "Rocket League",
-  "EA Sports FC 25",
-  "Mario Kart 8 Deluxe",
-  "Valorant",
-  "League of Legends",
-  "Counter-Strike 2",
-  "Fortnite",
-] as const;
+import { DISCIPLINES } from "./disciplines";
+
+/**
+ * La liste vient désormais de lib/arena/disciplines.ts, qui sert AUSSI à la
+ * page d'accueil. Une seule source : impossible qu'une discipline soit
+ * proposée à la création mais absente de la vitrine, ou l'inverse.
+ * Elle couvre les deux verticales : sans « Padel » ici, la normalisation
+ * laisserait passer « padel », « PADEL » et « Padel » comme trois disciplines
+ * différentes.
+ */
+export const JEUX_SUGGERES: readonly string[] = DISCIPLINES.map((d) => d.jeu);
 
 /**
  * Normalisation serveur : espaces propres + correction des saisies qui

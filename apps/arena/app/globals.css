@@ -10,7 +10,44 @@
 }
 
 body {
-  @apply bg-arena-bg text-arena-ink antialiased;
+  @apply bg-arena-bg font-corps text-arena-ink antialiased;
+}
+
+h1,
+h2,
+h3 {
+  @apply font-titre tracking-tight;
+}
+
+/* Motif de points très discret pour le bandeau d'accueil. Fait en CSS pur :
+   pas d'image à charger, net sur écran Retina, et il suit la couleur du
+   thème. Sans lui, un fond blanc plein donne un rendu plat. */
+.motif-points {
+  background-image: radial-gradient(theme("colors.arena.border") 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* Halo de la pastille « en direct ». */
+@keyframes pulsation {
+  0% { transform: scale(1); opacity: 0.6; }
+  70% { transform: scale(2.2); opacity: 0; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+.pulsation {
+  animation: pulsation 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Une animation qui clignote peut déclencher gêne ou malaise. Quand la
+   personne a demandé moins d'animations dans son système, on obéit. */
+@media (prefers-reduced-motion: reduce) {
+  .pulsation {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Anneau de focus visible et homogène. Beaucoup de sites le suppriment parce

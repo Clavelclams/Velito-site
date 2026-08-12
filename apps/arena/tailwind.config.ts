@@ -23,6 +23,11 @@ const config = {
         arena: {
           // --- Surfaces ---
           bg: "#FFFFFF",
+          // Fond « nuit » : bandeau d'accueil, barre de navigation par-dessus,
+          // pied de page. C'est cette alternance clair / sombre qui donne du
+          // rythme ; un site entièrement blanc paraît vide même bien rempli.
+          nuit: "#160F2E",
+          "nuit-clair": "#241748",
           surface: "#F6F5FB",
           "surface-fort": "#EDEBF7",
           border: "#E2E0EF",
@@ -48,6 +53,13 @@ const config = {
           gold: "#8A5A08",
           "gold-pale": "#FBF3E3",
         },
+      },
+      fontFamily: {
+        // Les deux variables viennent de next/font (app/layout.tsx).
+        // La pile de secours reprend les polices système pour que le texte
+        // reste correct si le fichier de police ne charge pas.
+        titre: ["var(--police-titre)", "system-ui", "sans-serif"],
+        corps: ["var(--police-corps)", "system-ui", "sans-serif"],
       },
       boxShadow: {
         // Sur fond clair, c'est l'ombre qui détache une carte, là où le thème
