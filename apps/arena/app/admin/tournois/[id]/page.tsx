@@ -250,7 +250,10 @@ export default async function PageTournoi({
       {matchs.length > 0 && (
         <section>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-gray-500">
-            Bracket — élimination simple
+            Bracket —{" "}
+            {tournoi.format === "DOUBLE_ELIMINATION"
+              ? "double élimination"
+              : "élimination simple"}
           </h2>
 
           <div className="space-y-6">

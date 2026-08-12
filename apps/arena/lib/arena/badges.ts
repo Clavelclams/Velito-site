@@ -59,10 +59,13 @@ export async function attribuerBadgesTournoi(
     for (const joueurId of participantsCheckIn) ajouter(joueurId, "PREMIER_TOURNOI");
 
     // 3. CHAMPION / FINALISTE d'après le résultat sportif (logique pure testée).
+    // Champion = 3 pts, finaliste (perdant de la finale) = exactement 2 pts.
+    // On ne donne PAS "Finaliste" au champion : afficher les deux badges
+    // ensemble ressemble à un bug côté joueur (constaté au test du 12/08).
     const pts = pointsDuTournoi(matchs);
     for (const [joueurId, p] of pts) {
       if (p >= 3) ajouter(joueurId, "CHAMPION");
-      if (p >= 2) ajouter(joueurId, "FINALISTE");
+      else if (p === 2) ajouter(joueurId, "FINALISTE");
     }
 
     if (attributions.length > 0) {
