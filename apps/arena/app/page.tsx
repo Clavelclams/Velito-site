@@ -43,6 +43,7 @@ import type { Joueur, MatchRow, Tournoi } from "@/lib/arena/types";
 import EnteteSite from "@/components/EnteteSite";
 import PiedSite from "@/components/PiedSite";
 import { MarqueArena } from "@/components/Marque";
+import MotifDiscipline, { type CleMotif } from "@/components/MotifDiscipline";
 import {
   IconeCalendrier,
   IconeJoueurs,
@@ -65,7 +66,27 @@ const dateLongue = (iso: string) =>
     minute: "2-digit",
   });
 
-export default async function ArenaHome() {
+/**
+ * Normalise pour la recherche : minuscules, sans accents, espaces resserrés.
+ * « PADEL », « padel » et « pâdel » doivent trouver la même chose.
+ * normalize("NFD") décompose « é » en « e » + accent, la regex retire ensuite
+ * les accents (bloc Unicode des diacritiques combinants).
+ */
+function normaliser(texte: string): string {
+  return texte
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+export default async function ArenaHome({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
+  const recherche = normaliser(q ?? "");
   let tournois: Tournoi[] = [];
   let podium: { pseudo: string; points: number; titres: number }[] = [];
   let championParTournoi = new Map<string, string>();
@@ -163,10 +184,23 @@ export default async function ArenaHome() {
     // reste servable avec ses états vides plutôt que de renvoyer une 500.
   }
 
-  const enCours = tournois.filter((t) => t.statut === "EN_COURS");
-  const ouverts = tournois.filter((t) => t.statut === "OUVERT");
-  const termines = tournois.filter((t) => t.statut === "TERMINE").slice(0, 6);
+  // Filtrage de la recherche EN MÉMOIRE, pas en SQL avec un ILIKE : la page
+  // charge de toute façon les 30 derniers tournois pour remplir ses
+  // compteurs, filtrer côté base ajouterait un aller-retour pour rien. À
+  // partir de quelques centaines de tournois il faudra une recherche plein
+  // texte Postgres, pas avant.
+  const correspond = (t: Tournoi) =>
+    !recherche ||
+    normaliser(`${t.titre} ${t.jeu} ${t.lieu ?? ""}`).includes(recherche);
+
+  const trouves = tournois.filter(correspond);
+  const enCours = trouves.filter((t) => t.statut === "EN_COURS");
+  const ouverts = trouves.filter((t) => t.statut === "OUVERT");
+  const termines = trouves
+    .filter((t) => t.statut === "TERMINE")
+    .slice(0, recherche ? 30 : 6);
   const aucunTournoi = tournois.length === 0;
+  const sansResultat = recherche.length > 0 && trouves.length === 0;
 
   // Nombre de tournois déjà organisés par discipline : une pastille qui affiche
   // « 2 tournois » prouve que la discipline est vivante, là où une pastille
@@ -182,26 +216,39 @@ export default async function ArenaHome() {
     { valeur: nbMatchsJoues, libelle: nbMatchsJoues > 1 ? "matchs validés" : "match validé" },
   ];
 
-  /** Pastille de discipline : même rendu pour l'esport et pour le sport. */
-  const Pastille = ({
+  /**
+   * Affiche de discipline. Cliquer dessus LANCE LA RECHERCHE sur cette
+   * discipline : la vignette n'est donc pas décorative, c'est un filtre. Sans
+   * ça, on affiche quatorze cases sur lesquelles il ne se passe rien, ce qui
+   * est pire que de ne rien afficher.
+   */
+  const Affiche = ({
     court,
     jeu,
     couleur,
+    motif,
   }: {
     court: string;
     jeu: string;
     couleur: string;
+    motif: CleMotif;
   }) => {
     const nb = parDiscipline.get(jeu) ?? 0;
     return (
       <a
-        href="#tournois"
-        className={`group relative flex aspect-[3/4] flex-col justify-end overflow-hidden rounded-xl bg-gradient-to-br ${couleur} p-3 ring-1 ring-inset ring-white/15 transition-transform hover:-translate-y-1`}
+        href={`/?q=${encodeURIComponent(jeu)}#tournois`}
+        className={`group relative flex aspect-[3/4] flex-col justify-end overflow-hidden rounded-xl bg-gradient-to-br ${couleur} p-3 ring-1 ring-inset ring-white/15 transition-transform hover:-translate-y-1 hover:ring-white/40`}
       >
-        <span className="font-titre text-sm font-bold leading-tight text-white drop-shadow">
+        {/* L'illustration déborde volontairement du cadre : c'est ce qui donne
+            l'impression d'une jaquette plutôt que d'un pictogramme centré. */}
+        <MotifDiscipline
+          cle={motif}
+          className="absolute -right-5 -top-4 h-28 w-28 text-white/25 transition-transform duration-300 group-hover:scale-110"
+        />
+        <span className="relative font-titre text-sm font-bold leading-tight text-white drop-shadow">
           {court}
         </span>
-        <span className="mt-1 text-[11px] font-semibold text-white/75">
+        <span className="relative mt-1 text-[11px] font-semibold text-white/75">
           {nb > 0 ? `${nb} tournoi${nb > 1 ? "s" : ""}` : "Bientôt"}
         </span>
       </a>
@@ -242,7 +289,7 @@ export default async function ArenaHome() {
             </h2>
             <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-5 lg:grid-cols-10">
               {DISCIPLINES_ESPORT.map((d) => (
-                <Pastille key={d.jeu} {...d} />
+                <Affiche key={d.jeu} {...d} />
               ))}
             </div>
 
@@ -252,12 +299,39 @@ export default async function ArenaHome() {
             </h2>
             <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-5 lg:grid-cols-10">
               {DISCIPLINES_SPORT.map((d) => (
-                <Pastille key={d.jeu} {...d} />
+                <Affiche key={d.jeu} {...d} />
               ))}
             </div>
           </section>
 
-          <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
+          {/* Recherche : un <form method="get"> natif, donc ZÉRO JavaScript.
+              Le navigateur construit lui-même /?q=..., Next re-rend la page
+              côté serveur, et l'URL obtenue est partageable et indexable.
+              Un champ contrôlé en React aurait demandé un composant client
+              pour un résultat strictement identique. */}
+          <form
+            action="/"
+            method="get"
+            role="search"
+            className="mx-auto mt-10 flex max-w-xl gap-2"
+          >
+            <label htmlFor="q" className="sr-only">
+              Rechercher un tournoi, un jeu ou un lieu
+            </label>
+            <input
+              id="q"
+              name="q"
+              type="search"
+              defaultValue={q ?? ""}
+              placeholder="Rechercher : Padel, Rocket League, Étouvie…"
+              className="min-w-0 flex-1 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-white placeholder:text-white/50 focus:border-white/50 focus:outline-none"
+            />
+            <button className="rounded-xl bg-white px-5 py-3 font-semibold text-arena-nuit transition-colors hover:bg-white/90">
+              Chercher
+            </button>
+          </form>
+
+          <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
             <a
               href="#tournois"
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 font-semibold text-arena-nuit transition-colors hover:bg-white/90"
@@ -294,6 +368,37 @@ export default async function ArenaHome() {
       </header>
 
       <main id="tournois" className="mx-auto max-w-6xl px-4 py-14 sm:py-20">
+        {recherche && (
+          <p className="mb-8 flex flex-wrap items-center gap-3 rounded-xl border border-arena-border bg-arena-surface px-4 py-3 text-sm shadow-carte">
+            <span>
+              <strong>{trouves.length}</strong>{" "}
+              {trouves.length > 1 ? "tournois trouvés" : "tournoi trouvé"} pour
+              {" « "}
+              <strong>{q}</strong>
+              {" »"}
+            </span>
+            <a
+              href="/#tournois"
+              className="font-semibold text-arena-violet underline-offset-4 hover:underline"
+            >
+              Effacer la recherche
+            </a>
+          </p>
+        )}
+
+        {sansResultat && (
+          <section className="mb-14 rounded-2xl border border-dashed border-arena-border bg-arena-surface px-6 py-12 text-center">
+            <p className="font-titre text-xl font-bold">
+              Aucun tournoi ne correspond
+            </p>
+            <p className="mx-auto mt-2 max-w-md text-arena-muted">
+              Essaie un autre mot, ou regarde tous les tournois. Une discipline
+              sans tournoi pour l&apos;instant, ça veut juste dire qu&apos;on
+              n&apos;en a pas encore organisé.
+            </p>
+          </section>
+        )}
+
         {/* ============ EN DIRECT ============ */}
         {enCours.length > 0 && (
           <section className="mb-14">
