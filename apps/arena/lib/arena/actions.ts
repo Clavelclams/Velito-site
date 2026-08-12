@@ -27,6 +27,14 @@ import {
   progresserDouble,
   type DestinationDouble,
 } from "../bracket-double";
+import {
+  classementPoule,
+  genererMatchsPoules,
+  ordonnerQualifies,
+  pouleTerminee,
+  repartirEnPoules,
+  type ResultatPoule,
+} from "../poules";
 import { attribuerBadgesTournoi } from "./badges";
 import { normaliserJeu } from "./jeux";
 import { estStatutTournoi, transitionAutorisee } from "./transitions";
@@ -105,8 +113,31 @@ export async function creerTournoi(formData: FormData) {
     // propres pour regrouper les joueurs par jeu — leçon du tournoi test).
     const jeu = normaliserJeu(String(formData.get("jeu") ?? ""));
     const format = String(formData.get("format") ?? "ELIMINATION_SIMPLE");
-    if (format !== "ELIMINATION_SIMPLE" && format !== "DOUBLE_ELIMINATION") {
+    if (
+      format !== "ELIMINATION_SIMPLE" &&
+      format !== "DOUBLE_ELIMINATION" &&
+      format !== "POULES_FINALE"
+    ) {
       throw new Error("Format de tournoi inconnu.");
+    }
+
+    // Configuration spécifique aux poules.
+    let nbPoules: number | null = null;
+    let nbQualifies: number | null = null;
+    if (format === "POULES_FINALE") {
+      nbPoules = Number(formData.get("nb_poules") ?? 2);
+      nbQualifies = Number(formData.get("nb_qualifies_par_poule") ?? 2);
+      if (!Number.isInteger(nbPoules) || nbPoules < 1 || nbPoules > 16) {
+        throw new Error("Nombre de poules invalide (entre 1 et 16).");
+      }
+      if (nbQualifies !== 1 && nbQualifies !== 2) {
+        throw new Error("Qualifiés par poule : 1 ou 2.");
+      }
+      if (nbPoules * nbQualifies < 2) {
+        throw new Error(
+          "Il faut au moins 2 qualifiés au total pour disputer une phase finale."
+        );
+      }
     }
     const dateDebut = String(formData.get("date_debut") ?? "");
     const lieu = String(formData.get("lieu") ?? "").trim() || null;
@@ -133,6 +164,8 @@ export async function creerTournoi(formData: FormData) {
         titre,
         jeu,
         format,
+        nb_poules: nbPoules,
+        nb_qualifies_par_poule: nbQualifies,
         date_debut: new Date(dateDebut).toISOString(),
         lieu,
         max_joueurs: maxJoueurs,
@@ -308,7 +341,24 @@ export async function demarrerTournoi(formData: FormData) {
     // REFUSER (ex: double élim avec un effectif ≠ 4/8/16/32). On ne verrouille
     // le tournoi qu'une fois certain d'avoir des matchs à insérer.
     let lignes: Record<string, unknown>[];
-    if (tournoi.format === "DOUBLE_ELIMINATION") {
+    if (tournoi.format === "POULES_FINALE") {
+      // Phase 1 UNIQUEMENT : les matchs de poules. La phase finale sera
+      // générée plus tard (genererPhaseFinale), quand les qualifiés seront
+      // connus — c'est la spécificité structurante de ce format.
+      const poules = repartirEnPoules(joueurIds, tournoi.nb_poules ?? 2);
+      lignes = genererMatchsPoules(poules).map((m) => ({
+        tournoi_id: tournoiId,
+        bracket: "P",
+        poule: m.poule,
+        round: m.journee,
+        position: m.position,
+        joueur1_id: m.joueur1Id,
+        joueur2_id: m.joueur2Id,
+        is_bye: false,
+        gagnant_id: null,
+        statut: "A_JOUER",
+      }));
+    } else if (tournoi.format === "DOUBLE_ELIMINATION") {
       lignes = genererBracketDoubleElimination(joueurIds).map((m) => ({
         tournoi_id: tournoiId,
         bracket: m.bracket,
@@ -437,6 +487,136 @@ export async function saisirScore(formData: FormData) {
 }
 
 /**
+ * PHASE FINALE d'un tournoi à poules — seconde génération.
+ *
+ * Contrairement aux autres formats, on ne peut pas créer ce bracket au
+ * démarrage : les qualifiés n'existent qu'une fois toutes les poules jouées.
+ * Cette action vérifie que chaque poule est complète, calcule les classements
+ * (logique pure testée), croise les têtes de série puis crée un bracket à
+ * élimination simple SANS retirage (l'ordre des qualifiés est significatif).
+ *
+ * Idempotence : le drapeau phase_finale_generee est posé par un UPDATE
+ * conditionnel — deux clics simultanés ne peuvent pas créer deux brackets.
+ */
+export async function genererPhaseFinale(formData: FormData) {
+  const tournoiId = String(formData.get("tournoi_id"));
+  try {
+    const ctx = await requireStaff();
+    const db = getServiceClient();
+    const tournoi = await chargerTournoiDeLOrga(tournoiId, ctx);
+
+    if (tournoi.format !== "POULES_FINALE") {
+      throw new Error("Ce tournoi n'est pas au format poules + finale.");
+    }
+    if (tournoi.statut !== "EN_COURS") {
+      throw new Error("Le tournoi doit être en cours.");
+    }
+    if (tournoi.phase_finale_generee) {
+      throw new Error("La phase finale a déjà été générée.");
+    }
+
+    const { data: matchsData } = await db
+      .schema("arena")
+      .from("matchs")
+      .select("*")
+      .eq("tournoi_id", tournoiId);
+    const matchs = (matchsData ?? []) as MatchRow[];
+    const matchsPoules = matchs.filter((m) => (m.bracket ?? "W") === "P");
+    if (matchsPoules.length === 0) {
+      throw new Error("Aucun match de poule trouvé.");
+    }
+
+    // Reconstruire la composition de chaque poule depuis ses matchs.
+    const numerosPoules = [
+      ...new Set(matchsPoules.map((m) => m.poule ?? 1)),
+    ].sort((a, b) => a - b);
+
+    const classements: string[][] = [];
+    for (const numero of numerosPoules) {
+      const deLaPoule = matchsPoules.filter((m) => (m.poule ?? 1) === numero);
+      const joueursPoule = [
+        ...new Set(
+          deLaPoule.flatMap((m) => [m.joueur1_id, m.joueur2_id])
+        ),
+      ].filter((j): j is string => j !== null);
+
+      const resultats: ResultatPoule[] = deLaPoule.map((m) => ({
+        joueur1Id: m.joueur1_id,
+        joueur2Id: m.joueur2_id,
+        scoreJ1: m.score_j1,
+        scoreJ2: m.score_j2,
+        valide: m.statut === "VALIDE",
+      }));
+
+      if (!pouleTerminee(joueursPoule.length, resultats)) {
+        throw new Error(
+          `La poule ${numero} n'est pas terminée : tous ses matchs doivent être validés avant de lancer la phase finale.`
+        );
+      }
+      classements.push(
+        classementPoule(joueursPoule, resultats).map((l) => l.joueurId)
+      );
+    }
+
+    // Croisement des têtes de série (logique pure testée).
+    const qualifies = ordonnerQualifies(
+      classements,
+      tournoi.nb_qualifies_par_poule ?? 2
+    );
+    if (qualifies.length < 2) {
+      throw new Error("Pas assez de qualifiés pour une phase finale.");
+    }
+
+    // Verrou idempotent AVANT insertion.
+    const { data: verrou } = await db
+      .schema("arena")
+      .from("tournois")
+      .update({ phase_finale_generee: true, updated_at: new Date().toISOString() })
+      .eq("id", tournoiId)
+      .eq("phase_finale_generee", false)
+      .select("id");
+    if (!verrou || verrou.length === 0) {
+      throw new Error("La phase finale a déjà été générée (double-clic ?).");
+    }
+
+    // conserverOrdre : surtout PAS de retirage, l'ordre porte le croisement.
+    const bracket = genererBracketEliminationSimple(qualifies, Math.random, {
+      conserverOrdre: true,
+    });
+    const { error } = await db.schema("arena").from("matchs").insert(
+      bracket.map((m) => ({
+        tournoi_id: tournoiId,
+        bracket: "W",
+        round: m.round,
+        position: m.position,
+        joueur1_id: m.joueur1Id,
+        joueur2_id: m.joueur2Id,
+        is_bye: m.isBye,
+        gagnant_id: m.gagnantId,
+        statut: m.isBye ? "VALIDE" : "A_JOUER",
+      }))
+    );
+    if (error) {
+      // Relâche le verrou pour permettre une nouvelle tentative.
+      await db
+        .schema("arena")
+        .from("tournois")
+        .update({ phase_finale_generee: false })
+        .eq("id", tournoiId);
+      throw new Error(`Phase finale impossible : ${error.message}`);
+    }
+
+    await log(ctx.userId, "PHASE_FINALE_GENEREE", tournoiId, null, {
+      qualifies: qualifies.length,
+      poules: numerosPoules.length,
+    });
+    revalidatePath(`/admin/tournois/${tournoiId}`);
+  } catch (e) {
+    redirectionErreur(`/admin/tournois/${tournoiId}`, e);
+  }
+}
+
+/**
  * Signale un litige sur un match (règlement §3 : « en cas de désaccord,
  * le signaler AVANT la validation »). Le match passe LITIGIEUX : le score
  * affiché n'est plus considéré fiable. Résolution = le staff re-saisit le
@@ -535,14 +715,29 @@ export async function validerScore(formData: FormData) {
         .eq("id", cible.id);
     };
 
-    if (tournoi.format === "DOUBLE_ELIMINATION") {
+    // const (pas d'expression répétée) → TypeScript sait, dans les branches
+    // suivantes, que le bracket ne peut plus valoir "P".
+    const bracketMatch = m.bracket ?? "W";
+
+    if (bracketMatch === "P") {
+      // Match de POULE : aucun bracket à faire avancer. On fige le résultat,
+      // le classement de la poule est recalculé à la lecture (lib/poules.ts).
+      const gagnantId =
+        (m.score_j1 ?? 0) > (m.score_j2 ?? 0) ? m.joueur1_id : m.joueur2_id;
+      if (!gagnantId) throw new Error("Match de poule incomplet.");
+      await validerMatch(gagnantId);
+      await log(ctx.userId, "MATCH_VALIDE", tournoiId, matchId, {
+        gagnant_id: gagnantId,
+        poule: m.poule ?? null,
+      });
+    } else if (tournoi.format === "DOUBLE_ELIMINATION") {
       // k = profondeur du tableau principal (rounds du bracket W).
       const k = Math.max(
         ...matchs.filter((x) => (x.bracket ?? "W") === "W").map((x) => x.round)
       );
       const prog = progresserDouble(
         {
-          bracket: m.bracket ?? "W",
+          bracket: bracketMatch,
           round: m.round,
           position: m.position,
           joueur1Id: m.joueur1_id,

@@ -15,18 +15,20 @@ import {
   ajouterJoueurStaff,
   changerStatutTournoi,
   demarrerTournoi,
+  genererPhaseFinale,
   saisirScore,
   signalerLitige,
   toggleCheckIn,
   validerScore,
 } from "@/lib/arena/actions";
+import ClassementsPoules from "@/components/ClassementsPoules";
 import type {
   Joueur,
   MatchRow,
   Participation,
   Tournoi,
 } from "@/lib/arena/types";
-import { grouperMatchsParSection, matchFinal } from "@/lib/arena/affichage";
+import { grouperMatchsParSection, matchFinal, nomFormat } from "@/lib/arena/affichage";
 import BandeauErreur from "@/components/BandeauErreur";
 
 const btn =
@@ -164,6 +166,21 @@ export default async function PageTournoi({
                 </button>
               </form>
             )}
+            {/* Poules : la phase finale est une SECONDE génération, une fois
+                toutes les poules validées (les qualifiés n'existent pas avant). */}
+            {tournoi.statut === "EN_COURS" &&
+              tournoi.format === "POULES_FINALE" &&
+              !tournoi.phase_finale_generee && (
+                <form action={genererPhaseFinale}>
+                  <input type="hidden" name="tournoi_id" value={tournoi.id} />
+                  <button
+                    className={`${btn} bg-arena-violet text-white hover:bg-arena-violet/80`}
+                    title="Calcule les classements de poules et crée le bracket final"
+                  >
+                    Lancer la phase finale
+                  </button>
+                </form>
+              )}
           </div>
         </div>
 
@@ -246,14 +263,18 @@ export default async function PageTournoi({
         )}
       </section>
 
+      {/* ---------- Classements de poules ---------- */}
+      <ClassementsPoules
+        matchs={matchs}
+        pseudo={pseudo}
+        nbQualifies={tournoi.nb_qualifies_par_poule ?? 2}
+      />
+
       {/* ---------- Bracket / matchs ---------- */}
       {matchs.length > 0 && (
         <section>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-gray-500">
-            Bracket —{" "}
-            {tournoi.format === "DOUBLE_ELIMINATION"
-              ? "double élimination"
-              : "élimination simple"}
+            Bracket — {nomFormat(tournoi.format)}
           </h2>
 
           <div className="space-y-6">

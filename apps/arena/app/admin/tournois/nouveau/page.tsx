@@ -70,12 +70,65 @@ export default async function NouveauTournoi({
             <option value="DOUBLE_ELIMINATION">
               Double élimination (exactement 4, 8, 16 ou 32 joueurs)
             </option>
+            <option value="POULES_FINALE">
+              Poules + phase finale (tout le monde joue plusieurs matchs)
+            </option>
           </select>
           <p className="mt-1 text-xs text-gray-600">
             Double élimination : une défaite ne sort pas du tournoi — le
             rattrapage offre une seconde chance jusqu&apos;en grande finale.
+            Poules : chacun affronte tous les joueurs de sa poule, les
+            meilleurs disputent ensuite une phase finale à élimination directe.
           </p>
         </div>
+
+        {/* Config poules — toujours visible (zéro JS) mais ignorée par le
+            serveur si un autre format est choisi. */}
+        <fieldset className="rounded-lg border border-arena-border p-4">
+          <legend className="px-2 text-xs uppercase tracking-widest text-gray-500">
+            Si format « poules »
+          </legend>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="nb_poules"
+                className="mb-1 block text-sm text-gray-400"
+              >
+                Nombre de poules
+              </label>
+              <input
+                id="nb_poules"
+                name="nb_poules"
+                type="number"
+                min={1}
+                max={16}
+                defaultValue={2}
+                className={inputCls}
+              />
+              <p className="mt-1 text-xs text-gray-600">
+                Un nombre pair évite que deux joueurs d&apos;une même poule se
+                croisent dès le premier tour.
+              </p>
+            </div>
+            <div>
+              <label
+                htmlFor="nb_qualifies_par_poule"
+                className="mb-1 block text-sm text-gray-400"
+              >
+                Qualifiés par poule
+              </label>
+              <select
+                id="nb_qualifies_par_poule"
+                name="nb_qualifies_par_poule"
+                defaultValue="2"
+                className={inputCls}
+              >
+                <option value="1">1er de chaque poule</option>
+                <option value="2">2 premiers de chaque poule</option>
+              </select>
+            </div>
+          </div>
+        </fieldset>
 
         <div className="grid grid-cols-2 gap-4">
           <div>

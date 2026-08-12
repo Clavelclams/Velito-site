@@ -117,7 +117,11 @@ export function slotDansParent(position: number): "joueur1" | "joueur2" {
  */
 export function genererBracketEliminationSimple(
   joueurIds: readonly string[],
-  rng: () => number = Math.random
+  rng: () => number = Math.random,
+  // conserverOrdre : n'applique PAS le tirage au sort. Utilisé par la phase
+  // finale d'un tournoi à poules, où l'ordre des qualifiés est SIGNIFICATIF
+  // (croisement des têtes de série pour éviter les retrouvailles de poule).
+  options: { conserverOrdre?: boolean } = {}
 ): MatchInput[] {
   const n = joueurIds.length;
   if (n < 2) {
@@ -127,7 +131,9 @@ export function genererBracketEliminationSimple(
   const taille = tailleBracket(n);
   const nbByes = taille - n;
   const nbRounds = Math.log2(taille);
-  const melanges = melangerJoueurs(joueurIds, rng);
+  const melanges = options.conserverOrdre
+    ? [...joueurIds]
+    : melangerJoueurs(joueurIds, rng);
 
   const matchs: MatchInput[] = [];
 

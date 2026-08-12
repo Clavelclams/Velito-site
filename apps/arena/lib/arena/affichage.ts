@@ -6,6 +6,20 @@
 
 import type { MatchRow } from "./types";
 
+/** Poule 1 → "A", poule 2 → "B"… (au-delà de Z, on retombe sur le numéro). */
+export function lettrePoule(numero: number): string {
+  return numero >= 1 && numero <= 26
+    ? String.fromCharCode(64 + numero)
+    : String(numero);
+}
+
+/** Libellé humain d'un format de tournoi. */
+export function nomFormat(format: string): string {
+  if (format === "DOUBLE_ELIMINATION") return "double élimination";
+  if (format === "POULES_FINALE") return "poules + phase finale";
+  return "élimination simple";
+}
+
 /** Nom humain d'un round : "Finale", "Demi-finales", "Quarts de finale", "Round N". */
 export function nomRound(round: number, nbRounds: number): string {
   if (round === nbRounds) return "Finale";
@@ -22,8 +36,12 @@ export function matchFinal(matchs: MatchRow[]): MatchRow | undefined {
   if (matchs.length === 0) return undefined;
   const gf = matchs.find((m) => m.bracket === "GF");
   if (gf) return gf;
-  const nbRounds = Math.max(...matchs.map((m) => m.round));
-  return matchs.find((m) => m.round === nbRounds);
+  // Les matchs de poule ne désignent aucun champion : on ne regarde que le
+  // bracket à élimination (phase finale d'un tournoi à poules incluse).
+  const elimination = matchs.filter((m) => (m.bracket ?? "W") !== "P");
+  if (elimination.length === 0) return undefined;
+  const nbRounds = Math.max(...elimination.map((m) => m.round));
+  return elimination.find((m) => m.round === nbRounds);
 }
 
 /**
@@ -37,6 +55,32 @@ export function grouperMatchsParSection(
   if (matchs.length === 0) return [];
   const tri = (a: MatchRow, b: MatchRow) => a.round - b.round || a.position - b.position;
   const estDouble = matchs.some((m) => m.bracket === "GF");
+  const poules = matchs.filter((m) => (m.bracket ?? "W") === "P");
+
+  // --- Poules + phase finale : une section par poule, puis le bracket final.
+  if (poules.length > 0) {
+    const groupes: { titre: string; matchs: MatchRow[] }[] = [];
+    const numeros = [...new Set(poules.map((m) => m.poule ?? 1))].sort(
+      (a, b) => a - b
+    );
+    for (const n of numeros) {
+      const liste = poules.filter((m) => (m.poule ?? 1) === n).sort(tri);
+      groupes.push({ titre: `Poule ${lettrePoule(n)}`, matchs: liste });
+    }
+    const finale = matchs.filter((m) => (m.bracket ?? "W") !== "P");
+    if (finale.length > 0) {
+      const nbRounds = Math.max(...finale.map((m) => m.round));
+      for (let r = 1; r <= nbRounds; r++) {
+        const liste = finale.filter((m) => m.round === r).sort(tri);
+        if (liste.length)
+          groupes.push({
+            titre: `Phase finale — ${nomRound(r, nbRounds)}`,
+            matchs: liste,
+          });
+      }
+    }
+    return groupes;
+  }
 
   if (!estDouble) {
     const nbRounds = Math.max(...matchs.map((m) => m.round));
