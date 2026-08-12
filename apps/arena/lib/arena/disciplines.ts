@@ -53,7 +53,13 @@ export const DISCIPLINES: Discipline[] = [
   // --- Sport physique ---
   { jeu: "Padel", court: "Padel", verticale: "SPORT", couleur: "from-[#0B4A3A] to-[#1E9E72]", motif: "raquette" },
   { jeu: "Five (football à 5)", court: "Five", verticale: "SPORT", couleur: "from-[#123A1E] to-[#2E8A3E]", motif: "ballon" },
-  { jeu: "Basket 3x3", court: "Basket 3x3", verticale: "SPORT", couleur: "from-[#7A3A0B] to-[#D6772E]", motif: "panier" },
+  // « Playground » et non « Basket 3x3 » : le 3x3 est une discipline OLYMPIQUE
+  // structurée par la FIBA, qui a son propre circuit et son propre classement
+  // mondial. Se placer sur ce terrain serait annoncer une compétition qu'on ne
+  // peut pas tenir. « Playground » désigne le basket de rue informel, celui
+  // des city-stades d'Amiens : c'est ce qu'on sait réellement organiser, et
+  // personne ne l'outille.
+  { jeu: "Playground", court: "Playground", verticale: "SPORT", couleur: "from-[#7A3A0B] to-[#D6772E]", motif: "panier" },
   { jeu: "Ping-pong", court: "Ping-pong", verticale: "SPORT", couleur: "from-[#1B2E5C] to-[#3E6BC4]", motif: "pingpong" },
 ];
 
