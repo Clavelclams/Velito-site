@@ -1,0 +1,49 @@
+{
+  "fiche": "roblox-gamedev-08-valider-comme-un-pro",
+  "questions": [
+    {
+      "question": "Un exploiteur écrit un script qui fait remote:FireServer(cible) sur TenterCapture 200 fois par seconde en visant tous les joueurs de la map depuis son spawn. Quelles vérifications le stoppent ?",
+      "choix": [
+        "Aucune : s'il appelle le Remote directement, le serveur est obligé d'exécuter la capture",
+        "Le cooldown (②) limite ses appels à un par seconde, et la vérification de distance (⑥) rejette toute cible à plus de 30 studs",
+        "Seul le contrôle de rôle (①) peut l'arrêter",
+        "Le LocalScript de visée l'empêche de cibler des joueurs hors écran"
+      ],
+      "bonne": 1,
+      "explication": "C'est exactement le scénario pour lequel les contrôles ② et ⑥ existent : le rate limiting absorbe le spam, et la règle de distance rend la capture à distance impossible quel que soit le nombre d'appels. Le LocalScript, lui, n'est d'aucune utilité : un exploiteur ne passe pas par ton code client — il parle directement au Remote, comme un curl contourne la validation JS d'un formulaire."
+    },
+    {
+      "question": "Le handler fait cible:IsA(\"BasePart\") AVANT toute utilisation de cible. Que se passerait-il sans le contrôle de type ③ si un client envoyait remote:FireServer(42) ?",
+      "choix": [
+        "Roblox convertit automatiquement 42 en Instance",
+        "Le serveur ignore silencieusement les arguments non-Instance",
+        "Le joueur 42 serait capturé",
+        "Le code planterait en appelant FindFirstAncestorOfClass sur un nombre : erreur serveur provoquée à volonté par le client"
+      ],
+      "bonne": 3,
+      "explication": "Un RemoteEvent transmet ce que le client veut : nombre, texte, nil. Sans vérification de type, 42:FindFirstAncestorOfClass(...) lève une erreur — et un client capable de faire planter un handler serveur à volonté peut spammer ton Output d'erreurs, voire perturber le jeu. typeof(cible) ~= \"Instance\" puis IsA(\"BasePart\") : on ne suppose rien, comme pour toute entrée utilisateur en web."
+    },
+    {
+      "question": "Pourquoi les six contrôles font-ils un simple return silencieux au lieu de renvoyer un message d'erreur au client (« trop loin », « pas ton équipe »...) ?",
+      "choix": [
+        "Un message d'erreur détaillé aiderait un exploiteur à cartographier les défenses et à calibrer son attaque",
+        "FireClient est trop coûteux pour être appelé dans un handler",
+        "Les RemoteEvents ne peuvent pas répondre au client",
+        "C'est uniquement pour raccourcir le code"
+      ],
+      "bonne": 0,
+      "explication": "Répondre « trop loin » à chaque tentative permettrait à un exploiteur de mesurer DISTANCE_MAX par dichotomie, puis de se téléporter juste à la limite. Le rejet silencieux ne donne aucun retour exploitable — même principe qu'un login qui répond « identifiants invalides » sans préciser si c'est l'email ou le mot de passe. Un joueur légitime, lui, n'atteint jamais ces cas grâce au code client."
+    },
+    {
+      "question": "Dans quel ordre les contrôles sont-ils placés, et pourquoi ?",
+      "choix": [
+        "Par ordre alphabétique des noms de variables",
+        "Les plus coûteux d'abord, pour échouer au plus tôt sur les cas complexes",
+        "Les moins chers et les plus discriminants d'abord (rôle, cooldown) : un spammeur est éjecté avant que le serveur ne calcule quoi que ce soit de coûteux",
+        "L'ordre n'a strictement aucune importance fonctionnelle ni performance"
+      ],
+      "bonne": 2,
+      "explication": "Comparaison d'équipe et lecture d'une table : quasi gratuit. Remontée de hiérarchie et calcul de distance : plus cher. En plaçant le bon marché discriminant en premier, le flot d'appels invalides est absorbé à coût minimal — c'est le rôle d'un middleware d'authentification qui rejette avant d'atteindre le contrôleur. Fonctionnellement le résultat serait le même dans un autre ordre, mais pas sous spam."
+    }
+  ]
+}

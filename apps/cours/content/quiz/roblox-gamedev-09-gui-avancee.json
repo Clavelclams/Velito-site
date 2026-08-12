@@ -1,0 +1,49 @@
+{
+  "fiche": "roblox-gamedev-09-gui-avancee",
+  "questions": [
+    {
+      "question": "Ton timer s'affiche parfaitement sur ton PC mais déborde de l'écran sur téléphone. Quelle est la cause la plus probable ?",
+      "choix": [
+        "Le téléphone ne supporte pas string.format",
+        "Les RemoteEvents arrivent dans le désordre sur mobile",
+        "Taille et position sont définies en décalage (pixels fixes) au lieu de l'échelle : 400px n'ont pas le même sens sur un écran de téléphone",
+        "StarterGui n'est pas copié dans PlayerGui sur mobile"
+      ],
+      "bonne": 2,
+      "explication": "Le décalage d'un UDim2 est en pixels absolus : un label de 400px de large occupe un tiers d'un moniteur mais dépasse un petit écran. L'échelle (0.3 = 30% de l'écran) s'adapte partout — c'est le % vs px du CSS, et la roadmap demande l'échelle en priorité car une énorme partie des joueurs Roblox sont sur mobile."
+    },
+    {
+      "question": "Ce LocalScript ne fait rien à l'écran : local hud = game.StarterGui.HUD ; hud.Timer.Text = \"00:30\". Pourquoi ?",
+      "choix": [
+        "Il modifie le template StarterGui, pas la copie de l'écran : à la connexion le contenu de StarterGui est copié dans player.PlayerGui, et c'est cette copie qui est affichée",
+        "Text est en lecture seule depuis un LocalScript",
+        "Il faut passer par un RemoteEvent pour modifier un TextLabel",
+        "Le ScreenGui doit d'abord être activé par le serveur"
+      ],
+      "bonne": 0,
+      "explication": "C'est le piège classique documenté dans la roadmap : StarterGui est un modèle, comme une classe ; PlayerGui contient l'instance réellement affichée. Modifier le template après la copie ne change rien à l'écran du joueur. Le LocalScript doit faire player:WaitForChild(\"PlayerGui\"):WaitForChild(\"HUD\")."
+    },
+    {
+      "question": "Pour le compteur « cachés restants », un dev propose que chaque client compte lui-même les joueurs invisibles du Workspace. Quel est le problème ?",
+      "choix": [
+        "GetPlayers n'est pas disponible côté client",
+        "Le comptage serait trop lent côté client",
+        "Les TextLabels ne peuvent afficher que des données reçues par RemoteEvent",
+        "Le client reconstituerait une donnée de jeu au lieu de la recevoir : résultats incohérents entre joueurs, et surtout la logique de « qui est encore vivant » appartient au serveur"
+      ],
+      "bonne": 3,
+      "explication": "Chaque client calculerait sa propre version, avec des résultats différents selon la réplication du moment — et le décompte des cachés vivants est une donnée de jeu, donc une décision serveur. Le bon design : le serveur compte et diffuse le nombre, les clients affichent. C'est le fil rouge appliqué au HUD : la vue ne fabrique pas les données du modèle."
+    },
+    {
+      "question": "Pourquoi la roadmap insiste-t-elle pour que le passage d'état (capture, passage en caisse) soit accompagné d'un son et d'un flash visuel ?",
+      "choix": [
+        "Pour masquer les temps de chargement du serveur",
+        "Parce qu'un événement important silencieux tombe à plat : le feedback est l'information qui fait comprendre le jeu sans explication — la définition même de « fini »",
+        "Parce que Roblox référence mieux les jeux qui utilisent des sons",
+        "Pour occuper les spectateurs éliminés"
+      ],
+      "bonne": 1,
+      "explication": "Le contrat de périmètre définit « fini » par « des joueurs comprennent les règles sans explication » : c'est le feedback qui rend ça possible. Un joueur capturé sans son ni flash ne comprend pas ce qui vient d'arriver, ni les autres autour. Le feedback n'est pas décoratif, c'est de l'information de gameplay — et trois lignes de TweenService suffisent."
+    }
+  ]
+}

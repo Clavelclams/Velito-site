@@ -1,0 +1,49 @@
+{
+  "fiche": "roblox-gamedev-02-cframe-et-vector3",
+  "questions": [
+    {
+      "question": "Tu veux placer un carton devant un joueur, quelle que soit la direction vers laquelle il regarde. Quelle expression est correcte ?",
+      "choix": [
+        "racine.Position + Vector3.new(0, 0.5, -2)",
+        "racine.CFrame * CFrame.new(0, 0.5, -2)",
+        "CFrame.new(0, 0.5, -2) * racine.CFrame",
+        "racine.CFrame + Vector3.new(0, 0.5, -2)"
+      ],
+      "bonne": 1,
+      "explication": "Multiplier le CFrame du joueur par CFrame.new(0, 0.5, -2) applique le décalage dans son repère local : -2 en Z, c'est « 2 studs devant lui », même s'il se tourne. L'addition de Vector3 travaille en coordonnées mondiales absolues : le carton se placerait toujours au même endroit du monde, pas devant le joueur. Et l'ordre compte : inverser la multiplication ne donne pas le même résultat."
+    },
+    {
+      "question": "Ce code doit téléporter un prop (un Model de plusieurs Parts) sur le joueur : prop.Position = racine.Position. Quel est le problème ?",
+      "choix": [
+        "Il manque un task.wait() avant l'affectation",
+        "Position attend un CFrame, pas un Vector3",
+        "Un Model n'a pas de propriété Position : il faut prop:PivotTo(racine.CFrame) pour déplacer toutes ses Parts d'un bloc",
+        "Il faut d'abord ancrer le prop avec Anchored = true"
+      ],
+      "bonne": 2,
+      "explication": "Position existe sur les BasePart, pas sur les Models : ce code plante. PivotTo est la méthode moderne pour déplacer un Model entier en conservant les positions relatives de ses Parts — c'est celle qu'utilise transformerEnProp dans la roadmap. SetPrimaryPartCFrame faisait la même chose mais est déprécié."
+    },
+    {
+      "question": "Dans la validation de capture, à quoi sert (racineA.Position - racineB.Position).Magnitude ?",
+      "choix": [
+        "À calculer la distance entre chercheur et cible pour rejeter une capture faite depuis l'autre bout de la map",
+        "À orienter le chercheur vers sa cible",
+        "À vérifier que les deux joueurs sont dans la même équipe",
+        "À mesurer la vitesse de déplacement du chercheur"
+      ],
+      "bonne": 0,
+      "explication": "Soustraire deux positions donne le vecteur déplacement entre elles, et .Magnitude en donne la longueur : c'est la distance en studs. C'est la vérification n°6 de la phase 5, la plus importante — sans elle, un exploiteur qui appelle le RemoteEvent directement peut éliminer tout le monde sans bouger de son spawn."
+    },
+    {
+      "question": "Quelle est la différence entre part.Position = Vector3.new(0, 5, 0) et part.CFrame = CFrame.new(0, 5, 0) ?",
+      "choix": [
+        "Aucune, les deux écritures sont strictement équivalentes",
+        "Position déplace aussi les Parts soudées, CFrame non",
+        "CFrame est plus lent car il recalcule les collisions",
+        "Position ne change que la position ; affecter un CFrame.new remet aussi l'orientation à zéro"
+      ],
+      "bonne": 3,
+      "explication": "Un CFrame contient position ET orientation : affecter CFrame.new(0, 5, 0) sans rotation redresse la Part dans l'orientation par défaut, alors que Position ne touche pas à l'orientation existante. C'est pour ça qu'on compose avec CFrame.Angles quand on veut une rotation précise. Sur le déplacement des Parts soudées, c'est l'inverse de la proposition 2 : c'est justement CFrame qui entraîne les soudures correctement."
+    }
+  ]
+}

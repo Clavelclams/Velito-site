@@ -16,6 +16,7 @@ const LIBELLES_NIVEAUX: Record<string, string> = {
   debutant: "Débutant",
   intermediaire: "Intermédiaire",
   solide: "Solide",
+  expert: "Expert",
 };
 
 export default function ListeLecons({ lecons }: { lecons: LeconMeta[] }) {

@@ -1,0 +1,49 @@
+{
+  "fiche": "roblox-gamedev-03-creation-par-code",
+  "questions": [
+    {
+      "question": "Ce code crée une zone logique : local z = Instance.new(\"Part\") ; z.Parent = workspace ; z.Transparency = 1 ; z.CanCollide = false ; z.Anchored = true. Qu'est-ce qui est critiquable ?",
+      "choix": [
+        "Transparency = 1 ne rend pas une Part invisible, il faut la détruire",
+        "Le Parent est affecté en premier : chaque propriété suivante est répliquée une par une aux clients au lieu d'une insertion complète",
+        "Il manque un task.wait() entre chaque propriété",
+        "Une zone logique doit être un Model, pas une Part"
+      ],
+      "bonne": 1,
+      "explication": "Le pattern canonique est : créer, configurer toutes les propriétés, puis Parent en dernier. Tant que Parent est nil, l'objet n'existe que pour le script ; le parenter d'abord force Roblox à répliquer chaque modification suivante individuellement. C'est l'équivalent d'un INSERT suivi de dix UPDATE au lieu d'un INSERT complet."
+    },
+    {
+      "question": "Quel trio de propriétés est la signature d'une zone logique comme ZoneCaisse ou ZoneSpawnArticles ?",
+      "choix": [
+        "Transparency = 1, CanCollide = false, Anchored = true",
+        "Transparency = 0, CanCollide = true, Anchored = true",
+        "Transparency = 1, CanCollide = true, Anchored = false",
+        "Massless = true, CanCollide = false, Anchored = false"
+      ],
+      "bonne": 0,
+      "explication": "Invisible (Transparency = 1), traversable (CanCollide = false) et fixe (Anchored = true) : la zone n'existe que pour le code, qui lit sa Position/Size ou branche son .Touched. C'est l'équivalent d'une div invisible qui sert d'ancre à ton JavaScript. Massless, lui, concerne les objets soudés à un personnage, pas les zones."
+    },
+    {
+      "question": "Un script serveur crée le RemoteEvent MiseAJourEtat au lancement. Côté client, tu écris : local r = ReplicatedStorage.Remotes.MiseAJourEtat. Que risque-t-il de se passer en multijoueur ?",
+      "choix": [
+        "Rien, ReplicatedStorage est toujours chargé avant les LocalScripts",
+        "Le RemoteEvent sera dupliqué pour chaque joueur connecté",
+        "Le client peut s'exécuter avant que le serveur ait créé l'objet : erreur « MiseAJourEtat is not a valid member » — il faut WaitForChild",
+        "Le client va créer lui-même le RemoteEvent, ce qui provoque un conflit"
+      ],
+      "bonne": 2,
+      "explication": "L'ordre de démarrage client/serveur n'est pas garanti : un objet créé par code au lancement du serveur peut ne pas être encore répliqué quand le LocalScript démarre. L'accès par point plante alors immédiatement. WaitForChild(\"MiseAJourEtat\") attend l'apparition de l'objet — c'est le réflexe systématique pour tout ce qui est créé dynamiquement."
+    },
+    {
+      "question": "Tu dois poser 12 plots d'entraînement régulièrement espacés le long d'un mur. Quelle est la bonne approche ?",
+      "choix": [
+        "Les poser un par un à la souris, c'est plus précis que le code",
+        "Une fonction creerPlot(position) appelée dans une boucle for : l'espacement devient un paramètre modifiable en une ligne",
+        "Créer un seul plot et augmenter sa Size pour couvrir tout le mur",
+        "Utiliser douze scripts, un par plot, pour isoler les erreurs"
+      ],
+      "bonne": 1,
+      "explication": "La répétition régulière est exactement le cas où le code bat la souris : une fonction + une boucle, et l'espacement ou le nombre se règlent en changeant un nombre. La map unique et irrégulière se construit à la souris, les séries se génèrent par code — c'est le bon partage des rôles, comme générer une liste en JS plutôt que copier-coller du HTML."
+    }
+  ]
+}

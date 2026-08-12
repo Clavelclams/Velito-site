@@ -1,0 +1,49 @@
+{
+  "fiche": "roblox-gamedev-05-machine-a-etats",
+  "questions": [
+    {
+      "question": "Ce code d'attente a un bug : while #Players:GetPlayers() < Config.JOUEURS_MINIMUM do diffuser(\"ATTENTE\", 0, \"En attente...\") end. Lequel ?",
+      "choix": [
+        "diffuser ne peut pas être appelé dans un while",
+        "GetPlayers() ne se met pas à jour dans une boucle",
+        "Il manque le task.wait() dans la boucle : le serveur gèle complètement, aucun joueur ne pourra jamais se connecter",
+        "La condition doit utiliser <= et non <"
+      ],
+      "bonne": 2,
+      "explication": "Une boucle sans task.wait() monopolise le thread : le serveur ne rend jamais la main, ne traite plus rien — pas même les connexions qui feraient sortir de la boucle. C'est le piège signalé en toutes lettres dans la roadmap : chaque chemin d'exécution d'un while true (ou de toute boucle d'attente) doit contenir une attente."
+    },
+    {
+      "question": "Pourquoi une machine à états plutôt que des booléens comme enPlanque, chasseActive, mancheFinie ?",
+      "choix": [
+        "Les booléens consomment plus de mémoire que les états",
+        "Avec des booléens indépendants, des combinaisons contradictoires deviennent possibles et produisent des bugs introuvables ; avec un état unique, on sait toujours où on en est",
+        "Roblox interdit plus de trois booléens par script",
+        "Les booléens ne sont pas répliqués aux clients"
+      ],
+      "bonne": 1,
+      "explication": "Trois booléens = huit combinaisons possibles, dont la plupart n'ont aucun sens (chasseActive = true ET mancheFinie = true ?). Une machine à états garantit un seul état à la fois et des transitions définies — comme le statut d'une commande en base : payée OU expédiée, jamais un brouillard de flags. C'est ce qui rend les bugs localisables."
+    },
+    {
+      "question": "Un joueur modifie son client pour afficher un timer de chasse de 10 minutes au lieu de 4min30. Quel effet sur la partie ?",
+      "choix": [
+        "La manche dure 10 minutes pour tout le monde : le client a diffusé son timer",
+        "La manche dure 10 minutes uniquement sur son serveur",
+        "Le serveur détecte la triche et l'exclut automatiquement",
+        "Aucun : le vrai décompte tourne dans compteARebours côté serveur, il ne fausse que son propre affichage"
+      ],
+      "bonne": 3,
+      "explication": "Le client ne calcule jamais le temps : il reçoit tempsRestant via FireAllClients chaque seconde et l'affiche. La transition d'état se produit quand la boucle serveur le décide, quoi que montre l'écran du tricheur. C'est le fil rouge du parcours : le serveur décide, le client affiche — l'affichage truqué ne trompe que son propriétaire."
+    },
+    {
+      "question": "En phase 5 tu devras terminer la CHASSE en avance si tous les cachés sont trouvés. Comment cela se traduit-il dans la boucle séquentielle ?",
+      "choix": [
+        "Par une condition de sortie anticipée dans compteARebours : une transition supplémentaire CHASSE → RÉSULTATS",
+        "En supprimant l'état CHASSE de la boucle",
+        "En lançant une deuxième boucle while true en parallèle",
+        "En laissant les clients décider quand le timer s'arrête"
+      ],
+      "bonne": 0,
+      "explication": "Ajouter une transition à une machine à états implémentée en boucle séquentielle, c'est ajouter une condition de sortie : compteARebours vérifie à chaque seconde s'il reste des cachés vivants et retourne en avance si non. Une deuxième boucle parallèle recréerait justement le chaos d'états concurrents que la machine à états élimine, et les clients n'ont jamais autorité sur les transitions."
+    }
+  ]
+}

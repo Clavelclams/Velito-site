@@ -1,0 +1,49 @@
+{
+  "fiche": "roblox-gamedev-13-fiabilite-et-performance",
+  "questions": [
+    {
+      "question": "Le DataStore est en panne au moment où un joueur se connecte : GetAsync échoue, ton pcall met ses points à 0 par défaut. Le joueur joue une heure puis se déconnecte. Que doit faire ta sauvegarde ?",
+      "choix": [
+        "Sauvegarder normalement : il a gagné des points pendant la session",
+        "Sauvegarder uniquement si les points sont supérieurs à zéro",
+        "Ne PAS sauvegarder : le chargement a échoué, écrire écraserait sa vraie progression avec les valeurs par défaut — d'où le drapeau chargementReussi",
+        "Réessayer GetAsync puis sauvegarder la somme des deux valeurs"
+      ],
+      "bonne": 2,
+      "explication": "C'est la subtilité qui distingue une sauvegarde pro : si tu n'as pas réussi à lire les 5000 points historiques du joueur, sauvegarder ses points de session (partis de 0) les détruit définitivement. On garde un drapeau chargementReussi[player] et on refuse d'écrire par-dessus une lecture échouée. Perdre une session est ennuyeux ; effacer un an de progression est impardonnable."
+    },
+    {
+      "question": "Tu sauvegardes les Points dans le DataStore à chaque capture réussie. Avec 12 joueurs actifs, quel problème va apparaître ?",
+      "choix": [
+        "Aucun, le DataStore est conçu pour des écritures fréquentes",
+        "Le dépassement des quotas de requêtes par minute : des sauvegardes seront rejetées. Il faut sauvegarder aux moments qui comptent : PlayerRemoving, auto-save périodique, BindToClose",
+        "Les points seront sauvegardés dans le désordre",
+        "Chaque sauvegarde fera respawn le joueur concerné"
+      ],
+      "bonne": 1,
+      "explication": "Le nombre de requêtes DataStore par minute est limité ; une partie animée génère des dizaines de captures. Une fois le quota consommé, les requêtes suivantes échouent — y compris la sauvegarde de déconnexion, la seule vraiment critique. La stratégie standard : les leaderstats vivent en mémoire pendant la session, et on écrit à PlayerRemoving, en auto-save espacé, et dans BindToClose pour l'arrêt serveur."
+    },
+    {
+      "question": "Dans ZoneCaisse.Touched, pourquoi le if valides[joueur] then return end doit-il être placé parmi les premières lignes du handler ?",
+      "choix": [
+        "Parce que Luau exige que les return soient en début de fonction",
+        "Pour que le joueur soit validé avant les autres",
+        "Par simple convention de lisibilité, sans effet réel",
+        ".Touched se déclenche des dizaines de fois par seconde par joueur qui court sur la zone : sans ce debounce en tête, un joueur consommerait toutes les places en une seconde et le handler ferait du travail coûteux en boucle"
+      ],
+      "bonne": 3,
+      "explication": "Deux raisons se superposent : la correction (le piège documenté de la phase 4 — sans debounce, chaque micro-contact décrémente placesRestantes) et la performance (un handler .Touched doit être bon marché et sortir vite, car il est mitraillé). Les gardes discriminantes et gratuites en premier, le travail coûteux après : la même logique d'ordre que les six contrôles du RemoteEvent."
+    },
+    {
+      "question": "Ton serveur Rush Magasin rame après une heure de jeu, alors que les premiers tests étaient fluides. Parmi ces causes, laquelle N'EST PAS un suspect plausible ?",
+      "choix": [
+        "Des tables indexées par player jamais nettoyées à la déconnexion",
+        "Des connexions .Touched accumulées sur des objets qui survivent, jamais Disconnect()",
+        "Des articles ratés dont les Parts sont restées CanCollide = true et non Massless, simulées en permanence",
+        "L'utilisation de string.format dans le HUD client"
+      ],
+      "bonne": 3,
+      "explication": "Un formatage de texte une fois par seconde côté client est totalement négligeable. Les trois autres sont les suspects classiques d'une dégradation progressive : les fuites (tables par joueur, connexions oubliées) s'accumulent avec le temps et les allers-retours de joueurs, et la physique mal réglée s'empile à mesure que des objets s'ajoutent. Une lenteur qui croît avec la durée de session sent toujours la fuite."
+    }
+  ]
+}

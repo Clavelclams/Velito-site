@@ -1,0 +1,49 @@
+{
+  "fiche": "roblox-gamedev-01-penser-comme-un-game-dev",
+  "questions": [
+    {
+      "question": "En pleine phase 3 (machine à états), tu as une idée géniale de système de taunts pour les cachés. Que fais-tu ?",
+      "choix": [
+        "Tu l'implémentes tout de suite tant que l'idée est fraîche",
+        "Tu la notes dans « Idées v2 » et tu retournes à la phase en cours",
+        "Tu crées une branche de projet séparée pour la tester",
+        "Tu remplaces la phase 4 par ce système, plus motivant"
+      ],
+      "bonne": 1,
+      "explication": "C'est LA règle anti-abandon du contrat de périmètre : toute nouvelle idée va dans « Idées v2 », sans exception. C'est exactement la gestion de backlog que tu pratiques en projet web — l'idée n'est pas perdue, elle est juste priorisée. L'implémenter maintenant, c'est comment les projets meurent à 40 %."
+    },
+    {
+      "question": "Pourquoi la boucle de jeu de la phase 3 contient-elle des commentaires TODO au lieu du code complet ?",
+      "choix": [
+        "Parce que l'auteur de la roadmap n'a pas fini de l'écrire",
+        "Pour économiser les performances du serveur en phase de test",
+        "Pour que la boucle tourne à vide dès maintenant et qu'on remplisse chaque trou phase par phase, en testant à chaque fois",
+        "Parce que Luau ignore les TODO à la compilation, ce qui évite les erreurs"
+      ],
+      "bonne": 2,
+      "explication": "Les TODO sont des trous volontaires : la machine à états tourne dès la phase 3, à vide, et chaque phase suivante en remplit un. Si un bug apparaît, tu sais qu'il vient de ce que tu viens d'ajouter. C'est le même principe que livrer un incrément fonctionnel à chaque sprint plutôt qu'un gros bloc invérifiable."
+    },
+    {
+      "question": "Quelle est la définition de « fini » pour la v1 du Prop Hunt selon le contrat de périmètre ?",
+      "choix": [
+        "Les trois gymnases sont construits et le jeu a 100 joueurs actifs",
+        "Trois personnes jouent deux manches complètes, comprennent les règles sans explication, et rigolent au moins une fois",
+        "Le code passe tous les tests unitaires et la map est texturée",
+        "Le jeu est publié en public avec une boutique fonctionnelle"
+      ],
+      "bonne": 1,
+      "explication": "La définition de « fini » est volontairement observable et binaire, comme un critère d'acceptation : soit les trois joueurs comprennent et rigolent, soit non. Les gymnases supplémentaires, textures et boutique sont explicitement listés dans « la v1 NE contient PAS » — les viser pour la v1, c'est garantir de ne jamais finir."
+    },
+    {
+      "question": "Tu es en phase 1 depuis deux sessions et le gymnase est jouable mais moche. L'envie d'ajouter textures et gradins est forte. Que dit la roadmap ?",
+      "choix": [
+        "Tu passes à la phase 2 quoi qu'il arrive : l'embellissement attend la phase 9",
+        "Tu prends une session de plus, l'esthétique motive les testeurs",
+        "Tu ajoutes juste les textures, les gradins iront en v2",
+        "Tu demandes un avis à des joueurs avant de décider"
+      ],
+      "bonne": 0,
+      "explication": "La phase 1 est identifiée comme « LA phase où le projet meurt » : la limite dure est de 2 sessions maximum, puis on passe aux équipes. La map moche est une décision assumée, pas un défaut — un gymnase gris jouable fait avancer le projet, un gymnase magnifique sans logique de jeu brûle des week-ends pour rien."
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "fiche": "roblox-gamedev-11-conception-pilotee-par-les-donnees",
+  "questions": [
+    {
+      "question": "Dans GestionArticles, tu trouves : if articleDuJour.id == \"clim\" then vitesse = 12 end. Pourquoi est-ce un problème de conception ?",
+      "choix": [
+        "La comparaison de strings est trop lente dans une boucle de jeu",
+        "Le moteur connaît maintenant un contenu précis : la séparation contenu/moteur est cassée — le comportement spécial doit devenir un champ de données (ex. vitessePorteur) lu génériquement",
+        "id devrait être un nombre, pas une string",
+        "Il faut comparer articleDuJour.nom, pas articleDuJour.id"
+      ],
+      "bonne": 1,
+      "explication": "Dès que le moteur contient un if spécifique à un contenu, chaque nouvel article risque d'exiger une modification du moteur — exactement ce que le pattern devait éviter. Ajoute un champ vitessePorteur au schéma du catalogue et fais lire ce champ par le moteur pour tous les articles. C'est le même code smell qu'un if ($article->getId() === 42) dans un contrôleur Symfony."
+    },
+    {
+      "question": "Quelles sont les DEUX seules choses à faire pour ajouter un nouvel article au jeu, selon la roadmap ?",
+      "choix": [
+        "Modifier poserArticles et ajouter un RemoteEvent dédié",
+        "Créer un nouveau script serveur et le déclarer dans la boucle",
+        "Construire un Model dans ReplicatedStorage/Articles et ajouter une entrée (6 lignes) au Catalogue",
+        "Dupliquer le jeu et publier une nouvelle version"
+      ],
+      "bonne": 2,
+      "explication": "C'est tout l'achat du data-driven : le contenu s'ajoute sans toucher au moteur, donc sans risque de casser ramassage, arrachage ou caisse. C'est ce qui permet la mise à jour en 20 minutes quand un truc est à la mode — la durée de vie du jeu est dans ses données. Si tu dois toucher à autre chose, ta séparation a une fuite."
+    },
+    {
+      "question": "Le Catalogue est dans ReplicatedStorage, donc lisible par les clients. Un joueur modifie son client pour que Catalogue.auHasard() renvoie toujours la console. Impact sur la partie ?",
+      "choix": [
+        "L'article de la manche devient la console pour tout le monde",
+        "L'article devient la console uniquement pour lui, y compris les Models posés au sol",
+        "Le serveur détecte l'incohérence et le kick",
+        "Aucun : le tirage qui compte est fait par le serveur dans sa boucle ; le client peut au pire fausser son propre affichage"
+      ],
+      "bonne": 3,
+      "explication": "Les données du catalogue sont partagées (le HUD lit noms et couleurs), mais la décision — quel article, combien, où — est prise par la boucle serveur qui fait son propre require et son propre tirage. Les Models au sol sont clonés par le serveur. Le client tricheur ne fausse que ce que son écran affiche. Données partagées, décisions serveur : le fil rouge, encore."
+    },
+    {
+      "question": "Tu veux ajouter un article « PS6 » avec le logo PlayStation pour attirer des joueurs. Que dit la roadmap ?",
+      "choix": [
+        "Interdit : aucune marque réelle — Roblox modère activement, un signalement suffit à faire retirer le jeu. On parodie : PlaySphere 6, StationPlay 6",
+        "Autorisé si le jeu est gratuit et sans Robux",
+        "Autorisé car un article de jeu relève du fair use",
+        "Autorisé à condition de créditer Sony dans la description"
+      ],
+      "bonne": 0,
+      "explication": "L'avertissement ouvre la roadmap Rush : ni logo, ni nom, ni charte graphique d'une marque réelle. Un seul signalement peut faire retirer le jeu et tout le travail avec. La parodie (PlaySphere 6, MAXI DISCOUNT, Choconoisette) est plus fun, t'appartient, et personne ne peut te la supprimer — c'est d'ailleurs une identité plus forte qu'une copie."
+    }
+  ]
+}

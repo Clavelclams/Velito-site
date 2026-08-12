@@ -1,0 +1,49 @@
+{
+  "fiche": "roblox-gamedev-14-publier-et-faire-vivre",
+  "questions": [
+    {
+      "question": "Ton Prop Hunt est publié depuis une semaine et affiche zéro joueur. Que dit ta roadmap ?",
+      "choix": [
+        "Il faut le dépublier et améliorer la map avant de retenter",
+        "C'est normal et sans importance : tu as fini et publié un jeu, l'objectif est atteint ; la visibilité se construit ensuite (mises à jour, clips)",
+        "C'est le signe que le jeu est mal équilibré",
+        "Il faut acheter de la publicité Roblox immédiatement"
+      ],
+      "bonne": 1,
+      "explication": "L'avertissement est écrit noir sur blanc en phase 8 : le compteur sera à zéro au début, et ça n'a aucune importance. Finir et publier te place déjà devant 95 % des gens qui ouvrent Studio, et le jeu est une pièce de portfolio complète. La visibilité vient après, par la régularité : contenu hebdo et clips — pas par une refonte panique de la map."
+    },
+    {
+      "question": "Pendant le test réel, un joueur ne comprend pas qu'il doit cliquer sur les props, un autre trouve la map « un peu vide », un troisième voudrait choisir son prop. Que corriges-tu avant le passage en Public ?",
+      "choix": [
+        "Les trois remarques, pour un lancement parfait",
+        "Le choix du prop d'abord, c'est la demande la plus enthousiaste",
+        "Uniquement le problème de compréhension du clic (ça bloque le jeu) ; la map et le choix du prop partent en Idées v2",
+        "Rien : on ne modifie jamais un jeu après publication"
+      ],
+      "bonne": 2,
+      "explication": "La règle de tri de la phase 8 : corriger uniquement ce qui bloque la compréhension ou casse le jeu. Ne pas comprendre l'action principale est bloquant (un feedback ou une consigne HUD à ajouter). La déco et le choix du prop sont explicitement du périmètre v2 dans la roadmap. Le contrat de périmètre tient jusqu'au bout — c'est lui qui fait qu'on publie."
+    },
+    {
+      "question": "Grâce à quelle décision d'architecture la « mise à jour de contenu hebdo » de Rush Magasin coûte-t-elle 20 minutes au lieu d'une session de code ?",
+      "choix": [
+        "La machine à états de BoucleDeJeu",
+        "Le nettoyage des déconnexions dans PlayerRemoving",
+        "Les six validations du RemoteEvent",
+        "Le Catalogue data-driven : un nouvel article = un Model + six lignes de données, zéro modification du moteur"
+      ],
+      "bonne": 3,
+      "explication": "C'est la récolte de la leçon 11 : le contenu étant une donnée, l'ajout d'un article ne touche pas au moteur, donc pas de risque de régression ni de re-test complet — Model, six lignes, republication. C'est ce qui rend tenable le rythme « une petite mise à jour par semaine », la régularité qui fait revenir les joueurs, comme le contenu frais d'un site."
+    },
+    {
+      "question": "Pourquoi la roadmap conseille-t-elle de publier d'abord en privé avec un lien d'invitation plutôt que directement en Public ?",
+      "choix": [
+        "Pour faire les tests réels dans un environnement contrôlé avant d'exposer le jeu à tous : une préprod avant la prod",
+        "Parce que Roblox impose une période privée de 30 jours",
+        "Parce que le mode privé désactive les quotas DataStore",
+        "Pour empêcher le vol du concept par d'autres développeurs"
+      ],
+      "bonne": 0,
+      "explication": "Le mode privé + lien te donne un vrai serveur en ligne, de vrais joueurs invités, mais aucun inconnu ne tombe sur un jeu encore bancal : tu observes, tu corriges ce qui bloque, puis tu passes en Public proprement. C'est exactement le cycle préprod → prod d'un déploiement web. Aucune règle Roblox n'impose de délai, et les quotas s'appliquent pareil."
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "fiche": "roblox-gamedev-07-manipuler-le-personnage",
+  "questions": [
+    {
+      "question": "Après transformation, un joueur-banc se déplace mais le banc reste planté au milieu du gymnase, immobile. Cause la plus probable ?",
+      "choix": [
+        "Le PivotTo a été fait avant le Parent = perso",
+        "Une ou plusieurs Parts du prop sont restées Anchored = true : une Part ancrée ignore les soudures",
+        "Le WeldConstraint doit avoir Part0 = la Part du prop et Part1 = la racine",
+        "Il manque Massless = true sur les Parts du prop"
+      ],
+      "bonne": 1,
+      "explication": "C'est le piège documenté de la phase 4 : une Part ancrée est figée dans le monde et ignore tout WeldConstraint — le personnage part, le prop reste. Il faut vérifier TOUTES les Parts du Model, y compris les imbriquées, d'où le GetDescendants. Massless, lui, ne concerne que le poids ; et l'ordre Part0/Part1 n'empêche pas la soudure de fonctionner."
+    },
+    {
+      "question": "Un caché transformé en plot se promène... avec un visage qui flotte au-dessus du plot. Qu'a oublié le code ?",
+      "choix": [
+        "De rendre le HumanoidRootPart transparent",
+        "De détruire l'ancien PropActuel",
+        "De mettre à 1 la Transparency du Decal : le visage n'est pas une BasePart, la boucle qui ne traite que les BasePart le laisse visible",
+        "De désactiver le Humanoid du personnage"
+      ],
+      "bonne": 2,
+      "explication": "Le visage Roblox est un Decal collé sur la tête, pas une BasePart : une boucle qui ne teste que IsA(\"BasePart\") le rate. D'où le elseif partie:IsA(\"Decal\") dans transformerEnProp. C'est l'effet « involontairement terrifiant » décrit dans la roadmap — et un bon rappel qu'un parcours de hiérarchie doit traiter tous les types concernés."
+    },
+    {
+      "question": "Pourquoi transformerEnProp doit-il s'exécuter côté serveur et non dans un LocalScript ?",
+      "choix": [
+        "Parce que Clone() n'existe pas côté client",
+        "Parce que les LocalScripts ne peuvent pas parcourir GetDescendants",
+        "Pour économiser la bande passante du client",
+        "Parce que la transformation doit être répliquée à tous les joueurs : faite localement, seul le joueur transformé se verrait en banc, les chercheurs verraient toujours son personnage"
+      ],
+      "bonne": 3,
+      "explication": "Un changement fait par un LocalScript ne vaut que sur la machine du joueur : les autres verraient le personnage normal — le jeu serait cassé (et accessoirement, un caché ne serait jamais vraiment caché). Toute modification qui doit être vue de tous passe par le serveur. La caméra, en revanche, est purement locale : c'est le partage exact du fil rouge « le serveur décide, le client affiche »."
+    },
+    {
+      "question": "Sans Massless = true sur les Parts du prop, quel symptôme apparaît en jeu ?",
+      "choix": [
+        "Le porteur d'un prop lourd est ralenti voire bloqué : la physique additionne les masses des Parts soudées",
+        "Le prop devient invisible pour les autres joueurs",
+        "Les WeldConstraints se détruisent au bout de quelques secondes",
+        "Le prop passe à travers le sol"
+      ],
+      "bonne": 0,
+      "explication": "Les masses des Parts soudées s'ajoutent à celle du personnage : un chariot à ballons bien massif transforme le joueur en escargot, voire l'immobilise. Massless = true rend la Part sans poids pour la physique tout en gardant sa géométrie. La roadmap le signale dans les deux jeux — pour le prop du gymnase comme pour le carton de Rush Magasin, c'est indispensable."
+    }
+  ]
+}

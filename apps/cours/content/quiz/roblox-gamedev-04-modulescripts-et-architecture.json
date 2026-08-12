@@ -1,0 +1,49 @@
+{
+  "fiche": "roblox-gamedev-04-modulescripts-et-architecture",
+  "questions": [
+    {
+      "question": "BoucleDeJeu appelle _G.repartirEquipes() mais plante « attempt to call a nil value »... une fois sur trois. Pourquoi ?",
+      "choix": [
+        "_G est vidé automatiquement toutes les 60 secondes par Roblox",
+        "L'ordre d'exécution des scripts n'est pas garanti : BoucleDeJeu s'exécute parfois avant que GestionEquipes ait rempli _G",
+        "_G n'est pas partagé entre scripts serveur, seulement entre clients",
+        "repartirEquipes contient une erreur de syntaxe intermittente"
+      ],
+      "bonne": 1,
+      "explication": "C'est le bug de timing classique de _G : rien ne garantit quel script démarre en premier, donc la clé peut ne pas encore exister au moment de l'appel — un bug intermittent, le pire genre. Avec require(), le problème disparaît : le chargement du module est attendu et la dépendance est explicite. C'est exactement pour ça que la roadmap annonce le remplacement de _G par un ModuleScript."
+    },
+    {
+      "question": "Deux scripts serveur font chacun require(ReplicatedStorage.Modules.Config). Le script A modifie Config.DUREE_PLANQUE = 10. Que voit le script B ?",
+      "choix": [
+        "Config.DUREE_PLANQUE vaut toujours 30 : chaque require renvoie une copie fraîche",
+        "Une erreur : un module requis deux fois est verrouillé en lecture seule",
+        "Config.DUREE_PLANQUE vaut 10 : le module n'est exécuté qu'une fois et tous les require partagent la même table",
+        "Cela dépend de l'ordre alphabétique des scripts"
+      ],
+      "bonne": 2,
+      "explication": "Un ModuleScript est exécuté au premier require, puis la même table est renvoyée à tous les appelants : c'est un singleton, comme un service Symfony injecté partout ou un module ES6. C'est ce qui permet d'utiliser un module comme état partagé propre — et c'est aussi pourquoi une modification faite par un script est visible par tous les autres."
+    },
+    {
+      "question": "Tu hésites à ranger un ModuleScript contenant la logique de validation des captures dans ReplicatedStorage/Modules. Bonne idée ?",
+      "choix": [
+        "Oui, ReplicatedStorage est le dossier standard pour tous les modules",
+        "Oui, du moment que le module est requis uniquement par des scripts serveur",
+        "Non, car les LocalScripts ne peuvent pas faire require depuis ReplicatedStorage",
+        "Non : tout ce qui est dans ReplicatedStorage est lisible par n'importe quel joueur ; la logique décisive reste dans ServerScriptService"
+      ],
+      "bonne": 3,
+      "explication": "La règle d'architecture de la roadmap : ServerScriptService est invisible et intrafraudable pour les joueurs, tout le reste est lisible par n'importe qui. Un exploiteur qui lit ta logique de validation sait exactement quelles vérifications contourner. ReplicatedStorage convient pour la Config de gameplay et ce qui doit être partagé avec les clients — jamais pour la logique décisive."
+    },
+    {
+      "question": "Quel est l'intérêt principal de centraliser DUREE_PLANQUE, COOLDOWN_VOL, POINTS_CAPTURE... dans un unique Config.lua ?",
+      "choix": [
+        "L'équilibrage devient un changement d'une ligne dans un seul fichier, sans toucher au moteur du jeu",
+        "Les valeurs y sont protégées contre les exploiteurs",
+        "Le jeu démarre plus vite car les constantes sont précompilées",
+        "Roblox exige un fichier Config pour publier un jeu"
+      ],
+      "bonne": 0,
+      "explication": "C'est la séparation configuration/code, comme un .env dans tes projets web : la phase d'équilibrage consiste à tourner des curseurs, et elle n'est vivable que si chaque curseur se règle en une ligne au même endroit. La protection contre les exploiteurs, elle, ne vient pas de la centralisation — Config est dans ReplicatedStorage, donc lisible par tous."
+    }
+  ]
+}

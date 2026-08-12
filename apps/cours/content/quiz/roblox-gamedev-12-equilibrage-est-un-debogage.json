@@ -1,0 +1,49 @@
+{
+  "fiche": "roblox-gamedev-12-equilibrage-est-un-debogage",
+  "questions": [
+    {
+      "question": "Après un playtest décevant, tu baisses COOLDOWN_VOL, tu ralentis VITESSE_PORTEUR et tu allonges DUREE_CAISSE. Le playtest suivant est bien meilleur. Quel est le problème ?",
+      "choix": [
+        "Aucun : l'important est que le jeu soit meilleur",
+        "Trois paramètres ont changé à la fois : impossible de savoir lequel a produit l'effet, donc impossible de reproduire, de doser ou de revenir en arrière intelligemment",
+        "Il fallait d'abord modifier la géométrie de la map",
+        "Les trois paramètres ne doivent jamais être modifiés dans la même semaine"
+      ],
+      "bonne": 1,
+      "explication": "C'est la règle n°4 de la roadmap : un seul paramètre modifié à la fois. Peut-être qu'un seul des trois changements a tout fait, et qu'un autre a même dégradé quelque chose que tu verras dans deux sessions sans comprendre d'où ça vient. C'est la méthode du débogage appliquée au design : une variable, un test, une conclusion — sinon tu tournes en rond."
+    },
+    {
+      "question": "Pendant le playtest, un joueur hurle « NOOON il m'a volé mon carton juste devant la caisse ! » et rejoue immédiatement. Un autre lâche « de toute façon je pouvais rien faire » et sort son téléphone. Comment lire ces deux signaux ?",
+      "choix": [
+        "Les deux sont des râles à corriger en priorité",
+        "Les deux sont normaux dans un party game, on ignore",
+        "Le premier est un râle de tension (le jeu fonctionne, à conserver) ; le second est un râle d'injustice suivi d'ennui : c'est LE symptôme à corriger",
+        "Le premier joueur est mauvais perdant, le second est simplement fatigué"
+      ],
+      "bonne": 2,
+      "explication": "Distinguer le râle de tension du râle d'injustice est la compétence clé de lecture d'un playtest : le premier crie parce que le jeu l'a fait vibrer (il rejoue !), le second a décroché parce qu'il n'avait aucun levier — et l'ennui, signal silencieux et mortel, se voit au téléphone sorti. On amplifie ce qui produit le premier, on corrige ce qui produit le second."
+    },
+    {
+      "question": "Symptôme récurrent : « le premier qui attrape un article gagne toujours ». Lequel de ces remèdes N'EST PAS dans la bonne direction ?",
+      "choix": [
+        "Baisser COOLDOWN_VOL pour rendre le vol plus fréquent",
+        "Ralentir davantage VITESSE_PORTEUR",
+        "Allonger la distance entre les rayons et la caisse",
+        "Augmenter DUREE_ETOURDI à 3 secondes pour le voleur uniquement"
+      ],
+      "bonne": 3,
+      "explication": "Le symptôme signifie que la défense (garder l'article) est trop forte par rapport à l'attaque (le voler). Les trois premiers remèdes affaiblissent le porteur ou allongent sa fenêtre de vulnérabilité. Étourdir longuement le voleur fait l'inverse : voler devient encore moins rentable, le premier arrivé gagne encore plus sûrement. Et rappel de méthode : quel que soit le remède choisi, on le teste seul."
+    },
+    {
+      "question": "Pourquoi la roadmap interdit-elle d'expliquer les règles pendant le playtest de 6 personnes ?",
+      "choix": [
+        "Parce que si le jeu a besoin d'explications, c'est l'interface et le feedback qui ont échoué — le test doit le révéler, pas le masquer",
+        "Pour gagner du temps sur la session de test",
+        "Parce que les joueurs jouent moins bien quand on leur parle",
+        "Pour éviter de dévoiler les exploits possibles du jeu"
+      ],
+      "bonne": 0,
+      "explication": "La définition de « fini » des deux jeux inclut « comprennent les règles sans explication » : le playtest silencieux est précisément le test de ce critère. Expliquer, c'est fausser la mesure — comme souffler la réponse pendant un test utilisateur. Ce que les joueurs ne comprennent pas seuls désigne exactement ce que le HUD ou le feedback doit mieux dire."
+    }
+  ]
+}

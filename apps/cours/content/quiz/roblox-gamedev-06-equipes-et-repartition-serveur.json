@@ -1,0 +1,49 @@
+{
+  "fiche": "roblox-gamedev-06-equipes-et-repartition-serveur",
+  "questions": [
+    {
+      "question": "Tu as oublié de décocher AutoAssignable sur tes deux Teams. Que se passe-t-il en multijoueur ?",
+      "choix": [
+        "Rien, AutoAssignable ne sert que pour les jeux sans script",
+        "Roblox assigne chaque arrivant à l'équipe la moins peuplée, court-circuitant ta logique de répartition serveur",
+        "Les joueurs ne peuvent plus rejoindre aucune équipe",
+        "Le serveur plante au premier PlayerAdded"
+      ],
+      "bonne": 1,
+      "explication": "AutoAssignable laisse le moteur équilibrer automatiquement les effectifs à la connexion — or ta répartition (ratio 1/4, mélange à chaque manche) est une règle métier qui appartient à ta boucle de jeu. Les deux logiques entreraient en conflit. Comme en web : quand l'attribution des rôles est une règle métier, on ne laisse pas le framework la faire par défaut."
+    },
+    {
+      "question": "Avec 3 joueurs connectés, que donnerait nbChercheurs = math.floor(#joueurs / 4) SANS le math.max(1, ...) ?",
+      "choix": [
+        "1 chercheur, le jeu fonctionne normalement",
+        "Une erreur de division",
+        "3 chercheurs et aucun caché",
+        "0 chercheur : personne ne chasse, la manche est injouable"
+      ],
+      "bonne": 3,
+      "explication": "math.floor(3/4) = 0. Sans le garde-fou math.max(1, ...), toute partie à 2 ou 3 joueurs se lancerait sans aucun chercheur — la manche tournerait à vide. C'est le réflexe des cas limites : chaque fois que tu divises un effectif, vérifie ce que donnent 0, 1 et 2, exactement comme tu testes une pagination avec 0 résultat."
+    },
+    {
+      "question": "Pourquoi mélanger la liste des joueurs avec Fisher-Yates avant de répartir, au lieu de prendre Players:GetPlayers() tel quel ?",
+      "choix": [
+        "Parce que GetPlayers() renvoie parfois des joueurs déconnectés",
+        "Pour améliorer les performances de la boucle de répartition",
+        "Parce que l'ordre de GetPlayers() est stable (ordre de connexion) : sans mélange, les mêmes joueurs seraient chercheurs à chaque manche",
+        "Parce que ipairs exige un tableau mélangé"
+      ],
+      "bonne": 2,
+      "explication": "GetPlayers() renvoie les joueurs dans un ordre qui ne change pas entre les manches ; prendre les N premiers donnerait toujours les mêmes chercheurs. Fisher-Yates (parcours décroissant + échange avec un index aléatoire ≤ i) donne à chaque permutation la même probabilité — contrairement aux mélanges naïfs qui sont biaisés. C'est le shuffle() dont tu comprends enfin l'intérieur."
+    },
+    {
+      "question": "Juste après repartirEquipes(), tous les joueurs disparaissent et réapparaissent aux spawns. Bug ou comportement normal ?",
+      "choix": [
+        "Comportement normal : changer player.Team déclenche un respawn, ce qui replace opportunément tout le monde en début de manche",
+        "Bug : il faut envelopper le changement d'équipe dans un pcall",
+        "Bug : la répartition doit se faire côté client pour éviter le respawn",
+        "Comportement normal, mais il faut le désactiver car il fait perdre les leaderstats"
+      ],
+      "bonne": 0,
+      "explication": "C'est le piège documenté de la phase 2 : l'affectation de player.Team fait respawn le personnage. Loin d'être un problème, ça remet tout le monde à zéro entre les manches — et avec Neutral décoché et TeamColor réglé sur les SpawnLocations, chaque équipe réapparaît chez elle. Les leaderstats, attachés au Player et non au Character, survivent très bien au respawn."
+    }
+  ]
+}

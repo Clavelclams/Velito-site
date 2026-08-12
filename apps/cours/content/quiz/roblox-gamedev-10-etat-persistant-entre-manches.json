@@ -1,0 +1,49 @@
+{
+  "fiche": "roblox-gamedev-10-etat-persistant-entre-manches",
+  "questions": [
+    {
+      "question": "En manche 2 de Rush Magasin, plus personne ne peut être éliminé : tous les joueurs sont considérés comme « passés en caisse » alors qu'ils n'ont rien fait. Quel est le bug le plus probable ?",
+      "choix": [
+        "enLice n'a pas été rempli au début de la partie",
+        "La table valides n'a pas été remise à zéro en fin de manche : c'est un état de manche traité comme un état de partie",
+        "PlayerRemoving a vidé la table valides par erreur",
+        "La ZoneCaisse est restée active pendant la préparation"
+      ],
+      "bonne": 1,
+      "explication": "valides[player] = true est posé au passage en caisse et doit être effacé à CHAQUE fin de manche (valides = {} dans finDeManche) : c'est un état de manche. Oublié, tous les validés de la manche 1 le restent pour toujours. C'est le bug type des jeux à manches : une donnée rangée dans la mauvaise durée de vie — comme stocker en session ce qui devrait vivre le temps d'une requête."
+    },
+    {
+      "question": "Un joueur quitte le serveur en pleine manche. Sans le nettoyage dans PlayerRemoving, quels sont les DEUX problèmes ?",
+      "choix": [
+        "Le serveur crash immédiatement, et les autres joueurs sont déconnectés",
+        "Son personnage reste visible dans le magasin, et son article devient indestructible",
+        "Fuite mémoire (les tables gardent une référence vers le Player, jamais libéré) et bugs fantômes (la partie peut se bloquer en attendant un joueur qui n'existe plus)",
+        "Ses leaderstats sont transférés au joueur suivant, et la manche recommence"
+      ],
+      "bonne": 2,
+      "explication": "Les tables porteurs, valides, immunite et la liste enLice conservent leurs références : le garbage collector ne peut pas libérer le Player (fuite qui s'accumule sur un serveur qui tourne des heures), et la logique de fin de manche attend un fantôme — partie bloquée. La règle d'or : chaque table indexée par player a sa ligne de nettoyage dans PlayerRemoving, écrite dans la minute où la table est créée."
+    },
+    {
+      "question": "Pourquoi la roadmap interdit-elle d'éjecter les éliminés du serveur et impose-t-elle une zone spectateur ?",
+      "choix": [
+        "Parce que kick() est réservé aux administrateurs du jeu",
+        "Pour que le serveur garde assez de joueurs et ne s'éteigne pas",
+        "Parce que les éliminés doivent conserver leur article pour la manche suivante",
+        "Un joueur qui attend est un joueur qui reste : éjecté, il ne revient pas ; spectateur, il commente et rejoint la partie suivante"
+      ],
+      "bonne": 3,
+      "explication": "C'est une décision de rétention : l'éliminé installé sur une plateforme avec vue sur les caisses vit la fin de partie, réagit, et est là au moment où la nouvelle partie démarre. L'éjecter, c'est le renvoyer vers la liste des milliers d'autres jeux Roblox. Techniquement l'élimination reste simple : retrait d'enLice, Health = 0, respawn vers la zone spectateur."
+    },
+    {
+      "question": "Ce code élimine les non-validés : for i, p in ipairs(enLice) do if not valides[p] then table.remove(enLice, i) end end. Quel est le problème ?",
+      "choix": [
+        "Supprimer dans un tableau pendant qu'on l'itère décale les index et saute des joueurs : il faut reconstruire une liste de survivants comme le fait finDeManche",
+        "ipairs ne fonctionne pas sur une liste de joueurs",
+        "table.remove ne peut pas être appelé dans une boucle",
+        "Il faut utiliser pairs au lieu de ipairs pour pouvoir supprimer"
+      ],
+      "bonne": 0,
+      "explication": "Quand table.remove(enLice, i) supprime l'élément i, tous les suivants reculent d'une case — mais la boucle passe quand même à i+1 : l'élément qui vient de glisser en position i n'est jamais examiné. Deux éliminés consécutifs, et le second survit par accident. Le pattern sûr de la roadmap : reconstruire la liste des survivants dans un nouveau tableau, puis remplacer enLice. Même piège qu'un splice dans un forEach en JS."
+    }
+  ]
+}
