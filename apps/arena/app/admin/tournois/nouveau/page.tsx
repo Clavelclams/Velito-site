@@ -66,7 +66,7 @@ export default async function NouveauTournoi({
               <span>
                 <span className="block text-sm font-semibold">Sport physique</span>
                 <span className="block text-xs text-arena-faint">
-                  Padel, five, basket 3x3
+                  Padel, five, playground
                 </span>
               </span>
             </label>

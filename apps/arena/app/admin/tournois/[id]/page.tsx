@@ -413,7 +413,22 @@ export default async function PageTournoi({
               <h3 className="mb-3 text-sm font-semibold uppercase tracking-widest text-arena-faint">
                 {estParEquipes ? "Composition des équipes" : "Ordre des joueurs"}
               </h3>
+              {/* ⚠️ La `key` n'est pas décorative — bug constaté en prod le
+                  13/08/2026. RepartitionJoueurs est un composant CLIENT qui
+                  initialise son état avec `useState(joueurs)`. En React, un
+                  useState n'est lu QU'AU PREMIER RENDU : quand une Server
+                  Action ajoute un joueur et revalide la page, le composant
+                  reçoit bien de nouvelles props, mais garde son ancien état.
+                  Résultat observé : on ajoutait 4 joueurs et la zone de
+                  répartition n'en montrait qu'un seul jusqu'au rechargement.
+                  Faire changer la `key` force React à démonter puis remonter
+                  le composant, donc à relire l'état initial. Alternative
+                  écartée : un useEffect de synchronisation, qui rendrait deux
+                  fois et créerait une source de vérité en double. */}
               <RepartitionJoueurs
+                key={`repartition-${participations.length}-${equipes
+                  .map((e) => `${e.id}:${(e.membres ?? []).length}`)
+                  .join("|")}`}
                 colonnes={colonnesRepartition}
                 joueurs={participations.map((p) => ({
                   id: p.joueur_id,
