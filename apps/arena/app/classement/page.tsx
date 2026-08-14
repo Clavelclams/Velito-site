@@ -1,7 +1,14 @@
 /**
- * Classement esport public — points cumulés sur les tournois TERMINÉS.
+ * Classement public — points cumulés sur les tournois TERMINÉS.
  * Barème : champion +3, finaliste +2, top 4 +1 (décision actée, cf.
  * lib/arena/classement.ts — logique pure testée).
+ *
+ * Depuis l'arrivée du module sport (padel, five…), la page couvre LES DEUX
+ * verticales. Un seul barème pour tout le monde : c'est un classement de
+ * PARTICIPATION, pas de force (la force, c'est l'ELO, serveur-seul).
+ * Un filtre Tous / Esport / Sport est proposé en liens GET — zéro JavaScript,
+ * même choix technique que la recherche de l'accueil : une URL par vue,
+ * partageable et lisible par les moteurs.
  *
  * Client anonyme → RLS : seuls les tournois publiés et les joueurs non
  * anonymisés sont visibles. Les mineurs en mode restreint (profil_public =
@@ -9,28 +16,48 @@
  */
 import { createClient } from "@/lib/supabase/server";
 import { calculerClassement } from "@/lib/arena/classement";
-import type { Joueur, MatchRow, Tournoi } from "@/lib/arena/types";
+import type { Discipline, Joueur, MatchRow, Tournoi } from "@/lib/arena/types";
 import EnteteSite from "@/components/EnteteSite";
 import PiedSite from "@/components/PiedSite";
 
 export const metadata = {
   title: "Classement · ARENA",
   description:
-    "Classement des joueurs ARENA : points cumulés sur les tournois esport (champion +3, finaliste +2, top 4 +1).",
+    "Classement des joueurs ARENA, esport et sport : points cumulés sur les tournois terminés (champion +3, finaliste +2, top 4 +1).",
 };
 
-export default async function PageClassement() {
+/** Les trois vues possibles du classement. */
+const FILTRES: { cle: string; libelle: string; discipline: Discipline | null }[] = [
+  { cle: "tous", libelle: "Tous", discipline: null },
+  { cle: "esport", libelle: "Esport", discipline: "ESPORT" },
+  { cle: "sport", libelle: "Sport", discipline: "SPORT" },
+];
+
+export default async function PageClassement({
+  searchParams,
+}: {
+  searchParams: Promise<{ v?: string }>;
+}) {
+  const { v } = await searchParams;
+  // Valeur inconnue dans l'URL → retour à « Tous », jamais d'erreur : une URL
+  // tapée à la main ne doit pas casser une page publique.
+  const filtre = FILTRES.find((f) => f.cle === v) ?? FILTRES[0]!;
+
   let lignes: ReturnType<typeof calculerClassement> = [];
   const pseudos = new Map<string, { pseudo: string; public: boolean }>();
 
   try {
     const supabase = await createClient();
 
-    const { data: tournois } = await supabase
+    let requete = supabase
       .schema("arena")
       .from("tournois")
-      .select("id")
+      .select("id, discipline")
       .eq("statut", "TERMINE");
+    if (filtre.discipline) {
+      requete = requete.eq("discipline", filtre.discipline);
+    }
+    const { data: tournois } = await requete;
 
     if (tournois && tournois.length > 0) {
       const ids = tournois.map((t) => (t as Pick<Tournoi, "id">).id);
@@ -85,7 +112,7 @@ export default async function PageClassement() {
       <main className="mx-auto max-w-2xl px-4 py-12">
       <header className="mb-8">
         <p className="text-xs font-semibold uppercase tracking-widest text-arena-lilac">
-          ARENA · Esport
+          ARENA · Esport &amp; sport
         </p>
         <h1 className="mt-1 text-3xl font-black">Classement</h1>
         <p className="mt-2 text-sm text-arena-muted">
@@ -94,10 +121,35 @@ export default async function PageClassement() {
         </p>
       </header>
 
+      {/* Filtre par verticale : de simples liens GET. La vue courante n'est
+          pas un lien (c'est là qu'on est), les autres oui. */}
+      <nav aria-label="Filtrer le classement" className="mb-6 flex gap-2">
+        {FILTRES.map((f) =>
+          f.cle === filtre.cle ? (
+            <span
+              key={f.cle}
+              aria-current="page"
+              className="rounded-full bg-arena-violet px-4 py-1.5 text-sm font-semibold text-white"
+            >
+              {f.libelle}
+            </span>
+          ) : (
+            <a
+              key={f.cle}
+              href={f.cle === "tous" ? "/classement" : `/classement?v=${f.cle}`}
+              className="rounded-full border border-arena-border px-4 py-1.5 text-sm font-semibold text-arena-muted transition-colors hover:border-arena-violet/50 hover:text-arena-ink"
+            >
+              {f.libelle}
+            </a>
+          )
+        )}
+      </nav>
+
       {lignes.length === 0 ? (
         <div className="rounded-lg border border-arena-border bg-arena-surface shadow-carte p-8 text-center text-arena-faint">
-          Aucun tournoi terminé pour l&apos;instant. Le classement démarrera avec
-          le premier champion.
+          {filtre.discipline
+            ? "Aucun tournoi terminé dans cette catégorie pour l'instant."
+            : "Aucun tournoi terminé pour l'instant. Le classement démarrera avec le premier champion."}
         </div>
       ) : (
         <ol className="space-y-2">

@@ -21,7 +21,22 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getServiceClient } from "../supabase/service";
 import { estStaffDe, requireStaff, type ContexteStaff } from "./auth";
-import { genererBracketEliminationSimple, progresserGagnant } from "../bracket";
+import {
+  genererBracketEliminationSimple,
+  melangerJoueurs,
+  progresserGagnant,
+} from "../bracket";
+import {
+  NOTE_INITIALE,
+  notesApresMatchEquipes,
+  repartirEnPoulesEquilibrees,
+  type JoueurNote,
+} from "../elo";
+import {
+  chercherRangParticipant,
+  extraireIdTournoiToornament,
+  recupererTournoiToornament,
+} from "../toornament";
 import {
   genererBracketDoubleElimination,
   progresserDouble,
@@ -132,6 +147,101 @@ function campsDuMatch(m: MatchRow, parEquipes: boolean) {
   return parEquipes
     ? { c1: m.equipe1_id ?? null, c2: m.equipe2_id ?? null, gagnant: m.equipe_gagnante_id ?? null }
     : { c1: m.joueur1_id, c2: m.joueur2_id, gagnant: m.gagnant_id };
+}
+
+// ---------- ELO interne (lib/elo.ts, moteur pur testé) ----------
+
+/**
+ * Met à jour les notes ELO après la VALIDATION d'un match.
+ *
+ * Trois choix à savoir défendre :
+ *
+ *  1. Un seul chemin de calcul pour tout le monde : `notesApresMatchEquipes`.
+ *     Pour un match individuel, chaque camp est une « équipe » d'un joueur —
+ *     la moyenne d'un singleton est sa propre note, et le facteur K reste
+ *     calculé PAR joueur. Le résultat est strictement identique à
+ *     `notesApresDuel`, sans dupliquer la logique d'appel.
+ *
+ *  2. La note vit PAR discipline (clé primaire joueur_id + discipline) :
+ *     être fort à Street Fighter ne dit rien du niveau au padel. Le moteur
+ *     de poules équilibrées ne mélange donc jamais les deux mondes.
+ *
+ *  3. L'appelant NE DOIT PAS échouer si cette fonction échoue. L'ELO est une
+ *     aide interne (équilibrage des poules) : le jour J, une validation de
+ *     score qui casserait à cause d'une table annexe serait indéfendable.
+ *     D'où le try/catch + log ELO_ECHEC côté appelant, jamais un throw qui
+ *     remonte à l'écran du staff.
+ */
+async function mettreAJourElo(
+  db: ReturnType<typeof getServiceClient>,
+  tournoi: Tournoi,
+  camp1: string,
+  camp2: string,
+  gagnantId: string,
+  parEquipes: boolean
+): Promise<void> {
+  const discipline = tournoi.discipline ?? "ESPORT";
+
+  // Qui joue réellement : le joueur lui-même, ou les membres de l'équipe.
+  let membres1 = [camp1];
+  let membres2 = [camp2];
+  if (parEquipes) {
+    const { data } = await db
+      .schema("arena")
+      .from("equipes_membres")
+      .select("equipe_id, joueur_id")
+      .in("equipe_id", [camp1, camp2]);
+    const lignes = (data ?? []) as { equipe_id: string; joueur_id: string }[];
+    membres1 = lignes.filter((l) => l.equipe_id === camp1).map((l) => l.joueur_id);
+    membres2 = lignes.filter((l) => l.equipe_id === camp2).map((l) => l.joueur_id);
+    // Composition introuvable → pas d'ELO plutôt qu'un ELO faux.
+    if (membres1.length === 0 || membres2.length === 0) return;
+  }
+
+  const tous = [...membres1, ...membres2];
+  const { data: eloData, error: erreurLecture } = await db
+    .schema("arena")
+    .from("elo_joueurs")
+    .select("joueur_id, note, nb_matchs")
+    .eq("discipline", discipline)
+    .in("joueur_id", tous);
+  if (erreurLecture) throw new Error(erreurLecture.message);
+
+  const existantes = new Map(
+    ((eloData ?? []) as { joueur_id: string; note: number; nb_matchs: number }[]).map(
+      (l) => [l.joueur_id, l]
+    )
+  );
+  // Jamais joué → note de départ 1000, 0 match (période de placement, K=40).
+  const enNote = (joueurId: string): JoueurNote => ({
+    joueurId,
+    note: existantes.get(joueurId)?.note ?? NOTE_INITIALE,
+    nbMatchs: existantes.get(joueurId)?.nb_matchs ?? 0,
+  });
+
+  const nouvelles = notesApresMatchEquipes(
+    membres1.map(enNote),
+    membres2.map(enNote),
+    gagnantId === camp1 ? "A" : "B"
+  );
+
+  const { error } = await db
+    .schema("arena")
+    .from("elo_joueurs")
+    .upsert(
+      [...nouvelles].map(([joueurId, note]) => ({
+        joueur_id: joueurId,
+        discipline,
+        // La contrainte CHECK en base borne la note entre 0 et 4000 : on borne
+        // AUSSI ici pour qu'un cas extrême produise une note plafonnée plutôt
+        // qu'une erreur Postgres.
+        note: Math.max(0, Math.min(4000, note)),
+        nb_matchs: (existantes.get(joueurId)?.nb_matchs ?? 0) + 1,
+        updated_at: new Date().toISOString(),
+      })),
+      { onConflict: "joueur_id,discipline" }
+    );
+  if (error) throw new Error(error.message);
 }
 
 // ---------- Tournois ----------
@@ -386,18 +496,30 @@ export async function demarrerTournoi(formData: FormData) {
       throw new Error("Le tournoi doit être OUVERT pour démarrer.");
     }
 
-    // Seuls les joueurs check-in participent au bracket (les absents sont exclus).
+    // Seuls les joueurs check-in participent au bracket (les absents sont
+    // exclus). `ordre` porte le classement manuel fait dans la colonne de
+    // répartition (migration 005) : null = joueur non classé.
     const { data: participations } = await db
       .schema("arena").from("participations")
-      .select("joueur_id")
+      .select("joueur_id, ordre")
       .eq("tournoi_id", tournoiId)
       .eq("check_in", true);
 
-    const joueurIds = (participations ?? []).map((p) => p.joueur_id as string);
+    const inscrits = (participations ?? []) as {
+      joueur_id: string;
+      ordre: number | null;
+    }[];
+    const joueurIds = inscrits.map((p) => p.joueur_id);
+    const ordreParJoueur = new Map(inscrits.map((p) => [p.joueur_id, p.ordre]));
 
     // Les CONCURRENTS du bracket : des joueurs en esport, des équipes en sport.
     const cols = colonnesCamp(tournoi);
     let participantIds: string[] = joueurIds;
+    // Composition de chaque concurrent (lui-même s'il est un joueur, ses
+    // membres s'il est une équipe) — sert au calcul de force ELO plus bas.
+    const membresParParticipant = new Map<string, string[]>(
+      joueurIds.map((id) => [id, [id]])
+    );
 
     if (cols.parEquipes) {
       const tailleAttendue = tournoi.taille_equipe ?? 2;
@@ -429,6 +551,13 @@ export async function demarrerTournoi(formData: FormData) {
         );
       }
       participantIds = equipes.map((e) => e.id);
+      membresParParticipant.clear();
+      for (const e of equipes) {
+        membresParParticipant.set(
+          e.id,
+          (e.membres ?? []).map((mb) => mb.joueur_id)
+        );
+      }
     }
 
     if (participantIds.length < 2) {
@@ -439,6 +568,73 @@ export async function demarrerTournoi(formData: FormData) {
       );
     }
 
+    // -- Têtes de série et équilibrage ---------------------------------------
+    // Trois sources possibles pour ordonner le tirage, PAR PRIORITÉ :
+    //   1. ORDRE MANUEL : le staff a classé des joueurs dans la colonne de
+    //      répartition. Une décision humaine explicite prime sur tout calcul.
+    //   2. ELO INTERNE : des joueurs ont déjà des notes → les poules sont
+    //      composées au serpentin (lib/elo.ts), fini la poule de la mort.
+    //   3. ALÉATOIRE : comportement historique quand on ne sait rien.
+    // L'ordre manuel est PAR JOUEUR : il ne s'applique qu'aux tournois
+    // individuels (classer des joueurs ne classe pas des équipes).
+    const ordreManuelActif =
+      !cols.parEquipes && inscrits.some((p) => p.ordre !== null);
+
+    if (ordreManuelActif) {
+      // Classés d'abord (dans l'ordre du staff), puis les non-classés TIRÉS AU
+      // SORT — le hasard reste la règle pour ceux qu'on n'a pas voulu placer.
+      const classes = participantIds
+        .filter((id) => (ordreParJoueur.get(id) ?? null) !== null)
+        .sort(
+          (a, b) => (ordreParJoueur.get(a) ?? 0) - (ordreParJoueur.get(b) ?? 0)
+        );
+      const nonClasses = melangerJoueurs(
+        participantIds.filter((id) => (ordreParJoueur.get(id) ?? null) === null),
+        Math.random
+      );
+      participantIds = [...classes, ...nonClasses];
+    }
+
+    // Notes ELO des concurrents (uniquement si aucun ordre manuel : la
+    // décision du staff prime). La force d'une équipe est la MOYENNE de ses
+    // membres — même convention que lib/elo.ts pour la mise à jour des notes.
+    let notesParticipants: JoueurNote[] | null = null;
+    if (!ordreManuelActif && tournoi.format === "POULES_FINALE") {
+      const tousLesJoueurs = [
+        ...new Set([...membresParParticipant.values()].flat()),
+      ];
+      const { data: eloData } = await db
+        .schema("arena")
+        .from("elo_joueurs")
+        .select("joueur_id, note")
+        .eq("discipline", tournoi.discipline ?? "ESPORT")
+        .in("joueur_id", tousLesJoueurs);
+      const notes = new Map(
+        ((eloData ?? []) as { joueur_id: string; note: number }[]).map((l) => [
+          l.joueur_id,
+          l.note,
+        ])
+      );
+      // Aucune note en base → l'ELO n'a rien à dire, on reste à l'aléatoire.
+      if (notes.size > 0) {
+        notesParticipants = participantIds.map((id) => {
+          const membres = membresParParticipant.get(id) ?? [id];
+          const somme = membres.reduce(
+            (s, j) => s + (notes.get(j) ?? NOTE_INITIALE),
+            0
+          );
+          return {
+            // `joueurId` désigne ici le CONCURRENT (joueur ou équipe) : le
+            // serpentin ne lit que l'identifiant et la note, il n'a pas
+            // besoin de savoir ce que l'identifiant désigne.
+            joueurId: id,
+            note: Math.round(somme / Math.max(1, membres.length)),
+            nbMatchs: 0,
+          };
+        });
+      }
+    }
+
     // Génération du bracket AVANT le verrou : les moteurs sont purs et peuvent
     // REFUSER (ex: double élim avec un effectif ≠ 4/8/16/32). On ne verrouille
     // le tournoi qu'une fois certain d'avoir des matchs à insérer.
@@ -447,7 +643,26 @@ export async function demarrerTournoi(formData: FormData) {
       // Phase 1 UNIQUEMENT : les matchs de poules. La phase finale sera
       // générée plus tard (genererPhaseFinale), quand les qualifiés seront
       // connus — c'est la spécificité structurante de ce format.
-      const poules = repartirEnPoules(participantIds, tournoi.nb_poules ?? 2);
+      const nbPoules = tournoi.nb_poules ?? 2;
+      let poules: string[][];
+      if (ordreManuelActif || notesParticipants) {
+        // Le serpentin ne valide pas l'effectif minimal (repartirEnPoules le
+        // fait) : on reproduit la même règle pour un message d'erreur
+        // identique quel que soit le chemin.
+        if (participantIds.length < nbPoules * 2) {
+          throw new Error(
+            `Effectif insuffisant : ${nbPoules} poules exigent au moins ${nbPoules * 2} joueurs check-in (actuellement ${participantIds.length}).`
+          );
+        }
+        // Ordre manuel → force décroissante par position (-index) : le
+        // serpentin retrouve exactement l'ordre voulu par le staff.
+        const forces: JoueurNote[] = ordreManuelActif
+          ? participantIds.map((id, i) => ({ joueurId: id, note: -i, nbMatchs: 0 }))
+          : notesParticipants!;
+        poules = repartirEnPoulesEquilibrees(forces, nbPoules);
+      } else {
+        poules = repartirEnPoules(participantIds, nbPoules);
+      }
       lignes = genererMatchsPoules(poules).map((m) => ({
         tournoi_id: tournoiId,
         bracket: "P",
@@ -473,7 +688,15 @@ export async function demarrerTournoi(formData: FormData) {
         statut: "A_JOUER",
       }));
     } else {
-      lignes = genererBracketEliminationSimple(participantIds).map((m) => ({
+      // Ordre manuel → pas de retirage : les joueurs classés sont placés en
+      // tête du bracket, et s'il y a des byes, ce sont EUX qui en bénéficient
+      // (la distribution anti double-bye sert les premiers de la liste).
+      // C'est l'effet concret et vérifiable de la colonne de répartition.
+      // NB : la DOUBLE élimination, elle, tire toujours au sort — son moteur
+      // n'accepte pas d'ordre imposé et on ne le modifie pas sans besoin réel.
+      lignes = genererBracketEliminationSimple(participantIds, Math.random, {
+        conserverOrdre: ordreManuelActif,
+      }).map((m) => ({
         tournoi_id: tournoiId,
         round: m.round,
         position: m.position,
@@ -516,6 +739,13 @@ export async function demarrerTournoi(formData: FormData) {
       par_equipes: cols.parEquipes,
       nb_matchs: lignes.length,
       format: tournoi.format,
+      // Traçabilité du tirage : indispensable pour répondre à « pourquoi je
+      // suis tombé contre lui au premier tour ? » sans reconstitution.
+      tirage: ordreManuelActif
+        ? "ORDRE_MANUEL"
+        : notesParticipants
+          ? "ELO_SERPENTIN"
+          : "ALEATOIRE",
     });
 
     revalidatePath(`/admin/tournois/${tournoiId}`);
@@ -843,6 +1073,10 @@ export async function validerScore(formData: FormData) {
     // suivantes, que le bracket ne peut plus valoir "P".
     const bracketMatch = m.bracket ?? "W";
 
+    // Vainqueur effectivement validé, mémorisé pour la mise à jour ELO après
+    // les branches (un seul point d'appel au lieu de trois).
+    let gagnantValide: string | null = null;
+
     if (bracketMatch === "P") {
       // Match de POULE : aucun bracket à faire avancer. On fige le résultat,
       // le classement de la poule est recalculé à la lecture (lib/poules.ts).
@@ -850,6 +1084,7 @@ export async function validerScore(formData: FormData) {
         (m.score_j1 ?? 0) > (m.score_j2 ?? 0) ? camps.c1 : camps.c2;
       if (!gagnantId) throw new Error("Match de poule incomplet.");
       await validerMatch(gagnantId);
+      gagnantValide = gagnantId;
       await log(ctx.userId, "MATCH_VALIDE", tournoiId, matchId, {
         gagnant_id: gagnantId,
         poule: m.poule ?? null,
@@ -872,6 +1107,7 @@ export async function validerScore(formData: FormData) {
         k
       );
       await validerMatch(prog.gagnantId);
+      gagnantValide = prog.gagnantId;
       if (prog.destGagnant) await placer(prog.destGagnant, prog.gagnantId);
       if (prog.destPerdant) await placer(prog.destPerdant, prog.perdantId);
       await log(ctx.userId, "MATCH_VALIDE", tournoiId, matchId, {
@@ -892,6 +1128,7 @@ export async function validerScore(formData: FormData) {
         nbRounds
       );
       await validerMatch(prog.gagnantId);
+      gagnantValide = prog.gagnantId;
       if (prog.parent) {
         await placer(
           { bracket: "W", ...prog.parent },
@@ -902,6 +1139,29 @@ export async function validerScore(formData: FormData) {
         gagnant_id: prog.gagnantId,
         finale: prog.parent === null,
       });
+    }
+
+    // Mise à jour ELO — APRÈS la validation, et jamais bloquante : si la
+    // table annexe casse, le staff a quand même validé son match (le jour J
+    // prime), et l'échec est historisé pour être corrigé à froid.
+    // Un match VALIDE ne repasse jamais ici (garde `statut !== "TERMINE"` en
+    // amont + trigger verrou_match_valide) : pas de double comptage possible.
+    if (gagnantValide && camps.c1 && camps.c2) {
+      try {
+        await mettreAJourElo(
+          db,
+          tournoi,
+          camps.c1,
+          camps.c2,
+          gagnantValide,
+          cols.parEquipes
+        );
+      } catch (erreurElo) {
+        await log(ctx.userId, "ELO_ECHEC", tournoiId, matchId, {
+          message:
+            erreurElo instanceof Error ? erreurElo.message : String(erreurElo),
+        });
+      }
     }
 
     revalidatePath(`/admin/tournois/${tournoiId}`);
@@ -951,14 +1211,22 @@ export async function enregistrerRepartition(
 
     const db = getServiceClient();
 
-    // 1. L'ordre d'affichage, une ligne à la fois. Le volume est de l'ordre
+    // 1. L'ordre de placement, une ligne à la fois. Le volume est de l'ordre
     // de quelques dizaines de participants : une boucle est plus lisible
     // qu'un upsert de masse, et le coût est négligeable.
+    //
+    // RÈGLE : `ordre` n'est enregistré QUE pour les joueurs PLACÉS dans une
+    // colonne (têtes de série ou équipe). Un joueur laissé dans la colonne
+    // « non assignés » garde ordre = null. C'est ce null qui permet à
+    // demarrerTournoi de distinguer « le staff a classé ce joueur » de « ce
+    // joueur passe au tirage au sort » — si on enregistrait l'ordre d'affichage
+    // de tout le monde, un seul glisser-déposer transformerait TOUT le tirage
+    // en ordre déterministe, silencieusement.
     for (const ligne of repartition) {
       const { error } = await db
         .schema("arena")
         .from("participations")
-        .update({ ordre: ligne.ordre })
+        .update({ ordre: ligne.colonneId !== null ? ligne.ordre : null })
         .eq("tournoi_id", tournoiId)
         .eq("joueur_id", ligne.joueurId);
       if (error) throw new Error(error.message);
@@ -1091,5 +1359,117 @@ export async function supprimerEquipe(formData: FormData) {
     revalidatePath(`/admin/tournois/${tournoiId}`);
   } catch (e) {
     redirectionErreur(`/admin/tournois/${tournoiId}`, e);
+  }
+}
+
+// ---------- Palmarès externe (import Toornament, migration 006) ----------
+
+/**
+ * Importe UN résultat Toornament sur le profil d'un joueur ARENA.
+ *
+ * Flux : le staff colle l'URL du tournoi + choisit le joueur ARENA + indique
+ * le pseudo utilisé sur Toornament (par défaut : le pseudo ARENA). On
+ * interroge la Viewer API (fiche du tournoi + classement final), on apparie
+ * le pseudo, et on stocke une COPIE datée du résultat avec l'URL source.
+ *
+ * Ce qui est volontairement REFUSÉ :
+ *  - importer sans appariement : si le pseudo n'apparaît pas dans le
+ *    classement Toornament, l'import échoue avec un message clair. Pas de
+ *    résultat « sur parole ».
+ *  - toute redistribution de points : le palmarès externe s'affiche, il ne
+ *    compte pas dans le classement ARENA (cf. migration 006, décision actée).
+ *
+ * V1 staff-only : ARENA n'a pas encore d'espace connecté pour les joueurs.
+ * Le jour où le login joueur existera (Lot 4), cette action s'ouvrira au
+ * joueur pour SON propre profil — la table et la logique ne bougeront pas.
+ */
+export async function importerResultatToornament(formData: FormData) {
+  try {
+    const ctx = await requireStaff();
+    const db = getServiceClient();
+
+    const joueurId = String(formData.get("joueur_id") ?? "");
+    const url = String(formData.get("url") ?? "").trim();
+    const nomToornamentSaisi = String(formData.get("nom_participant") ?? "").trim();
+
+    const tournoiExterneId = extraireIdTournoiToornament(url);
+    if (!tournoiExterneId) {
+      throw new Error(
+        "Lien non reconnu : colle l'URL d'un tournoi toornament.com (elle contient /tournaments/<numéro>)."
+      );
+    }
+
+    const { data: joueurData } = await db
+      .schema("arena")
+      .from("joueurs")
+      .select("id, pseudo")
+      .eq("id", joueurId)
+      .single();
+    if (!joueurData) throw new Error("Joueur introuvable.");
+    const nomParticipant = nomToornamentSaisi || (joueurData.pseudo as string);
+
+    // Deux appels réseau : la fiche (nom, jeu, dates) puis le classement.
+    const tournoi = await recupererTournoiToornament(tournoiExterneId);
+    const resultat = await chercherRangParticipant(tournoiExterneId, nomParticipant);
+    if (!resultat) {
+      throw new Error(
+        `« ${nomParticipant} » n'apparaît pas dans le classement de ce tournoi Toornament. ` +
+          "Vérifie le pseudo exact utilisé là-bas (champ « pseudo sur Toornament »)."
+      );
+    }
+
+    const { error } = await db.schema("arena").from("resultats_externes").insert({
+      joueur_id: joueurId,
+      source: "TOORNAMENT",
+      tournoi_externe_id: tournoiExterneId,
+      url,
+      nom_tournoi: tournoi.full_name || tournoi.name,
+      jeu: tournoi.discipline ?? null,
+      nom_participant: resultat.nomTrouve,
+      rang: resultat.rang,
+      nb_participants: tournoi.size ?? null,
+      date_fin: tournoi.scheduled_date_end || null,
+      importe_par: ctx.userId,
+    });
+    if (error) {
+      throw new Error(
+        error.code === "23505"
+          ? "Ce tournoi Toornament est déjà importé pour ce joueur."
+          : `Import impossible : ${error.message}`
+      );
+    }
+
+    await log(ctx.userId, "RESULTAT_EXTERNE_IMPORTE", null, null, {
+      joueur_id: joueurId,
+      source: "TOORNAMENT",
+      tournoi_externe_id: tournoiExterneId,
+      rang: resultat.rang,
+    });
+    revalidatePath("/admin/imports");
+  } catch (e) {
+    redirectionErreur("/admin/imports", e);
+  }
+}
+
+/** Retire un résultat importé (erreur d'appariement, demande du joueur…). */
+export async function supprimerResultatExterne(formData: FormData) {
+  try {
+    const ctx = await requireStaff();
+    const db = getServiceClient();
+    const resultatId = String(formData.get("resultat_id") ?? "");
+
+    const { error } = await db
+      .schema("arena")
+      .from("resultats_externes")
+      .delete()
+      .eq("id", resultatId);
+    if (error) throw new Error(`Suppression impossible : ${error.message}`);
+
+    await log(ctx.userId, "RESULTAT_EXTERNE_SUPPRIME", null, null, {
+      resultat_id: resultatId,
+    });
+    revalidatePath("/admin/imports");
+  } catch (e) {
+    redirectionErreur("/admin/imports", e);
   }
 }

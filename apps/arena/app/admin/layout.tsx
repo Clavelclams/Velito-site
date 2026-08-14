@@ -128,9 +128,17 @@ export default async function AdminLayout({
             · {ctx.organisations.map((o) => o.name).join(" · ")}
           </span>
         </a>
-        <a href="/" className="text-sm text-arena-muted hover:text-arena-ink">
-          Site public →
-        </a>
+        <nav className="flex items-center gap-4 text-sm">
+          <a href="/admin/tournois" className="text-arena-muted hover:text-arena-ink">
+            Tournois
+          </a>
+          <a href="/admin/imports" className="text-arena-muted hover:text-arena-ink">
+            Palmarès externe
+          </a>
+          <a href="/" className="text-arena-muted hover:text-arena-ink">
+            Site public →
+          </a>
+        </nav>
       </header>
       {children}
     </div>

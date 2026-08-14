@@ -107,6 +107,26 @@ export interface EloJoueur {
   nb_matchs: number;
 }
 
+/**
+ * Résultat obtenu sur une plateforme EXTERNE (Toornament…), copié au moment
+ * de l'import avec son URL source. Affiché sur le profil, jamais compté dans
+ * le classement ARENA (migration 006).
+ */
+export interface ResultatExterne {
+  id: string;
+  joueur_id: string;
+  source: "TOORNAMENT";
+  tournoi_externe_id: string;
+  url: string;
+  nom_tournoi: string;
+  jeu: string | null;
+  nom_participant: string;
+  rang: number | null;
+  nb_participants: number | null;
+  date_fin: string | null;
+  created_at: string;
+}
+
 export interface Participation {
   id: string;
   tournoi_id: string;

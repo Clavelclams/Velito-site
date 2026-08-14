@@ -10,7 +10,8 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { pointsDuTournoi } from "@/lib/arena/classement";
-import type { Joueur, MatchRow, Tournoi } from "@/lib/arena/types";
+import { libelleRang } from "@/lib/toornament";
+import type { Joueur, MatchRow, ResultatExterne, Tournoi } from "@/lib/arena/types";
 import EnteteSite from "@/components/EnteteSite";
 import PiedSite from "@/components/PiedSite";
 
@@ -39,18 +40,28 @@ export default async function PageJoueur({
   const joueur = joueurData as Joueur;
 
   // Participations → tournois visibles (RLS filtre les brouillons).
-  const [{ data: partData }, { data: badgesData }] = await Promise.all([
-    supabase
-      .schema("arena")
-      .from("participations")
-      .select("tournoi_id, check_in, tournoi:tournois(*)")
-      .eq("joueur_id", joueur.id),
-    supabase
-      .schema("arena")
-      .from("badges_joueurs")
-      .select("badge:badges(nom, description)")
-      .eq("joueur_id", joueur.id),
-  ]);
+  const [{ data: partData }, { data: badgesData }, { data: externesData }] =
+    await Promise.all([
+      supabase
+        .schema("arena")
+        .from("participations")
+        .select("tournoi_id, check_in, tournoi:tournois(*)")
+        .eq("joueur_id", joueur.id),
+      supabase
+        .schema("arena")
+        .from("badges_joueurs")
+        .select("badge:badges(nom, description)")
+        .eq("joueur_id", joueur.id),
+      // Palmarès externe (Toornament) : lecture publique, RLS migration 006.
+      // `catch` implicite inutile : si la table n'existe pas encore (migration
+      // non jouée), data vaut null et la section ne s'affiche pas.
+      supabase
+        .schema("arena")
+        .from("resultats_externes")
+        .select("*")
+        .eq("joueur_id", joueur.id)
+        .order("date_fin", { ascending: false }),
+    ]);
 
   // Cast via unknown : sans types générés, Supabase ne sait pas qu'un embed
   // par FK est un to-one (objet) et l'infère en tableau — on connaît le schéma.
@@ -62,6 +73,7 @@ export default async function PageJoueur({
   const badges = ((badgesData ?? []) as unknown as { badge: BadgeAffiche | null }[])
     .map((b) => b.badge)
     .filter((b): b is BadgeAffiche => b !== null);
+  const resultatsExternes = (externesData ?? []) as ResultatExterne[];
 
   // Résultats sportifs : points par tournoi terminé où il a joué.
   const tournoisTermines = participations
@@ -71,14 +83,26 @@ export default async function PageJoueur({
   let points = 0;
   let titres = 0;
   if (tournoisTermines.length > 0) {
-    const { data: matchsData } = await supabase
-      .schema("arena")
-      .from("matchs")
-      .select("*")
-      .in(
-        "tournoi_id",
-        tournoisTermines.map((t) => t.id)
-      );
+    const ids = tournoisTermines.map((t) => t.id);
+    const [{ data: matchsData }, { data: equipesData }] = await Promise.all([
+      supabase.schema("arena").from("matchs").select("*").in("tournoi_id", ids),
+      // Équipes du joueur dans ces tournois : au padel, pointsDuTournoi rend
+      // des points par ÉQUIPE. Sans cette correspondance, un champion de padel
+      // afficherait 0 point sur son propre profil (bug repéré le 14/08/2026
+      // après le premier tournoi padel : la carte /classement était juste,
+      // le profil non — deux lectures du même barème doivent partager la
+      // même résolution équipe → joueur).
+      supabase
+        .schema("arena")
+        .from("equipes")
+        .select("id, membres:equipes_membres(joueur_id)")
+        .in("tournoi_id", ids),
+    ]);
+    const mesEquipes = new Set(
+      ((equipesData ?? []) as { id: string; membres: { joueur_id: string }[] }[])
+        .filter((e) => (e.membres ?? []).some((mb) => mb.joueur_id === joueur.id))
+        .map((e) => e.id)
+    );
     const parTournoi = new Map<string, MatchRow[]>();
     for (const m of (matchsData ?? []) as MatchRow[]) {
       const liste = parTournoi.get(m.tournoi_id) ?? [];
@@ -86,7 +110,12 @@ export default async function PageJoueur({
       parTournoi.set(m.tournoi_id, liste);
     }
     for (const matchs of parTournoi.values()) {
-      const p = pointsDuTournoi(matchs).get(joueur.id) ?? 0;
+      const pts = pointsDuTournoi(matchs);
+      // Points gagnés en individuel + points gagnés via une de ses équipes.
+      let p = pts.get(joueur.id) ?? 0;
+      for (const [campId, val] of pts) {
+        if (mesEquipes.has(campId)) p += val;
+      }
       points += p;
       if (p >= 3) titres += 1;
     }
@@ -137,6 +166,45 @@ export default async function PageJoueur({
               </li>
             ))}
           </ul>
+        </section>
+      )}
+
+      {/* Palmarès externe : résultats vérifiés à l'import (appariement dans
+          le classement Toornament) mais NON comptés dans les points ARENA.
+          Le lien source est affiché pour que chacun puisse vérifier. */}
+      {resultatsExternes.length > 0 && (
+        <section className="mb-8">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-arena-faint">
+            Palmarès externe
+          </h2>
+          <ul className="space-y-2">
+            {resultatsExternes.map((r) => (
+              <li key={r.id}>
+                <a
+                  href={r.url}
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between gap-3 rounded-lg border border-arena-border bg-arena-surface shadow-carte px-4 py-3 transition-colors hover:border-arena-violet/50"
+                >
+                  <span>
+                    <span className="font-bold">{r.nom_tournoi}</span>
+                    <span className="ml-2 text-sm text-arena-muted">
+                      {r.jeu ? `${r.jeu} · ` : ""}
+                      {r.date_fin
+                        ? new Date(r.date_fin).toLocaleDateString("fr-FR")
+                        : "date inconnue"}
+                    </span>
+                  </span>
+                  <span className="whitespace-nowrap rounded-full bg-arena-violet/10 px-3 py-1 text-xs font-semibold text-arena-violet">
+                    {libelleRang(r.rang, r.nb_participants)} · Toornament
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-arena-faint">
+            Résultats importés depuis Toornament — hors classement ARENA, lien
+            source sur chaque ligne.
+          </p>
         </section>
       )}
 

@@ -125,11 +125,13 @@ export default async function PageTournoi({
         titre: e.nom,
         effectifCible: tournoi.taille_equipe,
       }))
-    : // Tournoi individuel : une seule colonne de mise en avant. Ce qui est
-      // réellement enregistré est l'ORDRE affiché, rien d'autre. Le libellé
-      // le dit tel quel : tant que demarrerTournoi ne consomme pas cet ordre,
-      // promettre un « tirage prioritaire » serait un mensonge d'interface.
-      [{ id: "MISE_EN_AVANT", titre: "Haut de liste" }];
+    : // Tournoi individuel : une seule colonne « Têtes de série ». Depuis que
+      // demarrerTournoi consomme `participations.ordre`, ce placement a un
+      // effet RÉEL : les joueurs classés ici ouvrent le bracket dans l'ordre
+      // choisi (et récupèrent les byes s'il y en a) ou sont répartis au
+      // serpentin dans les poules. Les joueurs laissés dans la colonne
+      // « non classés » restent, eux, tirés au sort — ordre = null en base.
+      [{ id: "MISE_EN_AVANT", titre: "Têtes de série" }];
 
   // Index pseudo par id joueur pour l'affichage des matchs.
   const pseudos = new Map<string, string>();
@@ -411,8 +413,15 @@ export default async function PageTournoi({
           participations.length > 0 && (
             <div className="mt-6 border-t border-arena-border pt-6">
               <h3 className="mb-3 text-sm font-semibold uppercase tracking-widest text-arena-faint">
-                {estParEquipes ? "Composition des équipes" : "Ordre des joueurs"}
+                {estParEquipes ? "Composition des équipes" : "Têtes de série"}
               </h3>
+              {!estParEquipes && (
+                <p className="mb-3 text-xs text-arena-faint">
+                  Les joueurs placés à droite ouvrent le bracket dans cet ordre
+                  (et sont exemptés de premier tour s&apos;il y a des byes).
+                  Les autres sont tirés au sort.
+                </p>
+              )}
               {/* ⚠️ La `key` n'est pas décorative — bug constaté en prod le
                   13/08/2026. RepartitionJoueurs est un composant CLIENT qui
                   initialise son état avec `useState(joueurs)`. En React, un
@@ -433,10 +442,17 @@ export default async function PageTournoi({
                 joueurs={participations.map((p) => ({
                   id: p.joueur_id,
                   pseudo: (p.joueur as Joueur | undefined)?.pseudo ?? "?",
-                  colonneId: equipeParJoueur.get(p.joueur_id) ?? null,
+                  // Individuel : un joueur avec un `ordre` en base a été placé
+                  // en tête de série — on le remet dans sa colonne au
+                  // rechargement, sinon le placement semblerait « oublié ».
+                  colonneId: estParEquipes
+                    ? (equipeParJoueur.get(p.joueur_id) ?? null)
+                    : p.ordre != null
+                      ? "MISE_EN_AVANT"
+                      : null,
                 }))}
                 titreNonAssignes={
-                  estParEquipes ? "Sans équipe" : "Ordre d'inscription"
+                  estParEquipes ? "Sans équipe" : "Non classés (tirage au sort)"
                 }
                 enregistrer={enregistrerRepartition.bind(null, tournoi.id)}
               />

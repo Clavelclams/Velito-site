@@ -34,6 +34,7 @@
         "SUPABASE_SERVICE_ROLE_KEY",
         "COOKIE_DOMAIN",
         "NEXT_PUBLIC_HUB_LOGIN_URL",
+        "TOORNAMENT_API_KEY",
         "DATABASE_URL",
         "OAUTH_ISSUER",
         "RESEND_API_KEY",
