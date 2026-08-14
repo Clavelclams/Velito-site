@@ -8,6 +8,9 @@
  *   - si `userEmail` est fourni  → "Mon compte" + bouton "Se déconnecter" (server action)
  *   - sinon                       → "Se connecter" + "S'inscrire"
  *
+ * `coursUrl` : lien vers cours.velito.fr, déjà filtré par NavBarSlot (null si
+ * l'user n'est pas sur la liste blanche). Ici on ne décide rien, on affiche.
+ *
  * Le composant reste Client (search, mobile menu). L'état d'auth est injecté
  * en prop par NavBarSlot (Server Component) qui lit le cookie session.
  *
@@ -26,9 +29,14 @@ import SearchPanel from "./SearchPanel";
 interface NavBarProps {
   /** Email de l'utilisateur connecté, ou null s'il est anonyme. */
   userEmail?: string | null;
+  /** URL de l'espace cours si CET utilisateur y a droit, sinon null. */
+  coursUrl?: string | null;
 }
 
-export default function NavBar({ userEmail = null }: NavBarProps) {
+export default function NavBar({
+  userEmail = null,
+  coursUrl = null,
+}: NavBarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const isAuthed = Boolean(userEmail);
@@ -36,6 +44,15 @@ export default function NavBar({ userEmail = null }: NavBarProps) {
   // Actions desktop (à droite) — diffèrent selon état d'auth
   const desktopActions = isAuthed ? (
     <>
+      {coursUrl && (
+        <a
+          href={coursUrl}
+          className="text-white/80 hover:text-white text-sm px-3 py-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-white/40"
+          title="Espace de révision CDA"
+        >
+          🎓 Cours
+        </a>
+      )}
       <Link
         href="/account"
         className="text-white/80 hover:text-white text-sm px-3 py-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-white/40"
@@ -72,6 +89,15 @@ export default function NavBar({ userEmail = null }: NavBarProps) {
   // Actions mobile (panneau déroulant) — même logique
   const mobileActions = isAuthed ? (
     <>
+      {coursUrl && (
+        <a
+          href={coursUrl}
+          onClick={() => setMobileOpen(false)}
+          className="block w-full text-center text-white/90 border border-white/20 rounded-full px-4 py-2.5 text-sm hover:bg-white/10 transition-colors"
+        >
+          🎓 Cours
+        </a>
+      )}
       <Link
         href="/account"
         onClick={() => setMobileOpen(false)}
