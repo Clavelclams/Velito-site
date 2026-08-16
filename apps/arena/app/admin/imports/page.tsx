@@ -1,16 +1,24 @@
 /**
  * /admin/imports — palmarès externe (Toornament).
  *
- * Le staff colle un lien de tournoi Toornament, choisit le joueur ARENA, et
- * le résultat vérifié (appariement par pseudo dans le classement Toornament)
- * s'affiche sur le profil public du joueur. Lecture seule : aucun point
- * ARENA n'est distribué (décision actée, migration 006).
+ * DEUX chemins d'entrée, un seul affichage public :
+ *
+ *  1. SAISIE MANUELLE (le chemin par défaut depuis le 15/08/2026) : le staff
+ *     colle le lien du tournoi Toornament + le rang. Le lien source est
+ *     affiché publiquement — vérifiable par n'importe qui en un clic.
+ *     Pivot décidé quand l'accès API Toornament s'est révélé payant
+ *     (plan « Arena », 229 €/mois — disproportionné pour de l'affichage).
+ *
+ *  2. IMPORT VÉRIFIÉ PAR API : ne s'affiche que si TOORNAMENT_API_KEY existe.
+ *     Le code reste prêt et se réactive seul si une clé apparaît un jour
+ *     (partenariat, changement de pricing).
  *
  * Server Component + <form> natifs, comme tout l'espace orga : la page
- * fonctionne sans JavaScript, l'action re-vérifie les droits de son côté.
+ * fonctionne sans JavaScript, les actions re-vérifient les droits.
  */
 import {
   importerResultatToornament,
+  saisirResultatExterne,
   supprimerResultatExterne,
 } from "@/lib/arena/actions";
 import { getServiceClient } from "@/lib/supabase/service";
@@ -60,36 +68,138 @@ export default async function PageImports({
           Palmarès externe<span className="text-arena-violet">.</span>
         </h1>
         <p className="mt-2 text-sm text-arena-muted">
-          Importe un résultat Toornament sur le profil d&apos;un joueur. Le
-          résultat s&apos;affiche avec son lien source — il ne donne aucun
-          point au classement ARENA.
+          Ajoute un résultat Toornament au profil d&apos;un joueur. Le lien
+          source est affiché publiquement — vérifiable par tous — et le
+          résultat ne donne aucun point au classement ARENA.
         </p>
       </header>
 
       <BandeauErreur message={erreur} />
 
-      {!cleConfiguree ? (
-        <div className="rounded-lg border border-arena-border bg-arena-surface shadow-carte p-6 text-sm text-arena-muted">
-          <p className="font-semibold text-arena-ink">
-            Import non configuré sur ce déploiement.
-          </p>
-          <p className="mt-2">
-            Pour l&apos;administrateur : ajouter la variable{" "}
-            <code>TOORNAMENT_API_KEY</code> (clé gratuite à créer sur{" "}
-            <a
-              href="https://developer.toornament.com"
-              className="underline hover:text-arena-ink"
-            >
-              developer.toornament.com
-            </a>
-            ), puis redéployer.
-          </p>
+      {/* ---- Saisie manuelle : le chemin par défaut ---- */}
+      <form
+        action={saisirResultatExterne}
+        className="rounded-lg border border-arena-border bg-arena-surface shadow-carte p-6"
+      >
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-arena-faint">
+          Ajouter un résultat
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="block text-sm sm:col-span-2">
+            <span className="mb-1 block font-semibold">
+              Lien du tournoi Toornament{" "}
+              <span className="font-normal text-arena-faint">
+                (obligatoire — c&apos;est la preuve)
+              </span>
+            </span>
+            <input
+              type="url"
+              name="url"
+              required
+              placeholder="https://www.toornament.com/fr/tournaments/…"
+              className={champ}
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block font-semibold">Joueur ARENA</span>
+            <select name="joueur_id" required className={champ}>
+              <option value="">— choisir —</option>
+              {joueurs.map((j) => (
+                <option key={j.id} value={j.id}>
+                  {j.pseudo}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block font-semibold">Nom du tournoi</span>
+            <input
+              type="text"
+              name="nom_tournoi"
+              required
+              maxLength={200}
+              placeholder="Ex : Coupe d'hiver Amiens 2026"
+              className={champ}
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block font-semibold">Rang final</span>
+            <input
+              type="number"
+              name="rang"
+              required
+              min={1}
+              placeholder="1 = vainqueur"
+              className={champ}
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block font-semibold">
+              Participants{" "}
+              <span className="font-normal text-arena-faint">(optionnel)</span>
+            </span>
+            <input
+              type="number"
+              name="nb_participants"
+              min={2}
+              placeholder="Ex : 16"
+              className={champ}
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block font-semibold">
+              Jeu <span className="font-normal text-arena-faint">(optionnel)</span>
+            </span>
+            <input
+              type="text"
+              name="jeu"
+              maxLength={100}
+              placeholder="Ex : Fifa 23"
+              className={champ}
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block font-semibold">
+              Date de fin{" "}
+              <span className="font-normal text-arena-faint">(optionnel)</span>
+            </span>
+            <input type="date" name="date_fin" className={champ} />
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block font-semibold">
+              Pseudo sur Toornament{" "}
+              <span className="font-normal text-arena-faint">
+                (si différent)
+              </span>
+            </span>
+            <input
+              type="text"
+              name="nom_participant"
+              maxLength={100}
+              placeholder="Par défaut : le pseudo ARENA"
+              className={champ}
+            />
+          </label>
         </div>
-      ) : (
+        <button type="submit" className={`mt-4 ${btn}`}>
+          Ajouter au profil
+        </button>
+        <p className="mt-3 text-xs text-arena-faint">
+          Vérifie le résultat sur la page publique du tournoi avant de saisir :
+          le lien sera affiché à côté du résultat, tout le monde pourra
+          contrôler.
+        </p>
+      </form>
+
+      {/* ---- Import vérifié par API : seulement si une clé existe ---- */}
+      {cleConfiguree && (
         <form
           action={importerResultatToornament}
-          className="rounded-lg border border-arena-border bg-arena-surface shadow-carte p-6"
+          className="mt-6 rounded-lg border border-arena-border bg-arena-surface shadow-carte p-6"
         >
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-arena-faint">
+            Import vérifié (API Toornament)
+          </h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-sm sm:col-span-2">
               <span className="mb-1 block font-semibold">
@@ -135,17 +245,17 @@ export default async function PageImports({
           </button>
           <p className="mt-3 text-xs text-arena-faint">
             L&apos;import est refusé si le pseudo n&apos;apparaît pas dans le
-            classement du tournoi : pas de résultat sur parole.
+            classement du tournoi.
           </p>
         </form>
       )}
 
       <section className="mt-10">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-arena-faint">
-          Résultats importés
+          Résultats enregistrés
         </h2>
         {resultats.length === 0 ? (
-          <p className="text-sm text-arena-faint">Aucun import pour l&apos;instant.</p>
+          <p className="text-sm text-arena-faint">Aucun résultat pour l&apos;instant.</p>
         ) : (
           <ul className="space-y-2">
             {resultats.map((r) => (

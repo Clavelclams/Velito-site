@@ -1473,3 +1473,100 @@ export async function supprimerResultatExterne(formData: FormData) {
     redirectionErreur("/admin/imports", e);
   }
 }
+
+/**
+ * Saisie MANUELLE d'un résultat externe par le staff — pivot du 15/08/2026.
+ *
+ * CONTEXTE (décision actée avec Clavel le soir même) : l'accès API Toornament
+ * est devenu payant — plan « Arena » à 229 €/mois minimum, pour une
+ * fonctionnalité d'AFFICHAGE sur une plateforme associative gratuite. Ratio
+ * valeur/coût indéfendable. L'import vérifié par API
+ * (importerResultatToornament) RESTE dans le code : il se réactive tout seul
+ * le jour où TOORNAMENT_API_KEY existe (partenariat, changement de pricing).
+ *
+ * En attendant, le staff saisit le résultat lui-même, À UNE CONDITION non
+ * négociable : fournir le lien du tournoi Toornament. Ce lien est affiché
+ * publiquement sur le profil — n'importe qui peut vérifier en un clic.
+ * Nuance assumée et affichée honnêtement : le résultat est « vérifiable par
+ * tous », pas « vérifié par une machine ». C'est le même modèle de confiance
+ * qu'un CV : la source est citée, au lecteur de cliquer.
+ */
+export async function saisirResultatExterne(formData: FormData) {
+  try {
+    const ctx = await requireStaff();
+    const db = getServiceClient();
+
+    const joueurId = String(formData.get("joueur_id") ?? "");
+    const url = String(formData.get("url") ?? "").trim();
+    const nomTournoi = String(formData.get("nom_tournoi") ?? "")
+      .trim()
+      .replace(/\s+/g, " ");
+    const jeu = String(formData.get("jeu") ?? "").trim() || null;
+    const nomParticipantSaisi = String(formData.get("nom_participant") ?? "").trim();
+    const rang = Number(formData.get("rang"));
+    const nbBrut = String(formData.get("nb_participants") ?? "").trim();
+    const nbParticipants = nbBrut === "" ? null : Number(nbBrut);
+    const dateFin = String(formData.get("date_fin") ?? "").trim() || null;
+
+    // Le lien EST la preuve : sans un vrai lien de tournoi toornament.com,
+    // pas de saisie. Même règle de parsing que l'import API.
+    const tournoiExterneId = extraireIdTournoiToornament(url);
+    if (!tournoiExterneId) {
+      throw new Error(
+        "Lien obligatoire et non reconnu : colle l'URL du tournoi sur toornament.com (elle contient /tournaments/<numéro>)."
+      );
+    }
+    if (nomTournoi.length < 1 || nomTournoi.length > 200) {
+      throw new Error("Nom du tournoi : entre 1 et 200 caractères.");
+    }
+    if (!Number.isInteger(rang) || rang < 1) {
+      throw new Error("Rang invalide : un entier à partir de 1 (1 = vainqueur).");
+    }
+    if (
+      nbParticipants !== null &&
+      (!Number.isInteger(nbParticipants) || nbParticipants < 2 || rang > nbParticipants)
+    ) {
+      throw new Error(
+        "Nombre de participants invalide (au moins 2, et le rang ne peut pas le dépasser)."
+      );
+    }
+
+    const { data: joueurData } = await db
+      .schema("arena")
+      .from("joueurs")
+      .select("id, pseudo")
+      .eq("id", joueurId)
+      .single();
+    if (!joueurData) throw new Error("Joueur introuvable.");
+
+    const { error } = await db.schema("arena").from("resultats_externes").insert({
+      joueur_id: joueurId,
+      source: "TOORNAMENT",
+      tournoi_externe_id: tournoiExterneId,
+      url,
+      nom_tournoi: nomTournoi,
+      jeu,
+      nom_participant: nomParticipantSaisi || (joueurData.pseudo as string),
+      rang,
+      nb_participants: nbParticipants,
+      date_fin: dateFin,
+      importe_par: ctx.userId,
+    });
+    if (error) {
+      throw new Error(
+        error.code === "23505"
+          ? "Ce tournoi Toornament est déjà enregistré pour ce joueur."
+          : `Saisie impossible : ${error.message}`
+      );
+    }
+
+    await log(ctx.userId, "RESULTAT_EXTERNE_SAISI", null, null, {
+      joueur_id: joueurId,
+      tournoi_externe_id: tournoiExterneId,
+      rang,
+    });
+    revalidatePath("/admin/imports");
+  } catch (e) {
+    redirectionErreur("/admin/imports", e);
+  }
+}

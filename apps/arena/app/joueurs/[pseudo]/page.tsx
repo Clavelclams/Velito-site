@@ -169,9 +169,10 @@ export default async function PageJoueur({
         </section>
       )}
 
-      {/* Palmarès externe : résultats vérifiés à l'import (appariement dans
-          le classement Toornament) mais NON comptés dans les points ARENA.
-          Le lien source est affiché pour que chacun puisse vérifier. */}
+      {/* Palmarès externe : résultats ajoutés par le staff (ou, si une clé
+          API existe, vérifiés automatiquement à l'import) — JAMAIS comptés
+          dans les points ARENA. La transparence tient au lien source affiché
+          sur chaque ligne : vérifiable par n'importe qui, en un clic. */}
       {resultatsExternes.length > 0 && (
         <section className="mb-8">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-arena-faint">
@@ -202,8 +203,8 @@ export default async function PageJoueur({
             ))}
           </ul>
           <p className="mt-2 text-xs text-arena-faint">
-            Résultats importés depuis Toornament — hors classement ARENA, lien
-            source sur chaque ligne.
+            Résultats obtenus sur Toornament, ajoutés par le staff — hors
+            classement ARENA, lien source vérifiable sur chaque ligne.
           </p>
         </section>
       )}
