@@ -13,9 +13,7 @@ import { ACCENTS_BLOCS, COULEURS_BLOCS, NOMS_BLOCS } from "@/lib/fiches/blocs";
 import RechercheFiches from "@/app/components/RechercheFiches";
 import ProgressionDashboard from "@/app/components/ProgressionDashboard";
 import ContinuerParcours from "@/app/components/ContinuerParcours";
-
-/** Date cible du jury (à affiner quand la convocation AFPA arrive). */
-const DATE_JURY = new Date("2027-04-01T09:00:00+02:00");
+import CompteARebours from "@/app/components/CompteARebours";
 
 export default function DashboardPage() {
   const fiches = listerFiches();
@@ -34,11 +32,6 @@ export default function DashboardPage() {
       ordre: l.ordre,
     })),
   );
-  const joursRestants = Math.max(
-    0,
-    Math.ceil((DATE_JURY.getTime() - Date.now()) / 86_400_000),
-  );
-
   // Compteur par bloc CDA (sur TOUTES les fiches — les stats globales ne
   // bougent pas quand on filtre la liste en dessous).
   const parBloc = { 1: 0, 2: 0, 3: 0 } as Record<1 | 2 | 3, number>;
@@ -54,15 +47,10 @@ export default function DashboardPage() {
             Révision CDA · {fiches.length} fiche{fiches.length > 1 ? "s" : ""}
           </p>
         </div>
-        {/* Le compte à rebours = LE point focal : carte gradient, blanc sur couleur. */}
-        <div className="rounded-2xl bg-gradient-to-br from-cours-accent to-cours-bloc2 px-6 py-4 text-center text-white shadow-lg shadow-cours-accent/25">
-          <p className="text-2xl font-bold sm:text-3xl tabular-nums">
-            J−{joursRestants}
-          </p>
-          <p className="text-xs uppercase tracking-wide text-white/80">
-            avant le jury
-          </p>
-        </div>
+        {/* Le compte à rebours = LE point focal : carte gradient, blanc sur
+            couleur. Composant CLIENT : cette page est statique, un calcul de
+            date fait ici serait figé au build (cf. CompteARebours.tsx). */}
+        <CompteARebours />
       </header>
 
       {/* ---- Ma progression (XP, série, révision du jour) ---- */}
