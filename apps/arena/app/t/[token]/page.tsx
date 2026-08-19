@@ -14,17 +14,32 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Joueur, MatchRow, Participation, Tournoi } from "@/lib/arena/types";
 import { grouperMatchsParSection, matchFinal } from "@/lib/arena/affichage";
+import { libelleTour, trouverMonMatch } from "@/lib/arena/mon-match";
 import ClassementsPoules from "@/components/ClassementsPoules";
 import AutoRefresh from "./AutoRefresh";
 import EnteteSite from "@/components/EnteteSite";
 import PiedSite from "@/components/PiedSite";
 
+/**
+ * Compare deux pseudos sans tenir compte de la casse ni des accents.
+ * Un joueur qui tape « lea » doit retrouver « Léa » : en plein tournoi, sur un
+ * téléphone, exiger l'orthographe exacte reviendrait à ne servir à rien.
+ */
+function memePseudo(a: string, b: string): boolean {
+  const n = (s: string) =>
+    s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+  return n(a) === n(b) && n(a).length > 0;
+}
+
 export default async function PagePubliqueTournoi({
   params,
+  searchParams,
 }: {
   params: Promise<{ token: string }>;
+  searchParams: Promise<{ moi?: string }>;
 }) {
   const { token } = await params;
+  const { moi: pseudoRecherche } = await searchParams;
   const supabase = await createClient();
 
   const { data: tournoiData } = await supabase
@@ -99,6 +114,36 @@ export default async function PagePubliqueTournoi({
       ? pseudo(finale.equipe_gagnante_id ?? finale.gagnant_id)
       : null;
 
+  // ---- « Mon match » : la réponse à LA question du jour J ----
+  // Recherche par pseudo dans les participants DÉJÀ chargés : aucune requête
+  // supplémentaire, et donc aucun moyen d'énumérer la base de joueurs depuis
+  // cette page publique — on ne peut trouver que les inscrits de CE tournoi.
+  const participationMoi = pseudoRecherche
+    ? participations.find((p) =>
+        memePseudo((p.joueur as Joueur | undefined)?.pseudo ?? "", pseudoRecherche)
+      )
+    : undefined;
+
+  // En sport, le camp du match est l'ÉQUIPE : il faut donc aussi savoir dans
+  // laquelle le joueur se trouve. En esport, cette recherche ne donne rien et
+  // c'est normal.
+  const monEquipeId = participationMoi
+    ? (equipes.find((e) =>
+        (e.membres ?? []).some((mb) => mb.joueur_id === participationMoi.joueur_id)
+      )?.id ?? null)
+    : null;
+
+  const monMatch = participationMoi
+    ? trouverMonMatch(matchs, [participationMoi.joueur_id, monEquipeId])
+    : null;
+
+  // Profondeur du tableau principal, pour nommer « finale » / « demi-finale »
+  // au lieu d'un numéro de tour qui ne parle à personne.
+  const roundsW = matchs
+    .filter((m) => (m.bracket ?? "W") === "W")
+    .map((m) => m.round);
+  const nbRounds = roundsW.length > 0 ? Math.max(...roundsW) : 0;
+
   return (
     <>
       <EnteteSite />
@@ -129,6 +174,101 @@ export default async function PagePubliqueTournoi({
         <p className="mb-8 rounded-lg border border-arena-gold/30 bg-arena-gold-pale p-4 text-center text-lg font-bold text-arena-gold">
           🏆 Champion : {champion}
         </p>
+      )}
+
+      {/* ---- MON MATCH ----
+          Un <form method="get"> natif : zéro JavaScript, une URL partageable
+          (/t/xxx?moi=Lea) qu'un joueur peut mettre en favori pour retrouver
+          sa situation d'un seul geste pendant tout le tournoi. Même choix
+          technique que la recherche de l'accueil. */}
+      {matchs.length > 0 && (
+        <section className="mb-8 rounded-lg border border-arena-violet/30 bg-arena-violet/5 p-4">
+          <h2 className="mb-3 text-sm font-bold uppercase tracking-widest text-arena-violet">
+            Mon match
+          </h2>
+
+          <form method="get" className="flex flex-wrap gap-2">
+            <input
+              type="text"
+              name="moi"
+              defaultValue={pseudoRecherche ?? ""}
+              placeholder="Ton pseudo"
+              aria-label="Ton pseudo"
+              className="min-h-[44px] flex-1 rounded-lg border border-arena-border bg-arena-surface px-3 py-2 text-sm focus:border-arena-violet focus:outline-none"
+            />
+            <button
+              type="submit"
+              className="min-h-[44px] rounded-lg bg-arena-violet px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-arena-violet-fonce"
+            >
+              Voir
+            </button>
+          </form>
+
+          {pseudoRecherche && !participationMoi && (
+            <p className="mt-3 text-sm text-arena-muted">
+              Aucun inscrit ne s&apos;appelle « {pseudoRecherche} » dans ce
+              tournoi. Vérifie l&apos;orthographe auprès du staff.
+            </p>
+          )}
+
+          {monMatch && participationMoi && (
+            <div className="mt-3 text-sm">
+              {monMatch.situation === "A_JOUER" && monMatch.prochain && (
+                <p className="text-base">
+                  <span className="font-bold">
+                    {libelleTour(monMatch.prochain, nbRounds)}
+                  </span>{" "}
+                  contre{" "}
+                  <span className="font-bold text-arena-violet">
+                    {pseudo(monMatch.adversaireId)}
+                  </span>
+                  {monMatch.prochain.statut === "LITIGIEUX" && (
+                    <span className="text-arena-gold"> · litige en cours</span>
+                  )}
+                </p>
+              )}
+
+              {monMatch.situation === "EN_ATTENTE" && monMatch.prochain && (
+                <p className="text-base">
+                  Qualifié pour{" "}
+                  <span className="font-bold">
+                    {libelleTour(monMatch.prochain, nbRounds)}
+                  </span>{" "}
+                  — <span className="text-arena-muted">adversaire pas encore
+                  connu, reste dans le coin.</span>
+                </p>
+              )}
+
+              {monMatch.situation === "ELIMINE" && (
+                <p className="text-base text-arena-muted">
+                  Éliminé pour cette fois. Merci d&apos;être venu jouer.
+                </p>
+              )}
+
+              {monMatch.situation === "TERMINE" && (
+                <p className="text-base text-arena-muted">
+                  {champion && memePseudo(champion, pseudo(participationMoi.joueur_id))
+                    ? "🏆 Champion. Bravo."
+                    : "Tous tes matchs sont joués."}
+                </p>
+              )}
+
+              {monMatch.situation === "INCONNU" && (
+                <p className="text-base text-arena-muted">
+                  Inscrit, mais le tirage ne t&apos;a pas encore placé.
+                </p>
+              )}
+
+              {(monMatch.victoires > 0 || monMatch.defaites > 0) && (
+                <p className="mt-2 text-xs text-arena-faint">
+                  {monMatch.victoires} victoire{monMatch.victoires > 1 ? "s" : ""} ·{" "}
+                  {monMatch.defaites} défaite{monMatch.defaites > 1 ? "s" : ""}
+                  {monEquipeId ? ` · équipe ${pseudo(monEquipeId)}` : ""}
+                </p>
+              )}
+            </div>
+          )}
+        </section>
       )}
 
       <div className="mb-8">
