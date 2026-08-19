@@ -18,6 +18,7 @@ import {
   demarrerTournoi,
   enregistrerRepartition,
   genererPhaseFinale,
+  assignerTerrain,
   saisirScore,
   signalerLitige,
   supprimerEquipe,
@@ -142,6 +143,18 @@ export default async function PageTournoi({
   // les deux index. Le reste de la page n'a plus à savoir de quel type de
   // tournoi il s'agit.
   const nomsEquipes = new Map(equipes.map((e) => [e.id, e.nom]));
+
+  // Terrains déjà saisis dans CE tournoi : ils alimentent la <datalist> des
+  // champs « Terrain ». Le staff tape « Court 1 » une seule fois, puis le
+  // choisit dans la liste — pas de table à configurer, pas de doublons dus
+  // aux fautes de frappe.
+  const terrainsUtilises = [
+    ...new Set(
+      matchs
+        .map((m) => m.terrain?.trim())
+        .filter((t): t is string => Boolean(t))
+    ),
+  ].sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
   const pseudo = (jid: string | null) =>
     jid ? (pseudos.get(jid) ?? nomsEquipes.get(jid) ?? "?") : "À venir";
 
@@ -162,6 +175,18 @@ export default async function PageTournoi({
   return (
     <div className="space-y-10">
       <BandeauErreur message={erreur} />
+
+      {/* Suggestions de terrains, partagées par tous les champs « Terrain ».
+          Une <datalist> native : le navigateur propose les valeurs déjà
+          utilisées sans imposer de choisir dans la liste — on peut toujours
+          taper un terrain inédit. Zéro JavaScript. */}
+      {terrainsUtilises.length > 0 && (
+        <datalist id="terrains-du-tournoi">
+          {terrainsUtilises.map((t) => (
+            <option key={t} value={t} />
+          ))}
+        </datalist>
+      )}
 
       {/* ---------- En-tête + cycle de vie ---------- */}
       <div>
@@ -512,6 +537,39 @@ export default async function PageTournoi({
                               {m.is_bye ? "(bye)" : pseudo(camps(m).c2)}
                             </span>
                           </div>
+
+                          {/* Terrain — module sport (migration 007).
+                              Affiché pour les tournois SPORT, et pour tout
+                              match qui en a déjà un : on ne masque jamais une
+                              information saisie. Un tournoi esport individuel
+                              n'a pas ce champ, pour ne pas alourdir une liste
+                              déjà dense — mais en LAN il suffit d'assigner
+                              « Poste 3 » une fois pour qu'il apparaisse. */}
+                          {(tournoi.discipline === "SPORT" || m.terrain) && (
+                            <form
+                              action={assignerTerrain}
+                              className="flex items-center gap-1.5"
+                            >
+                              <input type="hidden" name="tournoi_id" value={tournoi.id} />
+                              <input type="hidden" name="match_id" value={m.id} />
+                              <input
+                                name="terrain"
+                                type="text"
+                                maxLength={40}
+                                list="terrains-du-tournoi"
+                                defaultValue={m.terrain ?? ""}
+                                placeholder="Terrain"
+                                aria-label={`Terrain du match ${pseudo(camps(m).c1)}`}
+                                className={`${inputCls} w-28`}
+                              />
+                              <button
+                                className={`${btn} border border-arena-border text-arena-faint hover:text-arena-ink`}
+                                title="Enregistrer le terrain (vider le champ le retire)"
+                              >
+                                Placer
+                              </button>
+                            </form>
+                          )}
 
                           <div className="flex items-center gap-2">
                             {m.statut === "VALIDE" ? (

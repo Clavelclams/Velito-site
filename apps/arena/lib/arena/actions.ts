@@ -1570,3 +1570,51 @@ export async function saisirResultatExterne(formData: FormData) {
     redirectionErreur("/admin/imports", e);
   }
 }
+
+/**
+ * Assigne (ou retire) le TERRAIN d'un match — module sport, migration 007.
+ *
+ * Pourquoi une action dédiée plutôt qu'un champ dans saisirScore : le terrain
+ * se décide AVANT le match, souvent bien avant que le score existe. Les mêler
+ * obligerait le staff à saisir un score fictif pour dire « ça se joue court 2 ».
+ *
+ * Volontairement modifiable même sur un match VALIDÉ : le verrou du règlement
+ * §3 protège le RÉSULTAT (score, vainqueur, statut), pas l'information de
+ * lieu. Corriger après coup « court 1 » en « court 2 » ne change aucun
+ * classement — l'interdire n'aurait fait qu'empêcher de réparer une faute de
+ * frappe.
+ */
+export async function assignerTerrain(formData: FormData) {
+  const tournoiId = String(formData.get("tournoi_id") ?? "");
+  try {
+    const ctx = await requireStaff();
+    await chargerTournoiDeLOrga(tournoiId, ctx);
+
+    const matchId = String(formData.get("match_id") ?? "");
+    // Espaces multiples écrasés : « Court  2 » et « Court 2 » doivent produire
+    // le même libellé, sinon la liste de suggestions se remplit de doublons
+    // qui n'en sont pas.
+    const brut = String(formData.get("terrain") ?? "").trim().replace(/\s+/g, " ");
+    if (brut.length > 40) {
+      throw new Error("Nom de terrain trop long (40 caractères maximum).");
+    }
+    // Champ vidé = retrait de l'assignation. C'est la seule façon d'annuler
+    // sans un bouton « supprimer » supplémentaire.
+    const terrain = brut === "" ? null : brut;
+
+    const db = getServiceClient();
+    const { error } = await db
+      .schema("arena")
+      .from("matchs")
+      .update({ terrain, updated_at: new Date().toISOString() })
+      .eq("id", matchId)
+      .eq("tournoi_id", tournoiId); // jamais le match d'un autre tournoi
+
+    if (error) throw new Error(`Assignation impossible : ${error.message}`);
+
+    await log(ctx.userId, "TERRAIN_ASSIGNE", tournoiId, matchId, { terrain });
+    revalidatePath(`/admin/tournois/${tournoiId}`);
+  } catch (e) {
+    redirectionErreur(`/admin/tournois/${tournoiId}`, e);
+  }
+}

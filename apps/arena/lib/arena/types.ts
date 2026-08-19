@@ -164,4 +164,10 @@ export interface MatchRow {
   equipe1_id?: string | null;
   equipe2_id?: string | null;
   equipe_gagnante_id?: string | null;
+  /**
+   * Où se joue le match (migration 007) : « Court 2 », « Terrain A »,
+   * « Table 3 »… Libellé libre car le vocabulaire change avec la discipline.
+   * null = non assigné, cas normal quand il n'y a qu'un seul terrain.
+   */
+  terrain?: string | null;
 }

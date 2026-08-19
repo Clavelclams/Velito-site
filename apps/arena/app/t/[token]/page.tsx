@@ -228,6 +228,15 @@ export default async function PagePubliqueTournoi({
                 </p>
               )}
 
+              {/* Le terrain : la question qui suit immédiatement « contre qui ».
+                  Affiché en gros, séparément, parce que c'est ce que le joueur
+                  cherche en traversant le complexe. */}
+              {monMatch.situation === "A_JOUER" && monMatch.prochain?.terrain && (
+                <p className="mt-1 text-base font-bold">
+                  📍 {monMatch.prochain.terrain}
+                </p>
+              )}
+
               {monMatch.situation === "EN_ATTENTE" && monMatch.prochain && (
                 <p className="text-base">
                   Qualifié pour{" "}
@@ -306,10 +315,21 @@ export default async function PagePubliqueTournoi({
                           </span>
                         )}
                       </span>
-                      <span className="mx-3 font-mono text-arena-muted">
-                        {m.statut === "VALIDE" || m.statut === "TERMINE"
-                          ? `${m.score_j1 ?? "·"} - ${m.score_j2 ?? "·"}`
-                          : "vs"}
+                      <span className="mx-3 text-center font-mono text-arena-muted">
+                        <span className="block">
+                          {m.statut === "VALIDE" || m.statut === "TERMINE"
+                            ? `${m.score_j1 ?? "·"} - ${m.score_j2 ?? "·"}`
+                            : "vs"}
+                        </span>
+                        {/* Terrain : n'apparaît que s'il est assigné, et
+                            seulement tant que le match n'est pas joué — une
+                            fois le résultat acquis, savoir où il s'est déroulé
+                            n'intéresse plus personne. */}
+                        {m.terrain && m.statut !== "VALIDE" && (
+                          <span className="block whitespace-nowrap text-xs font-sans text-arena-violet">
+                            📍 {m.terrain}
+                          </span>
+                        )}
                       </span>
                       <span
                         className={
