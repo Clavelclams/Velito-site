@@ -168,6 +168,19 @@ export default async function PagePubliqueTournoi({
                 : tournoi.statut}
           </span>
         </p>
+        {/* Export CSV public : les données repartent aussi librement qu'elles
+            sont entrées (doctrine de complémentarité). Simple <a> : le
+            navigateur télécharge, zéro JavaScript. */}
+        {matchs.length > 0 && (
+          <p className="mt-2 text-xs">
+            <a
+              href={`/t/${tournoi.qr_token}/export`}
+              className="text-arena-faint underline hover:text-arena-ink"
+            >
+              ⬇ Télécharger les résultats (CSV)
+            </a>
+          </p>
+        )}
       </header>
 
       {champion && (

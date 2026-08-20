@@ -210,6 +210,13 @@ export default async function PageTournoi({
               </a>
               {" · "}
               <a
+                href={`/admin/tournois/${tournoi.id}/export`}
+                className="text-arena-lilac underline hover:text-arena-ink"
+              >
+                Participants (CSV)
+              </a>
+              {" · "}
+              <a
                 href={`/admin/tournois/${tournoi.id}/qr`}
                 className="text-arena-lilac underline hover:text-arena-ink"
               >

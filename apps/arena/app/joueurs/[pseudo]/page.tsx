@@ -10,6 +10,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { pointsDuTournoi } from "@/lib/arena/classement";
+import { calculerStatsJoueur, type TournoiJoue } from "@/lib/arena/stats";
 import { libelleRang } from "@/lib/toornament";
 import type { Joueur, MatchRow, ResultatExterne, Tournoi } from "@/lib/arena/types";
 import EnteteSite from "@/components/EnteteSite";
@@ -82,6 +83,8 @@ export default async function PageJoueur({
 
   let points = 0;
   let titres = 0;
+  let stats: ReturnType<typeof calculerStatsJoueur> | null = null;
+  const pseudosStats = new Map<string, string>();
   if (tournoisTermines.length > 0) {
     const ids = tournoisTermines.map((t) => t.id);
     const [{ data: matchsData }, { data: equipesData }] = await Promise.all([
@@ -95,11 +98,16 @@ export default async function PageJoueur({
       supabase
         .schema("arena")
         .from("equipes")
-        .select("id, membres:equipes_membres(joueur_id)")
+        .select("id, tournoi_id, membres:equipes_membres(joueur_id)")
         .in("tournoi_id", ids),
     ]);
+    const equipes = (equipesData ?? []) as {
+      id: string;
+      tournoi_id: string;
+      membres: { joueur_id: string }[];
+    }[];
     const mesEquipes = new Set(
-      ((equipesData ?? []) as { id: string; membres: { joueur_id: string }[] }[])
+      equipes
         .filter((e) => (e.membres ?? []).some((mb) => mb.joueur_id === joueur.id))
         .map((e) => e.id)
     );
@@ -118,6 +126,54 @@ export default async function PageJoueur({
       }
       points += p;
       if (p >= 3) titres += 1;
+    }
+
+    // ---- Stats maison (module pur lib/arena/stats.ts) ----
+    // Un TournoiJoue par tournoi terminé : le jeu, les matchs, qui je suis
+    // dedans (mon id + mon équipe éventuelle) et la composition des équipes
+    // pour résoudre adversaires et partenaires jusqu'aux JOUEURS.
+    const equipesParTournoi = new Map<string, typeof equipes>();
+    for (const e of equipes) {
+      const liste = equipesParTournoi.get(e.tournoi_id) ?? [];
+      liste.push(e);
+      equipesParTournoi.set(e.tournoi_id, liste);
+    }
+    const tournoisJoues: TournoiJoue[] = tournoisTermines.map((tr) => {
+      const eqs = equipesParTournoi.get(tr.id) ?? [];
+      return {
+        jeu: tr.jeu,
+        matchs: parTournoi.get(tr.id) ?? [],
+        mesIds: [
+          joueur.id,
+          eqs.find((e) => (e.membres ?? []).some((mb) => mb.joueur_id === joueur.id))
+            ?.id ?? null,
+        ],
+        membresParEquipe: new Map(
+          eqs.map((e) => [e.id, (e.membres ?? []).map((mb) => mb.joueur_id)])
+        ),
+      };
+    });
+    stats = calculerStatsJoueur(tournoisJoues);
+
+    // Pseudos des adversaires/partenaires affichés. Client ANONYME → RLS, et
+    // filtre profil_public : un mineur en mode restreint n'apparaît dans
+    // aucun palmarès d'autrui — même règle que le classement (RGPD).
+    const idsAffiches = [
+      ...stats.adversaires.slice(0, 6).map((a) => a.joueurId),
+      ...stats.partenaires.slice(0, 6).map((pa) => pa.joueurId),
+    ];
+    if (idsAffiches.length > 0) {
+      const { data: joueursData } = await supabase
+        .schema("arena")
+        .from("joueurs")
+        .select("id, pseudo, profil_public")
+        .in("id", idsAffiches);
+      for (const j of (joueursData ?? []) as Pick<
+        Joueur,
+        "id" | "pseudo" | "profil_public"
+      >[]) {
+        if (j.profil_public) pseudosStats.set(j.id, j.pseudo);
+      }
     }
   }
 
@@ -166,6 +222,103 @@ export default async function PageJoueur({
               </li>
             ))}
           </ul>
+        </section>
+      )}
+
+      {/* Stats maison : calculées sur NOS tournois uniquement (module pur
+          lib/arena/stats.ts). Les joueurs en mode restreint sont absents des
+          listes adversaires/partenaires — pseudosStats ne les contient pas. */}
+      {stats && stats.matchsJoues > 0 && (
+        <section className="mb-8">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-arena-faint">
+            Stats
+          </h2>
+
+          <p className="mb-3 text-sm text-arena-muted">
+            <span className="font-bold text-arena-ink">{stats.matchsJoues}</span>{" "}
+            match{stats.matchsJoues > 1 ? "s" : ""} ·{" "}
+            <span className="font-bold text-arena-green">{stats.victoires} V</span>{" "}
+            /{" "}
+            <span className="font-bold text-arena-ink">{stats.defaites} D</span>
+            {stats.winrate !== null && (
+              <>
+                {" "}
+                ·{" "}
+                <span className="font-bold text-arena-ink">
+                  {stats.winrate} %
+                </span>{" "}
+                de victoires
+              </>
+            )}
+          </p>
+
+          <ul className="space-y-1.5">
+            {stats.parJeu.slice(0, 5).map((l) => (
+              <li
+                key={l.jeu}
+                className="flex items-center justify-between rounded-lg border border-arena-border bg-arena-surface shadow-carte px-4 py-2 text-sm"
+              >
+                <span className="font-semibold">{l.jeu}</span>
+                <span className="text-arena-muted">
+                  {l.victoires} V / {l.defaites} D ·{" "}
+                  <span className="font-bold text-arena-ink">{l.winrate} %</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+
+          {(() => {
+            // N'afficher que les joueurs à profil public (résolus plus haut).
+            const rivaux = stats.adversaires
+              .filter((a) => pseudosStats.has(a.joueurId))
+              .slice(0, 3);
+            const coequipiers = stats.partenaires
+              .filter((pa) => pseudosStats.has(pa.joueurId))
+              .slice(0, 3);
+            if (rivaux.length === 0 && coequipiers.length === 0) return null;
+            return (
+              <div className="mt-3 space-y-1 text-sm text-arena-muted">
+                {rivaux.length > 0 && (
+                  <p>
+                    Adversaires fréquents :{" "}
+                    {rivaux.map((a, i) => (
+                      <span key={a.joueurId}>
+                        {i > 0 && ", "}
+                        <a
+                          href={`/joueurs/${encodeURIComponent(pseudosStats.get(a.joueurId) ?? "")}`}
+                          className="font-semibold text-arena-ink underline hover:text-arena-violet"
+                        >
+                          {pseudosStats.get(a.joueurId)}
+                        </a>{" "}
+                        <span className="text-arena-faint">
+                          ({a.victoires}-{a.rencontres - a.victoires})
+                        </span>
+                      </span>
+                    ))}
+                  </p>
+                )}
+                {coequipiers.length > 0 && (
+                  <p>
+                    Partenaires d&apos;équipe :{" "}
+                    {coequipiers.map((pa, i) => (
+                      <span key={pa.joueurId}>
+                        {i > 0 && ", "}
+                        <a
+                          href={`/joueurs/${encodeURIComponent(pseudosStats.get(pa.joueurId) ?? "")}`}
+                          className="font-semibold text-arena-ink underline hover:text-arena-violet"
+                        >
+                          {pseudosStats.get(pa.joueurId)}
+                        </a>{" "}
+                        <span className="text-arena-faint">
+                          ({pa.tournois} tournoi{pa.tournois > 1 ? "s" : ""})
+                        </span>
+                      </span>
+                    ))}
+                  </p>
+                )}
+              </div>
+            );
+          })()}
         </section>
       )}
 
