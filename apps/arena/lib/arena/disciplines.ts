@@ -11,9 +11,11 @@
  * de League of Legends ou de Fortnite sont des œuvres protégées. Toornament
  * les affiche parce qu'il a des accords avec les éditeurs (Riot, Ubisoft,
  * Microsoft sont ses clients). Nous n'en avons pas. Reprendre ces images
- * serait une contrefaçon, et pour une association qui demande des subventions
- * publiques c'est un risque disproportionné face au gain esthétique.
- * Donc : typographie forte + couleur propre à chaque discipline. Assumé.
+ * serait une contrefaçon — et Nintendo (Smash, Mario Kart) est l'éditeur le
+ * plus procédurier du secteur. Pour une association qui demande des
+ * subventions publiques, c'est un risque disproportionné face au gain
+ * esthétique. Donc : typographie forte + couleur propre à chaque discipline.
+ * Assumé, et défendu tel quel devant un jury.
  *
  * `jeu` correspond EXACTEMENT au libellé stocké dans arena.tournois.jeu, ce
  * qui permet de compter les tournois par discipline sans table de
@@ -27,6 +29,10 @@ export type Verticale = "ESPORT" | "SPORT";
 export interface Discipline {
   /** Libellé exact utilisé dans la colonne `jeu`. */
   jeu: string;
+  /** Identifiant d'URL de la fiche jeu (/jeux/[slug]). STABLE : contrairement
+   *  au libellé, il ne change pas à chaque édition annuelle, donc un lien
+   *  partagé ou mis en favori survit au passage FC 26 → FC 27. */
+  slug: string;
   /** Nom court affiché sur la pastille (les titres longs cassent la grille). */
   court: string;
   verticale: Verticale;
@@ -35,33 +41,50 @@ export interface Discipline {
   /** Illustration ORIGINALE affichée en grand sur la pastille (cf. le
    *  commentaire de MotifDiscipline.tsx sur les droits d'auteur). */
   motif: CleMotif;
+  /** Libellés des éditions PRÉCÉDENTES du même jeu (« EA Sports FC 25 »…) :
+   *  les tournois déjà joués sous l'ancien nom restent comptés et listés sur
+   *  la fiche de l'édition courante — l'historique ne disparaît pas parce
+   *  que l'éditeur sort un millésime. */
+  anciensLibelles?: string[];
 }
 
 export const DISCIPLINES: Discipline[] = [
   // --- Esport ---
-  { jeu: "Rocket League", court: "Rocket League", verticale: "ESPORT", couleur: "from-[#1B3C8C] to-[#2E6BD6]", motif: "voiture" },
-  { jeu: "EA Sports FC 25", court: "EA FC 25", verticale: "ESPORT", couleur: "from-[#0B3B2E] to-[#128A5E]", motif: "ballon" },
-  { jeu: "Street Fighter 6", court: "Street Fighter 6", verticale: "ESPORT", couleur: "from-[#7A1B1B] to-[#D14B2A]", motif: "combat" },
-  { jeu: "Tekken 8", court: "Tekken 8", verticale: "ESPORT", couleur: "from-[#2B1B4A] to-[#6B3FA0]", motif: "combat" },
-  { jeu: "Super Smash Bros. Ultimate", court: "Smash Ultimate", verticale: "ESPORT", couleur: "from-[#8A3B00] to-[#E08A2B]", motif: "combat" },
-  { jeu: "Mario Kart 8 Deluxe", court: "Mario Kart 8", verticale: "ESPORT", couleur: "from-[#A32020] to-[#E85D4A]", motif: "voiture" },
-  { jeu: "Valorant", court: "Valorant", verticale: "ESPORT", couleur: "from-[#6E1526] to-[#C63A4C]", motif: "tir" },
-  { jeu: "Counter-Strike 2", court: "Counter-Strike 2", verticale: "ESPORT", couleur: "from-[#4A3A12] to-[#B08A2E]", motif: "tir" },
-  { jeu: "League of Legends", court: "League of Legends", verticale: "ESPORT", couleur: "from-[#0E2A45] to-[#1E6E8C]", motif: "epee" },
-  { jeu: "Fortnite", court: "Fortnite", verticale: "ESPORT", couleur: "from-[#3B1E7A] to-[#7B4FD6]", motif: "construction" },
+  { jeu: "Rocket League", slug: "rocket-league", court: "Rocket League", verticale: "ESPORT", couleur: "from-[#1B3C8C] to-[#2E6BD6]", motif: "voiture" },
+  // Édition courante depuis septembre 2025. À la sortie de FC 27 : changer
+  // `jeu` et `court`, et pousser « EA Sports FC 26 » dans anciensLibelles.
+  { jeu: "EA Sports FC 26", slug: "ea-sports-fc", court: "EA FC 26", verticale: "ESPORT", couleur: "from-[#0B3B2E] to-[#128A5E]", motif: "ballon", anciensLibelles: ["EA Sports FC 25"] },
+  { jeu: "Street Fighter 6", slug: "street-fighter-6", court: "Street Fighter 6", verticale: "ESPORT", couleur: "from-[#7A1B1B] to-[#D14B2A]", motif: "combat" },
+  { jeu: "Tekken 8", slug: "tekken-8", court: "Tekken 8", verticale: "ESPORT", couleur: "from-[#2B1B4A] to-[#6B3FA0]", motif: "combat" },
+  { jeu: "Super Smash Bros. Ultimate", slug: "super-smash-bros-ultimate", court: "Smash Ultimate", verticale: "ESPORT", couleur: "from-[#8A3B00] to-[#E08A2B]", motif: "combat" },
+  { jeu: "Mario Kart 8 Deluxe", slug: "mario-kart-8-deluxe", court: "Mario Kart 8", verticale: "ESPORT", couleur: "from-[#A32020] to-[#E85D4A]", motif: "voiture" },
+  { jeu: "Valorant", slug: "valorant", court: "Valorant", verticale: "ESPORT", couleur: "from-[#6E1526] to-[#C63A4C]", motif: "tir" },
+  { jeu: "Counter-Strike 2", slug: "counter-strike-2", court: "Counter-Strike 2", verticale: "ESPORT", couleur: "from-[#4A3A12] to-[#B08A2E]", motif: "tir" },
+  { jeu: "League of Legends", slug: "league-of-legends", court: "League of Legends", verticale: "ESPORT", couleur: "from-[#0E2A45] to-[#1E6E8C]", motif: "epee" },
+  { jeu: "Fortnite", slug: "fortnite", court: "Fortnite", verticale: "ESPORT", couleur: "from-[#3B1E7A] to-[#7B4FD6]", motif: "construction" },
 
   // --- Sport physique ---
-  { jeu: "Padel", court: "Padel", verticale: "SPORT", couleur: "from-[#0B4A3A] to-[#1E9E72]", motif: "raquette" },
-  { jeu: "Five (football à 5)", court: "Five", verticale: "SPORT", couleur: "from-[#123A1E] to-[#2E8A3E]", motif: "ballon" },
+  { jeu: "Padel", slug: "padel", court: "Padel", verticale: "SPORT", couleur: "from-[#0B4A3A] to-[#1E9E72]", motif: "raquette" },
+  { jeu: "Five (football à 5)", slug: "five", court: "Five", verticale: "SPORT", couleur: "from-[#123A1E] to-[#2E8A3E]", motif: "ballon" },
   // « Playground » et non « Basket 3x3 » : le 3x3 est une discipline OLYMPIQUE
   // structurée par la FIBA, qui a son propre circuit et son propre classement
   // mondial. Se placer sur ce terrain serait annoncer une compétition qu'on ne
   // peut pas tenir. « Playground » désigne le basket de rue informel, celui
   // des city-stades d'Amiens : c'est ce qu'on sait réellement organiser, et
   // personne ne l'outille.
-  { jeu: "Playground", court: "Playground", verticale: "SPORT", couleur: "from-[#7A3A0B] to-[#D6772E]", motif: "panier" },
-  { jeu: "Ping-pong", court: "Ping-pong", verticale: "SPORT", couleur: "from-[#1B2E5C] to-[#3E6BC4]", motif: "pingpong" },
+  { jeu: "Playground", slug: "playground", court: "Playground", verticale: "SPORT", couleur: "from-[#7A3A0B] to-[#D6772E]", motif: "panier" },
+  { jeu: "Ping-pong", slug: "ping-pong", court: "Ping-pong", verticale: "SPORT", couleur: "from-[#1B2E5C] to-[#3E6BC4]", motif: "pingpong" },
 ];
 
 export const DISCIPLINES_ESPORT = DISCIPLINES.filter((d) => d.verticale === "ESPORT");
 export const DISCIPLINES_SPORT = DISCIPLINES.filter((d) => d.verticale === "SPORT");
+
+/** Retrouve une discipline par son slug d'URL (fiche jeu), sinon undefined. */
+export function disciplineParSlug(slug: string): Discipline | undefined {
+  return DISCIPLINES.find((d) => d.slug === slug);
+}
+
+/** Tous les libellés `jeu` d'une discipline, édition courante ET anciennes. */
+export function libellesDe(d: Discipline): string[] {
+  return [d.jeu, ...(d.anciensLibelles ?? [])];
+}

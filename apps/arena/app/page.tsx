@@ -38,12 +38,17 @@
 import { createClient } from "@/lib/supabase/server";
 import { calculerClassement } from "@/lib/arena/classement";
 import { matchFinal } from "@/lib/arena/affichage";
-import { DISCIPLINES_ESPORT, DISCIPLINES_SPORT } from "@/lib/arena/disciplines";
+import {
+  DISCIPLINES_ESPORT,
+  DISCIPLINES_SPORT,
+  libellesDe,
+  type Discipline,
+} from "@/lib/arena/disciplines";
 import type { Joueur, MatchRow, Tournoi } from "@/lib/arena/types";
 import EnteteSite from "@/components/EnteteSite";
 import PiedSite from "@/components/PiedSite";
 import { MarqueArena } from "@/components/Marque";
-import MotifDiscipline, { type CleMotif } from "@/components/MotifDiscipline";
+import MotifDiscipline from "@/components/MotifDiscipline";
 import {
   IconeCalendrier,
   IconeJoueurs,
@@ -217,26 +222,23 @@ export default async function ArenaHome({
   ];
 
   /**
-   * Affiche de discipline. Cliquer dessus LANCE LA RECHERCHE sur cette
-   * discipline : la vignette n'est donc pas décorative, c'est un filtre. Sans
-   * ça, on affiche quatorze cases sur lesquelles il ne se passe rien, ce qui
-   * est pire que de ne rien afficher.
+   * Affiche de discipline. Cliquer dessus ouvre la FICHE JEU (/jeux/[slug]) :
+   * tournois de la discipline + renvoi vers son tracker de stats quand il en
+   * existe un. La vignette n'est donc pas décorative, c'est une porte
+   * d'entrée — sans ça, quatorze cases sur lesquelles il ne se passe rien,
+   * ce qui est pire que de ne rien afficher.
    */
-  const Affiche = ({
-    court,
-    jeu,
-    couleur,
-    motif,
-  }: {
-    court: string;
-    jeu: string;
-    couleur: string;
-    motif: CleMotif;
-  }) => {
-    const nb = parDiscipline.get(jeu) ?? 0;
+  const Affiche = (d: Discipline) => {
+    const { court, couleur, motif } = d;
+    // Compte toutes les éditions du jeu : un tournoi FC 25 reste compté sur
+    // la pastille FC 26 — l'historique survit aux millésimes.
+    const nb = libellesDe(d).reduce(
+      (somme, libelle) => somme + (parDiscipline.get(libelle) ?? 0),
+      0
+    );
     return (
       <a
-        href={`/?q=${encodeURIComponent(jeu)}#tournois`}
+        href={`/jeux/${d.slug}`}
         className={`group relative flex aspect-[3/4] flex-col justify-end overflow-hidden rounded-xl bg-gradient-to-br ${couleur} p-3 ring-1 ring-inset ring-white/15 transition-transform hover:-translate-y-1 hover:ring-white/40`}
       >
         {/* L'illustration déborde volontairement du cadre : c'est ce qui donne
