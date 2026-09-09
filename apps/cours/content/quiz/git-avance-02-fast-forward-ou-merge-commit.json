@@ -1,0 +1,49 @@
+{
+  "fiche": "git-avance-02-fast-forward-ou-merge-commit",
+  "questions": [
+    {
+      "question": "Quand git merge fait-il un fast-forward ?",
+      "choix": [
+        "Quand il n'y a pas de conflit",
+        "Quand la branche cible est un ancêtre direct de la branche fusionnée (elle n'a pas bougé)",
+        "Quand on ajoute --fast",
+        "Quand les deux branches ont le même nombre de commits"
+      ],
+      "bonne": 1,
+      "explication": "Fast-forward = main n'a reçu aucun commit depuis la création de la branche. Git déplace juste l'étiquette. Aucun commit créé, aucun conflit possible."
+    },
+    {
+      "question": "Un merge commit a combien de parents ?",
+      "choix": [
+        "Un",
+        "Deux",
+        "Autant que de fichiers modifiés",
+        "Zéro, c'est un commit spécial"
+      ],
+      "bonne": 1,
+      "explication": "Un merge commit combine deux lignes d'histoire : il pointe vers la pointe de chaque branche fusionnée. C'est ce qui le distingue d'un commit normal."
+    },
+    {
+      "question": "Que fait git merge --ff-only si main a bougé depuis la création de la branche ?",
+      "choix": [
+        "Il crée un merge commit",
+        "Il refuse et ne fait rien",
+        "Il rebase automatiquement",
+        "Il force le fast-forward en écrasant main"
+      ],
+      "bonne": 1,
+      "explication": "--ff-only n'accepte que le cas sûr. Si un fast-forward est impossible, Git refuse : c'est ton signal qu'il faut regarder ce qui a changé sur main avant d'agir."
+    },
+    {
+      "question": "Sur GitHub, « Squash and merge » fait quoi ?",
+      "choix": [
+        "Fusionne sans commit",
+        "Transforme les N commits de la branche en UN seul commit sur main",
+        "Supprime les commits de la branche",
+        "Rejoue chaque commit sur main"
+      ],
+      "bonne": 1,
+      "explication": "Squash = écraser. Les N commits deviennent un seul, avec un message combiné. Utile quand la branche contient des commits brouillons (wip, fix typo)."
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "fiche": "deploiement-02-dns-domaines-et-sous-domaines",
+  "questions": [
+    {
+      "question": "Un CNAME, c'est ?",
+      "choix": [
+        "Nom → adresse IP",
+        "Nom → autre nom : cours CNAME cname.vercel-dns.com. Vercel gère l'IP ; si elle change, rien à faire",
+        "Un certificat",
+        "Un enregistrement mail"
+      ],
+      "bonne": 1,
+      "explication": "Le domaine racine (apex) ne peut pas être un CNAME, d'où les enregistrements A pour velito.fr."
+    },
+    {
+      "question": "Le point final dans cname.vercel-dns.com. sert à ?",
+      "choix": [
+        "Rien",
+        "Nom absolu. Sans lui, certains serveurs le lisent relatif à la zone → cname.vercel-dns.com.velito.fr, qui n'existe pas",
+        "Terminer la ligne",
+        "La compatibilité IPv6"
+      ],
+      "bonne": 1,
+      "explication": "Petit et important."
+    },
+    {
+      "question": "Pourquoi cours.velito.fr était visible en quelques minutes alors qu'un changement peut prendre une heure ?",
+      "choix": [
+        "Chance",
+        "Personne n'avait jamais demandé ce nom : aucun cache. Un changement est retenu par les résolveurs pendant le TTL",
+        "Vercel est rapide",
+        "OVH prioritaire"
+      ],
+      "bonne": 1,
+      "explication": "Pour changer un enregistrement existant : baisser le TTL à 300 la veille, changer, remonter."
+    },
+    {
+      "question": "app.venaball.fr est dans le DNS mais affiche la page OVH par défaut. Cause ?",
+      "choix": [
+        "Mauvais certificat",
+        "Pas déclaré dans le multisite OVH : Apache ne sait pas quel dossier servir pour ce Host",
+        "Propagation",
+        "Mauvais CNAME"
+      ],
+      "bonne": 1,
+      "explication": "DNS + multisite + SSL coché : les trois. Blocage n°2 de la liste du 09/09."
+    }
+  ]
+}

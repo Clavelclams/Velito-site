@@ -1,0 +1,49 @@
+{
+  "fiche": "deploiement-01-du-code-au-serveur-vue-densemble",
+  "questions": [
+    {
+      "question": "Sur Vercel, que se passe-t-il après un git push sur main ?",
+      "choix": [
+        "Rien, il faut un SSH",
+        "GitHub prévient Vercel, qui clone, build (next build), et déploie : statique sur CDN, dynamique en serverless. Le domaine bascule",
+        "Vercel copie les fichiers par FTP",
+        "Il faut cliquer Deploy"
+      ],
+      "bonne": 1,
+      "explication": "Pas de serveur au sens classique. Chaque déploiement est immuable : on n'en modifie pas un, on en crée un nouveau."
+    },
+    {
+      "question": "Sur OVH, que se passe-t-il après un git push ?",
+      "choix": [
+        "Le site est mis à jour",
+        "Rien : OVH n'écoute pas GitHub. Il faut SSH + git pull sur le serveur + cache:clear + migrations",
+        "OVH build automatiquement",
+        "Un mail est envoyé"
+      ],
+      "bonne": 1,
+      "explication": "Un vrai serveur, mutable. deploy.ps1 fait la séquence. Le site vitrine venaball.fr est encore une chaîne différente : SFTP pur, sans Git."
+    },
+    {
+      "question": "Build vs runtime ?",
+      "choix": [
+        "Identiques",
+        "Build = transformer le code en ce que le serveur sert (une fois). Runtime = répondre à une requête (à chaque fois). Une page SSG n'a pas de runtime",
+        "Build est pour le front",
+        "Runtime est pour le build"
+      ],
+      "bonne": 1,
+      "explication": "Un build qui échoue vaut mieux qu'un site cassé : rien n'est déployé tant qu'il ne passe pas."
+    },
+    {
+      "question": "Pourquoi l'immuabilité de Vercel est une protection ?",
+      "choix": [
+        "Elle n'en est pas une",
+        "Personne ne peut modifier un fichier en prod à la main ; rollback = promouvoir un ancien déploiement, sans rebuild",
+        "Elle chiffre les fichiers",
+        "Elle bloque les bots"
+      ],
+      "bonne": 1,
+      "explication": "Sur OVH, un fichier édité à la main sur le serveur fait échouer le prochain git pull — et personne ne sait qui l'a touché."
+    }
+  ]
+}

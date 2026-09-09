@@ -1,0 +1,49 @@
+{
+  "fiche": "supabase-postgres-06-contraintes-check-et-modelisation-rgpd",
+  "questions": [
+    {
+      "question": "Comment écrire « si mineur, alors profil non public » en CHECK ?",
+      "choix": [
+        "CHECK (est_mineur AND profil_public = false)",
+        "CHECK (NOT est_mineur OR profil_public = false) — A ⇒ B s'écrit NOT A OR B",
+        "CHECK (est_mineur = profil_public)",
+        "Impossible en CHECK"
+      ],
+      "bonne": 1,
+      "explication": "Logique de première année : une implication est un OU avec la prémisse niée. Toute règle conditionnelle tient en une contrainte."
+    },
+    {
+      "question": "Pourquoi une contrainte CHECK plutôt qu'un if dans le formulaire ?",
+      "choix": [
+        "C'est plus rapide",
+        "Le if protège le formulaire ; la contrainte protège la table, par tous les chemins : import, script, action future, requête manuelle",
+        "Les if sont interdits",
+        "Pour les tests"
+      ],
+      "bonne": 1,
+      "explication": "Une règle qu'on doit se rappeler devient une règle qu'on ne peut pas violer."
+    },
+    {
+      "question": "Pourquoi arena.joueurs stocke annee_naissance et pas date_naissance ?",
+      "choix": [
+        "Par manque de place",
+        "Minimisation RGPD : la finalité (mineur ? catégorie ?) n'exige que l'année. La donnée la mieux protégée est celle qu'on n'a pas",
+        "Les dates sont lentes",
+        "Erreur de conception"
+      ],
+      "bonne": 1,
+      "explication": "Le jour et le mois seraient à protéger, conserver, supprimer pour rien. Ça se décide au CREATE TABLE."
+    },
+    {
+      "question": "« Un joueur ne peut pas être inscrit deux fois au même tournoi » — quel outil ?",
+      "choix": [
+        "CHECK",
+        "UNIQUE (tournoi_id, joueur_id)",
+        "Trigger",
+        "Policy"
+      ],
+      "bonne": 1,
+      "explication": "Un CHECK ne voit que sa ligne. Une unicité sur plusieurs lignes = UNIQUE. Une règle sur plusieurs lignes non-unicité (« max_joueurs ») = trigger."
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "fiche": "tests-03-rendre-testable-fonctions-pures-et-injection",
+  "questions": [
+    {
+      "question": "Qu'est-ce qu'une fonction pure ?",
+      "choix": [
+        "Une fonction sans paramètre",
+        "Mêmes entrées → même sortie, sans effet de bord : pas de base, réseau, fichier, horloge, hasard",
+        "Une fonction TypeScript",
+        "Une fonction sans boucle"
+      ],
+      "bonne": 1,
+      "explication": "genererCalendrierPoule([a,b,c], 1) rend toujours le même tableau. On la teste par simple appel. C'est ce qui rend les 11 fichiers de tests ARENA possibles."
+    },
+    {
+      "question": "Comment rendre testable une fonction qui tire au hasard ?",
+      "choix": [
+        "On ne peut pas",
+        "Injecter le générateur en paramètre avec Math.random par défaut : en test, on passe un rng déterministe",
+        "Utiliser un seed global",
+        "Tester 1000 fois"
+      ],
+      "bonne": 1,
+      "explication": "melangerJoueurs(liste, rng = Math.random). Prod : rien à passer. Test : () => 0.5. Pure par rapport à ses arguments — la seule pureté qui compte."
+    },
+    {
+      "question": "Le bug du 19 août (doublon d'affectation) n'a pas été attrapé par un test. Pourquoi ?",
+      "choix": [
+        "Pas de test écrit",
+        "La règle était mélangée à Doctrine dans une commande de 500 lignes : impossible à isoler. Extraite en fonction pure, elle aurait été testable en dix lignes",
+        "Le test était désactivé",
+        "C'est un bug de base"
+      ],
+      "bonne": 1,
+      "explication": "« Je ne peux pas tester ça, ça touche la base » dit que le code est mal découpé, pas que le test est impossible."
+    },
+    {
+      "question": "Tu mockes trois services pour tester une ligne de logique. Que faire ?",
+      "choix": [
+        "Continuer",
+        "Extraire la logique dans une fonction pure : le mock est le plan B, l'extraction le plan A",
+        "Ajouter un quatrième mock",
+        "Passer en test d'intégration"
+      ],
+      "bonne": 1,
+      "explication": "Beaucoup de mocks = signe que la logique aurait dû sortir de son contexte. Préfère extraire à mocker."
+    }
+  ]
+}

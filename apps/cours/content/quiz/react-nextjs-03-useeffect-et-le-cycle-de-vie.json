@@ -1,0 +1,49 @@
+{
+  "fiche": "react-nextjs-03-useeffect-et-le-cycle-de-vie",
+  "questions": [
+    {
+      "question": "Que signifie un tableau de dépendances vide [] dans useEffect ?",
+      "choix": [
+        "L'effet ne tourne jamais",
+        "L'effet tourne une fois, après le premier affichage (montage)",
+        "L'effet tourne à chaque rendu",
+        "L'effet tourne au démontage seulement"
+      ],
+      "bonne": 1,
+      "explication": "[] = aucune dépendance = rien ne déclenche de relance = une seule exécution au montage. Pas de tableau du tout = à chaque rendu (presque toujours une erreur)."
+    },
+    {
+      "question": "Pourquoi CompteARebours calcule la date dans useEffect et pas dans le corps ?",
+      "choix": [
+        "C'est plus rapide",
+        "useEffect ne tourne que dans le navigateur ; le corps tourne aussi sur le serveur au build, et les deux dates différeraient (erreur d'hydratation)",
+        "Pour utiliser setInterval",
+        "C'est une convention"
+      ],
+      "bonne": 1,
+      "explication": "Le composant est rendu deux fois : serveur puis client. Si les rendus diffèrent, React se plaint. L'effet est client-only : premier rendu identique (null), puis la vraie valeur."
+    },
+    {
+      "question": "Un useEffect pose un setInterval sans le nettoyer. Que se passe-t-il ?",
+      "choix": [
+        "Rien de grave",
+        "À chaque montage un nouveau timer s'ajoute aux précédents : fuite, et les anciens continuent après démontage",
+        "L'effet est ignoré",
+        "React le nettoie automatiquement"
+      ],
+      "bonne": 1,
+      "explication": "Sans return () => clearInterval(t), chaque visite de la page empile un timer. La fonction de nettoyage retournée par l'effet est ce qui évite les fuites."
+    },
+    {
+      "question": "ESLint signale react-hooks/exhaustive-deps sur ton effet. Que faire ?",
+      "choix": [
+        "Désactiver la règle",
+        "Ajouter la variable manquante aux dépendances — dans 95 % des cas ESLint a raison",
+        "Retirer le tableau",
+        "Ignorer, c'est un warning"
+      ],
+      "bonne": 1,
+      "explication": "Une variable utilisée dans l'effet mais absente des dépendances garde sa première valeur pour toujours. ESLint le détecte. Les 5 % restants, tu les reconnaîtras quand tu en seras là."
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "fiche": "tests-08-tdd-et-tests-comme-specification",
+  "questions": [
+    {
+      "question": "Le cycle TDD, c'est ?",
+      "choix": [
+        "Coder, tester, déployer",
+        "Rouge (test d'un comportement inexistant) → vert (code minimal) → refactor (améliorer sans changer le comportement)",
+        "Tester, coder, tester",
+        "Planifier, coder, tester"
+      ],
+      "bonne": 1,
+      "explication": "Cycles de quelques minutes. Le test avant force à concevoir l'interface comme utilisateur, et rend le code testable par construction."
+    },
+    {
+      "question": "Où le TDD brille-t-il ?",
+      "choix": [
+        "Partout",
+        "Algorithmes et règles métier : entrées/sorties claires, cas limites nombreux. Bracket, ELO, poules, badges",
+        "L'interface visuelle",
+        "L'exploration"
+      ],
+      "bonne": 1,
+      "explication": "Il gêne sur l'exploration (on ne sait pas ce qu'on veut), l'UI (coût > valeur), la plomberie (rien à spécifier)."
+    },
+    {
+      "question": "Pourquoi écrire le code minimal qui passe, même s'il est « faux en général » ?",
+      "choix": [
+        "Par paresse",
+        "Le prochain test le forcera à devenir juste. On ne code que ce qui est demandé (YAGNI)",
+        "Pour aller vite",
+        "C'est une erreur"
+      ],
+      "bonne": 1,
+      "explication": "return noteA + 10 passe le premier test. Le second (notes différentes) forcera la vraie formule. Pas de « et si un jour »."
+    },
+    {
+      "question": "Comment présenter ses tests au jury ?",
+      "choix": [
+        "« J'ai fait du TDD »",
+        "Montrer la suite (--reporter=verbose lisible comme une spécification), un bug devenu test de non-régression, et ce qu'on ne teste pas et pourquoi",
+        "Donner le pourcentage de couverture",
+        "Lister les fichiers"
+      ],
+      "bonne": 1,
+      "explication": "Vérifiable dans le dépôt. « Fait du TDD » ne l'est pas. Un test est la seule documentation qui ne peut pas mentir."
+    }
+  ]
+}

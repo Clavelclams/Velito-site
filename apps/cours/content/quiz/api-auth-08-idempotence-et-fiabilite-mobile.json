@@ -1,0 +1,49 @@
+{
+  "fiche": "api-auth-08-idempotence-et-fiabilite-mobile",
+  "questions": [
+    {
+      "question": "Idempotent, définition ?",
+      "choix": [
+        "Rapide",
+        "Appliquer 1 ou N fois donne le même état. GET, PUT absolu, DELETE le sont. POST ne l'est pas par défaut",
+        "Sans effet",
+        "Atomique"
+      ],
+      "bonne": 1,
+      "explication": "« Crée une action » dix fois = dix actions. « Mets le score à 34 » dix fois = 34."
+    },
+    {
+      "question": "Le client_uid de Venaball fait quoi ?",
+      "choix": [
+        "Identifie le téléphone",
+        "Clé d'idempotence générée par l'app avant l'envoi : un renvoi (réponse perdue en 4G) est reconnu, même réponse renvoyée, rien créé. Colonne UNIQUE nullable",
+        "Chiffre la requête",
+        "Trace l'utilisateur"
+      ],
+      "bonne": 1,
+      "explication": "L'index unique est la ceinture si deux renvois passent le findOneBy en même temps."
+    },
+    {
+      "question": "Pourquoi une clé d'idempotence ne suffit pas pour le score adverse en delta ?",
+      "choix": [
+        "Elle suffit",
+        "Deux +2 successifs sont deux actions légitimes, indiscernables d'un renvoi. Solution : envoyer la valeur absolue (34), idempotente par nature",
+        "Le delta est trop petit",
+        "Il faut un UUID"
+      ],
+      "bonne": 1,
+      "explication": "Préfère « voici l'état voulu » à « voici le changement »."
+    },
+    {
+      "question": "Une file hors-ligne qui réessaie, sans clé d'idempotence côté serveur, c'est ?",
+      "choix": [
+        "Robuste",
+        "Une machine à doublons. venaball club-store a une file « à réécrire » : c'est ce qu'elle doit faire avec backoff, et le serveur doit avoir la clé",
+        "Normal",
+        "Rapide"
+      ],
+      "bonne": 1,
+      "explication": "L'idempotence se conçoit à l'écriture de la route, pas quand les stats sont fausses."
+    }
+  ]
+}

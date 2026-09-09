@@ -1,0 +1,49 @@
+{
+  "fiche": "git-avance-06-index-lock-et-les-trois-zones",
+  "questions": [
+    {
+      "question": "Tu modifies un fichier, git add, puis tu le modifies encore. Que contient le prochain commit ?",
+      "choix": [
+        "Les deux modifications",
+        "Seulement la première (celle au moment du git add)",
+        "Seulement la seconde",
+        "Rien, il faut re-add"
+      ],
+      "bonne": 1,
+      "explication": "git add photographie l'instant. La seconde modification n'est pas dans l'index : git status montre le fichier en vert ET en rouge. Il faut re-add pour l'inclure."
+    },
+    {
+      "question": "Qu'est-ce que .git/index.lock ?",
+      "choix": [
+        "Un fichier de configuration",
+        "Un verrou posé par Git pendant qu'il écrit l'index, supprimé à la fin",
+        "Le cache des branches",
+        "Un fichier de sauvegarde de l'index"
+      ],
+      "bonne": 1,
+      "explication": "Verrou d'écriture : si deux Git tentent d'écrire en même temps, le second refuse. Il reste si Git est interrompu — ou si le processus qui l'a créé ne peut pas le supprimer."
+    },
+    {
+      "question": "Quand est-il sûr de supprimer index.lock ?",
+      "choix": [
+        "Jamais",
+        "Toujours",
+        "Quand aucun processus Git ne tourne (ferme VS Code) — c'est alors un cadavre",
+        "Seulement après un git commit"
+      ],
+      "bonne": 2,
+      "explication": "Si un Git tourne vraiment, supprimer le verrou peut corrompre l'index. Si aucun ne tourne, le fichier est un reste d'interruption : suppression sans risque."
+    },
+    {
+      "question": "À quoi sert git stash ?",
+      "choix": [
+        "Supprimer les modifications non commitées",
+        "Mettre de côté les modifications non commitées pour changer de branche, puis les restaurer avec stash pop",
+        "Créer une branche temporaire",
+        "Compresser le dépôt"
+      ],
+      "bonne": 1,
+      "explication": "stash empile les modifs dans une zone temporaire et remet le dossier propre. Tu changes de branche, tu reviens, stash pop restaure. Plusieurs stashs possibles (stash list)."
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "fiche": "tests-05-phpunit-et-tests-unitaires-symfony",
+  "questions": [
+    {
+      "question": "Pourquoi UserTest teste setRolesMembre() sans Doctrine ?",
+      "choix": [
+        "Doctrine est mocké",
+        "La règle métier est dans l'entité (new User()), pas dans un contrôleur : c'est un choix d'architecture qui rend le test possible en trois lignes",
+        "Le test est fonctionnel",
+        "PHPUnit ne supporte pas Doctrine"
+      ],
+      "bonne": 1,
+      "explication": "Une entité riche (avec ses règles) se teste seule. Une règle dans un contrôleur exige de monter tout Symfony."
+    },
+    {
+      "question": "assertSame ou assertEquals ?",
+      "choix": [
+        "assertEquals toujours",
+        "assertSame (===) par défaut ; assertEquals (==) dit que \"1\" égale 1",
+        "assertSame pour les objets",
+        "Peu importe"
+      ],
+      "bonne": 1,
+      "explication": "assertEquals pour les objets et tableaux (comparaison en profondeur). assertSame pour les scalaires."
+    },
+    {
+      "question": "Que fait failOnDeprecation=\"true\" dans phpunit.dist.xml ?",
+      "choix": [
+        "Ignore les dépréciations",
+        "Une dépréciation PHP fait échouer la suite : ce qui est ignoré aujourd'hui est une panne à la prochaine mise à jour",
+        "Log les dépréciations",
+        "Désactive PHPUnit"
+      ],
+      "bonne": 1,
+      "explication": "Strict, et bien. Idem failOnNotice et failOnWarning."
+    },
+    {
+      "question": "À quoi sert un data provider ?",
+      "choix": [
+        "À charger des fixtures",
+        "Un test, plusieurs jeux de données : dérouler les bords sans dupliquer la méthode",
+        "À mocker la base",
+        "À paralléliser"
+      ],
+      "bonne": 1,
+      "explication": "#[DataProvider('rolesInvalides')] + une méthode statique qui retourne les cas. À l'échec, PHPUnit dit lequel (with data set #2)."
+    }
+  ]
+}

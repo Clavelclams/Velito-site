@@ -1,0 +1,49 @@
+{
+  "fiche": "react-nextjs-02-props-et-state",
+  "questions": [
+    {
+      "question": "Que sont les props d'un composant ?",
+      "choix": [
+        "Des variables globales",
+        "Les paramètres de la fonction, reçus du parent, en lecture seule",
+        "Le state du composant",
+        "Des attributs CSS"
+      ],
+      "bonne": 1,
+      "explication": "<Badge niveau=\"x\" /> appelle Badge({ niveau: \"x\" }). Les attributs JSX deviennent un objet, premier argument de la fonction. Un composant ne modifie jamais ses props."
+    },
+    {
+      "question": "Pourquoi let ouvert = false puis ouvert = true au clic ne réaffiche rien ?",
+      "choix": [
+        "Il faut un point-virgule",
+        "Un composant est réexécuté à chaque rendu : une variable locale est recréée. Seul setState déclenche un réaffichage",
+        "Il faut utiliser var",
+        "Le clic n'est pas capturé"
+      ],
+      "bonne": 1,
+      "explication": "useState est la seule mémoire qui survit aux rendus, et setState est le seul déclencheur de re-rendu. Une variable normale est perdue au rendu suivant."
+    },
+    {
+      "question": "Un composant utilise useState. Que doit contenir sa première ligne ?",
+      "choix": [
+        "import React",
+        "\"use client\"",
+        "export default",
+        "\"use strict\""
+      ],
+      "bonne": 1,
+      "explication": "Les hooks n'existent que dans les Client Components. Sans \"use client\", c'est un Server Component et useState lève une erreur."
+    },
+    {
+      "question": "Comment un enfant prévient-il son parent d'un changement ?",
+      "choix": [
+        "En modifiant les props",
+        "En appelant une fonction reçue en prop (onChange, onClic…)",
+        "Avec un événement global",
+        "Il ne peut pas"
+      ],
+      "bonne": 1,
+      "explication": "Les données descendent en props. Pour remonter, le parent passe une fonction ; l'enfant l'appelle. L'enfant ne connaît pas le state du parent, il appelle juste la fonction."
+    }
+  ]
+}

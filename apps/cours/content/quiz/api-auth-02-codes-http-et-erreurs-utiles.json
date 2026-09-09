@@ -1,0 +1,49 @@
+{
+  "fiche": "api-auth-02-codes-http-et-erreurs-utiles",
+  "questions": [
+    {
+      "question": "4xx vs 5xx ?",
+      "choix": [
+        "Identiques",
+        "4xx = le client a mal demandé (corrige ta requête). 5xx = le serveur a planté (réessaie plus tard)",
+        "4xx = serveur",
+        "5xx = client"
+      ],
+      "bonne": 1,
+      "explication": "La distinction la plus importante. Jamais un 500 pour un cas prévu (validation, droit) : c'est un aveu."
+    },
+    {
+      "question": "Un jeton absent ou expiré → ?",
+      "choix": [
+        "403",
+        "401 : identifie-toi. L'app renvoie à l'écran de connexion",
+        "404",
+        "400"
+      ],
+      "bonne": 1,
+      "explication": "403 = authentifié mais pas autorisé : se reconnecter ne changera rien, l'app ne doit pas renvoyer au login."
+    },
+    {
+      "question": "Un pseudo déjà pris à la création → ?",
+      "choix": [
+        "400",
+        "409 Conflict : l'état actuel empêche l'action. Le bon code pour une violation d'unicité",
+        "422",
+        "500"
+      ],
+      "bonne": 1,
+      "explication": "422 = validation métier (score négatif). 409 = conflit d'état."
+    },
+    {
+      "question": "Un renvoi d'action déjà traitée (client_uid) reçoit ?",
+      "choix": [
+        "409",
+        "Le même 200 que l'original, avec deja: true : du point de vue du client, l'opération a réussi",
+        "400",
+        "204"
+      ],
+      "bonne": 1,
+      "explication": "Le 409 est pour un vrai conflit qui empêche l'action. Ici l'action a déjà réussi."
+    }
+  ]
+}

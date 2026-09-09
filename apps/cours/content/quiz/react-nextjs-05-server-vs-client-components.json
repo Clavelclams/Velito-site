@@ -1,0 +1,49 @@
+{
+  "fiche": "react-nextjs-05-server-vs-client-components",
+  "questions": [
+    {
+      "question": "Par défaut, un composant dans app/ tourne où ?",
+      "choix": [
+        "Dans le navigateur",
+        "Sur le serveur — c'est un Server Component sauf s'il commence par \"use client\"",
+        "Les deux à égalité",
+        "Ça dépend du nom du fichier"
+      ],
+      "bonne": 1,
+      "explication": "Le défaut est serveur. Le code d'un Server Component n'est jamais envoyé au navigateur : il peut lire des fichiers, des secrets, une base."
+    },
+    {
+      "question": "Pourquoi lib/fiches/blocs.ts a été séparé de fiches.ts ?",
+      "choix": [
+        "Pour la lisibilité",
+        "Pour que RechercheFiches (client) puisse importer les constantes sans tirer node:fs dans le bundle navigateur",
+        "Pour les tests",
+        "Par convention Next"
+      ],
+      "bonne": 1,
+      "explication": "\"use client\" est contagieux vers le bas : tout ce qu'un Client Component importe devient du code client. fiches.ts importe fs → interdit côté client. blocs.ts n'a pas fs → importable."
+    },
+    {
+      "question": "Que fait import type { FicheMeta } from \"@/lib/fiches/fiches\" ?",
+      "choix": [
+        "Importe le type et le code",
+        "Importe uniquement le type, effacé à la compilation — aucun code (donc pas fs) ne part au client",
+        "Importe en lecture seule",
+        "C'est une erreur de syntaxe"
+      ],
+      "bonne": 1,
+      "explication": "import type est utilisé par TypeScript pour vérifier, puis supprimé. Le module fiches.ts n'est jamais chargé côté client. Toujours import type pour un type venant d'un module serveur."
+    },
+    {
+      "question": "Où placer \"use client\" idéalement ?",
+      "choix": [
+        "Sur la page entière dès qu'il y a un clic",
+        "Le plus bas possible : sur le plus petit composant qui a besoin d'interactivité",
+        "Dans layout.tsx",
+        "Sur tous les fichiers pour simplifier"
+      ],
+      "bonne": 1,
+      "explication": "Mettre \"use client\" sur la page entière perd le bénéfice serveur (données, zéro JS). La page reste serveur, elle lit les données, et passe en props aux petites îles clientes."
+    }
+  ]
+}

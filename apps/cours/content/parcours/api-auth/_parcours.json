@@ -1,0 +1,7 @@
+{
+  "titre": "API REST & authentification",
+  "description": "Comment ton app mobile parle à ton serveur, et comment sept sites partagent un compte. REST, codes HTTP, conception d'endpoints, sessions vs jetons, jetons opaques hashés (Venaball), JWT et JWKS (hub), OAuth2 + PKCE, idempotence. Du /api/club/moi de Venaball au serveur OAuth du hub.",
+  "icone": "🔐",
+  "ordre": 16,
+  "domaine": "backend"
+}

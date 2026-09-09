@@ -1,0 +1,49 @@
+{
+  "fiche": "tests-02-premier-test-vitest",
+  "questions": [
+    {
+      "question": "Quel matcher pour comparer deux flottants ?",
+      "choix": [
+        "toBe",
+        "toBeCloseTo(x, décimales) — 0.1 + 0.2 n'est pas 0.3 en JS",
+        "toEqual",
+        "toMatch"
+      ],
+      "bonne": 1,
+      "explication": "toBe est strict (===). Les calculs à virgule ont des erreurs d'arrondi. toBeCloseTo tolère. Jamais toBe sur un calcul flottant."
+    },
+    {
+      "question": "Comment tester qu'une fonction lève une erreur ?",
+      "choix": [
+        "expect(f()).toThrow()",
+        "expect(() => f()).toThrow('message') — on passe une fonction, pas son résultat",
+        "try/catch dans le test",
+        "expect(f).toBeError()"
+      ],
+      "bonne": 1,
+      "explication": "Si tu écris f() directement, l'erreur se produit avant que expect la voie. Enveloppe dans une fonction. Vérifie le message : il fait partie du contrat."
+    },
+    {
+      "question": "Que signifie AAA ?",
+      "choix": [
+        "Assert Always Again",
+        "Arrange (préparer), Act (agir), Assert (vérifier) — les trois temps d'un test",
+        "Async Await Assert",
+        "Add Apply Assert"
+      ],
+      "bonne": 1,
+      "explication": "Un test sans cette forme teste souvent trop de choses. Un it = un comportement. Si tu écris « et » dans le nom, coupe en deux."
+    },
+    {
+      "question": "Quelle différence entre toBe et toEqual ?",
+      "choix": [
+        "Aucune",
+        "toBe = égalité stricte (===), pour les primitifs ; toEqual = égalité structurelle en profondeur, pour objets et tableaux",
+        "toEqual est plus rapide",
+        "toBe est pour les objets"
+      ],
+      "bonne": 1,
+      "explication": "expect([1,2]).toBe([1,2]) échoue (deux tableaux différents en mémoire). toEqual compare le contenu."
+    }
+  ]
+}

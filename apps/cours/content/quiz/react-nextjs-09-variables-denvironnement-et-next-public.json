@@ -1,0 +1,49 @@
+{
+  "fiche": "react-nextjs-09-variables-denvironnement-et-next-public",
+  "questions": [
+    {
+      "question": "Que fait le préfixe NEXT_PUBLIC_ ?",
+      "choix": [
+        "Rend la variable obligatoire",
+        "La variable est inlinée au build dans le JavaScript client : visible par tous",
+        "La variable est chiffrée",
+        "Rien, c'est une convention"
+      ],
+      "bonne": 1,
+      "explication": "Next remplace process.env.NEXT_PUBLIC_X par sa valeur littérale au build. Elle part dans le bundle public. Jamais de secret avec ce préfixe."
+    },
+    {
+      "question": "Tu ajoutes une variable dans Vercel après avoir poussé. Elle est absente en prod. Pourquoi ?",
+      "choix": [
+        "Vercel a un bug",
+        "Vercel fige l'environnement à la création du déploiement : il faut un Redeploy",
+        "Il faut attendre 24 h",
+        "La variable est mal nommée"
+      ],
+      "bonne": 1,
+      "explication": "Le déploiement emporte les variables telles qu'elles étaient à l'instant du push. Nouvelle variable = Redeploy, même commit, environnement rafraîchi."
+    },
+    {
+      "question": "NEXT_PUBLIC_X marquée Sensitive dans Vercel donne quoi ?",
+      "choix": [
+        "Une variable sécurisée",
+        "Une valeur vide : Sensitive empêche la lecture au build, et NEXT_PUBLIC_ est inliné au build",
+        "Une erreur de build",
+        "Rien de spécial"
+      ],
+      "bonne": 1,
+      "explication": "Incompatibles. Sensitive = pas lisible au build. NEXT_PUBLIC = inliné au build. Résultat : chaîne vide dans le bundle. Une variable serveur peut être Sensitive ; une publique, non."
+    },
+    {
+      "question": "Une variable est dans Vercel mais undefined pendant next build. Première chose à vérifier ?",
+      "choix": [
+        "Le nom",
+        "Qu'elle est listée dans turbo.json → tasks.build.env : Turbo isole l'environnement du build",
+        "La portée Production",
+        "Le cache Vercel"
+      ],
+      "bonne": 1,
+      "explication": "Turbo ne transmet que les variables listées, pour que son cache soit fiable. Une variable absente de la liste n'existe pas pendant le build. Vide silencieux."
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "fiche": "react-nextjs-10-hydratation-et-localstorage",
+  "questions": [
+    {
+      "question": "Qu'est-ce que l'hydratation ?",
+      "choix": [
+        "Le chargement des données",
+        "React réexécute un Client Component dans le navigateur et compare son arbre au HTML serveur pour y attacher les événements",
+        "La mise en cache",
+        "Le rendu serveur"
+      ],
+      "bonne": 1,
+      "explication": "Le HTML arrive d'abord (rapide). Puis le JS charge, React reconstruit l'arbre virtuel, le compare au HTML, et attache onClick etc. Le HTML mort devient vivant."
+    },
+    {
+      "question": "Pourquoi Math.random() dans un rendu provoque une erreur d'hydratation ?",
+      "choix": [
+        "Math.random est interdit en React",
+        "Le serveur et le client tirent deux valeurs différentes : les arbres ne correspondent plus",
+        "C'est trop lent",
+        "Il faut un import"
+      ],
+      "bonne": 1,
+      "explication": "Tout ce qui diffère entre serveur et client casse la comparaison : date, random, localStorage, window, HTML invalide. React abandonne l'hydratation et reconstruit tout."
+    },
+    {
+      "question": "Le motif correct pour afficher une valeur du localStorage ?",
+      "choix": [
+        "La lire directement dans le rendu",
+        "useState(null) puis useEffect qui lit et met à jour : premier rendu identique des deux côtés, puis la vraie valeur",
+        "Utiliser window.localStorage au niveau module",
+        "suppressHydrationWarning partout"
+      ],
+      "bonne": 1,
+      "explication": "Premier rendu serveur : null. Premier rendu client : null aussi. Identiques. Puis l'effet (client-only) met la vraie valeur. C'est le motif de progression.ts et CompteARebours."
+    },
+    {
+      "question": "Un Server Component est-il hydraté ?",
+      "choix": [
+        "Oui, comme tous",
+        "Non : il n'a pas de JavaScript client, son HTML est final. Moins de client = moins de risques d'hydratation",
+        "Seulement s'il a des enfants clients",
+        "Seulement en production"
+      ],
+      "bonne": 1,
+      "explication": "Seuls les Client Components subissent la double exécution. Un argument de plus pour pousser \"use client\" vers le bas."
+    }
+  ]
+}

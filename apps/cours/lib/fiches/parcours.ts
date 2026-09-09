@@ -15,6 +15,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
+import { domaineValide, type Domaine } from "./domaines";
 
 export interface ParcoursMeta {
   /** Nom du dossier — sert d'URL (/parcours/[techno]). */
@@ -25,6 +26,8 @@ export interface ParcoursMeta {
   icone: string;
   /** Ordre d'affichage recommandé des parcours entre eux. */
   ordre: number;
+  /** Regroupement sur la page /parcours (bases, backend, frontend, metier, jeux). */
+  domaine: Domaine;
   nbLecons: number;
   /** Identifiants globaux des leçons (pour calculer la progression côté client). */
   idsLecons: string[];
@@ -63,9 +66,10 @@ function lireInfosParcours(techno: string): Omit<ParcoursMeta, "slug" | "nbLecon
       description: String(brut.description ?? ""),
       icone: String(brut.icone ?? "📚"),
       ordre: Number.isFinite(Number(brut.ordre)) ? Number(brut.ordre) : 99,
+      domaine: domaineValide(brut.domaine),
     };
   } catch {
-    return { titre: techno, description: "", icone: "📚", ordre: 99 };
+    return { titre: techno, description: "", icone: "📚", ordre: 99, domaine: "autres" };
   }
 }
 

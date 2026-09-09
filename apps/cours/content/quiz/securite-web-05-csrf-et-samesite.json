@@ -1,0 +1,49 @@
+{
+  "fiche": "securite-web-05-csrf-et-samesite",
+  "questions": [
+    {
+      "question": "Le CSRF, c'est ?",
+      "choix": [
+        "Un vol de cookie",
+        "Un site tiers fait envoyer à ton navigateur une requête authentifiée par tes cookies, à ton insu",
+        "Une injection",
+        "Un faux certificat"
+      ],
+      "bonne": 1,
+      "explication": "Le navigateur joint les cookies du domaine cible à chaque requête vers ce domaine, même déclenchée par evil.com. Le serveur ne distingue pas."
+    },
+    {
+      "question": "Que fait SameSite=Lax ?",
+      "choix": [
+        "Bloque tous les cookies cross-site",
+        "Le cookie n'est pas envoyé sur un POST, une image, un fetch venant d'un autre site ; il l'est sur une navigation de haut niveau (clic de lien)",
+        "Chiffre le cookie",
+        "Rien"
+      ],
+      "bonne": 1,
+      "explication": "Défaut moderne, celui de Supabase. Strict bloquerait aussi les liens depuis un mail. None exige Secure et est à justifier."
+    },
+    {
+      "question": "Pourquoi le logout du hub est POST-only ?",
+      "choix": [
+        "Par convention",
+        "Un GET permettrait de déconnecter avec une balise <img src=…/logout> cachée. Une mutation n'est jamais un GET",
+        "POST est plus rapide",
+        "Pour le CSRF token"
+      ],
+      "bonne": 1,
+      "explication": "Un GET ne fait que lire. Toute action qui modifie un état est un POST."
+    },
+    {
+      "question": "Pourquoi l'API mobile (Bearer) n'a pas de problème CSRF ?",
+      "choix": [
+        "Elle en a",
+        "Un site tiers ne peut pas ajouter un en-tête Authorization à une requête forgée : pas de cookie automatique = pas de CSRF",
+        "Elle utilise HTTPS",
+        "Elle a un token CSRF"
+      ],
+      "bonne": 1,
+      "explication": "Le CSRF est un problème de cookies. C'est un argument pour les jetons dans les API."
+    }
+  ]
+}

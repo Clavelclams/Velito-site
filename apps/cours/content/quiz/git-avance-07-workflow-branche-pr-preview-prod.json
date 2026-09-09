@@ -1,0 +1,49 @@
+{
+  "fiche": "git-avance-07-workflow-branche-pr-preview-prod",
+  "questions": [
+    {
+      "question": "Pourquoi git pull --ff-only plutôt que git pull ?",
+      "choix": [
+        "C'est plus rapide",
+        "Il refuse si ta main locale a divergé, au lieu de créer un merge commit silencieux",
+        "Il télécharge moins de données",
+        "Il ne marche que sur main"
+      ],
+      "bonne": 1,
+      "explication": "Si tu as des commits locaux sur main que GitHub n'a pas, pull normal crée un merge commit sans te le dire. --ff-only refuse : tu vois le problème avant qu'il se cache."
+    },
+    {
+      "question": "À quoi sert le Preview Vercel dans le workflow ?",
+      "choix": [
+        "À économiser des minutes de build",
+        "À tester en conditions réelles (vraies env vars, vraie base) sans toucher la prod, avant de merger",
+        "À remplacer les tests unitaires",
+        "À déployer sur un autre domaine"
+      ],
+      "bonne": 1,
+      "explication": "Chaque push sur une branche produit une URL de Preview. Le 9 septembre, le Preview était vert 7 minutes avant le merge : la preuve que le build passait."
+    },
+    {
+      "question": "Une branche de feature devrait vivre combien de temps, et pourquoi ?",
+      "choix": [
+        "Le plus longtemps possible pour regrouper le travail",
+        "Moins d'une semaine : au-delà, elle mélange plusieurs sujets et main ne reflète plus le travail réel",
+        "Exactement un sprint",
+        "Jusqu'à ce que tous les tests passent"
+      ],
+      "bonne": 1,
+      "explication": "Ta branche portait 3 sujets et 7 commits sur 3 semaines. Résultat : un fix cru déployé qui ne l'était pas. Trois PR d'un jour valent mieux qu'une PR de trois semaines."
+    },
+    {
+      "question": "Après avoir mergé une PR sur GitHub, que faire localement ?",
+      "choix": [
+        "Rien",
+        "git switch main, git pull --ff-only, git branch -d <branche>, git fetch --prune",
+        "git push --force main",
+        "git rebase main"
+      ],
+      "bonne": 1,
+      "explication": "Ramener main à jour, supprimer la branche locale (-d refuse si non mergée : sécurité), nettoyer les refs distantes supprimées. Sinon les branches mergées s'accumulent et masquent celles qui comptent."
+    }
+  ]
+}

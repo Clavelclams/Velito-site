@@ -1,0 +1,49 @@
+{
+  "fiche": "deploiement-04-variables-denvironnement-en-production",
+  "questions": [
+    {
+      "question": "Sur OVH, tu modifies .env.local. La nouvelle valeur n'est pas prise. Pourquoi ?",
+      "choix": [
+        "Mauvais fichier",
+        "Symfony cache la configuration compilée : php bin/console cache:clear --env=prod",
+        "Il faut redémarrer Apache",
+        "Le fichier est ignoré"
+      ],
+      "bonne": 1,
+      "explication": "Toujours cache:clear après un changement de config, template, route ou .env.local."
+    },
+    {
+      "question": "APP_ENV manquant laissait Venaball en dev. Conséquence et leçon ?",
+      "choix": [
+        "Aucune",
+        "Barre de debug et traces complètes visibles par tous. Leçon : une config manquante doit donner l'état sûr (prod par défaut), pas l'état pratique",
+        "Site plus lent",
+        "Pas de cache"
+      ],
+      "bonne": 1,
+      "explication": "Même principe que le middleware fail-closed : le défaut protège."
+    },
+    {
+      "question": "Une variable qui manque au démarrage : le meilleur comportement ?",
+      "choix": [
+        "Continuer avec undefined",
+        "Planter au démarrage avec une erreur explicite : on le voit tout de suite, pas quand un utilisateur tombe dessus",
+        "Planter à la première utilisation",
+        "Logger un warning"
+      ],
+      "bonne": 1,
+      "explication": "lib/supabase/server.ts lève une erreur. Symfony refuse de démarrer si un %env(X)% manque. Le middleware laissait passer — corrigé."
+    },
+    {
+      "question": "La date du jury, un tarif, un texte : en variable d'environnement ?",
+      "choix": [
+        "Oui",
+        "Non : en base ou en contenu. Une variable d'env est pour l'infrastructure (URLs, clés, secrets), sinon chaque changement est un redeploy",
+        "Oui si NEXT_PUBLIC_",
+        "Oui en prod seulement"
+      ],
+      "bonne": 1,
+      "explication": "Infrastructure en env ; métier en données."
+    }
+  ]
+}

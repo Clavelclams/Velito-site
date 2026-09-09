@@ -1,0 +1,7 @@
+{
+  "titre": "React & Next.js",
+  "description": "Le framework de tout Velito-site (hub, arena, vea, cours…), repris depuis zéro : composants, state, App Router, Server vs Client Components, SSG et cache, Server Actions, middleware, variables d'environnement, hydratation. Chaque leçon s'appuie sur TON code.",
+  "icone": "⚛️",
+  "ordre": 11,
+  "domaine": "frontend"
+}

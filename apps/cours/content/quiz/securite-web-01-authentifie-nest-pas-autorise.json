@@ -1,0 +1,49 @@
+{
+  "fiche": "securite-web-01-authentifie-nest-pas-autorise",
+  "questions": [
+    {
+      "question": "Différence entre authentification et autorisation ?",
+      "choix": [
+        "Aucune",
+        "Authentification = qui es-tu. Autorisation = as-tu le droit de faire ça sur cette ressource. Deux questions, deux vérifications",
+        "L'autorisation vient avant",
+        "L'authentification suffit"
+      ],
+      "bonne": 1,
+      "explication": "Sur cours : session (authentifié) puis liste blanche (autorisé). Un système qui oublie la seconde laisse tout utilisateur connecté tout faire."
+    },
+    {
+      "question": "401 ou 403 ?",
+      "choix": [
+        "401 = pas le droit, 403 = pas connecté",
+        "401 = pas authentifié (identifie-toi), 403 = authentifié mais pas autorisé",
+        "Les deux sont identiques",
+        "403 = serveur en panne"
+      ],
+      "bonne": 1,
+      "explication": "L'app réagit différemment : 401 → écran de connexion ; 403 → se reconnecter ne changera rien. 404 est parfois un 403 discret (ARENA)."
+    },
+    {
+      "question": "Cacher le lien « Cours » aux non-autorisés sur le hub, c'est de la sécurité ?",
+      "choix": [
+        "Oui",
+        "Non, de la navigation : la sécurité est dans le middleware de cours qui refuse quoi qu'il arrive. L'UI est contournable",
+        "Oui si le lien est vraiment caché",
+        "Ça dépend"
+      ],
+      "bonne": 1,
+      "explication": "La décision se prend côté serveur, sur chaque requête, près de la ressource. Jamais dans le bouton, le menu, ou le composant."
+    },
+    {
+      "question": "Que veut dire « deny by default » ?",
+      "choix": [
+        "Refuser tout le monde",
+        "Le refus est l'état de départ, on ouvre explicitement : RLS activée, middleware default-deny, .htaccess Require all denied",
+        "Bloquer les bots",
+        "Refuser en dev"
+      ],
+      "bonne": 1,
+      "explication": "L'inverse — tout ouvert, on ferme ce qu'on pense — casse à la première page oubliée."
+    }
+  ]
+}

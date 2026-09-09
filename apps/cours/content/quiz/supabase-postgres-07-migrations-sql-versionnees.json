@@ -1,0 +1,49 @@
+{
+  "fiche": "supabase-postgres-07-migrations-sql-versionnees",
+  "questions": [
+    {
+      "question": "Pourquoi BEGIN; … COMMIT; autour d'une migration ?",
+      "choix": [
+        "Par style",
+        "Si une instruction échoue, tout est annulé : la base n'est jamais à moitié migrée",
+        "Pour la performance",
+        "C'est obligatoire en Postgres"
+      ],
+      "bonne": 1,
+      "explication": "Atomicité. Sans transaction, une migration cassée à la troisième instruction laisse les deux premières appliquées."
+    },
+    {
+      "question": "Une migration déjà exécutée en prod doit-elle être modifiée ?",
+      "choix": [
+        "Oui si elle a un bug",
+        "Jamais : on en ajoute une nouvelle. Exception documentée : une migration jamais exécutée nulle part",
+        "Oui, avec un commentaire",
+        "Oui, si on redéploie"
+      ],
+      "bonne": 1,
+      "explication": "Modifier une migration exécutée désynchronise la base et le fichier. La 001 d'ARENA a été réécrite parce qu'elle n'avait jamais tourné — et le fichier le dit avec la date."
+    },
+    {
+      "question": "UPDATE club SET sigle = 'MABB' WHERE id = 2 — le problème ?",
+      "choix": [
+        "Le sigle est trop court",
+        "Sur une autre instance, le club d'id 2 n'est pas le MABB. Il faut garder par une clé métier : AND slug = 'mabb'",
+        "UPDATE est interdit en migration",
+        "Il manque un COMMIT"
+      ],
+      "bonne": 1,
+      "explication": "Le DML fait des hypothèses sur le contenu. Portable = gardé par une condition qui identifie les bonnes lignes. Slug, jamais id."
+    },
+    {
+      "question": "Quel est le point faible actuel des migrations ARENA ?",
+      "choix": [
+        "Pas de transaction",
+        "Aucun journal des migrations appliquées : elles sont exécutées à la main, le suivi repose sur une personne",
+        "Trop de fichiers",
+        "Pas de down"
+      ],
+      "bonne": 1,
+      "explication": "Doctrine a doctrine_migration_versions. ARENA devrait avoir la même chose : CLI Supabase ou table maison. Ça tient seul, pas à deux."
+    }
+  ]
+}

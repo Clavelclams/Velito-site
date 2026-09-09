@@ -1,0 +1,7 @@
+{
+  "titre": "Tester son code",
+  "description": "Le bloc que le jury creuse toujours. De « pourquoi tester » à « tester ce que l'utilisateur ne peut PAS faire » : Vitest sur ARENA, PHPUnit sur Venaball, fonctions pures, cas limites, tests fonctionnels, anti-IDOR, et ce qu'on ne teste pas. Tu as déjà 26 fichiers de tests — ici tu comprends ce qu'ils prouvent.",
+  "icone": "🧪",
+  "ordre": 13,
+  "domaine": "metier"
+}

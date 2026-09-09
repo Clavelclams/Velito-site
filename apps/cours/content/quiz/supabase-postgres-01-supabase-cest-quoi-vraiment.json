@@ -1,0 +1,49 @@
+{
+  "fiche": "supabase-postgres-01-supabase-cest-quoi-vraiment",
+  "questions": [
+    {
+      "question": "Supabase, c'est quoi ?",
+      "choix": [
+        "Une base NoSQL",
+        "Une base PostgreSQL ordinaire + PostgREST (API auto) + Auth + Realtime + Storage",
+        "Un framework JavaScript",
+        "Un hébergeur de sites"
+      ],
+      "bonne": 1,
+      "explication": "Postgres au centre, sans rien de spécial. Autour : une API REST générée depuis les tables, un service d'auth qui émet des JWT, du temps réel, des fichiers."
+    },
+    {
+      "question": "Pourquoi la clé anon peut-elle être publique ?",
+      "choix": [
+        "Elle est chiffrée",
+        "Elle identifie seulement le projet ; les requêtes s'exécutent avec le rôle anon/authenticated et la RLS s'applique",
+        "Elle expire vite",
+        "Elle ne permet que la lecture"
+      ],
+      "bonne": 1,
+      "explication": "anon = qui tu es (le projet), pas ce que tu peux faire. C'est la RLS qui décide. Sans RLS, la clé anon lit tout — donc la RLS n'est pas optionnelle."
+    },
+    {
+      "question": "Que fait service_role que anon ne fait pas ?",
+      "choix": [
+        "Écrire",
+        "Contourner la RLS : tout lire, tout écrire, quelles que soient les policies",
+        "Créer des utilisateurs",
+        "Envoyer des mails"
+      ],
+      "bonne": 1,
+      "explication": "service_role est la clé admin. Elle ne doit jamais quitter le serveur — jamais en NEXT_PUBLIC_, jamais dans un Client Component. Un usage = une raison écrite."
+    },
+    {
+      "question": "Entre le navigateur et Postgres, sur Supabase, il y a quoi ?",
+      "choix": [
+        "Ton code serveur",
+        "PostgREST seulement, qui traduit les URL en SQL — aucun code à toi",
+        "Un cache",
+        "Un firewall applicatif"
+      ],
+      "bonne": 1,
+      "explication": "C'est ce qui rend Supabase rapide à développer, et ce qui rend la RLS vitale : rien d'autre ne filtre."
+    }
+  ]
+}

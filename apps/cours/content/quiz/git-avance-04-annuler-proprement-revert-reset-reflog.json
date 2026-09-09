@@ -1,0 +1,49 @@
+{
+  "fiche": "git-avance-04-annuler-proprement-revert-reset-reflog",
+  "questions": [
+    {
+      "question": "Un commit est en prod et il casse. Quelle commande pour l'annuler proprement ?",
+      "choix": [
+        "git reset --hard HEAD~1 puis push --force",
+        "git revert <hash> puis push",
+        "git checkout <hash-précédent>",
+        "git rebase -i et drop"
+      ],
+      "bonne": 1,
+      "explication": "Sur une branche partagée, on ne réécrit pas l'histoire. revert crée un nouveau commit qui applique l'inverse. Le commit fautif ET son annulation restent visibles."
+    },
+    {
+      "question": "Que fait git reset --soft HEAD~2 ?",
+      "choix": [
+        "Supprime les 2 derniers commits et leurs modifications",
+        "Recule la branche de 2 commits en gardant les modifications indexées",
+        "Recule de 2 commits en jetant tout",
+        "Crée une branche 2 commits en arrière"
+      ],
+      "bonne": 1,
+      "explication": "--soft garde tout dans l'index (prêt à recommiter). --mixed garde dans le dossier mais désindexe. --hard jette. Seul --hard détruit du travail non commité."
+    },
+    {
+      "question": "Tu as fait git reset --hard par erreur et perdu 3 commits. Que faire ?",
+      "choix": [
+        "Ils sont perdus, recoder",
+        "git reflog pour retrouver le hash, puis git reset --hard <hash>",
+        "git revert HEAD",
+        "Restaurer depuis GitHub (impossible s'ils n'étaient pas poussés)"
+      ],
+      "bonne": 1,
+      "explication": "Le reflog journalise chaque mouvement de HEAD pendant ~90 jours. Les commits existent toujours dans .git/objects ; le reflog te donne leur hash. Presque rien n'est irrécupérable."
+    },
+    {
+      "question": "Qu'est-ce que le detached HEAD ?",
+      "choix": [
+        "Une branche supprimée",
+        "HEAD pointe directement sur un commit, pas sur une branche",
+        "Une erreur de corruption",
+        "Le mode lecture seule de Git"
+      ],
+      "bonne": 1,
+      "explication": "Après git checkout <hash>, HEAD n'est plus attaché à une branche. Commiter dans cet état crée des commits sans branche, perdus au prochain switch (sauf reflog). git switch -c pour repartir d'ici."
+    }
+  ]
+}

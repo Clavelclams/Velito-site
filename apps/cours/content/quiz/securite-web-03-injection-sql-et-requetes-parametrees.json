@@ -1,0 +1,49 @@
+{
+  "fiche": "securite-web-03-injection-sql-et-requetes-parametrees",
+  "questions": [
+    {
+      "question": "Pourquoi tu n'as jamais eu d'injection SQL ?",
+      "choix": [
+        "Par vigilance",
+        "Doctrine et Supabase paramètrent tout : la valeur est envoyée séparément de la requête, jamais interprétée comme du SQL",
+        "Tu n'utilises pas SQL",
+        "La RLS protège"
+      ],
+      "bonne": 1,
+      "explication": "findOneBy(['pseudo' => $x]) et .eq('pseudo', x) sont des requêtes paramétrées. Tu n'échappes rien, tu passes des paramètres."
+    },
+    {
+      "question": "Où l'injection peut-elle revenir ?",
+      "choix": [
+        "Nulle part",
+        "SQL brut concaténé (executeQuery avec des chaînes collées), noms de colonnes dynamiques, commandes shell",
+        "Dans les migrations",
+        "Dans les vues"
+      ],
+      "bonne": 1,
+      "explication": "Dès qu'on quitte l'outil. Une valeur externe collée dans une chaîne SQL = injection."
+    },
+    {
+      "question": "L'utilisateur choisit la colonne de tri. Un paramètre ?",
+      "choix": [
+        "Oui, ORDER BY :colonne",
+        "Non : un paramètre porte une valeur, jamais un nom d'objet. Liste blanche (in_array) avant de coller",
+        "Oui avec des backticks",
+        "Impossible à sécuriser"
+      ],
+      "bonne": 1,
+      "explication": "Le seul cas où la concaténation est inévitable, et c'est pour ça qu'elle est encadrée par une liste fermée."
+    },
+    {
+      "question": "Le principe commun à SQL, CSV, HTML, shell ?",
+      "choix": [
+        "Tout échapper",
+        "Repérer où une donnée entre dans une syntaxe, et s'assurer qu'elle y entre comme donnée, pas comme code",
+        "Tout filtrer",
+        "Tout refuser"
+      ],
+      "bonne": 1,
+      "explication": "Injection SQL, XSS, CSV cassé, injection de commande : même mécanisme, autre syntaxe."
+    }
+  ]
+}

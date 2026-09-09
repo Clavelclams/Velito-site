@@ -1,0 +1,49 @@
+{
+  "fiche": "supabase-postgres-04-policies-et-security-definer",
+  "questions": [
+    {
+      "question": "Que fait SECURITY DEFINER sur une fonction ?",
+      "choix": [
+        "La rend plus rapide",
+        "Elle s'exécute avec les droits de son créateur, pas de l'appelant : elle peut lire une table interdite à l'appelant",
+        "Elle devient immuable",
+        "Elle est cachée"
+      ],
+      "bonne": 1,
+      "explication": "arena.est_staff lit shared.user_permissions (interdite à anon) et ne rend qu'un booléen. Une porte contrôlée : une réponse, pas des données."
+    },
+    {
+      "question": "Pourquoi SET search_path est-il obligatoire sur une fonction SECURITY DEFINER ?",
+      "choix": [
+        "Pour la performance",
+        "Sans lui, un utilisateur peut créer un schéma evil avec une fausse user_permissions, le mettre en tête de son search_path, et faire répondre vrai à la fonction",
+        "C'est une convention Supabase",
+        "Pour éviter les erreurs de compilation"
+      ],
+      "bonne": 1,
+      "explication": "La fonction résout les noms non qualifiés selon le search_path de l'appelant. Figer le search_path ferme la porte. Toute SECURITY DEFINER sans search_path figé est une faille."
+    },
+    {
+      "question": "À quoi sert STABLE sur arena.est_staff ?",
+      "choix": [
+        "À empêcher les modifications",
+        "Indice pour l'optimiseur : mêmes arguments dans une requête = même résultat, donc appelée une fois par requête au lieu d'une fois par ligne",
+        "À la rendre SECURITY DEFINER",
+        "À la cacher"
+      ],
+      "bonne": 1,
+      "explication": "Sur une policy évaluée sur 10 000 lignes, la différence est énorme. IMMUTABLE serait faux (dépend de auth.uid()), VOLATILE serait lent."
+    },
+    {
+      "question": "Une fonction SECURITY DEFINER de 50 lignes qui fait trois choses, c'est ?",
+      "choix": [
+        "Une bonne factorisation",
+        "Un contournement de la RLS avec trois surfaces d'attaque",
+        "Normal pour du PL/pgSQL",
+        "Optimal"
+      ],
+      "bonne": 1,
+      "explication": "Un privilège délégué doit être petit, à une responsabilité, avec des arguments validés et un résultat minimal. Sinon c'est un trou."
+    }
+  ]
+}

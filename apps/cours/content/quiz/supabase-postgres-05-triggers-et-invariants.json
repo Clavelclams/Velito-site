@@ -1,0 +1,49 @@
+{
+  "fiche": "supabase-postgres-05-triggers-et-invariants",
+  "questions": [
+    {
+      "question": "Pourquoi mettre l'invariant « un match validé ne change plus » dans un trigger et pas dans une policy RLS ?",
+      "choix": [
+        "Les triggers sont plus rapides",
+        "Un trigger s'applique à tous les rôles, service_role compris ; une policy est contournée par service_role",
+        "Les policies ne gèrent pas UPDATE",
+        "Par habitude"
+      ],
+      "bonne": 1,
+      "explication": "Ton code serveur écrit en service_role. Si ce code fait une bêtise, la RLS ne protège de rien. Le trigger, si. Les invariants critiques vont là."
+    },
+    {
+      "question": "Pourquoi IS DISTINCT FROM et pas <> dans le verrou ?",
+      "choix": [
+        "C'est plus lisible",
+        "NULL <> 5 vaut NULL (ni vrai ni faux) : un score passant de NULL à 10 passerait le verrou. IS DISTINCT FROM traite NULL comme une valeur",
+        "<> est déprécié",
+        "Pour la performance"
+      ],
+      "bonne": 1,
+      "explication": "Sur un trigger de sécurité, c'est la différence entre protéger et croire protéger."
+    },
+    {
+      "question": "BEFORE ou AFTER pour un trigger qui refuse une écriture ?",
+      "choix": [
+        "AFTER",
+        "BEFORE : l'exception part avant toute écriture, rien à annuler. AFTER est pour réagir (journaliser, notifier)",
+        "Les deux",
+        "Peu importe"
+      ],
+      "bonne": 1,
+      "explication": "Valider en BEFORE, réagir en AFTER. Un trigger tourne dans la transaction : s'il lève, tout est annulé."
+    },
+    {
+      "question": "Qu'est-ce qu'une table append-only ?",
+      "choix": [
+        "Une table sans index",
+        "Une table où UPDATE et DELETE sont interdits par trigger : on ne peut qu'ajouter. Un journal opposable",
+        "Une table temporaire",
+        "Une table sans clé primaire"
+      ],
+      "bonne": 1,
+      "explication": "arena.logs et arena.consentements. L'état courant d'un consentement = la dernière ligne. On sait quand quelqu'un a coché et décoché."
+    }
+  ]
+}

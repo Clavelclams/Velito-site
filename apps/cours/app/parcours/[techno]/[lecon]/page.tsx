@@ -19,6 +19,8 @@ import {
 import { getQuiz } from "@/lib/fiches/quiz";
 import QuizFiche from "@/app/components/QuizFiche";
 import BoutonLeconFaite from "@/app/components/BoutonLeconFaite";
+import BadgeNiveau from "@/app/components/BadgeNiveau";
+import NavigationClavier from "@/app/components/NavigationClavier";
 
 /** Pré-génère toutes les pages de leçons au build. */
 export function generateStaticParams() {
@@ -70,10 +72,28 @@ export default async function PageLecon({
       </Link>
 
       <header className="anim-arrivee mb-8 mt-4 rounded-2xl border-l-4 border-cours-accent bg-cours-surface p-6 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-wide text-cours-text-muted">
-          {parcours?.icone} Leçon {lecon.ordre}/{lecons.length} · {lecon.niveau}{" "}
-          · ~{lecon.duree} min
+        <p className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-cours-text-muted">
+          <span>
+            {parcours?.icone} Leçon {lecon.ordre}/{lecons.length}
+          </span>
+          <BadgeNiveau niveau={lecon.niveau} className="normal-case tracking-normal" />
+          <span>~{lecon.duree} min</span>
         </p>
+        {/* Fil de progression dans le parcours : où en est-on ? */}
+        <div className="mt-3 flex gap-1" aria-hidden="true">
+          {lecons.map((l) => (
+            <span
+              key={l.id}
+              className={`h-1 flex-1 rounded-full ${
+                l.ordre < lecon.ordre
+                  ? "bg-cours-accent/60"
+                  : l.ordre === lecon.ordre
+                    ? "bg-cours-accent"
+                    : "bg-cours-border"
+              }`}
+            />
+          ))}
+        </div>
         <h1 className="mt-1 text-2xl font-bold leading-tight sm:text-3xl">{lecon.titre}</h1>
       </header>
 
@@ -127,7 +147,11 @@ export default async function PageLecon({
         <BoutonLeconFaite idLecon={lecon.id} />
       </div>
 
-      {/* ---- Navigation précédente / suivante ---- */}
+      {/* ---- Navigation précédente / suivante (+ flèches du clavier) ---- */}
+      <NavigationClavier
+        precedente={precedente ? `/parcours/${techno}/${precedente.fichier}` : null}
+        suivante={suivante ? `/parcours/${techno}/${suivante.fichier}` : null}
+      />
       <nav className="mt-10 flex items-center justify-between gap-4 border-t border-cours-border pt-6 text-sm">
         {precedente ? (
           <Link
@@ -152,6 +176,9 @@ export default async function PageLecon({
           </span>
         )}
       </nav>
+      <p className="mt-3 hidden text-center text-[11px] text-cours-text-muted sm:block">
+        Astuce : ← et → au clavier pour changer de leçon.
+      </p>
     </div>
   );
 }

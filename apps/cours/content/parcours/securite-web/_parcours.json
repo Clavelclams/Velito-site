@@ -1,0 +1,7 @@
+{
+  "titre": "Sécurité web",
+  "description": "Les failles que tu as trouvées, corrigées ou évitées dans tes propres projets : IDOR, injection, XSS, CSRF, open redirect, uploads, secrets, en-têtes. Pas de théorie abstraite — chaque leçon part d'une ligne de ton code. Le bloc 3 du CDA, et ce qu'un jury appelle « application sécurisée ».",
+  "icone": "🛡️",
+  "ordre": 14,
+  "domaine": "metier"
+}

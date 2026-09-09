@@ -1,0 +1,49 @@
+{
+  "fiche": "api-auth-03-concevoir-des-endpoints",
+  "questions": [
+    {
+      "question": "Concevoir une API : partir de quoi ?",
+      "choix": [
+        "Des tables",
+        "Des écrans : un endpoint par vue cohérente. Pas un par table (dix appels), pas un fourre-tout (2 Mo)",
+        "Du framework",
+        "Du JSON"
+      ],
+      "bonne": 1,
+      "explication": "/api/club/moi rend ce qu'il faut pour l'écran d'accueil. Un appel, un écran."
+    },
+    {
+      "question": "Un contrôleur par rôle (coach, parent, direction), pourquoi ?",
+      "choix": [
+        "Par organisation",
+        "Autorisation par conception : un parent n'a pas d'endpoint pour convoquer, donc pas besoin d'un Voter qui le refuse",
+        "Pour la lisibilité",
+        "Par convention Symfony"
+      ],
+      "bonne": 1,
+      "explication": "Chaque vue expose ce que ce rôle a le droit et besoin de voir."
+    },
+    {
+      "question": "json_encode($entite) directement, le problème ?",
+      "choix": [
+        "C'est lent",
+        "Fuite d'un champ sensible ajouté plus tard, couplage contrat/base, taille. Construire la sortie explicitement",
+        "Ça ne marche pas",
+        "Le format"
+      ],
+      "bonne": 1,
+      "explication": "« Prénom + club seulement entre joueuses » est une règle de sérialisation."
+    },
+    {
+      "question": "Une action métier (confirmer une mission) : PATCH { statut } ou POST /confirmer ?",
+      "choix": [
+        "PATCH",
+        "POST nommé : une transition a des règles (pas déjà pourvue, notifier). Le PATCH les cacherait derrière un changement de champ",
+        "GET",
+        "PUT"
+      ],
+      "bonne": 1,
+      "explication": "Même logique que demarrerTournoi sur ARENA."
+    }
+  ]
+}

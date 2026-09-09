@@ -1,0 +1,7 @@
+{
+  "titre": "Supabase & Postgres",
+  "description": "La base de tout Velito-site : ce qu'est vraiment Supabase, les schémas, la RLS, les policies et SECURITY DEFINER, les triggers, les contraintes, les migrations, le temps réel, les fonctions atomiques, l'auth par cookies. Du SQL du parcours précédent à la sécurité garantie par la base.",
+  "icone": "🐘",
+  "ordre": 12,
+  "domaine": "backend"
+}

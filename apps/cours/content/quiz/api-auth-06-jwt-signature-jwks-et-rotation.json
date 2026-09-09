@@ -1,0 +1,49 @@
+{
+  "fiche": "api-auth-06-jwt-signature-jwks-et-rotation",
+  "questions": [
+    {
+      "question": "Le contenu d'un JWT est ?",
+      "choix": [
+        "Chiffré",
+        "Lisible (base64url), pas modifiable (signé). Ne jamais y mettre ce que le porteur ne doit pas voir",
+        "Secret",
+        "Compressé"
+      ],
+      "bonne": 1,
+      "explication": "jwt.io le décode. Un JWT est inaltérable, pas confidentiel."
+    },
+    {
+      "question": "Pourquoi RS256 et pas HS256 pour le hub ?",
+      "choix": [
+        "Plus court",
+        "Asymétrique : la clé privée signe (hub), la publique vérifie (JWKS). En HS256, chaque client aurait la clé de signature et pourrait forger",
+        "Plus rapide",
+        "Standard"
+      ],
+      "bonne": 1,
+      "explication": "Vérifier ≠ pouvoir signer. C'est ce qui fait du hub un fournisseur d'identité."
+    },
+    {
+      "question": "Comment changer de clé sans déconnecter personne ?",
+      "choix": [
+        "Impossible",
+        "Signer avec la nouvelle, vérifier avec toutes les non révoquées : les anciens jetons restent valides jusqu'à expiration (1 h), puis l'ancienne clé sort",
+        "Redéployer",
+        "Attendre minuit"
+      ],
+      "bonne": 1,
+      "explication": "Le kid dans l'en-tête dit quelle clé utiliser. keys.ts du hub fait exactement ça."
+    },
+    {
+      "question": "Une app cliente vérifie combien de choses sur un JWT ?",
+      "choix": [
+        "Une : la signature",
+        "Quatre : signature, exp, iss (émis par le hub), aud (destiné à cette app). Oublier aud fait qu'un jeton volé sur une app ouvre les autres",
+        "Deux",
+        "Trois"
+      ],
+      "bonne": 1,
+      "explication": "Décoder n'est pas vérifier. getSession décode ; getUser vérifie."
+    }
+  ]
+}

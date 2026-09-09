@@ -1,0 +1,49 @@
+{
+  "fiche": "deploiement-08-https-certificats-et-le-tour-des-domaines",
+  "questions": [
+    {
+      "question": "HTTPS garantit quoi ?",
+      "choix": [
+        "La vitesse",
+        "Confidentialité (personne ne lit), intégrité (personne ne modifie), authenticité (c'est bien ce serveur). Le certificat porte la troisième",
+        "Le SEO",
+        "La compression"
+      ],
+      "bonne": 1,
+      "explication": "Le certificat est signé par une CA à qui le navigateur fait confiance, après vérification que tu contrôles le domaine."
+    },
+    {
+      "question": "Combien de temps vaut un certificat Let's Encrypt ?",
+      "choix": [
+        "1 an",
+        "90 jours, renouvelé automatiquement par Vercel et OVH",
+        "Illimité",
+        "30 jours"
+      ],
+      "bonne": 1,
+      "explication": "Si le renouvellement rate (DNS changé, défi bloqué), c'est « connexion non privée » du jour au lendemain."
+    },
+    {
+      "question": "Contenu mixte, c'est ?",
+      "choix": [
+        "HTML + CSS",
+        "Une page HTTPS qui charge une ressource en http:// : le navigateur bloque le script et avertit pour l'image",
+        "Deux certificats",
+        "HTTP/1 et HTTP/2"
+      ],
+      "bonne": 1,
+      "explication": "findstr http:// dans les templates et CSS."
+    },
+    {
+      "question": "Quand poser HSTS ?",
+      "choix": [
+        "Tout de suite",
+        "Après avoir vérifié que HTTP redirige et que HTTPS marche partout : une fois posé, le navigateur refuse HTTP pendant un an",
+        "Jamais",
+        "Seulement sur Vercel"
+      ],
+      "bonne": 1,
+      "explication": "Sinon on s'enferme dehors."
+    }
+  ]
+}

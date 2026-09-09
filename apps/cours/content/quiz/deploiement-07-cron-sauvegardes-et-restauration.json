@@ -1,0 +1,49 @@
+{
+  "fiche": "deploiement-07-cron-sauvegardes-et-restauration",
+  "questions": [
+    {
+      "question": "mysqldump --single-transaction sert à ?",
+      "choix": [
+        "Compresser",
+        "Un instantané cohérent de toutes les tables à un même instant, sans verrouiller : le site continue pendant le dump",
+        "Sauvegarder une seule table",
+        "Chiffrer"
+      ],
+      "bonne": 1,
+      "explication": "Sans l'option, les tables sont verrouillées le temps de l'export."
+    },
+    {
+      "question": "set -euo pipefail en tête du script, pourquoi ?",
+      "choix": [
+        "Par style",
+        "Arrêt au premier échec, variable non définie = erreur, pipe cassé = erreur. Sans ça, un dump raté produit un fichier tronqué qui a l'air d'une sauvegarde",
+        "Pour la vitesse",
+        "Pour les logs"
+      ],
+      "bonne": 1,
+      "explication": "Une sauvegarde silencieusement vide est pire que pas de sauvegarde."
+    },
+    {
+      "question": "Pourquoi var/backups sur le même hébergement n'est pas une vraie sauvegarde ?",
+      "choix": [
+        "C'est une vraie sauvegarde",
+        "Si OVH perd le disque, base ET dumps disparaissent. Règle 3-2-1 : une copie hors site manque",
+        "Les dumps sont trop gros",
+        "Le dossier est public"
+      ],
+      "bonne": 1,
+      "explication": "Un backup sur la machine qui brûle n'est pas un backup — c'est écrit dans le script."
+    },
+    {
+      "question": "Un dump jamais restauré, c'est ?",
+      "choix": [
+        "Une sauvegarde",
+        "Une hypothèse. Charset, DEFINER, fichier tronqué, MariaDB→MySQL : ça peut échouer. Restaurer dans une base de test, compter, chronométrer",
+        "Suffisant",
+        "Un fichier de plus"
+      ],
+      "bonne": 1,
+      "explication": "Le jour J, la question sera « en combien de temps », pas « est-ce que ça marche »."
+    }
+  ]
+}

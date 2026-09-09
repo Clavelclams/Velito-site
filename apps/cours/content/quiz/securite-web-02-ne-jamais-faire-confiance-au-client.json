@@ -1,0 +1,49 @@
+{
+  "fiche": "securite-web-02-ne-jamais-faire-confiance-au-client",
+  "questions": [
+    {
+      "question": "La validation dans le formulaire (required, minLength) sert à quoi ?",
+      "choix": [
+        "À la sécurité",
+        "Au confort : retour immédiat, moins d'allers-retours. Zéro sécurité — elle est contournable en 10 secondes dans F12",
+        "À rien",
+        "À remplacer la validation serveur"
+      ],
+      "bonne": 1,
+      "explication": "Le navigateur est chez l'utilisateur. Il peut tout modifier. Le serveur refait tout."
+    },
+    {
+      "question": "Un client envoie une liste d'ids de joueuses à convoquer. La bonne approche ?",
+      "choix": [
+        "Convoquer les ids reçus",
+        "Partir de l'effectif réel de l'équipe (serveur) et ne garder que les ids qui en font partie : intersection",
+        "Vérifier que les ids sont des entiers",
+        "Faire confiance si le client est authentifié"
+      ],
+      "bonne": 1,
+      "explication": "ConvocationManager : on ne valide pas ce que le client envoie, on part de ce que le serveur sait. Sinon une joueuse d'un autre club est convoquée et son nom exposé."
+    },
+    {
+      "question": "Les trois niveaux de validation, du plus simple au plus fort ?",
+      "choix": [
+        "Type, longueur, format",
+        "Type/forme → liste fermée → cohérence avec ce que le serveur sait (cet id est bien dans cette équipe)",
+        "Client, serveur, base",
+        "Syntaxe, sémantique, style"
+      ],
+      "bonne": 1,
+      "explication": "Le troisième niveau est celui qui bloque IDOR et open redirect. max(0, min(300, (int) x)) fait les deux premiers en une ligne."
+    },
+    {
+      "question": "« Cet email n'existe pas » vs « Identifiants invalides » ?",
+      "choix": [
+        "Le premier est plus utile",
+        "Le premier permet d'énumérer les comptes. Le second ne révèle rien. Le détail va dans les logs serveur",
+        "Aucune différence",
+        "Le second est moins sûr"
+      ],
+      "bonne": 1,
+      "explication": "Le message d'erreur est une sortie à surveiller. Idem APP_ENV=dev qui affiche les traces : un plan de l'application."
+    }
+  ]
+}

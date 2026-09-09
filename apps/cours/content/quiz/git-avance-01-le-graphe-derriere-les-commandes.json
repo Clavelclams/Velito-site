@@ -1,0 +1,49 @@
+{
+  "fiche": "git-avance-01-le-graphe-derriere-les-commandes",
+  "questions": [
+    {
+      "question": "Qu'est-ce qu'une branche Git, physiquement ?",
+      "choix": [
+        "Une copie complète du dossier de travail",
+        "Un fichier de quelques octets contenant le hash d'un commit",
+        "Une liste de différences par rapport à main",
+        "Un dossier caché dans .git/objects"
+      ],
+      "bonne": 1,
+      "explication": "Une branche est une étiquette : un fichier .git/refs/heads/<nom> qui contient un hash. Créer une branche = créer une étiquette ; la supprimer ne supprime aucun commit."
+    },
+    {
+      "question": "Le 9 septembre, 7 commits ont été poussés mais rien n'est arrivé en prod. Pourquoi ?",
+      "choix": [
+        "GitHub a perdu les commits",
+        "Vercel était en panne",
+        "Le push a copié l'étiquette de la branche de feature, pas main — et Vercel déploie main",
+        "Les commits étaient trop gros"
+      ],
+      "bonne": 2,
+      "explication": "Commiter fait avancer la branche courante uniquement. Push copie cette étiquette sur le serveur. main n'a pas bougé, donc Vercel — qui écoute main — n'a rien vu."
+    },
+    {
+      "question": "Que représente origin/main dans ton dépôt local ?",
+      "choix": [
+        "La branche main sur GitHub, en temps réel",
+        "Ta dernière vue de main distant, mise à jour seulement sur fetch/pull/push",
+        "Une copie de sauvegarde de main",
+        "La branche par défaut de Vercel"
+      ],
+      "bonne": 1,
+      "explication": "origin/main est une étiquette locale qui reflète l'état de main sur GitHub au dernier fetch. Elle peut être en retard sur la réalité."
+    },
+    {
+      "question": "Quelle commande liste les commits que HEAD a et que main n'a pas ?",
+      "choix": [
+        "git diff main",
+        "git log --oneline main..HEAD",
+        "git status main",
+        "git branch --compare main"
+      ],
+      "bonne": 1,
+      "explication": "La syntaxe A..B liste les commits atteignables depuis B mais pas depuis A. main..HEAD = ce que ta position a en plus de main. Le 9 septembre, ça aurait listé 7 lignes."
+    }
+  ]
+}
