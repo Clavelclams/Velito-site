@@ -50,7 +50,13 @@ import {
   repartirEnPoules,
   type ResultatPoule,
 } from "../poules";
+import {
+  champsJoueurPourAnnee,
+  consentementParentalRequis,
+  validerAnneeNaissance,
+} from "./age";
 import { attribuerBadgesTournoi } from "./badges";
+import { messageErreurBase, type ErreurBase } from "./erreurs";
 import { normaliserJeu } from "./jeux";
 import { estStatutTournoi, transitionAutorisee } from "./transitions";
 import type { MatchRow, Tournoi } from "./types";
@@ -75,6 +81,18 @@ function redirectionErreur(chemin: string, e: unknown): never {
   const message =
     e instanceof Error ? e.message : "Erreur inattendue — réessaie.";
   redirect(`${chemin}?erreur=${encodeURIComponent(message)}`);
+}
+
+/**
+ * Transforme une erreur Postgres en Error lisible pour l'écran. Le message
+ * brut part dans les logs serveur (Vercel) où il est utile ; il ne remonte
+ * JAMAIS dans l'URL ni à l'écran (audit du 06/09/2026 : fuite de la
+ * structure de la base + jargon pour le staff). La traduction par code
+ * SQLSTATE vit dans lib/arena/erreurs.ts, testée.
+ */
+function erreurBase(contexte: string, erreur: ErreurBase | null | undefined): Error {
+  console.error(`[arena/actions] ${contexte} —`, erreur?.code, erreur?.message);
+  return new Error(messageErreurBase(erreur, contexte));
 }
 
 async function log(
@@ -205,7 +223,7 @@ async function mettreAJourElo(
     .select("joueur_id, note, nb_matchs")
     .eq("discipline", discipline)
     .in("joueur_id", tous);
-  if (erreurLecture) throw new Error(erreurLecture.message);
+  if (erreurLecture) throw erreurBase("Lecture des notes ELO impossible", erreurLecture);
 
   const existantes = new Map(
     ((eloData ?? []) as { joueur_id: string; note: number; nb_matchs: number }[]).map(
@@ -241,7 +259,7 @@ async function mettreAJourElo(
       })),
       { onConflict: "joueur_id,discipline" }
     );
-  if (error) throw new Error(error.message);
+  if (error) throw erreurBase("Écriture impossible", error);
 }
 
 // ---------- Tournois ----------
@@ -332,7 +350,7 @@ export async function creerTournoi(formData: FormData) {
       .select("id")
       .single();
 
-    if (error) throw new Error(`Création impossible : ${error.message}`);
+    if (error) throw erreurBase("Création impossible", error);
 
     revalidatePath("/admin/tournois");
     redirect(`/admin/tournois/${data.id}`);
@@ -421,22 +439,86 @@ export async function ajouterJoueurStaff(formData: FormData) {
       throw new Error("Les inscriptions sont fermées (tournoi démarré ou clos).");
     }
 
+    // ---- Protection des mineurs (RGPD, règlement §5) ----
+    // L'année de naissance est OBLIGATOIRE à l'inscription : sans elle, le
+    // schéma ne peut pas protéger un mineur (audit du 06/09/2026 : les
+    // colonnes existaient depuis la 001, aucun écran ne les alimentait, donc
+    // tous les joueurs étaient majeurs par défaut). L'année seule suffit,
+    // et la règle « protéger par excès » est dans lib/arena/age.ts.
+    const anneeCourante = new Date().getFullYear();
+    const annee = validerAnneeNaissance(
+      formData.get("annee_naissance") as string | null,
+      anneeCourante
+    );
+    if (annee === null) {
+      throw new Error(
+        "Année de naissance requise (4 chiffres) : elle sert uniquement à protéger les mineurs."
+      );
+    }
+    const champsAge = champsJoueurPourAnnee(annee, anneeCourante);
+    const parentalRequis = consentementParentalRequis(annee, anneeCourante);
+    const parentalRecueilli = formData.get("consentement_parental") === "on";
+    if (parentalRequis && !parentalRecueilli) {
+      throw new Error(
+        "Joueur de moins de 15 ans : coche « autorisation parentale recueillie » après l'avoir obtenue d'un parent présent."
+      );
+    }
+
     // Joueur existant ? Sinon création.
     const { data: existant } = await db
       .schema("arena").from("joueurs")
-      .select("id")
+      .select("id, annee_naissance, profil_public")
       .eq("pseudo", pseudo)
       .maybeSingle();
 
     let joueurId = existant?.id as string | undefined;
+    // Ce qui sera VRAI en base après cette action, pour tracer le consentement
+    // sur l'état réel et non sur l'année tapée aujourd'hui (un pseudo déjà
+    // connu garde son année d'origine).
+    let profilPublicEffectif = champsAge.profil_public;
     if (!joueurId) {
       const { data: cree, error } = await db
         .schema("arena").from("joueurs")
-        .insert({ pseudo })
+        .insert({
+          pseudo,
+          ...champsAge,
+          consentement_parental_at: parentalRequis ? new Date().toISOString() : null,
+        })
         .select("id")
         .single();
-      if (error) throw new Error(`Création joueur impossible : ${error.message}`);
+      if (error) throw erreurBase("Création joueur impossible", error);
       joueurId = cree.id;
+    } else if (existant?.annee_naissance === null) {
+      // Joueur créé avant l'existence de ce champ : on complète, on n'écrase
+      // jamais une année déjà connue (le staff d'une autre orga pourrait se
+      // tromper, et l'année connue a été donnée lors d'une inscription réelle).
+      const { error } = await db
+        .schema("arena").from("joueurs")
+        .update({
+          ...champsAge,
+          consentement_parental_at: parentalRequis ? new Date().toISOString() : null,
+        })
+        .eq("id", joueurId);
+      if (error) throw erreurBase("Mise à jour du joueur impossible", error);
+    } else {
+      profilPublicEffectif = Boolean(existant?.profil_public);
+    }
+
+    // Trace du consentement d'affichage public (table append-only, RLS
+    // « lecture par soi-même ») : un majeur inscrit au bureau accepte
+    // d'apparaître dans les résultats publics (règlement §4) ; un mineur,
+    // non — et c'est enregistré tel quel, pas déduit après coup.
+    await db.schema("arena").from("consentements").insert({
+      joueur_id: joueurId,
+      type: "AFFICHAGE_PUBLIC",
+      accorde: profilPublicEffectif,
+      source: "staff",
+    });
+    if (parentalRequis) {
+      await log(ctx.userId, "CONSENTEMENT", tournoiId, null, {
+        joueur_id: joueurId,
+        type: "PARENTAL",
+      });
     }
 
     const { error: errPart } = await db.schema("arena").from("participations").insert({
@@ -447,7 +529,7 @@ export async function ajouterJoueurStaff(formData: FormData) {
     });
     // 23505 = violation d'unicité → déjà inscrit, pas une vraie erreur.
     if (errPart && errPart.code !== "23505") {
-      throw new Error(`Inscription impossible : ${errPart.message}`);
+      throw erreurBase("Inscription impossible", errPart);
     }
 
     await log(ctx.userId, "JOUEUR_CHECKIN", tournoiId, null, { pseudo });
@@ -731,7 +813,7 @@ export async function demarrerTournoi(formData: FormData) {
         .from("tournois")
         .update({ statut: "OUVERT", updated_at: new Date().toISOString() })
         .eq("id", tournoiId);
-      throw new Error(`Génération du bracket impossible : ${error.message}`);
+      throw erreurBase("Génération du bracket impossible", error);
     }
 
     await log(ctx.userId, "TOURNOI_DEMARRE", tournoiId, null, {
@@ -952,7 +1034,7 @@ export async function genererPhaseFinale(formData: FormData) {
         .from("tournois")
         .update({ phase_finale_generee: false })
         .eq("id", tournoiId);
-      throw new Error(`Phase finale impossible : ${error.message}`);
+      throw erreurBase("Phase finale impossible", error);
     }
 
     await log(ctx.userId, "PHASE_FINALE_GENEREE", tournoiId, null, {
@@ -1229,7 +1311,7 @@ export async function enregistrerRepartition(
         .update({ ordre: ligne.colonneId !== null ? ligne.ordre : null })
         .eq("tournoi_id", tournoiId)
         .eq("joueur_id", ligne.joueurId);
-      if (error) throw new Error(error.message);
+      if (error) throw erreurBase("Écriture impossible", error);
     }
 
     // 2. Les équipes, seulement pour un tournoi par équipes. On repart de zéro
@@ -1242,7 +1324,7 @@ export async function enregistrerRepartition(
         .from("equipes_membres")
         .delete()
         .eq("tournoi_id", tournoiId);
-      if (erreurPurge) throw new Error(erreurPurge.message);
+      if (erreurPurge) throw erreurBase("Écriture impossible", erreurPurge);
 
       const membres = repartition
         .filter((l) => l.colonneId !== null)
@@ -1257,7 +1339,7 @@ export async function enregistrerRepartition(
           .schema("arena")
           .from("equipes_membres")
           .insert(membres);
-        if (error) throw new Error(error.message);
+        if (error) throw erreurBase("Écriture impossible", error);
       }
     }
 
@@ -1319,7 +1401,7 @@ export async function creerEquipe(formData: FormData) {
       throw new Error(
         error.code === "23505"
           ? `Une équipe s'appelle déjà « ${nom} » dans ce tournoi.`
-          : `Création impossible : ${error.message}`
+          : messageErreurBase(error, "Création impossible")
       );
     }
 
@@ -1353,7 +1435,7 @@ export async function supprimerEquipe(formData: FormData) {
       .eq("id", equipeId)
       .eq("tournoi_id", tournoiId); // ceinture et bretelles : jamais celle d'un autre tournoi
 
-    if (error) throw new Error(`Suppression impossible : ${error.message}`);
+    if (error) throw erreurBase("Suppression impossible", error);
 
     await log(ctx.userId, "EQUIPE_SUPPRIMEE", tournoiId, null, { equipe_id: equipeId });
     revalidatePath(`/admin/tournois/${tournoiId}`);
@@ -1435,7 +1517,7 @@ export async function importerResultatToornament(formData: FormData) {
       throw new Error(
         error.code === "23505"
           ? "Ce tournoi Toornament est déjà importé pour ce joueur."
-          : `Import impossible : ${error.message}`
+          : messageErreurBase(error, "Import impossible")
       );
     }
 
@@ -1463,7 +1545,7 @@ export async function supprimerResultatExterne(formData: FormData) {
       .from("resultats_externes")
       .delete()
       .eq("id", resultatId);
-    if (error) throw new Error(`Suppression impossible : ${error.message}`);
+    if (error) throw erreurBase("Suppression impossible", error);
 
     await log(ctx.userId, "RESULTAT_EXTERNE_SUPPRIME", null, null, {
       resultat_id: resultatId,
@@ -1556,7 +1638,7 @@ export async function saisirResultatExterne(formData: FormData) {
       throw new Error(
         error.code === "23505"
           ? "Ce tournoi Toornament est déjà enregistré pour ce joueur."
-          : `Saisie impossible : ${error.message}`
+          : messageErreurBase(error, "Saisie impossible")
       );
     }
 
@@ -1610,11 +1692,169 @@ export async function assignerTerrain(formData: FormData) {
       .eq("id", matchId)
       .eq("tournoi_id", tournoiId); // jamais le match d'un autre tournoi
 
-    if (error) throw new Error(`Assignation impossible : ${error.message}`);
+    if (error) throw erreurBase("Assignation impossible", error);
 
     await log(ctx.userId, "TERRAIN_ASSIGNE", tournoiId, matchId, { terrain });
     revalidatePath(`/admin/tournois/${tournoiId}`);
   } catch (e) {
     redirectionErreur(`/admin/tournois/${tournoiId}`, e);
   }
+}
+
+// ---------- RGPD joueur : compléter l'âge, droit à l'effacement ----------
+
+/**
+ * Le staff a-t-il un lien légitime avec ce joueur ? Oui si le joueur a
+ * participé à AU MOINS un tournoi d'une organisation dont il est staff.
+ * Sans ce garde-fou, n'importe quel staff de n'importe quelle orga pourrait
+ * modifier ou effacer n'importe quel joueur de la plateforme (les pseudos
+ * sont globaux — voir audit du 06/09/2026, « identité joueur »).
+ */
+async function verifierLienStaffJoueur(
+  db: ReturnType<typeof getServiceClient>,
+  ctx: ContexteStaff,
+  joueurId: string
+): Promise<void> {
+  const orgIds = ctx.organisations.map((o) => o.id);
+  const { data } = await db
+    .schema("arena")
+    .from("participations")
+    .select("id, tournoi:tournois!inner(organisation_id)")
+    .eq("joueur_id", joueurId)
+    .in("tournoi.organisation_id", orgIds)
+    .limit(1);
+  if (!data || data.length === 0) {
+    throw new Error("Ce joueur n'a participé à aucun tournoi de tes organisations.");
+  }
+}
+
+/**
+ * Complète l'année de naissance d'un joueur inscrit AVANT que le champ soit
+ * demandé (badge « âge ? » dans l'espace orga). Une année déjà connue n'est
+ * jamais écrasée : la première saisie, faite lors d'une inscription réelle,
+ * fait foi.
+ */
+export async function completerAnneeNaissance(formData: FormData) {
+  const joueurId = String(formData.get("joueur_id"));
+  try {
+    const ctx = await requireStaff();
+    const db = getServiceClient();
+    await verifierLienStaffJoueur(db, ctx, joueurId);
+
+    const anneeCourante = new Date().getFullYear();
+    const annee = validerAnneeNaissance(
+      formData.get("annee_naissance") as string | null,
+      anneeCourante
+    );
+    if (annee === null) throw new Error("Année de naissance invalide (4 chiffres attendus).");
+
+    const parentalRequis = consentementParentalRequis(annee, anneeCourante);
+    if (parentalRequis && formData.get("consentement_parental") !== "on") {
+      throw new Error("Moins de 15 ans : l'autorisation parentale doit être cochée.");
+    }
+
+    const { data: joueur } = await db
+      .schema("arena")
+      .from("joueurs")
+      .select("id, annee_naissance, anonymise")
+      .eq("id", joueurId)
+      .single();
+    if (!joueur || joueur.anonymise) throw new Error("Joueur introuvable.");
+    if (joueur.annee_naissance !== null) {
+      throw new Error("L'année de ce joueur est déjà connue ; elle ne se modifie pas ici.");
+    }
+
+    const champs = champsJoueurPourAnnee(annee, anneeCourante);
+    const { error } = await db
+      .schema("arena")
+      .from("joueurs")
+      .update({
+        ...champs,
+        consentement_parental_at: parentalRequis ? new Date().toISOString() : null,
+      })
+      .eq("id", joueurId);
+    if (error) throw erreurBase("Mise à jour impossible", error);
+
+    await db.schema("arena").from("consentements").insert({
+      joueur_id: joueurId,
+      type: "AFFICHAGE_PUBLIC",
+      accorde: champs.profil_public,
+      source: "staff",
+    });
+    await log(ctx.userId, "JOUEUR_AGE_COMPLETE", null, null, {
+      joueur_id: joueurId,
+      est_mineur: champs.est_mineur,
+    });
+    revalidatePath(`/admin/joueurs/${joueurId}`);
+  } catch (e) {
+    redirectionErreur(`/admin/joueurs/${joueurId}`, e);
+  }
+}
+
+/**
+ * Droit à l'effacement (RGPD art. 17) — version « anonymisation ».
+ *
+ * Pourquoi anonymiser et non supprimer : les matchs joués sont des faits
+ * (l'adversaire a bien gagné ou perdu), et les supprimer fausserait les
+ * résultats des AUTRES joueurs. On retire donc tout ce qui identifie la
+ * personne et on garde la ligne comme support des clés étrangères. Après
+ * cette action, la RLS (joueurs_lecture : anonymise = false) rend le joueur
+ * invisible partout en public ; en base ne reste qu'un identifiant technique.
+ *
+ * Garde-fous : staff d'une orga où le joueur a joué, ET le pseudo doit être
+ * retapé à l'identique — une action irréversible ne se déclenche pas d'un
+ * clic mal placé.
+ */
+export async function anonymiserJoueur(formData: FormData) {
+  const joueurId = String(formData.get("joueur_id"));
+  try {
+    const ctx = await requireStaff();
+    const db = getServiceClient();
+    await verifierLienStaffJoueur(db, ctx, joueurId);
+
+    const { data: joueur } = await db
+      .schema("arena")
+      .from("joueurs")
+      .select("id, pseudo, anonymise")
+      .eq("id", joueurId)
+      .single();
+    if (!joueur) throw new Error("Joueur introuvable.");
+    if (joueur.anonymise) throw new Error("Ce joueur est déjà anonymisé.");
+
+    const confirmation = String(formData.get("confirmation") ?? "").trim();
+    if (confirmation !== joueur.pseudo) {
+      throw new Error("Confirmation incorrecte : retape le pseudo exactement pour anonymiser.");
+    }
+
+    // Le nouveau pseudo doit rester UNIQUE (contrainte) et ne rien dire :
+    // un fragment de l'uuid technique suffit.
+    const pseudoNeutre = `joueur-${joueurId.slice(0, 8)}`;
+    const { error } = await db
+      .schema("arena")
+      .from("joueurs")
+      .update({
+        pseudo: pseudoNeutre,
+        user_id: null,
+        annee_naissance: null,
+        est_mineur: false,
+        consentement_parental_at: null,
+        profil_public: false,
+        anonymise: true,
+      })
+      .eq("id", joueurId);
+    if (error) throw erreurBase("Anonymisation impossible", error);
+
+    // L'ELO est une donnée dérivée d'une personne : on l'efface aussi. Les
+    // badges et résultats externes restent portés par l'id, mais la RLS ne
+    // les montre plus (profil_public = false, anonymise = true).
+    await db.schema("arena").from("elo_joueurs").delete().eq("joueur_id", joueurId);
+
+    // Le journal ne conserve PAS l'ancien pseudo — ce serait recréer la
+    // donnée qu'on vient d'effacer. Seul l'identifiant technique est tracé.
+    await log(ctx.userId, "JOUEUR_ANONYMISE", null, null, { joueur_id: joueurId });
+    revalidatePath("/admin/tournois");
+  } catch (e) {
+    redirectionErreur(`/admin/joueurs/${joueurId}`, e);
+  }
+  redirect(`/admin/tournois?info=${encodeURIComponent("Joueur anonymisé.")}`);
 }

@@ -9,7 +9,12 @@ import { getContexteStaff } from "@/lib/arena/auth";
 import { getServiceClient } from "@/lib/supabase/service";
 import type { Tournoi } from "@/lib/arena/types";
 
-export default async function ListeTournois() {
+export default async function ListeTournois({
+  searchParams,
+}: {
+  searchParams: Promise<{ info?: string }>;
+}) {
+  const { info } = await searchParams;
   const ctx = await getContexteStaff();
   if (!ctx) return null; // le layout affiche déjà l'écran de connexion
 
@@ -28,6 +33,16 @@ export default async function ListeTournois() {
 
   return (
     <div>
+      {/* Message de confirmation d'une action venue d'une autre page (ex.
+          anonymisation d'un joueur) : même mécanique que ?erreur=, en vert. */}
+      {info && (
+        <p
+          role="status"
+          className="mb-6 rounded-lg border border-arena-green/30 bg-arena-green-pale px-4 py-3 text-sm font-semibold text-arena-green"
+        >
+          ✓ {info}
+        </p>
+      )}
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-black">Tournois</h1>
         <Link

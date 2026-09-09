@@ -39,9 +39,27 @@ export interface Joueur {
   pseudo: string;
   annee_naissance: number | null;
   est_mineur: boolean;
+  /** Horodatage du consentement parental (mineur de moins de 15 ans). */
+  consentement_parental_at: string | null;
   profil_public: boolean;
   anonymise: boolean;
+  created_at: string;
 }
+
+/**
+ * Les SEULES colonnes de arena.joueurs lisibles avec la clé anonyme depuis
+ * la migration 009 (droits par colonne). Un `select("*")` public échoue
+ * désormais avec « permission denied » : toute lecture publique doit passer
+ * par cette liste. Les écrans staff (service_role) voient tout.
+ */
+export const COLONNES_JOUEUR_PUBLIC =
+  "id, pseudo, profil_public, anonymise, created_at" as const;
+
+/** Ce qu'une page publique connaît d'un joueur — rien de plus. */
+export type JoueurPublic = Pick<
+  Joueur,
+  "id" | "pseudo" | "profil_public" | "anonymise" | "created_at"
+>;
 
 export type FormatTournoi =
   | "ELIMINATION_SIMPLE"

@@ -306,21 +306,47 @@ export default async function PageTournoi({
           <form
             key={`ajout-joueur-${participations.length}`}
             action={ajouterJoueurStaff}
-            className="mb-4 flex gap-2"
+            className="mb-4 flex flex-col gap-2"
           >
             <input type="hidden" name="tournoi_id" value={tournoi.id} />
-            <input
-              name="pseudo"
-              required
-              minLength={2}
-              placeholder="Pseudo du joueur (ajout jour J)"
-              className={`${inputCls} flex-1`}
-            />
-            <button
-              className={`${btn} bg-arena-violet text-white hover:bg-arena-violet-fonce`}
-            >
-              Ajouter + check-in
-            </button>
+            <div className="flex gap-2">
+              <input
+                name="pseudo"
+                required
+                minLength={2}
+                placeholder="Pseudo du joueur (ajout jour J)"
+                className={`${inputCls} flex-1`}
+              />
+              {/* Année seule, jamais la date : minimisation RGPD. Elle sert
+                  à UNE chose — placer un mineur en profil restreint — et la
+                  règle « protéger par excès » vit dans lib/arena/age.ts. */}
+              <input
+                name="annee_naissance"
+                required
+                inputMode="numeric"
+                pattern="[0-9]{4}"
+                maxLength={4}
+                placeholder="Année de naissance"
+                aria-label="Année de naissance (4 chiffres)"
+                title="4 chiffres — obligatoire pour protéger les mineurs"
+                className={`${inputCls} w-44`}
+              />
+              <button
+                className={`${btn} bg-arena-violet text-white hover:bg-arena-violet-fonce`}
+              >
+                Ajouter + check-in
+              </button>
+            </div>
+            <label className="flex items-start gap-2 text-xs text-arena-muted">
+              <input type="checkbox" name="consentement_parental" className="mt-0.5" />
+              <span>
+                Autorisation parentale recueillie —{" "}
+                <b>obligatoire si le joueur a moins de 15 ans</b> (un parent
+                présent au bureau, ou l&apos;autorisation écrite en main). Le
+                serveur refuse l&apos;inscription d&apos;un moins de 15 ans sans
+                cette case.
+              </span>
+            </label>
           </form>
         )}
 
@@ -333,8 +359,37 @@ export default async function PageTournoi({
                 key={p.id}
                 className="flex items-center justify-between rounded-lg border border-arena-border bg-arena-surface shadow-carte px-3 py-2"
               >
-                <span className="text-sm font-semibold">
+                <span className="flex items-center gap-2 text-sm font-semibold">
                   {(p.joueur as Joueur | undefined)?.pseudo ?? "?"}
+                  {/* Badges RGPD, visibles du staff seulement (service_role) :
+                      un mineur est signalé, un joueur inscrit avant que
+                      l'année soit demandée est marqué « âge ? » pour que le
+                      staff complète à la prochaine occasion. */}
+                  {(p.joueur as Joueur | undefined)?.est_mineur && (
+                    <span
+                      title="Mineur : profil restreint, absent des classements publics"
+                      className="rounded-full bg-arena-gold-pale px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-arena-gold"
+                    >
+                      mineur
+                    </span>
+                  )}
+                  {(p.joueur as Joueur | undefined)?.annee_naissance == null && (
+                    <span
+                      title="Année de naissance inconnue : inscrit avant que le champ existe. À compléter."
+                      className="rounded-full bg-arena-surface px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-arena-faint"
+                    >
+                      âge ?
+                    </span>
+                  )}
+                  {(p.joueur as Joueur | undefined)?.id && (
+                    <a
+                      href={`/admin/joueurs/${(p.joueur as Joueur).id}`}
+                      title="Fiche RGPD du joueur (année, effacement)"
+                      className="text-[10px] font-semibold uppercase tracking-wide text-arena-faint hover:text-arena-violet"
+                    >
+                      rgpd
+                    </a>
+                  )}
                 </span>
                 {tournoi.statut === "OUVERT" || tournoi.statut === "BROUILLON" ? (
                   <form action={toggleCheckIn}>
