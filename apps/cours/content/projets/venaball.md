@@ -2,7 +2,7 @@
 titre: "Venaball"
 avancement: 75
 statut: "en cours"
-maj: 2026-07-25
+maj: 2026-09-04
 ---
 
 ## C'est quoi
@@ -38,17 +38,17 @@ Venaball est une plateforme de gestion de clubs de basket, développée en Symfo
 D'après `instruction/31_ETAT_REEL_2026-07-13.md` (document maître) et `24_ETAT_AVANCEMENT_VS_CDC` : le **cœur métier utilisé au quotidien par le club MABB est à ~90 %, solide et en prod** ; la vision CDC complète de l'écosystème SaaS est à ~60 % (les pans commerciaux — plans payants, boutique, messagerie — sont volontairement non commencés). Par application : vitrine ~82 %, manager ~82 %, espace joueuse web ~68 %, app mobile ~85 % (bloquée par la sortie stores, pas par le code).
 
 Ce qui est **réellement problématique** (classé par gravité dans le doc d'état) :
-- **7 uploaders sur 8 écrivent dans `public/uploads/`** : justificatifs financiers et photos de mineures accessibles par URL devinée (RT-0011, ouvert).
-- **Le cron de purge RGPD (`app:sorties:purger-rgpd`) n'est pas déclaré dans le dépôt** : si personne ne l'a configuré sur OVH, la purge n'a jamais tourné.
-- **Aucune sauvegarde de la base de prod.**
+- **Uploads : colmaté, pas réglé** (26/07). Un `.htaccess` en refus par défaut dans `public/uploads/` bloque l'accès direct à tout sauf les images d'affichage public, et neutralise l'exécution de scripts. Mais les fichiers sont toujours DANS la racine web : la protection disparaît en silence sur un serveur qui ne lit pas les `.htaccess` (Nginx) ou si `AllowOverride` est désactivé. La correction de fond — écrire hors de `public/` et servir via un contrôleur — reste à faire.
+- **Le cron de purge RGPD (`app:sorties:purger-rgpd`) n'est toujours pas déclaré dans le dépôt** : si personne ne l'a configuré sur OVH, la purge n'a jamais tourné. Point ouvert.
+- **Sauvegarde de la base : en place depuis le 13/07** (`bin/sauvegarde-bdd.sh`, cron OVH à 4 h, `mysqldump --single-transaction`, rotation à 14 jours). Deux réserves écrites dans le script lui-même : les dumps sont sur le MÊME hébergement que la base, et **aucune restauration n'a jamais été testée**.
 - Stats live à fiabiliser : minutes jouées et titulaires calculés faux (RT-0012), promotion des sessions manuelle, doublon d'agrégateurs (RT-0013).
 - Mailer Brevo posé mais domaine non authentifié (DKIM/SPF à finir).
 - Confirmés absents : messagerie interne (seul vrai trou métier), plans/abonnements, QR/carte membre, export iCal, recherche globale.
 
 ## Prochaines étapes
 
-1. **Régler la dette RGPD avant tout** : déplacer les uploads sensibles hors de `public/` (sur le modèle de `DechargeSortieUploader`) et vérifier/poser le cron de purge sur OVH.
-2. **Mettre en place une sauvegarde de la base de prod** (aucune n'existe).
+1. **Finir la dette RGPD** : déplacer les uploads sensibles hors de `public/` (sur le modèle de `DechargeSortieUploader`) — le `.htaccess` du 26/07 est un colmatage lié à Apache, pas une architecture. Et vérifier/poser le cron de purge sur OVH.
+2. **Tester une restauration** depuis un dump, et déposer une copie hors de l'hébergement. Un dump jamais restauré n'est pas une sauvegarde.
 3. **Sortir l'app sur les stores** (chemin critique du plan de fin de projet, doc 26) : compte Apple Developer, build EAS, TestFlight, test terrain avec une vraie joueuse.
 4. **Finir le mailer Brevo** (DKIM/SPF sur la zone DNS OVH) pour que convocations, invitations et reset partent vraiment.
 5. **Étoffer les tests** sur Manager et l'API (bloc attendu au jury, aujourd'hui mince) et fiabiliser les stats live (minutes réelles depuis les entrées/sorties `PresenceTerrain`).
