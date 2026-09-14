@@ -19,6 +19,50 @@ import ClassementsPoules from "@/components/ClassementsPoules";
 import AutoRefresh from "./AutoRefresh";
 import EnteteSite from "@/components/EnteteSite";
 import PiedSite from "@/components/PiedSite";
+import type { Metadata } from "next";
+
+/**
+ * Titre et description de partage : quand un joueur envoie le lien du tournoi
+ * sur Discord ou WhatsApp, l'aperçu doit dire QUEL tournoi, pas « ARENA ».
+ * Une requête légère (deux colonnes), même RLS que la page : un brouillon
+ * n'a pas d'aperçu non plus.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}): Promise<Metadata> {
+  const { token } = await params;
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .schema("arena")
+      .from("tournois")
+      .select("titre, jeu, lieu, date_debut, statut")
+      .eq("qr_token", token)
+      .maybeSingle();
+    if (!data) return { title: "Tournoi introuvable" };
+    const t = data as Pick<Tournoi, "titre" | "jeu" | "lieu" | "date_debut" | "statut">;
+    const quand = new Date(t.date_debut).toLocaleDateString("fr-FR", {
+      day: "numeric",
+      month: "long",
+    });
+    const description = `${t.jeu} · ${quand}${t.lieu ? ` · ${t.lieu}` : ""} — ${
+      t.statut === "EN_COURS"
+        ? "en cours, bracket en direct"
+        : t.statut === "TERMINE"
+          ? "résultats"
+          : "inscriptions et bracket"
+    } sur ARENA.`;
+    return {
+      title: t.titre,
+      description,
+      openGraph: { title: t.titre, description },
+    };
+  } catch {
+    return { title: "Tournoi" };
+  }
+}
 
 /**
  * Compare deux pseudos sans tenir compte de la casse ni des accents.
@@ -56,7 +100,9 @@ export default async function PagePubliqueTournoi({
     supabase
       .schema("arena")
       .from("participations")
-      .select("*, joueur:joueurs(*)")
+      // Embed explicite : depuis la migration 009, `joueurs(*)` est refusé
+      // au client anonyme (colonnes sensibles). On ne demande que le pseudo.
+      .select("*, joueur:joueurs(id, pseudo, profil_public)")
       .eq("tournoi_id", tournoi.id),
     supabase
       .schema("arena")
@@ -92,7 +138,10 @@ export default async function PagePubliqueTournoi({
   // Un identifiant de camp désigne un joueur (esport) ou une équipe (sport).
   // On interroge les deux index : le reste de la page ignore la différence.
   const pseudo = (jid: string | null) =>
-    jid ? (pseudos.get(jid) ?? nomsEquipes.get(jid) ?? "?") : "À venir";
+    // Un identifiant sans nom résolu = joueur anonymisé (droit à l'effacement,
+    // la RLS ne renvoie plus sa ligne). On l'affiche comme tel : le match a
+    // bien eu lieu, seule la personne n'est plus nommée.
+    jid ? (pseudos.get(jid) ?? nomsEquipes.get(jid) ?? "Anonyme") : "À venir";
 
   /** Composition d'une équipe, affichée sous son nom sur la page publique. */
   const membresDe = (equipeId: string | null) =>

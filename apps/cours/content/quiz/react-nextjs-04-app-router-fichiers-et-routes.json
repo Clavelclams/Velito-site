@@ -1,0 +1,49 @@
+{
+  "fiche": "react-nextjs-04-app-router-fichiers-et-routes",
+  "questions": [
+    {
+      "question": "Comment Next.js App Router définit-il les routes ?",
+      "choix": [
+        "Dans routes.config.js",
+        "Par l'arborescence de app/ : dossier = segment d'URL, page.tsx = page",
+        "Avec des annotations dans les composants",
+        "Dans next.config.js"
+      ],
+      "bonne": 1,
+      "explication": "Le système de fichiers est le routeur. app/fiches/[slug]/page.tsx répond sur /fiches/<valeur>. Pas de fichier de routes à maintenir."
+    },
+    {
+      "question": "Quelle différence entre layout.tsx et page.tsx ?",
+      "choix": [
+        "Aucune",
+        "layout enveloppe toutes les pages du dossier et ne se réaffiche pas à la navigation ; page est le contenu de la route",
+        "page est pour le mobile",
+        "layout est optionnel, page obligatoire partout"
+      ],
+      "bonne": 1,
+      "explication": "Le layout persiste entre les navigations (le header EnTete ne clignote pas). La page change. Un dossier sans page.tsx n'est pas une route."
+    },
+    {
+      "question": "Pourquoi <Link> plutôt que <a> pour un lien interne ?",
+      "choix": [
+        "<a> est déprécié",
+        "<Link> fait une navigation client sans rechargement, garde le layout et pré-charge la cible ; <a> recharge tout",
+        "<Link> est plus stylé",
+        "Pour le SEO"
+      ],
+      "bonne": 1,
+      "explication": "<Link> intercepte le clic : seul le contenu change, l'état client est préservé. <a> est pour les liens externes (autre domaine), comme le lien vers cours.velito.fr dans le hub."
+    },
+    {
+      "question": "Dans Next 15+, comment lire le slug dans une page [slug] ?",
+      "choix": [
+        "props.slug",
+        "const { slug } = await params (params est une Promise)",
+        "useParams() côté serveur",
+        "window.location"
+      ],
+      "bonne": 1,
+      "explication": "params est asynchrone depuis Next 15 : il faut await. La fonction de page est donc async. notFound() pour un slug inconnu."
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "fiche": "api-auth-05-jetons-opaques-hashes-en-base",
+  "questions": [
+    {
+      "question": "Pourquoi Venaball a choisi un jeton opaque plutôt qu'un JWT ?",
+      "choix": [
+        "JWT est déprécié",
+        "Zéro dépendance (authenticator natif), révocation immédiate (une ligne à supprimer), JWT possible plus tard",
+        "Plus rapide",
+        "Plus court"
+      ],
+      "bonne": 1,
+      "explication": "ADR-0007/0010. Une décision réversible et documentée."
+    },
+    {
+      "question": "En base, on stocke ?",
+      "choix": [
+        "Le jeton en clair",
+        "Son hash SHA-256 : un dump de la table ne permet pas de rejouer. Le clair n'est montré qu'une fois, au login",
+        "Le jeton chiffré",
+        "Rien"
+      ],
+      "bonne": 1,
+      "explication": "Même principe que les mots de passe hashés, appliqué aux jetons."
+    },
+    {
+      "question": "Pourquoi SHA-256 et pas bcrypt ?",
+      "choix": [
+        "bcrypt est cassé",
+        "Un jeton de 256 bits aléatoires est fort : brute force impossible. bcrypt ralentit volontairement, utile pour un mot de passe faible, inutile ici et mille fois plus lent à chaque requête",
+        "SHA-256 est plus sûr",
+        "Par habitude"
+      ],
+      "bonne": 1,
+      "explication": "Le bon outil pour le bon secret."
+    },
+    {
+      "question": "Un rôle est retiré à un utilisateur. Avec un jeton opaque, effet ?",
+      "choix": [
+        "À l'expiration",
+        "Immédiat : le jeton dit qui, les droits sont relus en base à chaque requête",
+        "Au prochain login",
+        "Jamais"
+      ],
+      "bonne": 1,
+      "explication": "Un JWT qui embarquerait les rôles garderait l'ancien jusqu'à expiration."
+    }
+  ]
+}

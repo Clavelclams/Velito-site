@@ -1,0 +1,49 @@
+{
+  "fiche": "securite-web-06-idor-le-classique",
+  "questions": [
+    {
+      "question": "Une IDOR, c'est ?",
+      "choix": [
+        "Une injection",
+        "Un id accepté sans vérifier le lien avec l'utilisateur : /seances/43 affiche la séance d'un autre club",
+        "Un déni de service",
+        "Un faux id"
+      ],
+      "bonne": 1,
+      "explication": "La faille la plus courante en pratique : un utilisateur curieux et une URL. SEC-0009 sur Venaball en était une vraie."
+    },
+    {
+      "question": "Des UUID au lieu d'ids séquentiels corrigent l'IDOR ?",
+      "choix": [
+        "Oui",
+        "Non : ils rendent la devinette difficile, pas la vérification inutile. Un UUID qui fuit dans un lien donne accès pareil",
+        "Oui si v4",
+        "Oui avec HTTPS"
+      ],
+      "bonne": 1,
+      "explication": "La sécurité par l'obscurité n'est pas de la sécurité. Vérifier l'appartenance reste obligatoire."
+    },
+    {
+      "question": "Les trois façons de fermer une IDOR ?",
+      "choix": [
+        "Chiffrer, hasher, valider",
+        "Voter à chaque accès, RLS à la source, intersection avec ce que le serveur sait",
+        "Cookie, token, session",
+        "Firewall, proxy, CDN"
+      ],
+      "bonne": 1,
+      "explication": "Venaball : Voter + intersection. ARENA : RLS. Idéal : requête déjà filtrée par le périmètre + Voter pour les règles fines."
+    },
+    {
+      "question": "Où se cachent les IDOR qu'on ne voit pas ?",
+      "choix": [
+        "Dans les contrôleurs principaux",
+        "Dans les chemins secondaires : listeners, commandes, imports, mails — le code « pratique » écrit sans se demander pour quel tenant",
+        "Dans les templates",
+        "Dans le CSS"
+      ],
+      "bonne": 1,
+      "explication": "AutoLinkBenevoleListener rattache au premier club alphabétique : pas une IDOR par URL, mais un chemin qui ne passe par aucun Voter."
+    }
+  ]
+}

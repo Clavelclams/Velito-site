@@ -1,0 +1,49 @@
+{
+  "fiche": "react-nextjs-06-ssg-dynamique-et-cache",
+  "questions": [
+    {
+      "question": "Pourquoi le compte à rebours affichait J−230 pendant des semaines ?",
+      "choix": [
+        "Bug de Vercel",
+        "La page était statique : Date.now() a été évalué une fois au build et figé dans le HTML",
+        "Le cache du navigateur",
+        "Une mauvaise timezone"
+      ],
+      "bonne": 1,
+      "explication": "Date.now() ne rend pas une page dynamique. La page a été générée au build du 14 août avec la date du 14 août, puis servie telle quelle. Toute valeur qui dépend de « maintenant » ne peut pas vivre dans du HTML statique."
+    },
+    {
+      "question": "Qu'est-ce qui rend une page Next dynamique (rendue à chaque requête) ?",
+      "choix": [
+        "Un composant client",
+        "cookies(), headers(), searchParams, fetch no-store, ou force-dynamic",
+        "Date.now()",
+        "Un useEffect"
+      ],
+      "bonne": 1,
+      "explication": "Ce qui varie par requête déclenche la bascule. Date.now() ne compte pas : c'est juste l'horloge, pas une lecture de requête."
+    },
+    {
+      "question": "À quoi sert generateStaticParams ?",
+      "choix": [
+        "À créer des paramètres d'URL",
+        "À lister les valeurs d'un segment dynamique pour pré-générer chaque page au build",
+        "À valider les params",
+        "À mettre en cache les params"
+      ],
+      "bonne": 1,
+      "explication": "Sans elle, Next ne sait pas quelles pages /fiches/[slug] générer et les rend à la demande. Avec, 51 fiches → 51 HTML au build."
+    },
+    {
+      "question": "Lire les cookies dans layout.tsx racine a quelle conséquence ?",
+      "choix": [
+        "Aucune",
+        "Toutes les pages du site deviennent dynamiques, y compris celles qui pourraient être statiques",
+        "Seul le layout devient dynamique",
+        "Une erreur de build"
+      ],
+      "bonne": 1,
+      "explication": "Le layout enveloppe tout. S'il lit la requête, tout dépend de la requête. C'est pour ça qu'EnTete est un Client Component qui lit l'état côté navigateur : le SSG est préservé."
+    }
+  ]
+}

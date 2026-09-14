@@ -30,10 +30,28 @@ const policeCorps = Plus_Jakarta_Sans({
   display: "swap",
 });
 
+/**
+ * Métadonnées par défaut. `metadataBase` rend absolues les URL relatives des
+ * pages (Open Graph, canonical) ; `title.template` évite de répéter le nom du
+ * site dans chaque page. Le site public d'ARENA est aussi son argument
+ * (« ton profil, tes résultats ») : sans titre par page ni description, un
+ * partage de lien affichait « ARENA · Tournois Velito » pour tout, tournoi
+ * de padel comme profil de joueur.
+ */
 export const metadata: Metadata = {
-  title: "ARENA · Tournois Velito",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://arena.velito.fr"),
+  title: {
+    default: "ARENA · Tournois Velito",
+    template: "%s · ARENA",
+  },
   description:
-    "Hub de tournois esport amateur. Brackets, scores validés, résultats qui ne se perdent plus. Par Velito, Amiens.",
+    "Tournois esport et sport physique à Amiens : brackets en direct, scores validés, résultats qui ne se perdent plus. Gratuit pour les associations. Par Velito.",
+  openGraph: {
+    siteName: "ARENA · Velito",
+    locale: "fr_FR",
+    type: "website",
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({

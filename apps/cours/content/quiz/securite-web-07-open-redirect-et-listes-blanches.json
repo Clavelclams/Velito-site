@@ -1,0 +1,49 @@
+{
+  "fiche": "securite-web-07-open-redirect-et-listes-blanches",
+  "questions": [
+    {
+      "question": "L'open redirect sert à quoi pour un attaquant ?",
+      "choix": [
+        "À voler des cookies",
+        "Ton domaine de confiance redirige vers sa page de phishing ; les filtres laissent passer car le lien pointe vers toi",
+        "À injecter du SQL",
+        "À faire un déni de service"
+      ],
+      "bonne": 1,
+      "explication": "Et dans OAuth, un redirect_uri non validé envoie le code d'autorisation chez l'attaquant."
+    },
+    {
+      "question": "Pourquoi startsWith('https://velito.fr') est insuffisant ?",
+      "choix": [
+        "C'est suffisant",
+        "https://velito.fr.evil.com passe. Seule l'égalité exacte sur l'origine (new URL().origin dans un Set) tient",
+        "Il faut startsWith('http')",
+        "Il faut endsWith"
+      ],
+      "bonne": 1,
+      "explication": "includes, jokers, endsWith sur la chaîne brute, //evil.com : tous contournables. Parser, prendre l'origine, comparer à un ensemble fermé."
+    },
+    {
+      "question": "Dans /oauth/authorize, un client_id inconnu → redirection vers redirect_uri avec error= ?",
+      "choix": [
+        "Oui, c'est la spec",
+        "Non : tant que redirect_uri n'est pas validé, rediriger serait l'open redirect. Page d'erreur sur le hub",
+        "Oui si state est présent",
+        "Oui en dev"
+      ],
+      "bonne": 1,
+      "explication": "L'ordre compte. Le mécanisme de report d'erreur ne doit jamais devenir le vecteur."
+    },
+    {
+      "question": "Origines de logout en dur dans le code, redirect_uri OAuth en base. Pourquoi cette différence ?",
+      "choix": [
+        "Par hasard",
+        "Mon périmètre (mes apps) en dur = auditable dans le diff, non modifiable via la base. Les tiers en base = enregistrables dynamiquement. Même exactitude",
+        "Le code est plus rapide",
+        "La base est plus sûre"
+      ],
+      "bonne": 1,
+      "explication": "Une compromission de base ne doit pas devenir une compromission de redirection pour mes propres apps."
+    }
+  ]
+}

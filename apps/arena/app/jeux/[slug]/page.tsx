@@ -19,6 +19,24 @@ import type { Tournoi } from "@/lib/arena/types";
 import MotifDiscipline from "@/components/MotifDiscipline";
 import EnteteSite from "@/components/EnteteSite";
 import PiedSite from "@/components/PiedSite";
+import type { Metadata } from "next";
+
+/** Aperçu de partage de la fiche jeu : données statiques, zéro requête. */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const d = disciplineParSlug(slug);
+  if (!d) return { title: "Jeu introuvable" };
+  return {
+    title: `${d.jeu} — tournois à Amiens`,
+    description: `Tournois ${d.jeu} organisés sur ARENA : à venir, passés, résultats. ${
+      d.verticale === "ESPORT" ? "Esport" : "Sport"
+    } amateur, gratuit pour les associations.`,
+  };
+}
 
 export default async function PageJeu({
   params,

@@ -1,0 +1,49 @@
+{
+  "fiche": "supabase-postgres-08-realtime-postgres-changes-vs-broadcast",
+  "questions": [
+    {
+      "question": "Quelle différence entre postgres_changes et broadcast ?",
+      "choix": [
+        "Aucune",
+        "postgres_changes notifie les écritures en base (persistant) ; broadcast envoie de client à client sans base (éphémère, sans garantie)",
+        "broadcast est plus lent",
+        "postgres_changes est déprécié"
+      ],
+      "bonne": 1,
+      "explication": "Le score passe par la base (source de vérité, survit au rechargement). Le trait de crayon passe en broadcast (des milliers d'écritures pour une donnée périmée à la seconde suivante seraient absurdes)."
+    },
+    {
+      "question": "Le critère pour choisir entre les deux ?",
+      "choix": [
+        "La taille du message",
+        "« Quelqu'un aura-t-il besoin de cette donnée dans dix secondes ? » Oui → base. Non → broadcast",
+        "Le nombre de clients",
+        "La latence"
+      ],
+      "bonne": 1,
+      "explication": "Score, gagnant, réponse validée → base. Curseur, trait, « X écrit… » → broadcast."
+    },
+    {
+      "question": "Un useEffect s'abonne à un canal sans removeChannel au démontage. Conséquence ?",
+      "choix": [
+        "Rien",
+        "Chaque montage empile un abonnement : les événements arrivent en double, triple…",
+        "Le canal se ferme tout seul",
+        "Une erreur"
+      ],
+      "bonne": 1,
+      "explication": "Même fuite que setInterval sans clearInterval. Toujours return () => supabase.removeChannel(channel)."
+    },
+    {
+      "question": "postgres_changes ne reçoit rien sur une table. Première vérification ?",
+      "choix": [
+        "La RLS",
+        "La table est-elle dans la publication supabase_realtime ? (dashboard Replication ou ALTER PUBLICATION)",
+        "Le filtre",
+        "La clé"
+      ],
+      "bonne": 1,
+      "explication": "Une table non publiée n'émet rien, silencieusement. C'est le piège classique après avoir créé une table."
+    }
+  ]
+}

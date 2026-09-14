@@ -1,0 +1,49 @@
+{
+  "fiche": "supabase-postgres-09-fonctions-rpc-et-operations-atomiques",
+  "questions": [
+    {
+      "question": "Le bug de score sur Interactive, c'était quoi ?",
+      "choix": [
+        "Un débordement",
+        "Lire-calculer-écrire depuis le client : deux joueurs simultanés lisent la même valeur, le second écrase le premier (lost update)",
+        "Une mauvaise RLS",
+        "Un problème de réseau"
+      ],
+      "bonne": 1,
+      "explication": "Sans erreur, sans log. Un point disparaît de temps en temps. Indétectable en testant seul."
+    },
+    {
+      "question": "Comment add_player_score corrige ça ?",
+      "choix": [
+        "Avec un verrou côté client",
+        "UPDATE … SET score = score + p_points en une instruction : Postgres lit et écrit sous verrou de ligne",
+        "Avec un délai entre les appels",
+        "En désactivant la concurrence"
+      ],
+      "bonne": 1,
+      "explication": "Une instruction SQL est atomique par construction. Si l'opération tient en une instruction, écris l'instruction. Ne la décompose pas."
+    },
+    {
+      "question": "Pourquoi la fonction est-elle SECURITY DEFINER ?",
+      "choix": [
+        "Pour la vitesse",
+        "La RLS interdit l'UPDATE direct de session_players : la fonction, avec les droits de son créateur, est la seule porte d'écriture du score",
+        "C'est obligatoire pour les RPC",
+        "Pour le cache"
+      ],
+      "bonne": 1,
+      "explication": "Aucune policy d'écriture pour le client + une fonction qui ne fait qu'une chose = surface minimale."
+    },
+    {
+      "question": "Quand une Server Action plutôt qu'une RPC ?",
+      "choix": [
+        "Toujours",
+        "Pour orchestrer : plusieurs services, un mail, de la logique TypeScript. La RPC pour l'atomique en base. L'une peut appeler l'autre",
+        "Jamais",
+        "Pour les lectures"
+      ],
+      "bonne": 1,
+      "explication": "RPC = dans Postgres, dans la transaction. Action = dans Next, peut faire plus. Complémentaires."
+    }
+  ]
+}

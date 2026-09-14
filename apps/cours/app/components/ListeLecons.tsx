@@ -11,13 +11,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { LeconMeta } from "@/lib/fiches/parcours";
 import { chargerProgression } from "@/lib/progression";
-
-const LIBELLES_NIVEAUX: Record<string, string> = {
-  debutant: "Débutant",
-  intermediaire: "Intermédiaire",
-  solide: "Solide",
-  expert: "Expert",
-};
+import BadgeNiveau from "./BadgeNiveau";
 
 export default function ListeLecons({ lecons }: { lecons: LeconMeta[] }) {
   const [faites, setFaites] = useState<string[] | null>(null);
@@ -64,8 +58,9 @@ export default function ListeLecons({ lecons }: { lecons: LeconMeta[] }) {
                 <span className={`font-medium ${faite ? "text-cours-text-muted" : ""}`}>
                   {lecon.titre}
                 </span>
-                <span className="mt-0.5 block text-xs text-cours-text-muted">
-                  {LIBELLES_NIVEAUX[lecon.niveau] ?? lecon.niveau} · ~{lecon.duree} min
+                <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-cours-text-muted">
+                  <BadgeNiveau niveau={lecon.niveau} />
+                  <span>~{lecon.duree} min</span>
                 </span>
               </span>
               {estProchaine && (

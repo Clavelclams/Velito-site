@@ -1,0 +1,49 @@
+{
+  "fiche": "securite-web-10-en-tetes-https-csp-et-audit",
+  "questions": [
+    {
+      "question": "Que fait Strict-Transport-Security ?",
+      "choix": [
+        "Force le HTTPS une fois",
+        "Dit au navigateur : pendant un an, ne me parle qu'en HTTPS, même si on te dit le contraire. Plus jamais de HTTP après la première visite",
+        "Chiffre les cookies",
+        "Bloque HTTP/1"
+      ],
+      "bonne": 1,
+      "explication": "includeSubDomains couvre tout .velito.fr. À poser après avoir vérifié que tout marche en HTTPS — sinon on s'enferme dehors."
+    },
+    {
+      "question": "X-Frame-Options: DENY protège de quoi ?",
+      "choix": [
+        "Du XSS",
+        "Du clickjacking : ta page ne peut pas être mise dans une iframe d'un autre site, sous un bouton invisible",
+        "Du CSRF",
+        "Des bots"
+      ],
+      "bonne": 1,
+      "explication": "Une page invisible par-dessus « Supprimer » : la victime croit cliquer ailleurs."
+    },
+    {
+      "question": "Content-Security-Policy-Report-Only sert à ?",
+      "choix": [
+        "Rien",
+        "Voir ce qu'une CSP bloquerait, dans la console, sans rien bloquer : la liste de ce qu'il faudra autoriser",
+        "Reporter la CSP à plus tard",
+        "Bloquer en mode silencieux"
+      ],
+      "bonne": 1,
+      "explication": "Sur Next, la CSP est un chantier (scripts inline d'hydratation). Report-Only d'abord, nonce ensuite."
+    },
+    {
+      "question": "Ce qu'un audit automatique (securityheaders, Security Advisor) ne voit pas ?",
+      "choix": [
+        "Tout",
+        "Les IDOR, les chemins secondaires, les mauvaises décisions d'autorisation : la logique. Les outils vérifient la couche ; toi, le sens",
+        "Les en-têtes",
+        "La RLS"
+      ],
+      "bonne": 1,
+      "explication": "Un audit n'est jamais fini ; il est daté, avec un registre des constats et de leur statut. Les audits de Venaball du 13/07, 26/07, 06/09 en sont."
+    }
+  ]
+}

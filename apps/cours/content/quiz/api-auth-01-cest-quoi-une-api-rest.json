@@ -1,0 +1,49 @@
+{
+  "fiche": "api-auth-01-cest-quoi-une-api-rest",
+  "questions": [
+    {
+      "question": "En REST, où est l'action ?",
+      "choix": [
+        "Dans l'URL (/getRencontres)",
+        "Dans le verbe HTTP : GET lit, POST crée/agit, PATCH modifie, DELETE supprime. L'URL nomme une ressource",
+        "Dans le corps",
+        "Dans un paramètre"
+      ],
+      "bonne": 1,
+      "explication": "/api/club/rencontres/42 nomme une chose. GET dessus la lit."
+    },
+    {
+      "question": "Sans état, ça veut dire ?",
+      "choix": [
+        "Pas de base",
+        "Chaque requête porte tout ce qu'il faut (dont l'identité). Le serveur ne se souvient pas de la précédente",
+        "Pas de cookies",
+        "Pas de session PHP"
+      ],
+      "bonne": 1,
+      "explication": "C'est ce qui permet plusieurs serveurs derrière une API : n'importe lequel peut répondre."
+    },
+    {
+      "question": "Une API est un contrat. Conséquence ?",
+      "choix": [
+        "On peut tout changer",
+        "On ajoute des champs, on n'en retire pas ; on ajoute des routes, on ne les renomme pas ; si on casse, on versionne (/v2)",
+        "On documente",
+        "On teste"
+      ],
+      "bonne": 1,
+      "explication": "L'app mobile installée ne se met pas à jour instantanément. format: arena-export-v1 est un début de version."
+    },
+    {
+      "question": "Venaball sert HTML et JSON. Comment sans dupliquer les règles ?",
+      "choix": [
+        "Deux codebases",
+        "Un service partagé (ConvocationManager) : la logique une fois, deux contrôleurs qui traduisent — formulaire d'un côté, JSON de l'autre",
+        "Un seul contrôleur",
+        "Des templates JSON"
+      ],
+      "bonne": 1,
+      "explication": "C'est l'architecture qui rend l'API possible."
+    }
+  ]
+}

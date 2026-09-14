@@ -1,0 +1,49 @@
+{
+  "fiche": "tests-06-tests-fonctionnels-et-anti-idor",
+  "questions": [
+    {
+      "question": "Que fait WebTestCase ?",
+      "choix": [
+        "Teste le CSS",
+        "Démarre un vrai noyau Symfony avec un client HTTP simulé : la requête traverse routeur, firewall, contrôleur, Voter, base",
+        "Teste JavaScript",
+        "Lance un navigateur"
+      ],
+      "bonne": 1,
+      "explication": "$this->client->request('GET', '/seances/42') fait tout ce qu'un vrai navigateur ferait. La réponse est réelle."
+    },
+    {
+      "question": "Pourquoi beginTransaction en setUp et rollBack en tearDown ?",
+      "choix": [
+        "Pour la vitesse",
+        "Tout ce que le test écrit est annulé à la fin : base propre à chaque test sans la recréer",
+        "Pour les mocks",
+        "C'est obligatoire"
+      ],
+      "bonne": 1,
+      "explication": "Motif standard, rapide. Chaque test part de zéro."
+    },
+    {
+      "question": "Ce qu'un test anti-IDOR prouve ?",
+      "choix": [
+        "Que la fonctionnalité existe",
+        "Un refus (403) : qu'une frontière tient. L'inverse des tests habituels, et le plus précieux en multi-tenant",
+        "Que la base répond",
+        "Que le routeur marche"
+      ],
+      "bonne": 1,
+      "explication": "Un test de succès prouve qu'une fonctionnalité existe ; un test de refus prouve que ce que l'utilisateur ne peut PAS faire est bloqué."
+    },
+    {
+      "question": "Pourquoi server: ['HTTP_HOST' => 'pirb.localhost'] dans les tests ?",
+      "choix": [
+        "Par style",
+        "Venaball route par host : sans le bon host, le firewall n'est pas le bon et le test prouve autre chose que ce qu'il croit",
+        "Pour le HTTPS",
+        "Pour les cookies"
+      ],
+      "bonne": 1,
+      "explication": "Un test doit reproduire les conditions réelles. Le firewall PIRB ne s'applique que sur pirb.*."
+    }
+  ]
+}

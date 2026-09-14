@@ -1,0 +1,49 @@
+{
+  "fiche": "tests-07-ce-quon-ne-teste-pas-reseau-aleatoire-temps",
+  "questions": [
+    {
+      "question": "Pourquoi ne pas appeler la vraie API Toornament dans un test unitaire ?",
+      "choix": [
+        "C'est interdit",
+        "Lent, instable (leur hoquet = ton rouge), dépendant du réseau, irréaliste (pas de 500 à la demande). Un test qui échoue pour une raison externe finit ignoré",
+        "C'est payant",
+        "Pas de clé en test"
+      ],
+      "bonne": 1,
+      "explication": "On teste la fonction qui transforme une réponse (donnée en dur) en ce que l'app utilise. Le réseau se vérifie autrement."
+    },
+    {
+      "question": "Comment tester une fonction qui dépend de la date ?",
+      "choix": [
+        "Attendre la bonne date",
+        "Injecter la date en paramètre (aujourdhui = new Date()) ou la figer avec vi.useFakeTimers + vi.setSystemTime",
+        "Utiliser Date.now()",
+        "On ne peut pas"
+      ],
+      "bonne": 1,
+      "explication": "« La veille du jury, joursAvantJury vaut 1 » est testable. « new Date() renvoie l'heure juste » ne l'est pas — et ce n'est pas ton code."
+    },
+    {
+      "question": "Qu'est-ce qu'un test de contrat ?",
+      "choix": [
+        "Un test juridique",
+        "Un test qui appelle vraiment une API externe, hors de la suite normale (job planifié), pour alerter si le format a changé",
+        "Un test de type",
+        "Un test E2E"
+      ],
+      "bonne": 1,
+      "explication": "Entre « pas de réseau en test » et « découvrir un changement quand un import rate ». Non fait sur ARENA — manque documenté."
+    },
+    {
+      "question": "Ne pas tester quelque chose, c'est ?",
+      "choix": [
+        "Une faute",
+        "Une décision, qui doit s'expliquer en une phrase : « je ne teste pas le réseau parce que je teste ce que je fais des réponses »",
+        "Une économie",
+        "Toujours acceptable"
+      ],
+      "bonne": 1,
+      "explication": "Chaque test coûte. Il doit rapporter plus. Un test lent, instable ou vide coûte sans rapporter."
+    }
+  ]
+}

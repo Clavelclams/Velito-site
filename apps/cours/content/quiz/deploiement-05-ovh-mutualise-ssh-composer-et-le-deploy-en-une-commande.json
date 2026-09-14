@@ -1,0 +1,49 @@
+{
+  "fiche": "deploiement-05-ovh-mutualise-ssh-composer-et-le-deploy-en-une-commande",
+  "questions": [
+    {
+      "question": "composer install ou composer update sur le serveur ?",
+      "choix": [
+        "update",
+        "install : lit composer.lock et installe exactement ces versions. update recalcule le lock — en local seulement",
+        "Les deux",
+        "Peu importe"
+      ],
+      "bonne": 1,
+      "explication": "--no-dev retire PHPUnit et les outils de dev : moins de code en prod. --optimize-autoloader pour la vitesse."
+    },
+    {
+      "question": "deploy.ps1 fait git add -A. Le problème ?",
+      "choix": [
+        "Aucun",
+        "Il commite tout, y compris ce qu'on ne voulait pas. Contredit la convention « jamais git add . sur mabb-site »",
+        "C'est lent",
+        "Il oublie les nouveaux fichiers"
+      ],
+      "bonne": 1,
+      "explication": "Solution : commiter à la main avant, ou remplacer par une confirmation interactive."
+    },
+    {
+      "question": "Que ne fait pas deploy.ps1 ?",
+      "choix": [
+        "Le push",
+        "Sauvegarder la base avant migration, lancer les tests, rollback, déployer sur les deux instances",
+        "Le cache:clear",
+        "Le pull"
+      ],
+      "bonne": 1,
+      "explication": "Un script de déploiement doit sauvegarder avant une migration destructive. Le cron nocturne ne suffit pas."
+    },
+    {
+      "question": "Le cron OVH est-il dans le dépôt ?",
+      "choix": [
+        "Oui",
+        "Non : il vit dans le manager OVH. Personne ne sait qu'il existe en lisant le code. À documenter dans instruction/",
+        "Oui dans crontab",
+        "Oui dans deploy.ps1"
+      ],
+      "bonne": 1,
+      "explication": "app:sorties:purger-rgpd devrait y être — blocage ouvert depuis juillet."
+    }
+  ]
+}

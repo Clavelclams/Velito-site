@@ -1,0 +1,49 @@
+{
+  "fiche": "deploiement-03-vercel-monorepo-build-preview-production",
+  "questions": [
+    {
+      "question": "Pourquoi npm install --prefix=../.. comme Install Command ?",
+      "choix": [
+        "Pour la vitesse",
+        "Les node_modules d'un monorepo npm workspaces sont à la racine : remonter de deux niveaux depuis apps/cours pour installer là",
+        "C'est le défaut",
+        "Pour éviter le cache"
+      ],
+      "bonne": 1,
+      "explication": "C'est ce qui a résolu Can't resolve 'gray-matter' en août."
+    },
+    {
+      "question": "À quoi sert npx turbo-ignore en Ignored Build Step ?",
+      "choix": [
+        "À ignorer les erreurs",
+        "À ne pas builder un projet dont le Root Directory et ses dépendances n'ont pas changé : sept projets ne buildent pas pour une fiche Markdown",
+        "À sauter les tests",
+        "À builder plus vite"
+      ],
+      "bonne": 1,
+      "explication": "Sans lui, chaque push déclenche sept builds. Économie de temps et de quota Hobby."
+    },
+    {
+      "question": "Push sur une branche autre que main → ?",
+      "choix": [
+        "Rien",
+        "Un déploiement Preview avec une URL générée. Le domaine de prod ne bouge pas",
+        "Production",
+        "Une erreur"
+      ],
+      "bonne": 1,
+      "explication": "Les variables ont une portée : une variable Production-only n'est pas dans le Preview. Utile pour une base de test, piège si oublié."
+    },
+    {
+      "question": "Le dernier déploiement casse. Le plus rapide pour revenir ?",
+      "choix": [
+        "git revert + push + attendre le build",
+        "Deployments → un déploiement précédent → Promote to Production : le domaine bascule en secondes",
+        "Redeploy",
+        "Contacter Vercel"
+      ],
+      "bonne": 1,
+      "explication": "L'immuabilité rend le rollback instantané : l'ancien déploiement existe encore."
+    }
+  ]
+}

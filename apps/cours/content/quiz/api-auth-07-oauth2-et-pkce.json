@@ -1,0 +1,49 @@
+{
+  "fiche": "api-auth-07-oauth2-et-pkce",
+  "questions": [
+    {
+      "question": "Pourquoi un code puis un échange, et pas directement les tokens ?",
+      "choix": [
+        "Par lenteur",
+        "Le code passe par le navigateur (URL → historique, Referer, logs). Un token n'a rien à y faire. Le code expire en 60 s, usage unique, et ne vaut rien sans le verifier",
+        "La spec l'impose",
+        "Pour le state"
+      ],
+      "bonne": 1,
+      "explication": "Les tokens transitent en POST serveur-à-serveur, jamais dans une URL."
+    },
+    {
+      "question": "PKCE protège de quoi ?",
+      "choix": [
+        "Du CSRF",
+        "De l'interception du code : sans le code_verifier (resté chez le client légitime), le code volé est inutilisable",
+        "Du XSS",
+        "Du rejeu de token"
+      ],
+      "bonne": 1,
+      "explication": "S256 obligatoire. plain enverrait le verifier en clair dès l'authorize."
+    },
+    {
+      "question": "Un refresh token déjà consommé revient. Que fait le hub ?",
+      "choix": [
+        "Il l'accepte",
+        "Rejeu détecté → toute la famille révoquée : victime et voleur dehors, la victime se reconnecte",
+        "Il émet un nouveau",
+        "Il log"
+      ],
+      "bonne": 1,
+      "explication": "L'attaque s'arrête à la première utilisation croisée. Un mois d'accès contre une reconnexion."
+    },
+    {
+      "question": "OIDC ajoute quoi à OAuth ?",
+      "choix": [
+        "Rien",
+        "L'identité : id_token (qui est la personne), userinfo, découverte. OAuth = autorisation, OIDC = authentification",
+        "Le chiffrement",
+        "PKCE"
+      ],
+      "bonne": 1,
+      "explication": "scope=openid déclenche l'id_token avec sub, email, nonce."
+    }
+  ]
+}

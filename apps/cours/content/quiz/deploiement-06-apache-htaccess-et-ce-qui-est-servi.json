@@ -1,0 +1,49 @@
+{
+  "fiche": "deploiement-06-apache-htaccess-et-ce-qui-est-servi",
+  "questions": [
+    {
+      "question": "Que fait RewriteCond %{REQUEST_FILENAME} !-f ?",
+      "choix": [
+        "Bloque les fichiers",
+        "Si le fichier demandé n'existe pas, passe à la règle suivante (→ index.php). Un fichier réel est servi directement, sans PHP",
+        "Force HTTPS",
+        "Refuse les dossiers"
+      ],
+      "bonne": 1,
+      "explication": "Rapide, et c'est pourquoi /uploads/doc.pdf était accessible sans contrôleur."
+    },
+    {
+      "question": "Options -Indexes sert à ?",
+      "choix": [
+        "Désactiver les index de base",
+        "Empêcher le listing du contenu d'un dossier quand il n'y a pas d'index.html",
+        "Accélérer Apache",
+        "Bloquer les images"
+      ],
+      "bonne": 1,
+      "explication": "Sans lui, /uploads/ affiche la liste des fichiers."
+    },
+    {
+      "question": "Tu ajoutes php_flag engine off sur OVH. Résultat ?",
+      "choix": [
+        "Les scripts sont bloqués",
+        "500 sur tout le dossier : la directive n'existe pas en PHP-FPM (le mode d'OVH). Un tutoriel pour mod_php appliqué à FPM",
+        "Rien",
+        "Plus de sécurité"
+      ],
+      "bonne": 1,
+      "explication": "Vérifie toujours le mode PHP avant de copier une directive."
+    },
+    {
+      "question": "Sur Nginx ou avec AllowOverride désactivé, le .htaccess uploads fait quoi ?",
+      "choix": [
+        "Pareil",
+        "Rien, et sans erreur : la protection disparaît en silence. C'est pourquoi sortir les fichiers de public/ est la correction de fond",
+        "Une erreur",
+        "Il est converti"
+      ],
+      "bonne": 1,
+      "explication": "Un .htaccess protège sur Apache avec AllowOverride. Point."
+    }
+  ]
+}

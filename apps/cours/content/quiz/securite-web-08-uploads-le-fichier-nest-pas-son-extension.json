@@ -1,0 +1,49 @@
+{
+  "fiche": "securite-web-08-uploads-le-fichier-nest-pas-son-extension",
+  "questions": [
+    {
+      "question": "Comment savoir ce qu'est vraiment un fichier envoyé ?",
+      "choix": [
+        "Son extension",
+        "Ses premiers octets (magic bytes) : FF D8 FF = JPEG, 25 50 44 46 = PDF. Le nom et le Content-Type sont des déclarations",
+        "Le Content-Type",
+        "Sa taille"
+      ],
+      "bonne": 1,
+      "explication": "finfo en PHP, file-type en Node. Taille → type réel → extension, dans cet ordre, côté serveur."
+    },
+    {
+      "question": "La faille uploads de Venaball, c'était quoi ?",
+      "choix": [
+        "Pas de validation MIME",
+        "Fichiers écrits dans public/uploads/ (servi par Apache) : une URL directe court-circuitait le contrôleur qui vérifiait les droits",
+        "Des noms devinables seulement",
+        "Pas de limite de taille"
+      ],
+      "bonne": 1,
+      "explication": "Justificatifs et photos de mineures accessibles à qui devinait le nom. Le .htaccess a colmaté ; sortir de public/ est la correction de fond."
+    },
+    {
+      "question": "Pourquoi le blocage des scripts vient en DERNIER dans le .htaccess ?",
+      "choix": [
+        "Par style",
+        "À égalité de correspondance, Apache applique la dernière règle : photo.php.jpg matche images ET scripts, le refus doit gagner",
+        "Pour la performance",
+        "Apache l'exige"
+      ],
+      "bonne": 1,
+      "explication": "Et pas de php_flag engine off : n'existe pas en PHP-FPM (OVH), ferait un 500 sur tout le site."
+    },
+    {
+      "question": "Pourquoi générer un nom (uuid.ext) au lieu d'utiliser le nom fourni ?",
+      "choix": [
+        "Pour le tri",
+        "Règle traversée de répertoire (../../config), collisions, photo.php.jpg, noms devinables. Le nom d'origine va en base",
+        "Pour la compression",
+        "C'est plus court"
+      ],
+      "bonne": 1,
+      "explication": "Un seul choix qui règle quatre problèmes."
+    }
+  ]
+}

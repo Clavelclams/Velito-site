@@ -1,0 +1,49 @@
+{
+  "fiche": "react-nextjs-07-server-actions-et-formulaires",
+  "questions": [
+    {
+      "question": "Qu'est-ce qu'une Server Action ?",
+      "choix": [
+        "Une route API REST",
+        "Une fonction serveur (\"use server\") appelable depuis un composant comme une fonction normale ; Next gère le transport HTTP",
+        "Un middleware",
+        "Un hook React"
+      ],
+      "bonne": 1,
+      "explication": "Tu écris await maFonction(), Next fait le POST, exécute sur le serveur, renvoie la valeur. La logique et les secrets ne quittent jamais le serveur."
+    },
+    {
+      "question": "Pourquoi valider les arguments dans l'action alors que le formulaire valide déjà ?",
+      "choix": [
+        "Par précaution inutile",
+        "Une action est un endpoint public : n'importe qui peut l'appeler avec n'importe quels arguments, sans passer par le formulaire",
+        "Pour les tests",
+        "Next l'exige"
+      ],
+      "bonne": 1,
+      "explication": "Le formulaire est contournable (copy as fetch, curl). La validation côté client est du confort ; celle dans l'action est la seule sécurité."
+    },
+    {
+      "question": "<form action={signOutAction}> sans JavaScript, ça marche ?",
+      "choix": [
+        "Non, il faut JS",
+        "Oui : le formulaire est soumis en HTML classique, l'action reçoit un FormData. Amélioration progressive gratuite",
+        "Seulement en dev",
+        "Seulement avec useActionState"
+      ],
+      "bonne": 1,
+      "explication": "C'est l'avantage de la syntaxe form action : sans JS chargé, le navigateur soumet normalement. Avec JS, Next intercepte et évite le rechargement."
+    },
+    {
+      "question": "Quand utiliser route.ts plutôt qu'une Server Action ?",
+      "choix": [
+        "Jamais",
+        "Quand un client externe (app mobile, autre site, webhook) doit appeler ton serveur : URL stable, format documenté",
+        "Pour les formulaires",
+        "Pour les pages statiques"
+      ],
+      "bonne": 1,
+      "explication": "Action = pour ton propre front. Route = API pour l'extérieur. L'export JSON d'ARENA est une route parce qu'il est fait pour être consommé par n'importe qui."
+    }
+  ]
+}

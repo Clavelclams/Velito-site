@@ -1,0 +1,49 @@
+{
+  "fiche": "supabase-postgres-03-rls-le-filtre-quon-ne-peut-pas-oublier",
+  "questions": [
+    {
+      "question": "Que se passe-t-il juste après ENABLE ROW LEVEL SECURITY sur une table ?",
+      "choix": [
+        "Rien, il faut des policies",
+        "Plus aucune ligne ne sort pour personne (sauf propriétaire et service_role) : default deny",
+        "Toutes les lignes sont lisibles",
+        "La table est verrouillée en écriture"
+      ],
+      "bonne": 1,
+      "explication": "La RLS ferme tout. On rouvre ensuite, policy par policy. C'est le bon défaut : on ne peut pas oublier de protéger."
+    },
+    {
+      "question": "Quelle différence entre USING et WITH CHECK dans une policy ?",
+      "choix": [
+        "Aucune",
+        "USING filtre les lignes existantes (SELECT/UPDATE/DELETE) ; WITH CHECK valide les nouvelles valeurs (INSERT/UPDATE)",
+        "USING est pour la lecture, WITH CHECK pour le rôle",
+        "WITH CHECK est déprécié"
+      ],
+      "bonne": 1,
+      "explication": "WITH CHECK (auteur_id = auth.uid()) empêche d'insérer au nom d'un autre. USING (statut <> 'BROUILLON') filtre ce qu'on voit."
+    },
+    {
+      "question": "Pourquoi la route /api/export/[token] d'ARENA n'a aucun contrôle d'accès dans le code ?",
+      "choix": [
+        "Oubli",
+        "Elle utilise le client anon : la RLS filtre, un tournoi brouillon revient vide → 404. Le contrôle est une propriété de la connexion",
+        "Les exports sont tous publics",
+        "Le token suffit"
+      ],
+      "bonne": 1,
+      "explication": "Si la route utilisait service_role, un if oublié publierait les brouillons. Avec anon, la base ne rend rien même si le code oublie."
+    },
+    {
+      "question": "Comment tester une policy correctement ?",
+      "choix": [
+        "Depuis le SQL Editor directement",
+        "SET ROLE anon; puis la requête, ou depuis le navigateur avec la clé anon — le SQL Editor est en service_role et contourne la RLS",
+        "Avec EXPLAIN",
+        "En lisant la policy"
+      ],
+      "bonne": 1,
+      "explication": "Le SQL Editor ne montre jamais le filtre. Une policy non testée depuis le bon rôle n'est pas testée."
+    }
+  ]
+}

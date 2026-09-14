@@ -2,7 +2,7 @@
 titre: "Venaball"
 avancement: 75
 statut: "en cours"
-maj: 2026-09-04
+maj: 2026-09-09
 ---
 
 ## C'est quoi
@@ -23,6 +23,11 @@ Venaball est une plateforme de gestion de clubs de basket, développée en Symfo
 
 ## Les décisions techniques et POURQUOI
 
+- **2026-09-09 — Une base de code, deux instances** : le même dépôt sert MABB Manager (`manager.mabb.fr`, cluster102, MariaDB 10.4) et Venaball Club (`club.venaball.fr` / `api.venaball.fr`, cluster100, MySQL 8.4). L'identité de marque est résolue sur le host (`MarqueResolver`), avec repli sûr sur MABB.
+- **2026-09-09 — Idempotence des saisies mobiles** : `action_match.client_uid` unique + score adverse envoyé en absolu et non en delta. Une réponse perdue en 4G de gymnase ne crée plus de doublon.
+- **2026-09-09 — Migrations portables** : tout DML est gardé (`AND slug = 'mabb'`), un club s'identifie par slug jamais par id, syntaxe commune MySQL/MariaDB, plus de données nominatives.
+- **2026-09-09 — Validation des clubs par `valide_at` + `valide_par_id`** plutôt qu'un booléen : le quand et le qui gratuitement, méthode `valider()` idempotente.
+
 - **2026-02-12 — ADR-0001, monolithe modulaire** : un seul projet Symfony découpé par domaines plutôt que des microservices — déploiement simple, entités Core partagées, discipline de découpage par dossier.
 - **2026-02-12 — ADR-0002, séparation par host + firewalls** : `mabb.fr` / `manager.mabb.fr` / `pirb.mabb.fr`, chaque espace a son fichier de routes et son firewall — isolation forte entre publics.
 - **2026-02-12 — ADR-0003, multi-tenant par `club_id`** : une seule base, filtrage systématique côté serveur via Voter — plus simple qu'une base par club, au prix d'une vigilance absolue (tests anti-fuite obligatoires).
@@ -40,6 +45,10 @@ D'après `instruction/31_ETAT_REEL_2026-07-13.md` (document maître) et `24_ETAT
 Ce qui est **réellement problématique** (classé par gravité dans le doc d'état) :
 - **Uploads : colmaté, pas réglé** (26/07). Un `.htaccess` en refus par défaut dans `public/uploads/` bloque l'accès direct à tout sauf les images d'affichage public, et neutralise l'exécution de scripts. Mais les fichiers sont toujours DANS la racine web : la protection disparaît en silence sur un serveur qui ne lit pas les `.htaccess` (Nginx) ou si `AllowOverride` est désactivé. La correction de fond — écrire hors de `public/` et servir via un contrôleur — reste à faire.
 - **Le cron de purge RGPD (`app:sorties:purger-rgpd`) n'est toujours pas déclaré dans le dépôt** : si personne ne l'a configuré sur OVH, la purge n'a jamais tourné. Point ouvert.
+- **Fuite inter-clubs latente (09/09)** : `AutoLinkBenevoleListener` rattache un nouvel inscrit au premier club actif par ordre alphabétique. Le commentaire disait « ce cas ne se produira qu'en V2 » — la V2 est en ligne. Dès le deuxième club validé sur Venaball, chaque nouvel utilisateur est rattaché au mauvais club.
+- **286 constats « le club = la MABB »** recensés dans l'audit du 09/09 (doc 42 §2), rien corrigé encore.
+- **`venaball club-store` (5 100 lignes) sans remote git** depuis le 13/08 : un disque qui lâche, et l'app staff disparaît.
+- **Un secret de dev commité dans `.env.dev`** (signe les tickets SSO) : à régénérer.
 - **Sauvegarde de la base : en place depuis le 13/07** (`bin/sauvegarde-bdd.sh`, cron OVH à 4 h, `mysqldump --single-transaction`, rotation à 14 jours). Deux réserves écrites dans le script lui-même : les dumps sont sur le MÊME hébergement que la base, et **aucune restauration n'a jamais été testée**.
 - Stats live à fiabiliser : minutes jouées et titulaires calculés faux (RT-0012), promotion des sessions manuelle, doublon d'agrégateurs (RT-0013).
 - Mailer Brevo posé mais domaine non authentifié (DKIM/SPF à finir).
@@ -47,6 +56,7 @@ Ce qui est **réellement problématique** (classé par gravité dans le doc d'é
 
 ## Prochaines étapes
 
+0. **Remplacer `AutoLinkBenevoleListener`** par une page de choix ou un code d'invitation avant le deuxième club validé — et poser une assertion qui explose si plusieurs clubs actifs en attendant.
 1. **Finir la dette RGPD** : déplacer les uploads sensibles hors de `public/` (sur le modèle de `DechargeSortieUploader`) — le `.htaccess` du 26/07 est un colmatage lié à Apache, pas une architecture. Et vérifier/poser le cron de purge sur OVH.
 2. **Tester une restauration** depuis un dump, et déposer une copie hors de l'hébergement. Un dump jamais restauré n'est pas une sauvegarde.
 3. **Sortir l'app sur les stores** (chemin critique du plan de fin de projet, doc 26) : compte Apple Developer, build EAS, TestFlight, test terrain avec une vraie joueuse.

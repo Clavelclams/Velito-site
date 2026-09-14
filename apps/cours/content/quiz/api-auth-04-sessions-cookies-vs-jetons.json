@@ -1,0 +1,49 @@
+{
+  "fiche": "api-auth-04-sessions-cookies-vs-jetons",
+  "questions": [
+    {
+      "question": "Pourquoi un cookie de session est inadapté à une app mobile ?",
+      "choix": [
+        "Trop lent",
+        "Une app n'est pas un navigateur : pas de jar de cookies automatique, pas de domaine partagé avec le serveur",
+        "Trop petit",
+        "Pas sécurisé"
+      ],
+      "bonne": 1,
+      "explication": "Cookie pour le web (automatique, HttpOnly, SameSite). Jeton dans l'en-tête pour le mobile."
+    },
+    {
+      "question": "Bearer veut dire ?",
+      "choix": [
+        "Porteur d'ours",
+        "Porteur : quiconque porte le jeton est considéré comme son propriétaire. Donc le jeton est un secret : HTTPS, stockage sûr, jamais en URL",
+        "Chiffré",
+        "Signé"
+      ],
+      "bonne": 1,
+      "explication": "Court (1 h) ou révocable (base)."
+    },
+    {
+      "question": "Où stocker le jeton sur Expo ?",
+      "choix": [
+        "AsyncStorage",
+        "expo-secure-store (Keychain iOS, Keystore Android). AsyncStorage est en clair",
+        "localStorage",
+        "Un fichier"
+      ],
+      "bonne": 1,
+      "explication": "Si tu trouves AsyncStorage.setItem('token'), migre."
+    },
+    {
+      "question": "Comment Symfony gère cookie ET jeton sur le même serveur ?",
+      "choix": [
+        "Un seul mécanisme",
+        "Un firewall par mécanisme : session sur manager.*, access_token stateless sur /api/. Le premier motif qui matche gagne",
+        "Deux serveurs",
+        "Un middleware"
+      ],
+      "bonne": 1,
+      "explication": "ADR-0002 : séparation par host et par chemin."
+    }
+  ]
+}

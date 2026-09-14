@@ -1,0 +1,49 @@
+{
+  "fiche": "react-nextjs-01-composants-et-jsx",
+  "questions": [
+    {
+      "question": "Qu'est-ce qu'un composant React, au fond ?",
+      "choix": [
+        "Une classe qui hérite de HTMLElement",
+        "Une fonction qui retourne du JSX (du HTML dans du JS)",
+        "Un fichier .html",
+        "Un template Twig compilé"
+      ],
+      "bonne": 1,
+      "explication": "Un composant = une fonction JavaScript qui retourne un arbre JSX. Le JSX est compilé en appels React.createElement — c'est pour ça que class devient className."
+    },
+    {
+      "question": "Pourquoi <compteARebours /> ne fonctionne pas mais <CompteARebours /> oui ?",
+      "choix": [
+        "Les minuscules sont réservées à Tailwind",
+        "Une balise en minuscule est interprétée comme un élément HTML natif ; la majuscule signale un composant",
+        "C'est une convention sans effet",
+        "Le fichier doit avoir le même nom"
+      ],
+      "bonne": 1,
+      "explication": "JSX distingue par la casse : minuscule = balise HTML (div, p…), majuscule = composant. Un composant en minuscule est cherché comme balise HTML inconnue."
+    },
+    {
+      "question": "Que fait {quiz && <QuizFiche />} en JSX ?",
+      "choix": [
+        "Affiche toujours QuizFiche",
+        "Affiche QuizFiche seulement si quiz est truthy ; sinon rend null (rien)",
+        "Lève une erreur si quiz est null",
+        "Affiche le mot quiz"
+      ],
+      "bonne": 1,
+      "explication": "L'opérateur && renvoie le second opérande si le premier est truthy, sinon le premier (null/undefined/false, que React n'affiche pas). C'est le motif d'affichage conditionnel."
+    },
+    {
+      "question": "Pourquoi key est-il obligatoire dans une liste .map() ?",
+      "choix": [
+        "Pour le style CSS",
+        "Pour que React identifie chaque élément quand la liste change (réordonner, supprimer) sans tout recréer",
+        "Pour l'accessibilité",
+        "C'est optionnel en fait"
+      ],
+      "bonne": 1,
+      "explication": "Sans key stable (id, slug), React ne sait pas quel élément est lequel et peut mélanger les états. L'index du tableau est un mauvais key : il change quand on supprime un élément."
+    }
+  ]
+}

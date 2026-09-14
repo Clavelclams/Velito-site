@@ -1,0 +1,7 @@
+{
+  "titre": "Déploiement & hébergement",
+  "description": "Du code sur ton PC au site que le monde voit. Vercel pour Velito-site, OVH mutualisé pour Venaball : build, DNS, variables d'environnement, SSH, Apache, cron, sauvegardes, HTTPS. Tout ce que tu fais déjà par réflexe, expliqué pour que tu saches quoi faire quand ça casse.",
+  "icone": "🚀",
+  "ordre": 15,
+  "domaine": "metier"
+}

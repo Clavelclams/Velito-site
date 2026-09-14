@@ -1,0 +1,49 @@
+{
+  "fiche": "supabase-postgres-02-schemas-et-exposed-schemas",
+  "questions": [
+    {
+      "question": "Qu'est-ce qu'un schéma Postgres ?",
+      "choix": [
+        "Le plan de la base",
+        "Un espace de noms : un dossier pour les tables, qui permet arena.tournois et vea.tournois de coexister",
+        "Une table système",
+        "Un type de colonne"
+      ],
+      "bonne": 1,
+      "explication": "Une app = un schéma. shared = commun. Ça donne lisibilité (arena.matchs), droits par schéma, isolation (DROP SCHEMA CASCADE), et partage explicite."
+    },
+    {
+      "question": "Après la migration 001 d'ARENA, toutes les requêtes .schema('arena') renvoyaient 404. Cause ?",
+      "choix": [
+        "Erreur SQL",
+        "Le schéma n'était pas dans « Exposed schemas » du dashboard : PostgREST ne le connaissait pas",
+        "Mauvaise clé",
+        "RLS trop stricte"
+      ],
+      "bonne": 1,
+      "explication": "PostgREST n'expose que public par défaut. Un schéma non déclaré n'existe pas pour lui → 404, pas une erreur de droits. Réglage dashboard, pas configurable en SQL."
+    },
+    {
+      "question": "Pourquoi écrire arena.tournois et pas tournois dans une migration ?",
+      "choix": [
+        "Par style",
+        "Une migration ne doit pas dépendre du search_path de la session qui l'exécute",
+        "tournois est réservé",
+        "Pour la performance"
+      ],
+      "bonne": 1,
+      "explication": "Sans schéma, Postgres cherche selon search_path (qui varie). Nom qualifié = résolution certaine, quel que soit l'exécutant."
+    },
+    {
+      "question": "Une vue Postgres 15+ créée sans security_invoker fait quoi ?",
+      "choix": [
+        "Rien de spécial",
+        "Elle s'exécute avec les droits de son créateur (toi, service_role) et contourne la RLS des tables lues",
+        "Elle est en lecture seule",
+        "Elle est plus lente"
+      ],
+      "bonne": 1,
+      "explication": "Incident réel sur vea.compta_balance_par_saison. ALTER VIEW … SET (security_invoker = on) pour qu'elle s'exécute avec les droits du lecteur."
+    }
+  ]
+}

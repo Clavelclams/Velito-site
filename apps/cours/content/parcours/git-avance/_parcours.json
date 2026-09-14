@@ -1,0 +1,7 @@
+{
+  "titre": "Git en profondeur",
+  "description": "Tu sais commit et push. Ici tu comprends ce qui se passe dessous : le graphe, fast-forward ou merge, rebase, annuler sans casser, les secrets dans l'historique, et le workflow branche → PR → prod. Le fil rouge : ta branche qui a gardé 7 commits hors de main sans que tu le voies.",
+  "icone": "🌳",
+  "ordre": 10,
+  "domaine": "metier"
+}

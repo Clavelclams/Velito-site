@@ -1,0 +1,49 @@
+{
+  "fiche": "git-avance-03-rebase-sans-peur",
+  "questions": [
+    {
+      "question": "Que fait git rebase main depuis une branche de feature ?",
+      "choix": [
+        "Fusionne main dans la branche avec un merge commit",
+        "Rejoue les commits de la branche par-dessus la pointe de main, avec de nouveaux hashes",
+        "Supprime les commits de main",
+        "Renomme la branche en main"
+      ],
+      "bonne": 1,
+      "explication": "Rebase = déplacer la base. Chaque commit est recréé avec un nouveau parent, donc un nouveau hash. Résultat : historique linéaire, et le merge suivant sera un fast-forward."
+    },
+    {
+      "question": "La règle d'or du rebase, c'est ?",
+      "choix": [
+        "Toujours rebase avant de push",
+        "Ne jamais rebase des commits que quelqu'un d'autre possède déjà",
+        "Ne jamais rebase plus de 5 commits",
+        "Toujours rebase avec -i"
+      ],
+      "bonne": 1,
+      "explication": "Rebase crée de nouveaux hashes. Si un collègue (ou Vercel, ou ton autre PC) a les anciens, vous avez deux histoires incompatibles. main = jamais. Branche locale = librement."
+    },
+    {
+      "question": "Après un rebase d'une branche déjà poussée, quelle commande pour pousser ?",
+      "choix": [
+        "git push",
+        "git push --force",
+        "git push --force-with-lease",
+        "git push --rebase"
+      ],
+      "bonne": 2,
+      "explication": "Les hashes ont changé, le push normal est refusé. --force écrase quoi qu'il arrive ; --force-with-lease refuse si le serveur a reçu des commits que tu n'as pas vus. Toujours le second."
+    },
+    {
+      "question": "Dans git rebase -i, que fait « squash » sur une ligne ?",
+      "choix": [
+        "Supprime le commit",
+        "Fusionne le commit avec celui du dessus en combinant les messages",
+        "Renomme le commit",
+        "Déplace le commit en premier"
+      ],
+      "bonne": 1,
+      "explication": "squash (s) fusionne avec le commit précédent et te laisse combiner les messages. fixup (f) fait pareil mais jette le message. drop supprime. reword renomme."
+    }
+  ]
+}

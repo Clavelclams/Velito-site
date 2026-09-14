@@ -12,9 +12,35 @@ import { createClient } from "@/lib/supabase/server";
 import { pointsDuTournoi } from "@/lib/arena/classement";
 import { calculerStatsJoueur, type TournoiJoue } from "@/lib/arena/stats";
 import { libelleRang } from "@/lib/toornament";
-import type { Joueur, MatchRow, ResultatExterne, Tournoi } from "@/lib/arena/types";
+import {
+  COLONNES_JOUEUR_PUBLIC,
+  type Joueur,
+  type JoueurPublic,
+  type MatchRow,
+  type ResultatExterne,
+  type Tournoi,
+} from "@/lib/arena/types";
 import EnteteSite from "@/components/EnteteSite";
 import PiedSite from "@/components/PiedSite";
+import type { Metadata } from "next";
+
+/**
+ * Aperçu de partage du profil : le pseudo, et rien d'autre — pas de
+ * requête, pas de donnée personnelle dans une balise meta. Le contenu réel
+ * (stats, parcours) reste dans la page, soumis à la RLS.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ pseudo: string }>;
+}): Promise<Metadata> {
+  const { pseudo } = await params;
+  const nom = decodeURIComponent(pseudo);
+  return {
+    title: `${nom} — profil joueur`,
+    description: `Tournois, résultats et stats de ${nom} sur ARENA, la plateforme de tournois esport et sport d'Amiens.`,
+  };
+}
 
 interface BadgeAffiche {
   nom: string;
@@ -31,14 +57,17 @@ export default async function PageJoueur({
 
   const supabase = await createClient();
 
+  // Colonnes publiques UNIQUEMENT (migration 009) : la clé anonyme n'a plus
+  // le droit de lire l'année de naissance ni le statut de mineur. Un
+  // `select("*")` ici serait refusé par Postgres — et c'est voulu.
   const { data: joueurData } = await supabase
     .schema("arena")
     .from("joueurs")
-    .select("*")
+    .select(COLONNES_JOUEUR_PUBLIC)
     .eq("pseudo", pseudo)
     .maybeSingle();
   if (!joueurData) notFound();
-  const joueur = joueurData as Joueur;
+  const joueur = joueurData as JoueurPublic;
 
   // Participations → tournois visibles (RLS filtre les brouillons).
   const [{ data: partData }, { data: badgesData }, { data: externesData }] =

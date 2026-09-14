@@ -1,59 +1,89 @@
-# ARENA — Velito Tournois
+# ARENA — Tournois Velito
 
-Hub de tournois esport amateur. Brackets, scores validés, résultats qui ne se
-perdent plus. App du monorepo Velito — `arena.velito.fr` — port dev **3003**.
+Infrastructure de tournois **gratuite et neutre**, esport et sport physique.
+App du monorepo Velito — `arena.velito.fr` — port dev **3003**.
 
-## État d'avancement
+> Source de vérité pour l'état du projet, les décisions et la feuille de
+> route : Notion (« Feuille de route — Hub Velito & ARENA »). Ce README ne
+> décrit que ce qu'il faut pour lancer et comprendre le code.
 
-- ✅ **S1** — Algo bracket élimination simple (`lib/bracket.ts`, pur, 13 tests
-  vitest) + schéma SQL (`sql/001_arena_schema_v1.sql`, 7 tables + RLS).
-- ✅ **S2** — Supabase branché (SSO cookie `.velito.fr`, même pattern que le
-  hub) + flux orga complet : créer un tournoi, inscriptions/check-in jour J,
-  démarrage (génération du bracket en base), saisie puis validation des scores
-  (double étape), progression automatique des gagnants, logs d'audit.
-- ✅ **S3** — Page publique `/t/[qr_token]` (bracket en direct, refresh auto
-  15 s), QR code imprimable (`/admin/tournois/[id]/qr`), export JSON public
-  (`/api/export/[qr_token]`), page prévention statique (`/prevention`).
-- ✅ **Lot 0/1 (août 2026)** — Schéma `arena.` + droits `shared.user_permissions`
-  + verrous DB + écrans d'erreur distingués (voir `docs/ARENA_LOT0_AUDIT.md`).
-- ✅ **Lot 2/4 partiels** — Anti double-clic au démarrage (transition atomique),
-  litiges (`signalerLitige`), classement public `/classement` (barème 3/2/1,
-  `lib/arena/classement.ts` testé), profil joueur public `/joueurs/[pseudo]`
-  (« CV esport »), badges automatiques à la clôture (`lib/arena/badges.ts`).
-- ⬜ **Reste** — OIDC PKCE (Lot 1), double élim + poules (migration SQL formats
-  requise), page participant, imports Toornament/Challonge (Lot 3), API par clé.
+## Ce que fait l'app (état au 09/09/2026)
+
+**Côté orga** (`/admin`, staff d'une organisation `shared.organizations`) :
+créer un tournoi (élimination simple, double élimination, poules + phase
+finale ; individuel ou par équipes : padel, five, playground, ping-pong),
+inscrire et pointer les joueurs le jour J, répartir les têtes de série et les
+équipes, démarrer, saisir puis valider les scores (double étape, litiges),
+assigner les terrains, QR code imprimable, export CSV des participants,
+saisie manuelle d'un palmarès externe, fiche RGPD par joueur (année de
+naissance, droit à l'effacement).
+
+**Côté public** (client anonyme, RLS) : page tournoi en direct `/t/[token]`
+avec « Mon match » (où je joue, contre qui, sur quel terrain), classement
+`/classement` (points 3/2/1, esport / sport), profil joueur `/joueurs/[pseudo]`
+(parcours, stats maison, badges, palmarès externe), fiches jeux `/jeux/[slug]`
+(tournois du jeu + renvoi vers le tracker de référence), exports CSV et JSON
+gratuits, règlement, prévention.
+
+**Mineurs** : l'année de naissance est obligatoire à l'inscription ; un mineur
+passe automatiquement en profil restreint (absent de tout classement public),
+un moins de 15 ans exige l'autorisation parentale. Règle « protéger par
+excès » dans `lib/arena/age.ts`.
+
+**Pas encore fait** : login joueur (OIDC hub prêt côté serveur, client ARENA
+à enregistrer), espace `/moi`, inscription par le joueur lui-même via QR, API
+publique par clé, widgets embarquables, notifications, score par sets.
 
 ## Architecture (à savoir défendre)
 
-- **Server Components + Server Actions uniquement** — pas de route API custom
-  pour le flux orga, pas de state client. Un seul composant `"use client"` :
-  `AutoRefresh` (polling de la page publique).
-- **Sécurité en 3 couches** : (1) chaque Server Action commence par
-  `requireStaff()` ; (2) les écritures passent par le client `service_role`
-  server-only APRÈS ce contrôle ; (3) la RLS Postgres reste active en filet
-  (lecture publique = tournois non-BROUILLON seulement).
-- **Logique métier isolée** : `lib/bracket.ts` est pur (zéro dépendance,
-  zéro I/O), testé par `lib/bracket.test.ts`. Les actions orchestrent, elles ne
+- **Server Components + Server Actions** — pas d'API custom pour le flux
+  orga, un seul composant client (`AutoRefresh`, polling de la page publique)
+  plus la répartition par glisser-déposer.
+- **Sécurité en trois couches** : chaque Server Action commence par
+  `requireStaff()` puis `chargerTournoiDeLOrga()` (appartenance à l'orga) ;
+  les écritures passent par `service_role` APRÈS ce contrôle ; la RLS reste
+  active en filet (lecture publique = non-brouillon, joueurs non anonymisés,
+  colonnes publiques seulement — migration 009).
+- **Logique métier dans des modules purs testés** (`lib/bracket*.ts`,
+  `lib/poules.ts`, `lib/elo.ts`, `lib/arena/{classement,mon-match,stats,csv,
+  age,erreurs,trackers,transitions}.ts`). Les actions orchestrent, elles ne
   décident pas.
-- **Traçabilité** : toute action sensible écrit dans `arena_logs`
-  (qui/quoi/quand + ancien/nouveau score) — utile en litige ET pour les
-  bilans d'activité VEA.
+- **Traçabilité** : toute action sensible écrit dans `arena.logs`
+  (append-only, trigger). Les erreurs Postgres sont traduites par code
+  SQLSTATE (`lib/arena/erreurs.ts`) : le message brut ne sort jamais à l'écran.
+- **Interop gratuite par défaut** : exports CSV/JSON publics, données qui
+  repartent avec la structure — c'est la doctrine de complémentarité.
 
 ## Dev local
 
 ```bash
-npm install               # à la racine du monorepo
-cp .env.example .env.local  # puis remplir (mêmes valeurs que le hub)
-npm run dev               # http://localhost:3003
-npm run test              # 13 tests bracket
+npm install                  # à la racine du monorepo
+cp .env.example .env.local   # puis remplir (mêmes valeurs que le hub)
+npm run dev                  # http://localhost:3003
+npm run test                 # vitest, modules purs
+npm run check-types          # typecheck strict
 ```
 
-Prérequis : `sql/001_arena_schema_v1.sql` exécuté dans Supabase + seed d'une
-organisation et d'un membre ADMIN (voir le cadrage).
+Prérequis base : `sql/001` → `sql/009` exécutés dans l'ordre sur Supabase
+(schéma `arena`, exposé à l'API Data), plus une organisation et un membre
+owner/editor dans `shared.user_permissions`.
+
+## Migrations
+
+Fichiers numérotés dans `sql/`, exécutés à la main dans l'éditeur SQL
+Supabase, jamais rejoués sauf mention « idempotente » en tête. La 009
+(droits par colonne sur `joueurs`) doit être passée AVANT toute inscription
+avec année de naissance.
 
 ## Pièges connus
 
-- Le monorepo active `noUncheckedIndexedAccess` : `tableau[i]` est typé
-  `T | undefined` → pas de swap destructuré, pas d'index sans garde.
-- Les `NEXT_PUBLIC_*` marquées Sensitive sur Vercel arrivent vides au runtime →
-  toujours lire `SUPABASE_URL` (runtime) en priorité (leçon du bug devis VENA).
+- `noUncheckedIndexedAccess` est activé : `tableau[i]` est `T | undefined`.
+- Les `NEXT_PUBLIC_*` marquées Sensitive sur Vercel arrivent vides au
+  runtime → lire `SUPABASE_URL` (runtime) en priorité.
+- Une variable ajoutée doit aussi figurer dans la liste `env` de
+  `turbo.json` à la racine, sinon elle est masquée au build.
+- Jamais de caractère Unicode invisible dans le source (BOM, combinants) :
+  écrire `"\uFEFF"` et `[\u0300-\u036f]`, pas le caractère lui-même.
+- Le code Toornament (`lib/toornament.ts`, `importerResultatToornament`) est
+  **dormant** : l'API est payante (229 €/mois). Le palmarès externe se saisit
+  à la main avec un lien source.

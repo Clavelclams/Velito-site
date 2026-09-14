@@ -1,0 +1,49 @@
+{
+  "fiche": "react-nextjs-08-middleware-et-protection-des-routes",
+  "questions": [
+    {
+      "question": "Quand s'exécute middleware.ts ?",
+      "choix": [
+        "Après le rendu de la page",
+        "Avant chaque requête, avant même de savoir quelle page sera rendue",
+        "Seulement sur les routes API",
+        "Au build"
+      ],
+      "bonne": 1,
+      "explication": "Le middleware est le videur : il voit la requête (URL, cookies, headers) et décide — laisser passer, rediriger, refuser — avant toute page."
+    },
+    {
+      "question": "Pourquoi le matcher exclut-il _next/static, les images, les CSS ?",
+      "choix": [
+        "Par sécurité",
+        "Sinon chaque asset déclencherait un appel à Supabase pour vérifier la session : lent et inutile",
+        "Ces fichiers n'ont pas de cookies",
+        "Next l'impose"
+      ],
+      "bonne": 1,
+      "explication": "Une page charge des dizaines d'assets. Sans le matcher, chaque image ferait un getUser(). Le matcher est la première optimisation d'un middleware."
+    },
+    {
+      "question": "Le middleware de cours faisait return response si les variables Supabase manquaient. Quel est le problème ?",
+      "choix": [
+        "Aucun, c'est une bonne pratique",
+        "Fail-open : mal configuré, il laisse tout passer et le site devient public. Il devrait refuser (503)",
+        "Le code ne compile pas",
+        "Ça ralentit le site"
+      ],
+      "bonne": 1,
+      "explication": "Une protection qui se désactive silencieusement quand elle est mal configurée n'est pas une protection. Le 14 août, un déploiement sans variable aurait publié toutes les fiches."
+    },
+    {
+      "question": "Que veut dire « default deny » pour un middleware ?",
+      "choix": [
+        "Refuser tout le monde",
+        "Tout est privé sauf une liste explicite de routes publiques : une nouvelle page est protégée par défaut",
+        "Bloquer les bots",
+        "Refuser en dev"
+      ],
+      "bonne": 1,
+      "explication": "L'inverse — tout public sauf une liste — casse dès qu'on ajoute une page et qu'on oublie de la lister. Avec default deny, on ne peut pas oublier de protéger."
+    }
+  ]
+}

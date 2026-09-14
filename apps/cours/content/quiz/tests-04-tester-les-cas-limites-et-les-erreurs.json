@@ -1,0 +1,49 @@
+{
+  "fiche": "tests-04-tester-les-cas-limites-et-les-erreurs",
+  "questions": [
+    {
+      "question": "Où vivent les bugs, statistiquement ?",
+      "choix": [
+        "Au milieu des cas normaux",
+        "Aux bords : vide, un, limite exacte, doublon, négatif, caractères spéciaux, trop grand",
+        "Dans les imports",
+        "Dans les commentaires"
+      ],
+      "bonne": 1,
+      "explication": "Un bon fichier de test passe plus de temps sur les bords que sur le milieu. facteurK(9) et facteurK(10), pas 5 et 50."
+    },
+    {
+      "question": "Pour tester une fonction dont la sortie exacte est imprévisible (mélange aléatoire), on vérifie ?",
+      "choix": [
+        "Rien",
+        "Des propriétés : même longueur, mêmes éléments, entrée non modifiée",
+        "Une valeur au hasard",
+        "Qu'elle ne plante pas"
+      ],
+      "bonne": 1,
+      "explication": "Même sans connaître l'ordre, tu prouves les invariants. Pour un calendrier : chaque paire une fois, n(n−1)/2 matchs."
+    },
+    {
+      "question": "Un bug est trouvé en production. La bonne habitude ?",
+      "choix": [
+        "Corriger vite",
+        "Écrire d'abord un test qui le reproduit (rouge), puis corriger (vert) : il ne reviendra pas",
+        "Documenter dans un README",
+        "Ajouter un try/catch"
+      ],
+      "bonne": 1,
+      "explication": "Le J−230, les fratries fusionnées, le doublon d'affectation : chacun aurait dû produire un test de non-régression."
+    },
+    {
+      "question": "Pourquoi tester toThrow('Effectif insuffisant') avec le message et pas juste toThrow() ?",
+      "choix": [
+        "Par style",
+        "Sans message, un TypeError sur undefined passerait aussi : on vérifierait que ça lève, pas que ça lève pour la bonne raison",
+        "Le message est optionnel",
+        "Pour la couverture"
+      ],
+      "bonne": 1,
+      "explication": "Le message fait partie du contrat : c'est ce que l'orga verra."
+    }
+  ]
+}

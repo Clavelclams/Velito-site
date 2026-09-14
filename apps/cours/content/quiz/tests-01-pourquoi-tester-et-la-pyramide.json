@@ -1,0 +1,49 @@
+{
+  "fiche": "tests-01-pourquoi-tester-et-la-pyramide",
+  "questions": [
+    {
+      "question": "Quels sont les trois étages de la pyramide de tests, du bas vers le haut ?",
+      "choix": [
+        "E2E, intégration, unitaire",
+        "Unitaire (beaucoup, rapides), intégration (quelques-uns), E2E (peu, lents)",
+        "Manuel, automatique, CI",
+        "Front, back, base"
+      ],
+      "bonne": 1,
+      "explication": "Beaucoup d'unitaires (une fonction, ms, isolé), quelques intégrations (plusieurs briques, base, HTTP), peu d'E2E (vrai navigateur, fragile). Ton écosystème a les deux premiers."
+    },
+    {
+      "question": "Un test qui ne peut jamais échouer, c'est ?",
+      "choix": [
+        "Un bon test stable",
+        "Pire que pas de test : il donne une fausse confiance",
+        "Un test unitaire",
+        "Un test de non-régression"
+      ],
+      "bonne": 1,
+      "explication": "expect(true).toBe(true) est vert et ne protège de rien. Un test doit vérifier un comportement qui pourrait casser."
+    },
+    {
+      "question": "À quoi sert la couverture de code ?",
+      "choix": [
+        "À prouver l'absence de bugs",
+        "À repérer ce qui n'est pas testé du tout. Pas un objectif : 100 % avec des tests vides vaut zéro",
+        "À noter les développeurs",
+        "À accélérer les tests"
+      ],
+      "bonne": 1,
+      "explication": "Vise des tests qui vérifient un comportement, et regarde la couverture pour trouver les trous."
+    },
+    {
+      "question": "Que veut dire « non-régression » ?",
+      "choix": [
+        "Le test ne régresse pas",
+        "Le test protège un comportement existant : si tu le casses par accident plus tard, le test le dit",
+        "Un test de performance",
+        "Un test qui ne teste que les nouveautés"
+      ],
+      "bonne": 1,
+      "explication": "Dans six mois tu modifies facteurK. Le test casse. Tu as changé un comportement sans le vouloir. Sans test, tu l'aurais su par un orga."
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "fiche": "supabase-postgres-10-auth-cookies-ssr-et-getuser",
+  "questions": [
+    {
+      "question": "Pourquoi un client Supabase par requête et jamais un singleton de module ?",
+      "choix": [
+        "Pour la performance",
+        "Chaque requête appartient à un utilisateur (son JWT, ses cookies). Un client partagé mélangerait les sessions de deux visiteurs",
+        "Par convention",
+        "Pour les tests"
+      ],
+      "bonne": 1,
+      "explication": "const supabase = createClient() en haut d'un fichier serveur = partagé entre toutes les requêtes du processus. Le visiteur B hérite de la session de A."
+    },
+    {
+      "question": "Différence entre getUser() et getSession() ?",
+      "choix": [
+        "Aucune",
+        "getSession décode le JWT sans le vérifier ; getUser l'envoie à Supabase qui vérifie la signature. Serveur = toujours getUser",
+        "getUser est plus lent donc à éviter",
+        "getSession est pour le serveur"
+      ],
+      "bonne": 1,
+      "explication": "Un cookie forgé passe getSession. Côté serveur, où la décision d'accès se prend, on vérifie."
+    },
+    {
+      "question": "Pourquoi setAll a un try/catch dans server.ts ?",
+      "choix": [
+        "Bug",
+        "Un Server Component ne peut pas écrire de cookies (il produit du HTML) ; on ignore, et le middleware — qui peut — rafraîchit",
+        "Pour les erreurs réseau",
+        "Par précaution inutile"
+      ],
+      "bonne": 1,
+      "explication": "C'est pour ça que le middleware appelle getUser() à chaque requête : ce n'est pas qu'un contrôle d'accès, c'est le moment où les cookies sont mis à jour."
+    },
+    {
+      "question": "Domain=.velito.fr sur le cookie de session donne quoi ?",
+      "choix": [
+        "Un cookie plus sûr",
+        "Tous les sous-domaines reçoivent le cookie : une connexion sert partout (SSO). Sans lui, session isolée par sous-domaine",
+        "Un cookie plus long",
+        "Rien"
+      ],
+      "bonne": 1,
+      "explication": "Le hub le fait ; compta et cours ne le font pas (isolés). Un choix par app, dans un seul fichier."
+    }
+  ]
+}

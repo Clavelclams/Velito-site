@@ -1,0 +1,49 @@
+{
+  "fiche": "securite-web-04-xss-et-echappement",
+  "questions": [
+    {
+      "question": "Pourquoi un pseudo <img onerror=…> ne s'exécute pas dans React ?",
+      "choix": [
+        "React bloque les images",
+        "{pseudo} en JSX est échappé : < devient &lt;, affiché en texte. Il faut dangerouslySetInnerHTML pour contourner",
+        "Le navigateur le refuse",
+        "Le serveur le filtre"
+      ],
+      "bonne": 1,
+      "explication": "Échappement par défaut. Twig fait pareil (autoescape), désactivé par |raw. Chaque dangerouslySetInnerHTML et |raw est à auditer."
+    },
+    {
+      "question": "L'échappement HTML protège-t-il <a href={url}> avec url = 'javascript:alert(1)' ?",
+      "choix": [
+        "Oui",
+        "Non : aucun caractère HTML dedans. Le lien exécute du code au clic. Valider le protocole (http/https) avant href",
+        "Oui si React 18+",
+        "Oui avec rel=noopener"
+      ],
+      "bonne": 1,
+      "explication": "href, src, JS inline, CSS inline : contextes où l'échappement HTML ne suffit pas."
+    },
+    {
+      "question": "Un cookie HttpOnly, c'est quoi ?",
+      "choix": [
+        "Un cookie chiffré",
+        "Un cookie invisible au JavaScript : document.cookie ne le contient pas, un XSS ne peut pas le voler",
+        "Un cookie HTTP sans HTTPS",
+        "Un cookie de session"
+      ],
+      "bonne": 1,
+      "explication": "Supabase Auth pose ses cookies ainsi. Ça n'empêche pas le XSS d'agir pendant que la victime est sur la page, mais il ne part pas avec la session."
+    },
+    {
+      "question": "Que fait Content-Security-Policy: script-src 'self' ?",
+      "choix": [
+        "Bloque tous les scripts",
+        "Le navigateur refuse tout script inline ou d'un autre domaine, même s'il est dans la page : rempart si un XSS passe",
+        "Autorise tous les scripts locaux",
+        "Chiffre les scripts"
+      ],
+      "bonne": 1,
+      "explication": "La ceinture derrière les bretelles. Posée sur le site vitrine Venaball le 9 septembre."
+    }
+  ]
+}
