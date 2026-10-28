@@ -45,6 +45,10 @@ type Evenement = {
   bilanPublic?: boolean;
   /** [28/10/2026] Partenaires (colonne vea.evenements.partenaires). */
   partenaires?: string[];
+  /** [28/10/2026] Série de séances récurrentes (colonne vea.evenements.serie). */
+  serie?: string | null;
+  /** Dates des séances suivantes de la même série (affichage regroupé). */
+  suivantes?: string[];
 };
 
 /**
@@ -84,7 +88,7 @@ export default function AgendaPage() {
       supabase
         .schema("vea")
         .from("evenements")
-        .select("id, nom, event_slug, date, heure, lieu, type, description, statut, bilan_public, partenaires")
+        .select("id, nom, event_slug, date, heure, lieu, type, description, statut, bilan_public, partenaires, serie")
         .order("date", { ascending: false })
         .then(({ data }) => {
           if (!data) return [] as Evenement[];
@@ -101,6 +105,7 @@ export default function AgendaPage() {
             bilanPublic: (e as { bilan_public?: boolean }).bilan_public ?? false,
             heure: (e as { heure?: string | null }).heure ?? null,
             partenaires: (e as { partenaires?: string[] | null }).partenaires ?? [],
+            serie: (e as { serie?: string | null }).serie ?? null,
           })) as Evenement[];
         }),
     ])
@@ -152,9 +157,27 @@ export default function AgendaPage() {
   // passe des minuit car la date etait stockee a 00h00).
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
-  const aVenir = evenements.filter(
-    (e) => new Date(e.date) >= startOfToday && e.actif
-  );
+  // [28/10/2026] À venir : du plus proche au plus lointain, et une seule carte
+  // par série (la prochaine séance) avec la liste des séances suivantes.
+  const aVenirBrut = evenements
+    .filter((e) => new Date(e.date) >= startOfToday && e.actif)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const parSerie = new Map<string, Evenement>();
+  const aVenir: Evenement[] = [];
+  for (const e of aVenirBrut) {
+    if (!e.serie) {
+      aVenir.push(e);
+      continue;
+    }
+    const premiere = parSerie.get(e.serie);
+    if (premiere) {
+      premiere.suivantes = [...(premiere.suivantes ?? []), e.date];
+    } else {
+      const carte = { ...e, suivantes: [] as string[] };
+      parSerie.set(e.serie, carte);
+      aVenir.push(carte);
+    }
+  }
   const passes = evenements.filter((e) => new Date(e.date) < startOfToday);
 
   // Filtres : "à venir" (default), tous, puis par type
@@ -166,6 +189,7 @@ export default function AgendaPage() {
     if (filtre === "a_venir") {
       // On retourne uniquement les events a venir (passes ignores)
       return liste.filter((e) => new Date(e.date) >= startOfToday && e.actif);
+      // (aVenir est déjà regroupé par série, voir plus haut)
     }
     if (filtre === "tous") return liste;
     return liste.filter((e) => e.type === filtre);
@@ -349,6 +373,14 @@ function EventCard({
         {ev.description && (
           <p className="text-vea-text-muted text-sm leading-relaxed line-clamp-3">
             {ev.description}
+          </p>
+        )}
+        {futur && ev.suivantes && ev.suivantes.length > 0 && (
+          <p className="text-xs text-vea-text-muted mt-2">
+            <span className="font-semibold">Puis :</span>{" "}
+            {ev.suivantes
+              .map((d) => new Date(`${d}T12:00:00Z`).toLocaleDateString("fr-FR", { day: "numeric", month: "short", timeZone: "UTC" }))
+              .join(", ")}
           </p>
         )}
         {ev.partenaires && ev.partenaires.length > 0 && (
