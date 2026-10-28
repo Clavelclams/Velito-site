@@ -287,6 +287,44 @@ export async function createPreinscritAndAddAction(input: {
 }
 
 // ============================================================================
+// Compléter la fiche d'un pré-inscrit (clic sur un présent)
+// [28/10/2026] Passe par la fonction SQL vea.completer_preinscrit
+// (sql/vea-completer-preinscrit-v1.sql) : elle revérifie le droit, ne modifie
+// que ces 6 champs, et refuse toute fiche liée à un compte.
+// ============================================================================
+export async function completerPreinscritAction(input: {
+  eventSlug: string;
+  participantId: string;
+  prenom: string;
+  nom: string;
+  sexe: "F" | "M" | "X" | "";
+  annee: number | null;
+  quartier: string;
+  phone: string;
+}): Promise<Result> {
+  const ctx = await contexte();
+  if ("erreur" in ctx) return { success: false, error: ctx.erreur };
+  const { supabase } = ctx;
+
+  const { data, error } = await supabase.schema("vea").rpc("completer_preinscrit", {
+    p_id: input.participantId,
+    p_prenom: input.prenom,
+    p_nom: input.nom.trim() || NOM_PROVISOIRE,
+    p_sexe: input.sexe || null,
+    p_annee: input.annee,
+    p_quartier: input.quartier,
+    // "06.12.34-56 78" -> "0612345678" (la fonction SQL n'accepte que des chiffres et un + initial)
+    p_phone: input.phone.replace(/[^\d+]/g, ""),
+  });
+  if (error) return { success: false, error: error.message };
+  const r = data as { success: boolean; error?: string } | null;
+  if (!r?.success) return { success: false, error: r?.error ?? "Enregistrement impossible." };
+
+  revalidatePath(`/admin/evenements/${input.eventSlug}`);
+  return { success: true };
+}
+
+// ============================================================================
 // Retrait
 // ============================================================================
 export async function removePresenceAction(input: {
