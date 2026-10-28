@@ -23,11 +23,14 @@ const STATUT_OPTIONS = [
 
 interface DemandeManagerProps {
   id: string;
+  /** [16/10/2026] 'stage' : même workflow, sans l'étape "Devis envoyé". */
+  type: "devis" | "stage";
   statut: string;
   notesInternes: string | null;
 }
 
-export default function DemandeManager({ id, statut, notesInternes }: DemandeManagerProps) {
+export default function DemandeManager({ id, type, statut, notesInternes }: DemandeManagerProps) {
+  const options = type === "stage" ? STATUT_OPTIONS.filter((o) => o.value !== "devis_envoye") : STATUT_OPTIONS;
   const router = useRouter();
   const [currentStatut, setCurrentStatut] = useState(statut || "nouveau");
   const [notes, setNotes] = useState(notesInternes ?? "");
@@ -93,7 +96,7 @@ export default function DemandeManager({ id, statut, notesInternes }: DemandeMan
             onChange={(e) => setCurrentStatut(e.target.value)}
             className={inputClass}
           >
-            {STATUT_OPTIONS.map((o) => (
+            {options.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
             ))}
           </select>

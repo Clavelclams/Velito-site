@@ -1,0 +1,49 @@
+{
+  "fiche": "table-de-marque-journal-d-evenements",
+  "questions": [
+    {
+      "question": "Dans la table de marque, le marqueur annule un panier à 2 points. Que se passe-t-il dans match.evenements ?",
+      "choix": [
+        "L'événement du panier est retiré du tableau avec filter",
+        "Un événement de type annulation est ajouté à la fin, avec cible = id du panier",
+        "Le champ score de l'équipe est diminué de 2",
+        "L'événement du panier reçoit un champ annule: true"
+      ],
+      "bonne": 1,
+      "explication": "On ne supprime ni ne modifie rien : on ajoute. evenementsActifs() filtre ensuite les événements visés. Le champ annule: true serait une modification de l'existant, et il n'y a pas de score stocké à diminuer."
+    },
+    {
+      "question": "Pourquoi les moteurs chrono.js et sets.js n'ont-ils aucune ligne qui traite les annulations ?",
+      "choix": [
+        "Parce que les annulations sont interdites pendant le match",
+        "Parce que store.js supprime les événements annulés avant de sauvegarder",
+        "Parce qu'ils ne lisent que evenementsActifs(match), qui a déjà retiré les annulations et leurs cibles",
+        "Parce que les annulations ne concernent que l'affichage"
+      ],
+      "bonne": 2,
+      "explication": "journal.js centralise la règle « qu'est-ce qui est encore vivant ». Chaque moteur reçoit une liste propre. Le stockage, lui, garde tout."
+    },
+    {
+      "question": "Au volley, on corrige un point attribué à la mauvaise équipe. Pourquoi le nouvel événement garde-t-il ordre: cible.ordre ?? cible.seq ?",
+      "choix": [
+        "Pour que sets.js rejoue le point à sa place d'origine, car l'ordre des points décide du service et de la rotation",
+        "Pour que l'horodatage affiché soit celui du point d'origine",
+        "Pour que le point corrigé ne puisse plus être annulé",
+        "Pour économiser un numéro seq"
+      ],
+      "bonne": 0,
+      "explication": "sets.js trie par (ordre ?? seq). Sans ordre, le point corrigé arriverait en fin de liste et toute la rotation serait recalculée dans le mauvais ordre. L'horodatage, lui, reste celui de la saisie de la correction."
+    },
+    {
+      "question": "Quel avantage le jury peut-il attendre d'un score recalculé plutôt que stocké ?",
+      "choix": [
+        "Il est plus rapide à afficher",
+        "Il prend moins de place dans le localStorage",
+        "Il ne peut pas être modifié par l'utilisateur",
+        "Il ne peut jamais être en désaccord avec l'historique des actions"
+      ],
+      "bonne": 3,
+      "explication": "C'est la seule source de vérité : le score découle du journal. Il n'est pas plus rapide (on relit tout) et rien n'empêche techniquement de modifier le localStorage."
+    }
+  ]
+}

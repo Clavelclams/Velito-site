@@ -1,0 +1,60 @@
+{
+  "fiche": "javascript-11-une-application-qui-marche-sans-reseau",
+  "questions": [
+    {
+      "question": "Tu corriges un bug dans js/match.js et tu envoies le fichier sur le serveur, sans toucher sw.js. Que voient les tablettes qui avaient déjà ouvert la table de marque ?",
+      "choix": [
+        "La nouvelle version au prochain rechargement",
+        "L'ancienne version : sw.js n'ayant pas changé, le service worker n'est pas réinstallé et sert match.js depuis le cache",
+        "Une page d'erreur, car le cache ne correspond plus",
+        "La nouvelle version seulement si elles sont hors ligne"
+      ],
+      "bonne": 1,
+      "explication": "Stratégie cache d'abord : tant que le cache emarque-unss-v8 existe, match.js vient de lui. Seul un sw.js modifié (VERSION_CACHE augmentée) déclenche install puis activate, qui supprime l'ancien cache."
+    },
+    {
+      "question": "Quel rôle le localStorage joue-t-il dans le fonctionnement hors ligne de la table de marque ?",
+      "choix": [
+        "Il stocke les fichiers JS de l'app",
+        "Il remplace le service worker sur iPad",
+        "Il garde l'état (matchs, présences) entre deux chargements ; le code, lui, vient du cache du service worker",
+        "Il synchronise les données avec le serveur au retour du réseau"
+      ],
+      "bonne": 2,
+      "explication": "Deux problèmes, deux outils : Cache API pour le code, localStorage pour les données. Il n'y a aucun serveur, donc aucune synchronisation."
+    },
+    {
+      "question": "Un prof utilise la table de marque dans Safari sur iPad, puis n'y revient pas pendant plusieurs semaines tout en utilisant Safari. Que peut-il arriver aux matchs non exportés ?",
+      "choix": [
+        "Ils peuvent avoir été effacés : WebKit peut supprimer les données écrites par script d'un site sans interaction depuis 7 jours d'utilisation",
+        "Rien : le localStorage est permanent",
+        "Ils sont automatiquement copiés dans iCloud",
+        "Ils sont protégés parce que app.js appelle navigator.storage.persist()"
+      ],
+      "bonne": 0,
+      "explication": "persist() est une demande que le navigateur peut refuser. Le localStorage n'est jamais une sauvegarde : d'où l'export JSON et, plus tard, l'envoi vers un serveur."
+    },
+    {
+      "question": "Pourquoi le service worker récupère-t-il Tailwind avec mode: 'no-cors', et quel est le revers ?",
+      "choix": [
+        "Pour aller plus vite ; aucun revers",
+        "Pour contourner le https ; le revers est une faille XSS",
+        "Pour pouvoir lire le CSS généré ; le revers est un cache plus gros",
+        "Parce que le CDN est un autre domaine ; la réponse est opaque, donc on ne peut pas vérifier qu'elle n'est pas une erreur"
+      ],
+      "bonne": 3,
+      "explication": "Une réponse opaque peut être exécutée par un <script> mais pas lue par le code : statut et contenu invisibles. Une erreur du CDN serait mise en cache sans alerte. Un CSS compilé livré avec l'app supprime le problème."
+    },
+    {
+      "question": "Dans store.js, charger() trouve une sauvegarde avec version: 2 alors que VERSION vaut 3. Que fait le code actuel ?",
+      "choix": [
+        "Il convertit la sauvegarde au nouveau format",
+        "Il repart d'un état vide : les matchs en cours sont perdus",
+        "Il lève une exception et l'app ne démarre pas",
+        "Il garde l'ancienne sauvegarde et ignore VERSION"
+      ],
+      "bonne": 1,
+      "explication": "if (lu.version !== VERSION) return etatInitial(); C'est sûr pour une maquette, dangereux pour un vrai usage : il faudrait une fonction de migration v2 vers v3."
+    }
+  ]
+}

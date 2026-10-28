@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-de-zero-07-les-migrations",
+  "questions": [
+    {
+      "question": "Tu ajoutes la propriété $cleFfbb dans Equipe.php. Pourquoi faut-il aussi une migration ?",
+      "choix": [
+        "Parce que modifier l'entité ne crée pas la colonne dans MySQL : la migration applique le même changement sur chaque base",
+        "Parce que sans migration, Twig ne peut pas afficher la propriété",
+        "Parce que Git refuse de pousser une entité modifiée sans migration",
+        "Parce que la migration remplit automatiquement la clé FFBB de chaque équipe"
+      ],
+      "bonne": 0,
+      "explication": "L'entité décrit ce que Doctrine attend, la migration modifie réellement la structure de la base, de façon identique sur le PC, le serveur MABB et le serveur Venaball. Git ne sait rien des migrations, et Version20260930150000 ajoute une colonne vide (DEFAULT NULL), elle ne remplit aucune valeur."
+    },
+    {
+      "question": "Comment doctrine:migrations:migrate sait-il quelles migrations il a déjà jouées sur un serveur ?",
+      "choix": [
+        "Il regarde la date de modification des fichiers",
+        "Il le demande à GitHub",
+        "Il consulte une table de versions dans la base elle-même (doctrine_migration_versions par défaut)",
+        "Il rejoue toutes les migrations à chaque fois"
+      ],
+      "bonne": 2,
+      "explication": "Chaque migration jouée laisse une ligne dans la table de versions de la base. Au lancement suivant, seules les migrations absentes de cette table sont jouées, ce qui permet de lancer la commande à chaque déploiement. Rejouer toutes les migrations casserait la base (colonnes déjà existantes)."
+    },
+    {
+      "question": "La migration des secteurs MABB contient WHERE c.slug = 'mabb' AND NOT EXISTS (...). Que se passe-t-il quand elle est jouée sur l'instance Venaball, où le club MABB n'existe pas ?",
+      "choix": [
+        "Elle plante et bloque le déploiement",
+        "Elle insère zéro ligne, sans erreur",
+        "Elle crée le club MABB puis ses secteurs",
+        "Elle insère les secteurs dans le club qui a l'id 2"
+      ],
+      "bonne": 1,
+      "explication": "INSERT ... SELECT ... FROM club WHERE slug = 'mabb' insère autant de lignes que la recherche en trouve : zéro si le club est absent. C'est la règle des migrations gardées par slug. Cibler l'id 2 serait justement le piège : sur une autre instance, l'id 2 est un autre club."
+    },
+    {
+      "question": "Le 03/10/2026, l'ajout de getCodeEmarque() a provoqué une erreur 500 sur tout le site. Pourquoi ?",
+      "choix": [
+        "Parce que la migration avait supprimé la table rencontre",
+        "Parce que le serveur OVH était en maintenance",
+        "Parce que le jeton CSRF du formulaire était invalide",
+        "Parce que getCodeEMarque() existait déjà et que PHP considère deux noms de méthode identiques à la casse près comme une seule méthode déclarée deux fois"
+      ],
+      "bonne": 3,
+      "explication": "Les noms de méthodes PHP ne tiennent pas compte des majuscules : getCodeEmarque et getCodeEMarque entrent en conflit, la classe Rencontre ne se charge plus et presque toutes les pages tombent. Le commit 2fa7cbc a supprimé le doublon et la migration. La migration n'avait rien supprimé, elle ajoutait une colonne."
+    },
+    {
+      "question": "Pourquoi la règle du projet interdit-elle de générer les migrations avec doctrine:migrations:diff ?",
+      "choix": [
+        "Parce que la commande n'existe pas sur OVH",
+        "Parce que la base locale a dérivé de la prod : la comparaison produirait du bruit ou du faux",
+        "Parce que diff ne sait pas écrire de méthode up()",
+        "Parce que diff supprime automatiquement les anciennes migrations"
+      ],
+      "bonne": 1,
+      "explication": "diff compare les entités avec la base locale. Comme celle-ci ne ressemble plus à la prod (PROMPT_DEV_COLLABORATEUR.md), le résultat serait faux. Les migrations sont donc écrites à la main, petites et réversibles. diff sait très bien écrire up() et ne supprime rien."
+    }
+  ]
+}

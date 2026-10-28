@@ -26,16 +26,28 @@ export default function MentionsLegalesPage() {
             <h2 className="font-display text-xl font-black text-vena-kaki mb-3">
               Éditeur du site
             </h2>
+            {/* [05/09/2026] Corrigé : le siège déclaré était « Amiens », alors que
+                le siège social statutaire est à Paris (domiciliation). Cette
+                incohérence avec le Kbis et le profil D-U-N-S est un motif de rejet
+                lors des vérifications d'identité (Apple, Google Play, banques).
+                Le SIREN/RCS était masqué : son affichage est une obligation légale
+                (LCEN art. 6 III + art. R.123-237 du code de commerce). */}
             <p className="text-sm">
-              <strong>Velito Expertise Numérique Amiens</strong> (VENA)
+              <strong>VELITO EXPERTISE NUMERIQUE AMIENS</strong> (VENA)
               <br />
-              SASU au capital social de 500€
+              SASU au capital social de 500 €
               <br />
-              Siège social : Amiens, Hauts-de-France, France
+              Siège social : 60 rue François Ier, 75008 Paris, France
               <br />
-              <span className="text-vena-text-muted">
-                SIRET et numéro RCS : disponibles sur demande
-              </span>
+              Activité exercée à Amiens, Hauts-de-France
+              <br />
+              SIREN : 935 334 672 — SIRET : 935 334 672 00018
+              <br />
+              RCS Paris 935 334 672
+              <br />
+              TVA intracommunautaire : FR56935334672
+              <br />
+              Code APE : 62.01Z (programmation informatique)
             </p>
             <p className="text-sm mt-3">
               <strong>Représentant légal :</strong> Clavel NDEMA MOUSSA, Président

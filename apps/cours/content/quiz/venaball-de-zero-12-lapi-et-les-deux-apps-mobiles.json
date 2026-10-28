@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-de-zero-12-lapi-et-les-deux-apps-mobiles",
+  "questions": [
+    {
+      "question": "Que stocke la table api_token pour le jeton d'une joueuse ?",
+      "choix": [
+        "Le jeton en clair, pour pouvoir le renvoyer si elle le perd",
+        "Son mot de passe chiffré",
+        "L'empreinte SHA-256 du jeton : le clair n'est envoyé qu'une fois, à la connexion",
+        "Rien : le jeton est autonome et contient tout"
+      ],
+      "bonne": 2,
+      "explication": "ApiToken::creerPour range hash('sha256', $clair) et ne renvoie le clair qu'à l'app. Si la table fuit, les empreintes ne permettent pas de se connecter. Un jeton « autonome qui contient tout », c'est un JWT, pas le jeton opaque de Venaball."
+    },
+    {
+      "question": "Le jeton de Léa a expiré pendant le week-end. Elle ouvre l'app joueuse. Quel code renvoie l'API, et que fait l'app ?",
+      "choix": [
+        "401 : ApiTokenHandler ne trouve plus de jeton valide, et l'app efface le jeton et revient à l'écran de connexion",
+        "403 : elle n'a plus le droit de voir ses stats",
+        "404 : sa fiche joueuse a été supprimée",
+        "200 : le serveur prolonge automatiquement le jeton"
+      ],
+      "bonne": 0,
+      "explication": "Jeton mort = « je ne sais plus qui tu es » = 401. Côté app, invaliderSession() (app joueuse) ou fermerSession() (app Club) renvoie à la connexion. 403 voudrait dire « identifiée mais interdite ». Il n'y a pas de renouvellement automatique (pas de refresh token)."
+    },
+    {
+      "question": "Un coach du club A modifie son app pour envoyer X-Club-Id avec l'identifiant du club B, où il n'a aucun rôle. Que répond le serveur ?",
+      "choix": [
+        "200 : l'en-tête suffit à choisir le club",
+        "403 : « tu n'as pas le droit dans ce club »",
+        "400 : l'en-tête est mal formé",
+        "404 « Club introuvable » : clubCourant() ne trouve pas ce club dans ses rôles actifs, et on ne confirme pas qu'il existe"
+      ],
+      "bonne": 3,
+      "explication": "Le X-Club-Id n'est jamais de confiance : ApiClubController::clubCourant() le compare aux clubs où le compte a un rôle actif et validé. Répondre 403 confirmerait que le club existe, d'où le 404 volontaire."
+    },
+    {
+      "question": "Où l'app joueuse range-t-elle son jeton sur le téléphone ?",
+      "choix": [
+        "Dans AsyncStorage, comme le reste des données",
+        "Dans expo-secure-store, le coffre-fort chiffré du téléphone (Keychain ou Keystore)",
+        "Dans un cookie, comme le site web",
+        "Nulle part : elle redemande le mot de passe à chaque ouverture"
+      ],
+      "bonne": 1,
+      "explication": "session.ts utilise SecureStore.setItemAsync, et son commentaire précise « PAS AsyncStorage » : un jeton d'authentification se protège. Une app mobile n'utilise pas de cookie de session, et relire le coffre au démarrage évite de redemander le mot de passe."
+    },
+    {
+      "question": "Pourquoi l'app Club n'a-t-elle pas le droit de décider seule quels écrans un compte peut ouvrir ?",
+      "choix": [
+        "Parce que React Native ne sait pas lire les rôles",
+        "Parce que les rôles changent trop souvent",
+        "Parce qu'une app peut être modifiée : c'est le serveur qui calcule les vues (/api/club/moi) et revérifie chaque requête",
+        "Parce que le téléphone n'a pas assez de mémoire"
+      ],
+      "bonne": 2,
+      "explication": "ApiClubMoiController calcule les vues côté serveur, et chaque route revérifie club et rôle. Si l'app affichait un écran caché, le serveur refuserait quand même. Les autres réponses sont des raisons techniques inventées."
+    }
+  ]
+}

@@ -32,6 +32,7 @@ const NAV_LINKS: NavLink[] = [
   { label: "Medias", href: "/medias" },
   { label: "Partenaires", href: "/partenaires" },
   { label: "Prestations", href: "/prestations" },
+  { label: "Stages", href: "/stages" },
 ];
 
 const HELLOASSO_URL =
@@ -129,7 +130,8 @@ export default function Navbar() {
         </div>
 
         {/* LIENS NAV (desktop) */}
-        <div className="hidden lg:flex items-center gap-7">
+        {/* [16/10/2026] gap-5 sous 1280px : avec le lien Stages (8 liens), gap-7 risque de pousser les boutons de droite sur un écran de 1024px (à vérifier à l'œil). */}
+        <div className="hidden lg:flex items-center gap-5 xl:gap-7">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}

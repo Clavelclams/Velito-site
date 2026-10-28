@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-de-zero-16-les-tests-ce-qui-est-prouve-et-ce-qui-ne-lest-pas",
+  "questions": [
+    {
+      "question": "Quelle est la différence entre un test unitaire et un test fonctionnel ?",
+      "choix": [
+        "Le test unitaire est écrit en PHP, le fonctionnel en JavaScript",
+        "Le test unitaire vérifie une pièce isolée sans base ni serveur web, le fonctionnel envoie une vraie requête HTTP à travers toute l'application",
+        "Le test fonctionnel est plus rapide que le test unitaire",
+        "Il n'y a pas de différence, ce sont deux noms pour la même chose"
+      ],
+      "bonne": 1,
+      "explication": "CategorieCalculatorTest teste une classe seule en mémoire ; PirbSeancesIdorTest envoie une requête HTTP qui traverse firewall, contrôleur et base. Les deux sont en PHP avec PHPUnit, et le fonctionnel est en général plus lent."
+    },
+    {
+      "question": "Dans PirbSeancesIdorTest, quelle réponse le test exige-t-il quand Alice ouvre la séance de l'équipe B ?",
+      "choix": [
+        "200, la page s'affiche",
+        "302, une redirection vers la connexion",
+        "403, accès interdit",
+        "404, page introuvable"
+      ],
+      "bonne": 2,
+      "explication": "assertResponseStatusCodeSame(403) : Alice est connectée, mais la séance ne concerne pas son équipe, donc refus. Le 302 vers la connexion est le comportement attendu pour un visiteur anonyme, testé dans un autre test du même fichier."
+    },
+    {
+      "question": "Pourquoi PirbSeancesIdorTest ouvre une transaction dans setUp() et l'annule dans tearDown() ?",
+      "choix": [
+        "Pour que les données créées par chaque test disparaissent et que la base de test reste propre",
+        "Pour accélérer les requêtes HTTP",
+        "Pour éviter d'avoir à se connecter",
+        "Pour envoyer les résultats sur GitHub"
+      ],
+      "bonne": 0,
+      "explication": "Le rollBack annule tout ce que le test a écrit : un test ne laisse pas de résidu qui fausserait le suivant. La connexion se fait par loginUser, et rien n'est envoyé sur GitHub : il n'y a pas de CI."
+    },
+    {
+      "question": "Laquelle de ces parties de Venaball n'a aucun test dans le dossier tests/ ?",
+      "choix": [
+        "Le ClubVoter",
+        "Le TenantResolver",
+        "Le calcul de catégorie FFBB",
+        "L'API de l'app Club (src/Controller/Api/Club/)"
+      ],
+      "bonne": 3,
+      "explication": "ClubVoterTest (17 tests), TenantResolverTest (14) et CategorieCalculatorTest (10) existent. L'API Club, ses 14 contrôleurs, n'a aucun test, comme la trésorerie, les imports et la purge RGPD."
+    },
+    {
+      "question": "Un jury te demande : « Tes tests tournent-ils à chaque modification ? » Quelle réponse est honnête ?",
+      "choix": [
+        "Oui, GitHub Actions les lance à chaque push",
+        "Oui, OVH les lance à chaque déploiement",
+        "Non : aucune CI ne lance PHPUnit, le seul workflow est une tâche OCR, et le dernier commit sur tests/ date du 07/07/2026",
+        "Oui, deploy.ps1 les lance avant git push"
+      ],
+      "bonne": 2,
+      "explication": "Le seul fichier de .github/workflows/ est parse-positions-ffbb.yml, une tâche planifiée qui lit des PDF. deploy.ps1 ne lance pas PHPUnit et OVH non plus. Le reconnaître, puis proposer une CI, est la réponse qui tient."
+    }
+  ]
+}

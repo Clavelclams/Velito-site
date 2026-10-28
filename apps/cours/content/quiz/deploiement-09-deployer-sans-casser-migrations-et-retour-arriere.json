@@ -1,0 +1,60 @@
+{
+  "fiche": "deploiement-09-deployer-sans-casser-migrations-et-retour-arriere",
+  "questions": [
+    {
+      "question": "Dans deploy.ps1, côté serveur, dans quel ordre passent cache:clear et doctrine:migrations:migrate ?",
+      "choix": [
+        "Le cache est vidé avant les migrations : pendant un moment, le nouveau code tourne sur l'ancien schéma",
+        "Les migrations passent avant le cache, comme il se doit",
+        "Le script ne lance aucune migration",
+        "Les deux tournent en parallèle"
+      ],
+      "bonne": 0,
+      "explication": "C'est l'un des trois défauts du script, avec l'absence de sauvegarde avant migration et l'absence de retour arrière."
+    },
+    {
+      "question": "Pourquoi 00_ECOSYSTEME.md §2.6 demande-t-il git fetch + git reset --hard origin/main plutôt que git pull ?",
+      "choix": [
+        "Parce que git pull est plus lent",
+        "Parce que git pull efface .env.local",
+        "Parce qu'un fichier suivi (reference.php) est modifié sur le serveur : git pull refuserait d'avancer, alors que reset --hard aligne de force les fichiers suivis sur main",
+        "Parce que git pull ne marche pas sur OVH"
+      ],
+      "bonne": 2,
+      "explication": "reset --hard ne touche que les fichiers suivis par Git : .env.local, public/uploads et var/ restent en place."
+    },
+    {
+      "question": "Quel est l'ordre sûr d'un déploiement ?",
+      "choix": [
+        "Code, cache, migrations, sauvegarde, vérification",
+        "Sauvegarde, code, dépendances, migrations, cache, vérification",
+        "Migrations, code, dépendances, cache, sauvegarde",
+        "Cache, code, migrations, dépendances, vérification"
+      ],
+      "bonne": 1,
+      "explication": "La sauvegarde d'abord : c'est le point de retour des données. Les dépendances avant les migrations et le cache, parce que le code en a besoin pour tourner."
+    },
+    {
+      "question": "La migration Version20261002120000 a un down() qui fait DROP TABLE fbi_licencie. Que garantit ce down() ?",
+      "choix": [
+        "Il restaure aussi les licences importées depuis",
+        "Rien, down() n'est jamais exécuté",
+        "Il remet la base exactement comme avant, données comprises",
+        "Il rétablit le schéma, mais efface les données écrites dans fbi_licencie entre-temps : seul un dump fait avant la migration les retrouve"
+      ],
+      "bonne": 3,
+      "explication": "Réversible veut dire schéma réversible, pas données réversibles. C'est pour ça que la sauvegarde passe avant la migration."
+    },
+    {
+      "question": "Quelle faiblesse la procédure de CLAUDE.md §3 a-t-elle, elle aussi ?",
+      "choix": [
+        "Elle n'a pas de composer install : une nouvelle dépendance arriverait sans sa bibliothèque",
+        "Elle vide le cache avant les migrations",
+        "Elle utilise git pull",
+        "Elle fait git add -A sur le serveur"
+      ],
+      "bonne": 0,
+      "explication": "Elle a le bon ordre migration puis cache et évite git pull, mais sans composer install ni sauvegarde avant migration. Il faut une seule procédure, complète."
+    }
+  ]
+}

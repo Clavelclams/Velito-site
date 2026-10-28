@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-de-zero-17-ce-qui-ne-va-pas-encore",
+  "questions": [
+    {
+      "question": "Quelle image résume le mieux la dette technique ?",
+      "choix": [
+        "Une facture d'hébergement impayée",
+        "Un prêt : on va plus vite aujourd'hui en prenant des raccourcis, on paie plus tard avec des intérêts",
+        "Un bug qui fait planter le site",
+        "Une bibliothèque Composer trop ancienne"
+      ],
+      "bonne": 1,
+      "explication": "La dette technique, ce sont les raccourcis qui coûtent du temps plus tard, et ce coût grandit quand du code s'empile dessus. Un bug ou une vieille bibliothèque peuvent en faire partie, mais ce n'est pas la définition."
+    },
+    {
+      "question": "Pourquoi l'absence de login_throttling actif dans security.yaml est-elle un risque ?",
+      "choix": [
+        "Les mots de passe sont stockés en clair",
+        "Les joueuses ne peuvent plus se déconnecter",
+        "Les formulaires n'ont plus de jeton CSRF",
+        "Rien ne freine un robot qui essaie des milliers de mots de passe à la suite"
+      ],
+      "bonne": 3,
+      "explication": "login_throttling limite le nombre de tentatives : commenté, il laisse la porte ouverte à la force brute. Les mots de passe sont bien hachés (password_hashers auto) et le CSRF est un autre mécanisme, sans lien avec ce bloc."
+    },
+    {
+      "question": "La commande app:sorties:purger-rgpd existe. Quel est alors le problème ?",
+      "choix": [
+        "Elle supprime toutes les joueuses",
+        "Aucun cron ne la lance : la purge ne tourne jamais toute seule",
+        "Elle est écrite en Python",
+        "Elle ne marche qu'en local"
+      ],
+      "bonne": 1,
+      "explication": "Le code existe, mais aucun bin/cron-*.php ne l'appelle et l'audit 44 note qu'aucune purge RGPD ne tourne. Les données restent donc au-delà de la durée prévue. Elle ne supprime pas tout, et c'est une commande Symfony en PHP."
+    },
+    {
+      "question": "Que fait public/uploads/.htaccess, et pourquoi reste-t-il une rustine ?",
+      "choix": [
+        "Il bloque tout sauf les images et interdit l'exécution de scripts, mais la protection dépend d'Apache : mieux vaut ranger les documents hors de public/",
+        "Il chiffre les fichiers, ce qui suffit pour toujours",
+        "Il supprime les fichiers après 14 jours",
+        "Il redirige vers le site vitrine"
+      ],
+      "bonne": 0,
+      "explication": "Le fichier ferme l'accès direct aux documents et bloque l'exécution de code, ce qui est bien. Mais il ne chiffre rien et ne supprime rien ; si la configuration change, les documents redeviennent exposés. La vraie correction est de les servir par un contrôleur depuis un dossier hors de public/."
+    },
+    {
+      "question": "Comment présenter un défaut connu au jury ?",
+      "choix": [
+        "Ne pas en parler en espérant qu'il ne pose pas la question",
+        "Dire que c'est la faute de l'IA",
+        "Dire ce que c'est, le risque, la correction prévue et sa priorité",
+        "Dire que tous les projets ont des bugs, donc que ce n'est pas grave"
+      ],
+      "bonne": 2,
+      "explication": "Le jury cherche un développeur lucide. Cacher le défaut fait perdre toute crédibilité s'il le trouve, rejeter la faute ou le minimiser montre qu'on n'assume pas. Quoi, risque, correction, priorité : c'est la formule de la leçon."
+    }
+  ]
+}

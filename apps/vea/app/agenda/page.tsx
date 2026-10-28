@@ -43,6 +43,8 @@ type Evenement = {
   /** Bilan public publie par l'admin -> bouton "Voir le bilan" sur les events
    *  passes -> /agenda/<slug>. Seuls les events Supabase peuvent en avoir un. */
   bilanPublic?: boolean;
+  /** [28/10/2026] Partenaires (colonne vea.evenements.partenaires). */
+  partenaires?: string[];
 };
 
 /**
@@ -82,7 +84,7 @@ export default function AgendaPage() {
       supabase
         .schema("vea")
         .from("evenements")
-        .select("id, nom, event_slug, date, lieu, type, description, statut, bilan_public")
+        .select("id, nom, event_slug, date, heure, lieu, type, description, statut, bilan_public, partenaires")
         .order("date", { ascending: false })
         .then(({ data }) => {
           if (!data) return [] as Evenement[];
@@ -97,6 +99,8 @@ export default function AgendaPage() {
             gallerySlug: GALLERY_EVENT_SLUGS.has(e.event_slug) ? e.event_slug : undefined,
             eventSlug: e.event_slug,
             bilanPublic: (e as { bilan_public?: boolean }).bilan_public ?? false,
+            heure: (e as { heure?: string | null }).heure ?? null,
+            partenaires: (e as { partenaires?: string[] | null }).partenaires ?? [],
           })) as Evenement[];
         }),
     ])
@@ -345,6 +349,11 @@ function EventCard({
         {ev.description && (
           <p className="text-vea-text-muted text-sm leading-relaxed line-clamp-3">
             {ev.description}
+          </p>
+        )}
+        {ev.partenaires && ev.partenaires.length > 0 && (
+          <p className="text-xs text-vea-text-dim mt-2">
+            <span className="font-semibold text-vea-text-muted">Avec :</span> {ev.partenaires.join(", ")}
           </p>
         )}
       </div>

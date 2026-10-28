@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-saison-regle-unique",
+  "questions": [
+    {
+      "question": "Avant le commit du 30/09/2026, une cotisation saisie le 15 juillet changeait de saison selon l'écran. Quelle était la cause ?",
+      "choix": [
+        "La base MySQL stockait les dates en UTC et décalait le mois",
+        "La règle de bascule était copiée dans plusieurs fichiers, avec juillet à un endroit et septembre dans les autres",
+        "Le sélecteur de saison n'écrivait rien en session",
+        "La FFBB avait changé sa date de début de saison en cours d'année"
+      ],
+      "bonne": 1,
+      "explication": "CotisationJoueur, XpCalculator et BadgeChecker avaient chacun leur propre calcul avec $mois >= 9, alors que SaisonService basculait en juillet. Une règle métier dupliquée finit par diverger : c'est exactement ce qui s'est passé."
+    },
+    {
+      "question": "Pourquoi SaisonService::pourDate() est-elle statique, alors que Symfony recommande d'injecter les services ?",
+      "choix": [
+        "Parce qu'une méthode statique est plus rapide à l'exécution",
+        "Parce que Doctrine interdit les services non statiques dans les repositories",
+        "Parce que les entités comme CotisationJoueur ne peuvent pas recevoir de service injecté, et que la règle est une fonction pure",
+        "Parce que les méthodes statiques sont automatiquement mises en cache par PHP"
+      ],
+      "bonne": 2,
+      "explication": "Une entité Doctrine est créée par l'ORM, pas par le conteneur de services : on ne peut rien lui injecter. Comme pourDate() ne dépend que de son paramètre (même entrée, même sortie), la rendre statique ne coûte rien et permet à tout le code de l'appeler."
+    },
+    {
+      "question": "Dans src/Service/SaisonService.php, que renvoie pourDate() pour la date du 30 juin 2026 ?",
+      "choix": [
+        "2025-2026",
+        "2026-2027",
+        "2026-2026",
+        "Une exception, car juin est hors saison"
+      ],
+      "bonne": 0,
+      "explication": "Le mois vaut 6, inférieur à MOIS_BASCULE (7) : la méthode renvoie (année - 1) - année, soit 2025-2026. Le lendemain, 1er juillet, elle renverrait 2026-2027. C'est précisément ce test de frontière qui manque dans SaisonServiceTest."
+    },
+    {
+      "question": "Que fait SaisonQueryListener quand une requête arrive avec ?saison=all dans l'URL ?",
+      "choix": [
+        "Il écrit « all » en session pour afficher toutes les saisons",
+        "Il lève une exception car la valeur est invalide",
+        "Il remet la session sur la saison courante calculée",
+        "Il ne touche pas à la session, car « all » n'est pas une saison valide selon isValide()"
+      ],
+      "bonne": 3,
+      "explication": "Le listener ne mémorise que des saisons qui passent SaisonService::isValide(). Les valeurs spéciales (all, vide, saison inconnue) sont ignorées, ce qui évite d'écraser le choix de l'utilisateur avec une valeur absurde."
+    },
+    {
+      "question": "Un jury cherche « -09-01 » dans le projet après le commit « règle unique ». Que trouve-t-il, honnêtement ?",
+      "choix": [
+        "Rien : toutes les dates de saison passent par SaisonService",
+        "Encore deux calculs à part : EvaluationMatchRepository::saisonBounds() et GenerateurSeancesService::bornesSaisonCourante()",
+        "Uniquement des occurrences dans les tests",
+        "Uniquement des occurrences dans les migrations"
+      ],
+      "bonne": 1,
+      "explication": "La règle est unifiée pour les cotisations, l'XP, les badges et le sélecteur, mais deux calculs au 1er septembre subsistent (stats de match et génération des séances). Le dire soi-même devant le jury vaut mieux que de prétendre à une unicité qui n'est pas totale."
+    }
+  ]
+}

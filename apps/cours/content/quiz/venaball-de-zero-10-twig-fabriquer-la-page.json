@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-de-zero-10-twig-fabriquer-la-page",
+  "questions": [
+    {
+      "question": "Dans un template Twig, quelle balise sert à afficher le nom d'une équipe ?",
+      "choix": [
+        "{% equipe.nom %}",
+        "{# equipe.nom #}",
+        "<?php echo $equipe->getNom(); ?>",
+        "{{ equipe.nom }}"
+      ],
+      "bonne": 3,
+      "explication": "{{ }} affiche une valeur, et Twig trouve tout seul getNom() sur l'objet. {% %} sert aux instructions (boucle, condition), {# #} aux commentaires invisibles. Le PHP brut n'est pas utilisé dans les templates."
+    },
+    {
+      "question": "La page Équipes commence par {% extends 'manager/base.html.twig' %}. Qu'est-ce que cela veut dire ?",
+      "choix": [
+        "La page hérite du gabarit commun (menu, styles, messages flash) et ne remplit que ses blocs, comme title et body",
+        "La page copie le contenu de base.html.twig à la fin du fichier",
+        "La page devient accessible sans connexion",
+        "La page charge la base de données"
+      ],
+      "bonne": 0,
+      "explication": "extends fait hériter la page du gabarit, qui réserve des emplacements avec block. La page remplit title (« Équipes ») et body. Rien n'est recopié à la main, et les droits ou la base n'ont rien à voir avec extends."
+    },
+    {
+      "question": "Un utilisateur nomme une équipe avec du code <script>. Que se passe-t-il quand la coach affiche la liste avec {{ equipe.nom }} ?",
+      "choix": [
+        "Le script s'exécute dans le navigateur de la coach",
+        "La page plante avec une erreur 500",
+        "Twig échappe les caractères spéciaux, le texte s'affiche à l'écran sans être exécuté",
+        "Le nom est supprimé automatiquement de la base"
+      ],
+      "bonne": 2,
+      "explication": "L'échappement automatique transforme < et > en équivalents inoffensifs : le navigateur affiche le texte au lieu de l'exécuter. C'est la protection par défaut contre l'injection de script (XSS). Elle ne disparaît que si on ajoute le filtre |raw."
+    },
+    {
+      "question": "Le bouton Archiver est entouré de {% if is_granted('CLUB_ADMIN', equipe) %}. Pourquoi ce test ne suffit-il pas à protéger l'archivage ?",
+      "choix": [
+        "Parce que is_granted ne fonctionne qu'en PHP",
+        "Parce que cacher un bouton n'empêche pas d'envoyer la requête à la main : la vraie barrière est le denyAccessUnlessGranted du contrôleur",
+        "Parce que CLUB_ADMIN n'existe pas dans le ClubVoter",
+        "Parce que Twig ignore les conditions sur les formulaires"
+      ],
+      "bonne": 1,
+      "explication": "Le template ne fait que du confort d'affichage. Quiconque connaît l'adresse peut envoyer un POST : c'est le contrôleur qui refuse avec denyAccessUnlessGranted. is_granted fonctionne bien dans Twig et CLUB_ADMIN est une constante réelle du ClubVoter."
+    },
+    {
+      "question": "Dans Venaball, plusieurs pages de la vitrine affichent {{ pageContenu.contenu|raw }}. Quel est le risque ?",
+      "choix": [
+        "Aucun, |raw rend l'affichage plus sûr",
+        "Le texte s'affiche en majuscules",
+        "|raw désactive l'échappement : sans nettoyage préalable du HTML, du code injecté dans le contenu serait exécuté",
+        "La page n'hérite plus du gabarit"
+      ],
+      "bonne": 2,
+      "explication": "|raw recopie le contenu tel quel, sans échappement. Aucune utilisation de HtmlSanitizer n'a été trouvée dans src/, donc ce HTML n'est pas nettoyé : c'est un point à corriger, même si ce contenu est saisi par des administrateurs. |raw ne touche ni la casse ni l'héritage."
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-de-zero-18-defendre-venaball-devant-le-jury",
+  "questions": [
+    {
+      "question": "Que note principalement le jury CDA ?",
+      "choix": [
+        "La taille du projet en nombre de lignes",
+        "Le nombre d'utilisateurs de l'application",
+        "Le design des écrans",
+        "Ta compréhension du projet et tes choix, que tu dois savoir expliquer et justifier"
+      ],
+      "bonne": 3,
+      "explication": "Le jury évalue le candidat : un projet modeste bien compris vaut mieux qu'un gros projet récité. Le nombre de lignes, d'utilisateurs ou le design peuvent illustrer, mais ne remplacent pas la capacité à expliquer."
+    },
+    {
+      "question": "Pour le CCP2 (application organisée en couches), quel élément de Venaball manque aujourd'hui ?",
+      "choix": [
+        "Un MCD et un MLD de la base de données",
+        "Des entités Doctrine",
+        "Des migrations",
+        "Des décisions d'architecture écrites"
+      ],
+      "bonne": 0,
+      "explication": "Il y a 68 fichiers d'entités, environ 90 migrations et 11 ADR dans 08_ADR.md. Ce qui manque, c'est le modèle conceptuel et le modèle logique des données, à produire pour le dossier."
+    },
+    {
+      "question": "Que contient aujourd'hui puml/index.puml, et quel outil du projet peut aider ?",
+      "choix": [
+        "Le diagramme complet de toutes les entités, rien à faire",
+        "Une seule classe d'exemple Client ; la commande make:puml (src/Command/PumlCommand.php) peut générer un diagramme à partir des entités",
+        "Le MCD validé par l'AFPA",
+        "Le plan de tests"
+      ],
+      "bonne": 1,
+      "explication": "Le fichier est un squelette sans rapport avec Venaball. La commande make:puml lit les métadonnées Doctrine et réécrit ce fichier : un point de départ à réduire aux entités centrales. Ce n'est ni un MCD validé ni un plan de tests."
+    },
+    {
+      "question": "Le jury te demande : « C'est toi qui as écrit ce code ? ». Quelle réponse tient le mieux ?",
+      "choix": [
+        "Oui, tout, ligne par ligne, sans aide",
+        "Non, c'est l'IA, je ne fais que déployer",
+        "J'ai utilisé une IA comme outil, mais le besoin, les choix d'architecture, la vérification et la mise en production sont les miens, et je peux vous expliquer n'importe quel fichier",
+        "Je préfère ne pas répondre à cette question"
+      ],
+      "bonne": 2,
+      "explication": "Mentir s'effondre à la première ligne que tu ne sais pas expliquer ; tout attribuer à l'IA nie ton rôle ; refuser de répondre inquiète. La bonne réponse est honnête et se prouve tout de suite en ouvrant un fichier."
+    },
+    {
+      "question": "Le jury demande si tu as une intégration continue. Quelle réponse suit la formule de la leçon ?",
+      "choix": [
+        "Oui, j'en ai une sur GitHub",
+        "Une CI, ça ne sert à rien sur un petit projet",
+        "Je ne sais pas ce que c'est",
+        "Non, c'est une limite connue : je poserais un workflow GitHub qui lance php bin/phpunit à chaque push et bloque si un test casse"
+      ],
+      "bonne": 3,
+      "explication": "Constat, limite connue, correction précise. Dire oui est faux (le seul workflow est une tâche OCR), minimiser l'utilité d'une CI montre une méconnaissance du CCP3, et ignorer le terme n'est pas acceptable à ce niveau."
+    }
+  ]
+}

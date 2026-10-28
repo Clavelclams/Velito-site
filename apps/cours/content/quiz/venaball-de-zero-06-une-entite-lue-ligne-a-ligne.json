@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-de-zero-06-une-entite-lue-ligne-a-ligne",
+  "questions": [
+    {
+      "question": "Quel est le rôle de Doctrine dans Venaball ?",
+      "choix": [
+        "Afficher les pages HTML",
+        "Vérifier les droits des utilisateurs",
+        "Envoyer les notifications push",
+        "Traduire les objets PHP en lignes SQL et inversement (ORM)"
+      ],
+      "bonne": 3,
+      "explication": "Doctrine est l'ORM : il lit les attributs #[ORM\\...] des entités pour savoir comment enregistrer un objet en base et le reconstruire à la lecture. Les pages sont fabriquées par Twig, et les droits sont vérifiés par les voters de Symfony."
+    },
+    {
+      "question": "Dans Joueur.php, la relation vers Equipe porte JoinColumn(nullable: true, onDelete: 'SET NULL'). Que devient Léa si son équipe est supprimée ?",
+      "choix": [
+        "Sa fiche reste, sa case équipe est simplement vidée",
+        "Sa fiche est supprimée avec l'équipe",
+        "La suppression de l'équipe est refusée tant que Léa y est",
+        "Léa est déplacée automatiquement dans une autre équipe"
+      ],
+      "bonne": 0,
+      "explication": "SET NULL vide la clé étrangère au lieu de supprimer la ligne, et nullable: true autorise ce vide. C'est voulu : on ne jette pas une licenciée parce que son équipe disparaît. La suppression en cascade, c'est onDelete: 'CASCADE', utilisé par exemple pour le club d'une équipe."
+    },
+    {
+      "question": "Dans Equipe.php, que signifie mappedBy: 'equipe' sur la propriété $affectations ?",
+      "choix": [
+        "Que la table equipe contient une colonne affectations_id",
+        "Que la vraie colonne de liaison se trouve de l'autre côté, dans la propriété equipe de JoueurEquipe",
+        "Que les affectations sont copiées dans la table equipe",
+        "Que la propriété est privée"
+      ],
+      "bonne": 1,
+      "explication": "Un OneToMany avec mappedBy est le miroir d'un ManyToOne : il ne crée aucune colonne dans sa propre table. La colonne equipe_id existe dans joueur_equipe, côté JoueurEquipe. Le caractère privé vient du mot-clé private, pas de mappedBy."
+    },
+    {
+      "question": "Un coach crée une équipe. À quel moment Doctrine écrit-il réellement la ligne dans MySQL ?",
+      "choix": [
+        "Au moment du new Equipe()",
+        "Au moment du setNom()",
+        "Au moment du flush() de l'EntityManager",
+        "Au moment du persist() seulement"
+      ],
+      "bonne": 2,
+      "explication": "persist() demande à Doctrine de surveiller le nouvel objet, mais c'est flush() qui envoie les ordres SQL (ici un INSERT). new et setNom ne touchent que l'objet en mémoire."
+    },
+    {
+      "question": "À quoi sert ClubAwareInterface dans Venaball ?",
+      "choix": [
+        "À créer automatiquement la colonne club_id en base",
+        "À chiffrer les données d'un club",
+        "À choisir le club actif dans le menu",
+        "À garantir une méthode getClub() pour que le ClubVoter vérifie le club de n'importe quelle entité métier"
+      ],
+      "bonne": 3,
+      "explication": "L'interface est un contrat qui impose getClub(). Le ClubVoter s'en sert pour contrôler Equipe, Joueur, Seance ou Rencontre sans les connaître une par une. La colonne club_id vient du ManyToOne et de la migration, pas de l'interface."
+    }
+  ]
+}

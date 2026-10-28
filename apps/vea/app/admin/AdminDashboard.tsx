@@ -457,14 +457,15 @@ export default function AdminDashboard({
           className="card-clean p-5 hover:border-vea-accent transition-all"
         >
           <div className="text-xs uppercase tracking-widest text-vea-accent font-bold mb-1">
-            Demandes de devis
+            Demandes de devis et de stage
           </div>
           <div className="text-lg font-bold text-vea-text mb-2">
-            Prestations — leads entrants
+            Prestations et stages
           </div>
+          {/* [16/10/2026] + candidatures envoyées depuis /stages */}
           <p className="text-xs text-vea-text-muted leading-relaxed">
-            Les demandes envoyées via la page Prestations (structure, pack, date,
-            budget). Réponse sous 48-72h, avec bouton « Répondre par email ».
+            Les demandes de devis (page Prestations) et les candidatures de stage
+            (page Stages), avec bouton « Répondre par email ».
           </p>
         </Link>
       </div>

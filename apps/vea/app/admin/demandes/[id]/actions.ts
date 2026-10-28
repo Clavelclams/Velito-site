@@ -57,11 +57,16 @@ export async function updateDemandeAction(input: {
     patch.updated_at = new Date().toISOString();
 
     const supabase = await createClient();
-    const { error } = await supabase
+    let requete = supabase
       .schema("vea")
       .from("demandes_prestation")
       .update(patch)
       .eq("id", input.id);
+    // [16/10/2026] "Devis envoyé" n'a pas de sens pour une candidature de
+    // stage : ce filtre fait qu'aucune ligne de type stage ne peut le recevoir,
+    // même si quelqu'un contourne la liste déroulante.
+    if (patch.statut === "devis_envoye") requete = requete.eq("type", "devis");
+    const { error } = await requete;
 
     if (error) return { success: false, error: error.message };
 

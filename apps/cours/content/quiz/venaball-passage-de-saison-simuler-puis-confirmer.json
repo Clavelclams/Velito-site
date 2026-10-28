@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-passage-de-saison-simuler-puis-confirmer",
+  "questions": [
+    {
+      "question": "Dans src/Command/PassageSaisonCommand.php, que se passe-t-il si on lance la commande sans l'option --apply ?",
+      "choix": [
+        "Elle demande une confirmation interactive puis écrit en base",
+        "Elle refuse de démarrer et affiche une erreur",
+        "Elle calcule tout et affiche le rapport complet, mais n'écrit rien en base",
+        "Elle écrit les équipes mais pas les affectations des joueuses"
+      ],
+      "bonne": 2,
+      "explication": "Le dry-run est le mode par défaut : chaque persist() et flush() est gardé par if ($apply). La commande raisonne et produit son rapport sans rien modifier."
+    },
+    {
+      "question": "Pourquoi PassageSaisonController lance-t-il la commande console en mémoire au lieu de réécrire la logique dans le contrôleur ?",
+      "choix": [
+        "Pour avoir une seule logique avec deux portes d'entrée : la page et la console ne peuvent pas diverger",
+        "Parce qu'un contrôleur Symfony n'a pas le droit d'utiliser l'EntityManager",
+        "Pour que l'opération tourne en arrière-plan sans bloquer la requête HTTP",
+        "Parce que la console s'exécute automatiquement dans une transaction"
+      ],
+      "bonne": 0,
+      "explication": "Application::run() avec BufferedOutput exécute exactement la même commande et capture son texte. Le rapport web est celui de la console, mot pour mot. Attention : ce n'est ni asynchrone ni transactionnel."
+    },
+    {
+      "question": "Une utilisatrice coche la case « J'ai lu la simulation », désactive le JavaScript et clique sur « Simuler ». Que fait le serveur ?",
+      "choix": [
+        "Il applique le passage, puisque la case est cochée",
+        "Il simule seulement : l'écriture exige à la fois action=appliquer et confirmation=oui",
+        "Il renvoie une erreur CSRF",
+        "Il applique uniquement les départs cochés"
+      ],
+      "bonne": 1,
+      "explication": "La condition côté serveur est un ET : bouton « appliquer » et case cochée. Le onclick JavaScript n'est qu'un confort d'interface, la vraie règle est en PHP."
+    },
+    {
+      "question": "Un utilisateur modifie le formulaire pour envoyer departs[999], 999 étant l'id d'une joueuse d'un autre club. Que se passe-t-il ?",
+      "choix": [
+        "La joueuse 999 est désactivée dans l'autre club",
+        "Le voter ClubVoter renvoie une 403 sur toute la page",
+        "La commande plante car l'id est inconnu",
+        "L'id est retiré par array_intersect avec la liste des joueuses du club, il est ignoré"
+      ],
+      "bonne": 3,
+      "explication": "Le contrôleur intersecte les ids reçus avec ceux des joueuses actives du club courant. C'est une protection contre l'IDOR : un id hors club ne passe jamais jusqu'à la commande."
+    },
+    {
+      "question": "Le serveur plante juste après l'archivage des équipes 2025-2026, avant la copie des créneaux. Que donne une relance de la commande ?",
+      "choix": [
+        "Doctrine annule automatiquement tout le passage, la relance repart de zéro",
+        "La relance recrée des équipes en double",
+        "La relance ne trouve plus d'équipe active en 2025-2026 et s'arrête : créneaux et tarifs restent à recopier à la main",
+        "La relance reprend exactement à l'étape des créneaux"
+      ],
+      "bonne": 2,
+      "explication": "Il n'y a pas de transaction englobante : chaque flush est définitif. Les équipes sources étant archivées (isActive false), la commande dit « Rien à reconduire ». C'est la limite à corriger avec wrapInTransaction()."
+    }
+  ]
+}

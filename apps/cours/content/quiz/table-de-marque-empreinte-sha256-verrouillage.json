@@ -1,0 +1,49 @@
+{
+  "fiche": "table-de-marque-empreinte-sha256-verrouillage",
+  "questions": [
+    {
+      "question": "La table de marque est ouverte en http://192.168.1.20 sur le réseau du gymnase. Quelle empreinte obtient-on au verrouillage ?",
+      "choix": [
+        "Une erreur : le verrouillage est impossible",
+        "sha256:... car SHA-256 est disponible partout",
+        "simple:... car crypto.subtle n'existe pas hors contexte sécurisé, le code se replie sur FNV-1a",
+        "Une empreinte vide"
+      ],
+      "bonne": 2,
+      "explication": "crypto.subtle n'est exposé qu'en https ou sur localhost. Le catch de calculerEmpreinte passe alors à FNV-1a, et le préfixe simple: le signale sur la feuille."
+    },
+    {
+      "question": "Pourquoi contenu() reconstruit-il un objet avec un ordre de clés fixe au lieu de faire JSON.stringify(match) ?",
+      "choix": [
+        "Pour choisir ce qui fait foi et garantir que le même match donne toujours le même texte, donc la même empreinte",
+        "Parce que JSON.stringify(match) lèverait une erreur",
+        "Pour que l'empreinte soit plus courte",
+        "Pour exclure les signatures, trop lourdes"
+      ],
+      "bonne": 0,
+      "explication": "JSON.stringify suit l'ordre d'insertion des clés, et le match contient aussi des champs qui ne font pas foi (marqueurActif, mode...). Les signatures, elles, sont bien incluses."
+    },
+    {
+      "question": "Quelqu'un modifie le score dans le localStorage puis recalcule l'empreinte. Qu'est-ce qui permet malgré tout de détecter la fraude aujourd'hui ?",
+      "choix": [
+        "Le service worker revérifie l'empreinte à chaque chargement",
+        "Rien dans l'app : seule une empreinte déjà diffusée ailleurs (PDF imprimé ou envoyé) permet la comparaison",
+        "SHA-256 empêche de recalculer une empreinte",
+        "Le réducteur refuse de charger un match modifié"
+      ],
+      "bonne": 1,
+      "explication": "Un hachage sans secret prouve l'intégrité par rapport à une référence conservée ailleurs, pas l'authenticité. Aucun code ne revérifie l'empreinte. La correction passe par un serveur qui horodate et conserve l'empreinte."
+    },
+    {
+      "question": "Dans match.js, quand l'action MATCH_VERROUILLER est-elle acceptée ?",
+      "choix": [
+        "Dès que l'arbitre a signé",
+        "À tout moment, sur demande du prof",
+        "Quand le chrono est à 00:00",
+        "Quand le match est terminé et que arbitre1, profA et profB ont signé"
+      ],
+      "bonne": 3,
+      "explication": "SIGNATURES_OBLIGATOIRES = ['arbitre1', 'profA', 'profB'], liste notée « à confirmer avec l'UNSS ». Une fois verrouillé, reduireUnMatch renvoie le match inchangé pour toute action."
+    }
+  ]
+}

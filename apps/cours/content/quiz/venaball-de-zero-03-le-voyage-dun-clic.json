@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-de-zero-03-le-voyage-dun-clic",
+  "questions": [
+    {
+      "question": "Il n'existe aucun fichier « equipes » dans public/. Comment la requête /equipes arrive-t-elle quand même au bon code ?",
+      "choix": [
+        "Apache cherche le fichier dans src/Controller/",
+        "Le DNS redirige vers le bon contrôleur",
+        "La règle de public/.htaccess envoie tout ce qui n'est pas un vrai fichier vers public/index.php",
+        "Le navigateur appelle directement EquipeController.php"
+      ],
+      "bonne": 2,
+      "explication": "RewriteCond !-f puis RewriteRule vers index.php : c'est le contrôleur frontal, une seule porte d'entrée. Le DNS ne fait que trouver la machine, il ne sait rien des pages."
+    },
+    {
+      "question": "Pourquoi pirb.mabb.fr/equipes n'arrive-t-il pas dans EquipeController du Manager ?",
+      "choix": [
+        "Parce que config/routes/manager.yaml exige le sous-domaine manager ou club",
+        "Parce que le contrôleur vérifie le nom de domaine dans son code",
+        "Parce que la base de données de pirb est différente",
+        "Parce que la route /equipes n'existe pas"
+      ],
+      "bonne": 0,
+      "explication": "Le routage par host impose subdomain '(manager|club)'. La route /equipes existe bien, mais seulement pour ces sous-domaines. La base est la même sur une instance donnée."
+    },
+    {
+      "question": "Dans EquipeController::index(), à quoi sert la ligne $criteria = ['club' => $club]; ?",
+      "choix": [
+        "À trier les équipes par club",
+        "À n'aller chercher que les équipes du club actif, pour qu'un club ne voie jamais celles d'un autre",
+        "À créer un nouveau club",
+        "À afficher le nom du club dans le titre"
+      ],
+      "bonne": 1,
+      "explication": "C'est le filtre multi-club : findBy ne renvoie que les équipes de ce club. Sans lui, la coach verrait les équipes de toute l'instance. Le tri par catégorie se fait plus loin avec usort."
+    },
+    {
+      "question": "Qui transforme la liste d'objets Equipe en lignes de tableau HTML ?",
+      "choix": [
+        "Doctrine",
+        "Le Repository",
+        "Apache",
+        "Twig, avec le modèle templates/manager/equipe/index.html.twig"
+      ],
+      "bonne": 3,
+      "explication": "Le contrôleur appelle $this->render(...) avec le modèle Twig, qui boucle sur equipes. Doctrine et le Repository vont chercher les données en base, ils ne fabriquent pas de HTML."
+    },
+    {
+      "question": "Un parent membre du club ouvre /equipes. Que voit-il ?",
+      "choix": [
+        "Une erreur : seuls les coachs ont accès",
+        "La liste, mais pas le bouton « Nouvelle équipe »",
+        "La liste et tous les boutons, y compris Archiver",
+        "Une page vide"
+      ],
+      "bonne": 1,
+      "explication": "index() demande CLUB_MEMBER (tout membre du club). Le modèle n'affiche « Nouvelle équipe » que si is_granted('CLUB_STAFF', club), et Archiver que pour CLUB_ADMIN. Le parent lit, il ne modifie pas."
+    }
+  ]
+}

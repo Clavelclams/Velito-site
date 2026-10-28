@@ -105,6 +105,45 @@ export async function hasTreasurerAccess(): Promise<boolean> {
 }
 
 /**
+ * [28/10/2026] Droit "saisie des présences" (bénévoles).
+ * Même mécanique que hasTreasurerAccess : extra_scope 'presences', en dehors
+ * de la hiérarchie owner/editor/viewer. Donne accès UNIQUEMENT à la liste des
+ * événements et aux présents (ajout, retrait, création de pré-inscrits).
+ * La base applique la même règle (vea.can_manage_presences, sql/vea-presences-benevole-v1.sql).
+ *
+ * Retourne true si l'user est owner/editor sur vea, OU a 'presences' dans extra_scopes.
+ */
+export async function hasPresenceAccess(): Promise<boolean> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const { data: org } = await supabase
+    .schema("shared")
+    .from("organizations")
+    .select("id")
+    .eq("slug", "vea")
+    .maybeSingle();
+  if (!org) return false;
+
+  const { data: perm } = await supabase
+    .schema("shared")
+    .from("user_permissions")
+    .select("scope, extra_scopes")
+    .eq("user_id", user.id)
+    .eq("organization_id", org.id)
+    .maybeSingle();
+
+  if (!perm) return false;
+  if (perm.scope === "owner" || perm.scope === "editor") return true;
+
+  const extra = (perm.extra_scopes ?? []) as string[];
+  return extra.includes("presences");
+}
+
+/**
  * Retourne le scope effectif de l user sur une org, ou null si aucune
  * permission. Utile pour afficher conditionnellement des boutons UI.
  */

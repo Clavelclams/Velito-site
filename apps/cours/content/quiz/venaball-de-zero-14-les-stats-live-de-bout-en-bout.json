@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-de-zero-14-les-stats-live-de-bout-en-bout",
+  "questions": [
+    {
+      "question": "Le panier de Léa est enregistré, mais la réponse se perd dans la 4G. La file renvoie la même action. Que fait le serveur ?",
+      "choix": [
+        "Il crée une deuxième ActionMatch : Léa passe à 4 points",
+        "Il trouve une ActionMatch avec le même clientUid, ne crée rien et renvoie l'existante avec deja: true",
+        "Il répond 409 et la file jette l'action",
+        "Il supprime les deux actions par sécurité"
+      ],
+      "bonne": 1,
+      "explication": "C'est l'idempotence du commit 36a8beb : findOneBy(['clientUid' => ...]) retrouve l'action et la renvoie sans rien créer. L'index unique sur client_uid protège en plus la base. Sans ce mécanisme, la première réponse aurait été la bonne : un doublon."
+    },
+    {
+      "question": "En plein match, le jeton de la bénévole expire. Le serveur répond 401. Que fait fileAttente.ts ?",
+      "choix": [
+        "Il jette l'action et passe à la suivante",
+        "Il réessaie toutes les 2 secondes indéfiniment",
+        "Il met la file en pause sans rien perdre, et reprend après reconnexion via reprendre()",
+        "Il range l'action dans rejetes"
+      ],
+      "bonne": 2,
+      "explication": "Règle 3 de la file : 401 = pause (enPause: 'auth'), on garde tout. La v1 traitait le 401 comme un refus et vidait la file, c'est précisément ce que la v2 a corrigé. rejetes est réservé aux autres refus 4xx."
+    },
+    {
+      "question": "Deux bénévoles ont saisi le même match dans deux sessions. Combien de sessions peuvent être OFFICIELLE pour ce match ?",
+      "choix": [
+        "Une seule : promouvoirOfficielle() archive l'ancienne officielle dans la même transaction",
+        "Deux, et les stats sont additionnées",
+        "Deux, et les stats sont moyennées",
+        "Aucune tant que les deux ne sont pas identiques"
+      ],
+      "bonne": 0,
+      "explication": "Le promoteur cherche l'officielle existante, la passe ARCHIVEE, puis promeut la nouvelle, le tout dans une transaction. Les compteurs ne lisent que la session officielle : jamais de mélange entre bénévoles."
+    },
+    {
+      "question": "Léa a joué un amical samedi, saisi et validé. Sa moyenne de points de saison change-t-elle ?",
+      "choix": [
+        "Oui, tous les matchs saisis comptent",
+        "Oui, mais seulement si l'amical est à domicile",
+        "Non, parce que les amicaux ne sont jamais saisis",
+        "Non : statsSaison() ne garde par défaut que les rencontres TYPE_OFFICIEL ; l'amical apparaît à part, dans horsCompetition"
+      ],
+      "bonne": 3,
+      "explication": "JoueurStatsAggregator filtre r.typeRencontre sur TYPE_OFFICIEL (convention FFBB). Les autres lignes ne sont pas perdues : evalsHorsCompetition() les renvoie dans un bloc séparé de /api/pirb/stats/saison."
+    },
+    {
+      "question": "Le match est saisi et la session est COMPLETE, mais personne ne la promeut. Que voit Léa dans l'app ?",
+      "choix": [
+        "Ses stats du match, puisque la saisie est terminée",
+        "Rien de ce match : sans session officielle, aucune EvaluationMatch live n'est générée",
+        "Ses stats, marquées « provisoires »",
+        "Une erreur 404 sur l'onglet Stats"
+      ],
+      "bonne": 1,
+      "explication": "La génération des EvaluationMatch se fait dans promouvoirOfficielle(). Sans ce geste manuel, rien ne remonte. C'est la faiblesse principale du circuit, et au 04/08/2026 aucune session n'avait jamais été promue en production. Il n'existe pas d'affichage « provisoire »."
+    }
+  ]
+}

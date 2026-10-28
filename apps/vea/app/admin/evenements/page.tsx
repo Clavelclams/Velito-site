@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
-import { hasPermission } from "@/lib/supabase/permissions";
+import { hasPermission, hasPresenceAccess } from "@/lib/supabase/permissions";
 import AddEventForm from "./AddEventForm";
 import { getScanUrl, getQRCodeUrl } from "@/lib/qrcode";
 
@@ -22,8 +22,9 @@ export default async function AdminEventsPage({
   const { passes } = await searchParams;
   const showPast = passes === "1";
 
+  // [28/10/2026] Le droit "presences" (bénévoles) voit la liste, sans le formulaire de création.
   const canEdit = await hasPermission("vea", "editor");
-  if (!canEdit) redirect("/admin?denied=events");
+  if (!canEdit && !(await hasPresenceAccess())) redirect("/admin?denied=events");
 
   // Recupere l'origin du site pour generer les URL QR (dev = localhost, prod = vea.velito.fr)
   const headerStore = await headers();
@@ -87,7 +88,7 @@ export default async function AdminEventsPage({
           </p>
         </div>
 
-        <AddEventForm siteOrigin={siteOrigin} />
+        {canEdit && <AddEventForm siteOrigin={siteOrigin} />}
 
         {/* Liste events — par défaut À VENIR (le passé sort de la vue admin et
             reste dans l'agenda public). Bascule via ?passes=1. */}

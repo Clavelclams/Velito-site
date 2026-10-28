@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-de-zero-01-venaball-vu-de-dehors",
+  "questions": [
+    {
+      "question": "Un papa est à la fois parent d'une U13, bénévole à la table de marque et coach des U11. Comment Venaball gère-t-il ça ?",
+      "choix": [
+        "Il doit créer trois comptes différents, un par rôle",
+        "On lui donne le rôle le plus élevé (coach) et les autres sont ignorés",
+        "Un seul compte, avec plusieurs rôles dans le club : une ligne UserClubRole par rôle",
+        "Il doit choisir un seul rôle à l'inscription"
+      ],
+      "bonne": 2,
+      "explication": "Les rôles sont des lignes séparées (UserClubRole), une par rôle et par club : un même compte peut donc en cumuler plusieurs. Créer trois comptes serait le piège classique : trois mots de passe, et des données éparpillées."
+    },
+    {
+      "question": "Quelle adresse sert l'outil du staff pour un club qui utilise le produit Venaball (pas le MABB) ?",
+      "choix": [
+        "club.venaball.fr",
+        "pirb.mabb.fr",
+        "venaball.fr",
+        "manager.mabb.fr"
+      ],
+      "bonne": 0,
+      "explication": "club.venaball.fr est le Manager de l'instance Venaball. manager.mabb.fr est le même outil, mais sur l'instance du MABB. venaball.fr n'est qu'un site statique de présentation."
+    },
+    {
+      "question": "Que veut dire « un seul code, deux instances » ?",
+      "choix": [
+        "Il y a deux dépôts git qui contiennent chacun une copie modifiée du code",
+        "Le même code est installé sur deux serveurs, chacun avec sa propre base de données",
+        "Le code tourne deux fois sur le même serveur pour être plus rapide",
+        "Une instance pour le web, une instance pour les applications mobiles"
+      ],
+      "bonne": 1,
+      "explication": "Le même dossier mabb-site est déployé chez OVH pour le MABB et pour Venaball, chaque instance ayant sa base. Ce n'est pas une séparation web/mobile : l'API mobile fait partie de chaque instance."
+    },
+    {
+      "question": "Pourquoi trouve-t-on encore le mot « pirb » dans les adresses comme /api/pirb/* ?",
+      "choix": [
+        "C'est le nom d'une bibliothèque Symfony",
+        "PIRB est le nom technique de la base de données",
+        "C'est une erreur de frappe jamais corrigée",
+        "PIRB était le nom historique de l'espace joueuse, et le code a gardé ce nom"
+      ],
+      "bonne": 3,
+      "explication": "Le produit s'appelle aujourd'hui Venaball, mais le code a gardé pirb dans les routes, les dossiers et le sous-domaine MABB. Renommer est possible mais pas prioritaire. Ce n'est ni une bibliothèque ni une base."
+    },
+    {
+      "question": "Où en sont les deux applications mobiles au 01/10/2026 selon le doc maître ?",
+      "choix": [
+        "Publiées sur l'App Store et Google Play",
+        "Publiées seulement sur Android",
+        "Aucune n'est publiée : l'app joueuse a un build de test Android, l'app Club n'a jamais été compilée",
+        "Elles n'existent pas encore, seul le site web existe"
+      ],
+      "bonne": 2,
+      "explication": "Le §9.1 de 00_ECOSYSTEME.md dit : deux apps, aucune publiée. Dire au jury qu'elles sont sur les stores serait faux ; dire qu'elles n'existent pas aussi, leur code est dans Pirb store et venaball club-store."
+    }
+  ]
+}

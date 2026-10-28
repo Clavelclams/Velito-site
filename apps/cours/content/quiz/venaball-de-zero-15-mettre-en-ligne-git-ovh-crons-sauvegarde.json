@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-de-zero-15-mettre-en-ligne-git-ovh-crons-sauvegarde",
+  "questions": [
+    {
+      "question": "Dans le bloc envoyé au serveur par deploy.ps1, quel est le problème d'ordre relevé par l'audit 44 ?",
+      "choix": [
+        "composer install est lancé avant git pull",
+        "cache:clear est lancé avant les migrations Doctrine",
+        "asset-map:compile est lancé avant composer install",
+        "git pull est lancé après les migrations"
+      ],
+      "bonne": 1,
+      "explication": "Le script vide le cache puis applique les migrations : pendant ce laps de temps, le nouveau code peut tourner sur une base pas encore modifiée et provoquer une erreur 500. Les autres ordres proposés ne correspondent pas au script : git pull vient bien en premier, puis Composer."
+    },
+    {
+      "question": "Pourquoi un dépôt GitHub qui a été public reste un problème même après l'avoir passé en privé ?",
+      "choix": [
+        "Parce que GitHub publie automatiquement les dépôts privés après un an",
+        "Parce que le passage en privé efface les commits récents",
+        "Parce que Git garde tout l'historique, et que quelqu'un a pu cloner le dépôt pendant qu'il était public",
+        "Parce qu'un dépôt privé ne peut plus être déployé par SSH"
+      ],
+      "bonne": 2,
+      "explication": "Git conserve chaque version, y compris les fichiers supprimés ensuite, et une copie clonée à l'époque reste chez celui qui l'a faite. D'où la règle : un secret exposé se change. Passer en privé n'efface rien et n'empêche pas le déploiement."
+    },
+    {
+      "question": "Dans bin/sauvegarde-bdd.sh, à quoi sert la ligne MYSQL_PWD=\"$DB_PASS\" mysqldump ... ?",
+      "choix": [
+        "À passer le mot de passe par l'environnement plutôt que sur la ligne de commande, où d'autres clients du serveur mutualisé pourraient le voir",
+        "À écrire le mot de passe en clair dans le fichier de sauvegarde",
+        "À changer le mot de passe de la base à chaque sauvegarde",
+        "À chiffrer le fichier .sql.gz"
+      ],
+      "bonne": 0,
+      "explication": "Le commentaire du script l'explique : sur la ligne de commande, le mot de passe serait visible dans la liste des processus. Le script ne le recopie pas dans le dump, ne le change pas, et gzip compresse sans chiffrer."
+    },
+    {
+      "question": "Pourquoi le projet a-t-il des fichiers comme bin/cron-otm-cloturer.php au lieu d'appeler directement bin/console dans le cron OVH ?",
+      "choix": [
+        "Parce que bin/console ne fonctionne pas en production",
+        "Parce que l'interface Tâches planifiées d'OVH ne permet pas de passer des arguments à la commande",
+        "Parce que PHP 8.3 interdit les commandes Symfony la nuit",
+        "Parce que ces fichiers remplacent les migrations"
+      ],
+      "bonne": 1,
+      "explication": "Le commentaire en tête du fichier le dit : OVH lance un script PHP sans arguments, donc le script fixe lui-même app:otm:cloturer --execute et lance bin/console dans un sous-processus. bin/console fonctionne très bien en production, et ces fichiers n'ont rien à voir avec les migrations."
+    },
+    {
+      "question": "Qu'est-ce qui manque encore pour que la sauvegarde de Venaball soit vraiment fiable, selon le doc maître ?",
+      "choix": [
+        "Un script de dump : il n'existe pas encore",
+        "La compression gzip",
+        "La rotation des anciens fichiers",
+        "Une restauration réelle testée une fois, et la sauvegarde des fichiers déposés (uploads, décharges)"
+      ],
+      "bonne": 3,
+      "explication": "Le script existe, compresse et fait une rotation sur 14 jours. Ce qui manque, c'est la preuve : une restauration réelle, et les fichiers de public/uploads et var/decharges, absents du dump. Une sauvegarde jamais restaurée n'est pas une sauvegarde."
+    }
+  ]
+}

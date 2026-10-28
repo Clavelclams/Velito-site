@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-de-zero-11-qui-a-le-droit-connexion-roles-multi-club",
+  "questions": [
+    {
+      "question": "Une maman tape son e-mail et son mot de passe sur club.venaball.fr. Le serveur vérifie qu'ils sont justes. De quelle étape s'agit-il ?",
+      "choix": [
+        "L'autorisation : on décide ce qu'elle peut voir",
+        "L'authentification : on prouve qui elle est",
+        "Le multi-tenant : on choisit son club",
+        "Le CSRF : on protège le formulaire"
+      ],
+      "bonne": 1,
+      "explication": "Vérifier l'identité (le badge), c'est l'authentification. L'autorisation vient après : savoir si elle a le droit d'ouvrir telle page, ce que fait ClubVoter. Le CSRF protège le formulaire, mais ne dit pas qui elle est."
+    },
+    {
+      "question": "Dans Venaball, où est rangé le fait que Karim est COACH au club A et PARENT au club B ?",
+      "choix": [
+        "Dans la colonne roles de User, sous la forme ['ROLE_COACH', 'ROLE_PARENT']",
+        "Dans security.yaml, section role_hierarchy",
+        "Dans la session, clé active_club_id",
+        "Dans deux lignes de la table user_club_role, une par club et par rôle"
+      ],
+      "bonne": 3,
+      "explication": "Les rôles métier vivent dans UserClubRole : une ligne (user, club, rôle). User.roles ne contient que les rôles plateforme (ROLE_USER, ROLE_SUPER_ADMIN), qui ne savent pas dire « dans quel club ». role_hierarchy ne concerne que ces rôles plateforme."
+    },
+    {
+      "question": "Léa s'inscrit au club et demande le rôle JOUEUR. Sa ligne UserClubRole a le statut pending. Que lui accorde ClubVoter pour CLUB_JOUEUR ?",
+      "choix": [
+        "Rien : hasMetaRole exige isStatusActive(), donc pending ne donne aucun droit",
+        "Tout, puisque la ligne existe en base",
+        "Un accès en lecture seule en attendant",
+        "Cela dépend du firewall utilisé"
+      ],
+      "bonne": 0,
+      "explication": "hasMetaRole vérifie le club, le rôle, isActive() ET isStatusActive(). Tant qu'un dirigeant n'a pas validé, la demande ne donne aucune permission. Il n'existe pas de mode « lecture seule » intermédiaire dans le Voter."
+    },
+    {
+      "question": "Que veut dire « multi-tenant » pour Venaball ?",
+      "choix": [
+        "Chaque club a sa propre base de données et son propre serveur",
+        "Un même utilisateur peut avoir plusieurs mots de passe",
+        "Plusieurs clubs partagent une base, chaque ligne porte son club_id, et chacun ne voit que ses lignes",
+        "Le site est disponible en plusieurs langues"
+      ],
+      "bonne": 2,
+      "explication": "Une seule base, plusieurs « locataires ». L'isolation se fait par le club_id de chaque ligne, vérifié par ClubVoter et TenantResolver. Une base par club serait une autre architecture, qui n'est pas celle de Venaball."
+    },
+    {
+      "question": "Qu'est-ce qui est vrai aujourd'hui sur la limitation des tentatives de connexion ?",
+      "choix": [
+        "Elle est active partout grâce à login_throttling",
+        "Elle n'existe nulle part dans le projet",
+        "Elle est active sur le web mais pas sur l'API",
+        "Le login de l'API a sa propre limite dans ApiAuthController, mais login_throttling est encore en commentaire sur les firewalls web"
+      ],
+      "bonne": 3,
+      "explication": "Dans security.yaml, login_throttling est commenté sur vitrine_admin, vitrine, manager et pirb (il faut d'abord installer symfony/rate-limiter). L'API compte elle-même les échecs dans ConnexionLog. Dire « active partout » serait faux devant le jury."
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "fiche": "securite-web-11-force-brute-et-limitation-de-debit",
+  "questions": [
+    {
+      "question": "Dans ApiAuthController, quand le serveur répond-il 429 ?",
+      "choix": [
+        "Après 3 échecs par IP en 5 minutes",
+        "Après 5 échecs par IP ou 10 par email en 1 heure",
+        "Jamais, l'API n'a aucune limite",
+        "Après 10 échecs depuis la même IP ou 5 sur le même email dans les 15 dernières minutes"
+      ],
+      "bonne": 3,
+      "explication": "countFailuresByIp($ip, 15) >= 10 coupe le balayage large ; countFailuresByEmail($email, 15) >= 5, plus bas, protège un compte ciblé même depuis plusieurs IP."
+    },
+    {
+      "question": "Pourquoi le contrôle des 429 est-il placé AVANT la vérification du mot de passe ?",
+      "choix": [
+        "Pour aller plus vite",
+        "Parce que Symfony l'impose",
+        "Pour que même le bon mot de passe soit refusé pendant le blocage : sinon l'attaquant verrait la différence entre 429 et 200 et continuerait à tester",
+        "Pour économiser une requête SQL"
+      ],
+      "bonne": 2,
+      "explication": "Si le mot de passe était vérifié d'abord, le blocage ne bloquerait que les mauvais essais, et le bon serait révélé par sa réponse différente."
+    },
+    {
+      "question": "Que se passerait-il si tu décommentais login_throttling dans security.yaml sans installer symfony/rate-limiter ?",
+      "choix": [
+        "Le conteneur Symfony ne compilerait plus : le site entier en erreur 500",
+        "Rien, Symfony ignorerait la ligne",
+        "La limitation marcherait avec une valeur par défaut",
+        "Seule la page de connexion serait en erreur"
+      ],
+      "bonne": 0,
+      "explication": "LoginThrottlingFactory lève une exception si le composant manque. C'est exactement l'avertissement écrit dans le commentaire du 26/07 au-dessus du bloc admin."
+    },
+    {
+      "question": "Une personne tape un email qui n'existe pas. Quel message l'API doit-elle renvoyer ?",
+      "choix": [
+        "« Ce compte n'existe pas »",
+        "Le même « Identifiants invalides. » que pour un mauvais mot de passe, pour ne pas révéler quels emails ont un compte",
+        "Une erreur 404",
+        "« Vérifie ton email », sans code d'erreur"
+      ],
+      "bonne": 1,
+      "explication": "C'est l'anti-énumération. Le 429 ne révèle rien non plus : il s'affiche dès que le seuil est atteint, que le compte existe ou non."
+    },
+    {
+      "question": "User a un champ isActive. Que manque-t-il pour qu'un compte désactivé ne puisse plus se connecter ?",
+      "choix": [
+        "Une migration",
+        "Un Voter de plus",
+        "Rien, Symfony vérifie isActive tout seul",
+        "Un UserChecker branché sur les firewalls (user_checker:) et un test isActive() dans ApiAuthController, dont la route est hors firewall"
+      ],
+      "bonne": 3,
+      "explication": "Symfony ne connaît pas ton champ isActive. Le UserChecker est appelé à chaque authentification sur le firewall ; la route de login API étant en security: false, elle doit vérifier elle-même."
+    }
+  ]
+}

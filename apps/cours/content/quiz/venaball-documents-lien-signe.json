@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-documents-lien-signe",
+  "questions": [
+    {
+      "question": "Pourquoi l'app Club ne met-elle pas simplement son jeton Bearer dans l'URL du PDF (?token=...) ?",
+      "choix": [
+        "Parce que Symfony refuse les paramètres de requête sur les routes /api",
+        "Parce qu'une URL finit dans l'historique et les journaux, et que le jeton vaut des semaines : une fuite donnerait accès à tout le compte",
+        "Parce que le jeton est trop long pour tenir dans une URL",
+        "Parce que le navigateur du téléphone chiffre mal les paramètres d'URL"
+      ],
+      "bonne": 1,
+      "explication": "Le lien signé ne donne accès qu'à UN document, pour UN compte, pendant 2 minutes. Le jeton dans l'URL exposerait tout le compte longtemps. La longueur n'est pas le problème : une URL tient largement un jeton."
+    },
+    {
+      "question": "Quelqu'un reçoit un lien valide pour le document 12 et remplace id=12 par id=13 dans l'URL. Que répond ApiClubDocumentController::fichier() ?",
+      "choix": [
+        "Le document 13, car la signature a déjà été vérifiée à l'émission du lien",
+        "Une 403 qui indique que le document 13 existe mais est interdit",
+        "La même 404 « Lien invalide ou expiré », car la signature recalculée pour le document 13 ne correspond plus",
+        "Le document 12, car l'id de l'URL est ignoré"
+      ],
+      "bonne": 2,
+      "explication": "Le HMAC couvre doc-club|id|compte|expiration : changer l'id change la signature attendue, impossible à recalculer sans %kernel.secret%. Le serveur vérifie à chaque ouverture, pas seulement à l'émission, et toutes les erreurs donnent la même 404."
+    },
+    {
+      "question": "Un coach obtient un lien, puis le dirigeant lui retire son rôle dans le club. Il ouvre le lien 30 secondes plus tard. Que se passe-t-il ?",
+      "choix": [
+        "Le document s'ouvre, la signature est valide et pas encore expirée",
+        "Le document s'ouvre, mais seulement en lecture",
+        "Le serveur révoque tous ses jetons d'API",
+        "404 : fichier() recharge le compte et recalcule peutVoir(), qui ne trouve plus de rôle dans le club"
+      ],
+      "bonne": 3,
+      "explication": "La signature prouve que le serveur a émis le lien, pas que le droit existe encore. C'est pour ça que les droits sont revérifiés à l'ouverture. Le piège principal, « signature valide donc accès », est exactement ce que ce contrôle évite."
+    },
+    {
+      "question": "Pourquoi comparer les signatures avec hash_equals() plutôt qu'avec === ?",
+      "choix": [
+        "hash_equals compare en temps constant : le temps de réponse ne révèle pas combien de caractères du début sont justes",
+        "=== ne fonctionne pas sur les chaînes hexadécimales",
+        "hash_equals est plus rapide que ===",
+        "hash_equals déchiffre la signature avant de la comparer"
+      ],
+      "bonne": 0,
+      "explication": "Une comparaison classique s'arrête au premier caractère différent ; en mesurant les temps de réponse, un attaquant pourrait deviner la signature caractère par caractère (attaque temporelle). Un HMAC ne se déchiffre pas, il se recalcule et se compare."
+    },
+    {
+      "question": "Le lien signé est en place. Quelle faiblesse reste ouverte dans Venaball pour les documents du club enregistrés en image ?",
+      "choix": [
+        "Aucune, le lien signé est le seul chemin vers le fichier",
+        "Ils sont écrits dans public/uploads/ent/ et le .htaccess laisse passer les images hors tresorerie et reunions : on peut les lire par leur adresse directe",
+        "Ils sont envoyés sans en-tête Content-Type",
+        "Ils sont mis en cache par le navigateur pendant une semaine"
+      ],
+      "bonne": 1,
+      "explication": "Le lien signé protège la route de l'API, pas le dossier public. DocumentUploader écrit sous public/ avec un nom uniqid (dérivé de l'horloge) et le .htaccess ouvre les images. La réponse du contrôleur porte bien Content-Type et Cache-Control: private, no-store."
+    }
+  ]
+}

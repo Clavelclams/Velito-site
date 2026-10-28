@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-contrainte-unique-garde-fou",
+  "questions": [
+    {
+      "question": "Quelles colonnes l'index unique uniq_joueur_equipe_saison couvre-t-il dans la table joueur_equipe ?",
+      "choix": [
+        "joueur_id et saison",
+        "joueur_id, equipe_id et saison",
+        "joueur_id, saison et type",
+        "equipe_id, saison et actif"
+      ],
+      "bonne": 1,
+      "explication": "L'index porte sur le trio joueuse, équipe, saison (déclaré dans JoueurEquipe.php et créé par Version20260615234500). Il interdit d'être deux fois dans la même équipe la même saison, mais ne dit rien du nombre de principales actives."
+    },
+    {
+      "question": "Dans JoueurEquipeRepository::rattacherPrincipale(), que se passe-t-il si la joueuse a déjà une ligne (désactivée) pour l'équipe visée et la même saison ?",
+      "choix": [
+        "Une nouvelle ligne est créée, puis l'ancienne est supprimée",
+        "La méthode lève une exception pour éviter le doublon",
+        "La ligne existante est réutilisée : elle repasse en type principale et actif à true",
+        "Rien ne se passe, la joueuse reste dans son ancienne équipe"
+      ],
+      "bonne": 2,
+      "explication": "La méthode cherche d'abord une ligne pour (joueuse, équipe, saison). Si elle existe, elle la réutilise au lieu d'en créer une : c'est ce qui évite la violation de l'index unique qui produisait le 500."
+    },
+    {
+      "question": "Pourquoi l'ajout de getCodeEmarque() dans Rencontre a-t-il mis tout le site en erreur 500, alors que getCodeEMarque() existait déjà ?",
+      "choix": [
+        "Parce que Doctrine refuse deux colonnes dont les noms se ressemblent",
+        "Parce que la migration ajoutant la colonne n'avait pas été lancée",
+        "Parce que Twig ne sait pas choisir entre deux getters",
+        "Parce que PHP ne distingue pas la casse des noms de méthodes : la même méthode était déclarée deux fois"
+      ],
+      "bonne": 3,
+      "explication": "Les propriétés PHP sont sensibles à la casse, les méthodes non. getCodeEmarque et getCodeEMarque sont la même méthode pour PHP, qui refuse de charger la classe. Rencontre étant utilisée partout, tout le site tombait. D'où la règle : grep -ri avant d'ajouter un nom."
+    },
+    {
+      "question": "Pourquoi peut-on dire que l'index unique « a fait son travail » alors qu'il a provoqué une erreur 500 ?",
+      "choix": [
+        "Parce qu'il a transformé un doublon silencieux, découvert des mois plus tard, en erreur immédiate et visible",
+        "Parce qu'une erreur 500 est automatiquement corrigée par Symfony",
+        "Parce qu'un index unique accélère toujours les requêtes d'écriture",
+        "Parce qu'il a supprimé automatiquement le doublon existant"
+      ],
+      "bonne": 0,
+      "explication": "Sans l'index, le code fautif aurait inséré la ligne en double sans aucune alerte. La base est le dernier rempart : elle garantit l'invariant même quand le code se trompe."
+    },
+    {
+      "question": "La règle « une seule affectation principale active par saison » est-elle garantie par la base de données ?",
+      "choix": [
+        "Oui, par l'index uniq_joueur_equipe_saison",
+        "Oui, par la clé étrangère vers equipe",
+        "Non, seulement par le code de rattacherPrincipale() ; une colonne générée avec index unique pourrait la garantir",
+        "Non, et c'est impossible à garantir en MySQL"
+      ],
+      "bonne": 2,
+      "explication": "L'index ne couvre que le trio joueuse, équipe, saison : deux principales actives dans deux équipes différentes restent possibles si un autre chemin écrit dans la table. MySQL n'a pas d'index partiel, mais une colonne générée (valeur seulement pour les principales actives, NULL sinon) indexée en unique ferait l'affaire."
+    }
+  ]
+}
