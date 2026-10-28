@@ -8,6 +8,7 @@
 
 import { useState, useTransition } from "react";
 import { createEventAction } from "./actions";
+import { datesHebdomadaires } from "@/lib/calendrier-scolaire";
 import { getQRCodeUrl, getScanUrl } from "@/lib/qrcode";
 
 type EventType = "tournoi" | "animation" | "programme" | "reunion" | "autre";
@@ -29,6 +30,10 @@ export default function AddEventForm({ siteOrigin }: { siteOrigin: string }) {
   const [type, setType] = useState<EventType>("tournoi");
   const [description, setDescription] = useState("");
   const [capacite, setCapacite] = useState("");
+  // [28/10/2026] Récurrence hebdomadaire (ex. Mercredis Elbeuf)
+  const [repeter, setRepeter] = useState(false);
+  const [jusquAu, setJusquAu] = useState("");
+  const [serieCreee, setSerieCreee] = useState<{ n: number; sautees: { date: string; raison: string }[] } | null>(null);
 
   const [error, setError] = useState("");
   const [createdToken, setCreatedToken] = useState<string | null>(null);
@@ -64,9 +69,12 @@ export default function AddEventForm({ siteOrigin }: { siteOrigin: string }) {
         description: description || undefined,
         type,
         capacite: capacite ? Number(capacite) : undefined,
+        repeter_jusqu_au: repeter && jusquAu ? jusquAu : undefined,
       });
 
-      if (result.success && result.token) {
+      if (result.success && result.seances) {
+        setSerieCreee({ n: result.seances, sautees: result.sautees ?? [] });
+      } else if (result.success && result.token) {
         setCreatedToken(result.token);
       } else {
         setError(result.error ?? "Erreur inconnue");
@@ -78,6 +86,36 @@ export default function AddEventForm({ siteOrigin }: { siteOrigin: string }) {
     "w-full bg-white border border-vea-border rounded-lg px-4 py-3 text-vea-text text-sm placeholder-vea-text-dim focus:outline-none focus:border-vea-accent focus:ring-2 focus:ring-vea-accent/15 transition-all";
   const labelClass =
     "block text-xs font-semibold text-vea-text-muted uppercase tracking-wider mb-1.5";
+
+  // [28/10/2026] Aperçu de la récurrence, calculé avec la même fonction que le serveur.
+  const apercu = repeter && date && jusquAu && jusquAu >= date ? datesHebdomadaires(date, jusquAu) : null;
+  const jjmm = (d: string) => `${d.slice(8, 10)}/${d.slice(5, 7)}`;
+
+  if (serieCreee) {
+    return (
+      <div className="card-clean p-8 text-center">
+        <div className="inline-block mb-4 bg-vea-accent-soft border border-vea-accent/20 rounded-full px-4 py-1 text-xs uppercase tracking-widest font-bold text-vea-accent">
+          {serieCreee.n} séances créées
+        </div>
+        <h2 className="text-2xl font-black text-vea-text mb-2">{nom}</h2>
+        <p className="text-sm text-vea-text-muted mb-4">
+          Chaque séance a sa fiche et son propre QR code, dans la liste ci-dessous.
+        </p>
+        {serieCreee.sautees.length > 0 && (
+          <p className="text-xs text-vea-text-dim mb-4">
+            Sans séance : {serieCreee.sautees.map((x) => `${jjmm(x.date)} (${x.raison})`).join(", ")}.
+          </p>
+        )}
+        <button
+          type="button"
+          onClick={() => { setSerieCreee(null); setNom(""); setSlug(""); setDate(""); setHeure(""); setDescription(""); setCapacite(""); setRepeter(false); setJusquAu(""); }}
+          className="btn-outline text-sm"
+        >
+          Creer un autre event
+        </button>
+      </div>
+    );
+  }
 
   // Si l'event vient d'etre cree, on affiche le QR code et l'URL a scanner
   if (createdToken) {
@@ -217,6 +255,37 @@ export default function AddEventForm({ siteOrigin }: { siteOrigin: string }) {
         />
       </div>
 
+      {/* [28/10/2026] Récurrence hebdomadaire */}
+      <div className="rounded-lg border border-vea-border p-4 space-y-3">
+        <label className="flex items-center gap-3 text-sm font-semibold text-vea-text cursor-pointer">
+          <input type="checkbox" checked={repeter} onChange={(e) => setRepeter(e.target.checked)} className="w-4 h-4 accent-vea-accent" />
+          Répéter chaque semaine (même jour, même heure)
+        </label>
+        {repeter && (
+          <>
+            <div>
+              <label htmlFor="jusquau" className={labelClass}>Jusqu&apos;au (inclus) *</label>
+              <input type="date" id="jusquau" value={jusquAu} min={date || undefined} onChange={(e) => setJusquAu(e.target.value)} required className={inputClass} />
+            </div>
+            <p className="text-[11px] text-vea-text-dim">
+              Les vacances scolaires (zone B) et les jours fériés sont sautés. Une séance = un événement avec son QR :
+              chaque présence compte et rapporte ses points.
+            </p>
+            {apercu && (
+              <div className="text-xs text-vea-text-muted space-y-1">
+                <p><strong>{apercu.dates.length} séance{apercu.dates.length > 1 ? "s" : ""} :</strong> {apercu.dates.map(jjmm).join(", ")}</p>
+                {apercu.sautees.length > 0 && (
+                  <p>Sautées : {apercu.sautees.map((x) => `${jjmm(x.date)} (${x.raison})`).join(", ")}</p>
+                )}
+                {apercu.horsCalendrier && (
+                  <p className="text-vea-accent">Attention : les vacances après l&apos;été 2027 ne sont pas encore dans le calendrier (lib/calendrier-scolaire.ts).</p>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
       {error && (
         <div className="border border-vea-accent/30 bg-vea-accent-soft rounded-lg px-4 py-3 text-sm text-vea-accent">
           {error}
@@ -225,7 +294,7 @@ export default function AddEventForm({ siteOrigin }: { siteOrigin: string }) {
 
       <button type="submit" disabled={isPending}
         className="btn-primary w-full disabled:opacity-60">
-        {isPending ? "Creation..." : "Creer l'event + generer QR"}
+        {isPending ? "Creation..." : repeter ? `Creer ${apercu ? apercu.dates.length : ""} seances + QR` : "Creer l'event + generer QR"}
       </button>
     </form>
   );
