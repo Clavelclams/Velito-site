@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-de-zero-02-une-application-web-cest-quoi",
+  "questions": [
+    {
+      "question": "Dans l'URL https://manager.mabb.fr/equipes, que désigne « manager » ?",
+      "choix": [
+        "Le nom de la page demandée",
+        "Un sous-domaine : il dit à quel espace du serveur on s'adresse",
+        "Le nom de la base de données",
+        "Le nom du dossier PHP sur le serveur"
+      ],
+      "bonne": 1,
+      "explication": "manager est le sous-domaine de mabb.fr. Venaball s'en sert pour choisir l'espace (Manager, joueuse, vitrine). La page demandée, c'est /equipes, la partie après le domaine."
+    },
+    {
+      "question": "Pourquoi l'app Venaball Club ne se connecte-t-elle pas directement à MySQL ?",
+      "choix": [
+        "Parce que MySQL ne fonctionne pas sur téléphone",
+        "Parce que le JSON est plus rapide que le SQL",
+        "Parce que le mot de passe de la base serait dans l'app, et personne ne vérifierait les droits",
+        "Parce qu'Apple l'interdit dans ses règles"
+      ],
+      "bonne": 2,
+      "explication": "Mettre le mot de passe de la base dans l'app permettrait à n'importe qui de l'extraire et de tout lire. En passant par l'API, le serveur garde le secret et vérifie les droits au même endroit que pour le web. La vitesse n'est pas la raison."
+    },
+    {
+      "question": "Quelle phrase décrit le mieux Symfony ?",
+      "choix": [
+        "Un langage de programmation comme PHP",
+        "Une base de données",
+        "Un hébergeur, comme OVH",
+        "Un framework : une boîte à outils PHP avec des règles de rangement"
+      ],
+      "bonne": 3,
+      "explication": "Symfony est écrit en PHP et apporte routage, sécurité, formulaires. Le langage, c'est PHP ; la base, c'est MySQL ou MariaDB ; l'hébergeur, c'est OVH."
+    },
+    {
+      "question": "venaball.fr est fait de cinq fichiers HTML copiés sur le serveur. manager.mabb.fr fabrique chaque page à la demande. Comment appelle-t-on ces deux types ?",
+      "choix": [
+        "Site statique pour venaball.fr, application web pour manager.mabb.fr",
+        "Application web pour les deux",
+        "Site statique pour les deux, car les deux affichent du HTML",
+        "API pour venaball.fr, site statique pour manager.mabb.fr"
+      ],
+      "bonne": 0,
+      "explication": "Un site statique renvoie la même page à tout le monde. Une application fabrique la page selon la personne et la base. Les deux finissent en HTML, mais ce n'est pas ça qui fait la différence."
+    },
+    {
+      "question": "Que renvoie la route /api/club/equipes de ApiClubCoachController ?",
+      "choix": [
+        "Une page HTML avec un tableau des équipes",
+        "Des données JSON (saison et liste d'équipes) que l'app dessine elle-même",
+        "Un fichier PDF",
+        "Une requête SQL que l'app exécute"
+      ],
+      "bonne": 1,
+      "explication": "La fonction se termine par return new JsonResponse(...). C'est le guichet des programmes. La page HTML, c'est EquipeController côté Manager, avec $this->render(...)."
+    }
+  ]
+}

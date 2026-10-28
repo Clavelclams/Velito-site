@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-de-zero-04-la-carte-du-dossier-mabb-site",
+  "questions": [
+    {
+      "question": "Tu veux savoir quelles colonnes a la table des équipes. Quel fichier ouvres-tu en premier ?",
+      "choix": [
+        "src/Entity/Sport/Equipe.php",
+        "src/Controller/Manager/EquipeController.php",
+        "templates/manager/equipe/index.html.twig",
+        "config/routes/manager.yaml"
+      ],
+      "bonne": 0,
+      "explication": "L'entité est la fiche qui décrit les cases d'une table. Le contrôleur utilise les équipes, le template les affiche, mais aucun des deux ne définit les colonnes."
+    },
+    {
+      "question": "Quel dossier est le seul visible depuis Internet ?",
+      "choix": [
+        "src/",
+        "config/",
+        "public/",
+        "templates/"
+      ],
+      "bonne": 2,
+      "explication": "public/ contient index.php, .htaccess, le Playground et les uploads. Tout le reste, dont src/ et config/, reste caché. Mettre un fichier sensible dans public/ le rendrait téléchargeable."
+    },
+    {
+      "question": "Où ranges-tu une logique réutilisée par plusieurs contrôleurs, comme le calcul de la saison active ?",
+      "choix": [
+        "Dans un template Twig",
+        "Dans une migration",
+        "Dans vendor/",
+        "Dans un service, comme src/Service/SaisonService.php"
+      ],
+      "bonne": 3,
+      "explication": "Un service est un spécialiste appelé par plusieurs contrôleurs. vendor/ contient le code des autres et ne se modifie jamais ; une migration ne sert qu'à changer la structure de la base."
+    },
+    {
+      "question": "Pourquoi deploy.ps1 ne doit-il pas être utilisé tel quel aujourd'hui ?",
+      "choix": [
+        "Parce qu'il est écrit en PHP et non en PowerShell",
+        "Parce qu'il fait git add -A et git pull, alors que la procédure actuelle impose git fetch puis git reset --hard sur le serveur et interdit l'ajout en aveugle",
+        "Parce qu'il déploie sur le mauvais club",
+        "Parce qu'il supprime la base de données"
+      ],
+      "bonne": 1,
+      "explication": "00_ECOSYSTEME.md §2.6 dit jamais git pull sur le serveur et jamais git add en aveugle sur ce dépôt. Le script date de juin et n'a pas suivi. Il ne supprime pas la base, mais il peut committer des fichiers indésirables."
+    },
+    {
+      "question": "Que contient le dossier migrations/ ?",
+      "choix": [
+        "Les sauvegardes de la base de données",
+        "Les fichiers pour déménager le site vers un autre hébergeur",
+        "Des fichiers datés qui décrivent chaque changement de structure de la base et comment l'annuler",
+        "Les données des joueuses à importer"
+      ],
+      "bonne": 2,
+      "explication": "Chaque migration (91 au 04/10/2026, la dernière Version20261002120000.php) ajoute ou modifie une table ou une colonne. Ce ne sont pas des sauvegardes : elles décrivent la forme de la base, pas son contenu."
+    }
+  ]
+}

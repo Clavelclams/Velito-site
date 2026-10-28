@@ -1,0 +1,49 @@
+{
+  "fiche": "pirb-hosts-une-source-pour-les-adresses",
+  "questions": [
+    {
+      "question": "Un APK preview-venaball est déjà installé chez une testeuse. Je modifie EXPO_PUBLIC_API_URL dans mon .env local. Que se passe-t-il sur son téléphone ?",
+      "choix": [
+        "Rien : la valeur a été recopiée dans le JavaScript au moment du build, il faut construire un nouveau binaire",
+        "L'app lit la nouvelle valeur au prochain lancement",
+        "L'app lit la nouvelle valeur après une mise à jour OTA automatique",
+        "L'app plante parce que la valeur du binaire ne correspond plus au .env"
+      ],
+      "bonne": 0,
+      "explication": "Une variable EXPO_PUBLIC_ est figée dans le code au build, la doc 20 du dossier le dit explicitement : changer le .env après coup ne change rien, il faut rebuilder. Le piège est de croire que le téléphone lit le .env au lancement : le .env n'existe que sur mon poste."
+    },
+    {
+      "question": "Dans src/services/hosts.ts, si EXPO_PUBLIC_API_URL vaut https://api.venaball.fr, que vaut URLS.motDePasseOublie ?",
+      "choix": [
+        "https://api.venaball.fr/mot-de-passe-oublie",
+        "https://manager.venaball.fr/mot-de-passe-oublie",
+        "https://club.venaball.fr/mot-de-passe-oublie",
+        "https://venaball.fr/mot-de-passe-oublie"
+      ],
+      "bonne": 2,
+      "explication": "MANAGER_BASE lit le premier morceau du nom d'hôte : api ou app donnent club, pirb donne manager. Le choix manager.venaball.fr est le piège : la règle pirb vers manager ne vaut que pour l'instance MABB (pirb.mabb.fr vers manager.mabb.fr)."
+    },
+    {
+      "question": "Quel bug a déclenché la création de hosts.ts le 30/09/2026 ?",
+      "choix": [
+        "Le jeton de connexion était envoyé au mauvais serveur et refusé en 401",
+        "Le Playground ne chargeait plus parce que le cache de la WebView gardait l'ancienne version",
+        "Le build EAS échouait parce que la variable d'environnement manquait dans eas.json",
+        "Le premier APK visant Venaball envoyait « mot de passe oublié » vers l'instance MABB, sur une page qui n'existait pas"
+      ],
+      "bonne": 3,
+      "explication": "Chaque écran recopiait sa propre adresse avec pirb.mabb.fr en repli, et deux écrans avaient manager.mabb.fr en dur : le lien partait sur la mauvaise instance, vers /reset-password qui n'existe pas. Le cache de la WebView est un vrai problème du projet (réglé par ?v=), mais un autre."
+    },
+    {
+      "question": "Un juré remarque que session.ts lit encore process.env.EXPO_PUBLIC_API_URL et lève une erreur s'il manque, alors que hosts.ts retombe sur api.venaball.fr. Quelle réponse tient ?",
+      "choix": [
+        "Ce n'est pas un problème, deux fichiers peuvent bien lire la même variable",
+        "Reconnaître deux comportements pour la même absence, expliquer que eas.json pose la variable sur les quatre profils, et proposer que hosts.ts soit le seul lecteur et échoue en release",
+        "Supprimer le repli de hosts.ts suffit, il n'y a rien d'autre à changer",
+        "Ajouter le même repli dans session.ts pour que tout le monde retombe sur api.venaball.fr"
+      ],
+      "bonne": 1,
+      "explication": "La bonne réponse nomme l'incohérence, dit pourquoi elle ne se produit pas dans les builds actuels et donne la correction : un seul lecteur, une erreur bruyante en release. Ajouter le repli partout est le piège : un binaire mal configuré parlerait en silence au serveur de production au lieu de signaler l'erreur."
+    }
+  ]
+}

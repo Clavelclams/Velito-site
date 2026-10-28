@@ -1,0 +1,49 @@
+{
+  "fiche": "table-de-marque-chrono-depuis-l-horloge",
+  "questions": [
+    {
+      "question": "Dans chrono.js, un test démarre le chrono à maintenant = 0. Avec une condition du type if (match.chrono.demarreA), que se passait-il ?",
+      "choix": [
+        "Le chrono démarrait normalement",
+        "Une exception était levée",
+        "0 est falsy : le chrono se croyait arrêté et tempsJeuMs ne comptait pas le temps écoulé",
+        "Le chrono comptait le temps deux fois"
+      ],
+      "bonne": 2,
+      "explication": "En JavaScript, 0, '', null, undefined, NaN et false sont falsy. Le test != null ne rejette que null et undefined. Avec Date.now() réel le bug ne se voyait jamais : ce sont les tests à instants fixes qui l'ont révélé."
+    },
+    {
+      "question": "La tablette se met en veille 40 secondes pendant que le chrono tourne. Au réveil, qu'affiche la table de marque ?",
+      "choix": [
+        "Le temps restant correct, car il est recalculé depuis demarreA et l'heure réelle",
+        "Le même temps qu'avant la veille, car setInterval a été suspendu",
+        "00:00, car le service worker a été arrêté",
+        "Un temps aléatoire"
+      ],
+      "bonne": 0,
+      "explication": "Le setInterval de horloge.js ne fait qu'afficher. Le temps vient de maintenant - demarreA : peu importe combien de tics ont été sautés."
+    },
+    {
+      "question": "Que fait l'action MATCH_PAUSE sur l'objet chrono ?",
+      "choix": [
+        "Elle met demarreA à 0",
+        "Elle fige ecouleMs = tempsJeuMs(m, t) puis met demarreA à null",
+        "Elle arrête le setInterval de horloge.js",
+        "Elle enregistre un événement pause dans le journal"
+      ],
+      "bonne": 1,
+      "explication": "On mémorise le temps joué et on efface l'instant de départ. Mettre 0 serait justement le piège falsy. Le setInterval continue de tourner, il n'affiche rien quand le chrono est arrêté."
+    },
+    {
+      "question": "Pourquoi ne pas remplacer Date.now() par performance.now(), qui ne recule jamais ?",
+      "choix": [
+        "performance.now() n'existe pas sur tablette",
+        "performance.now() est moins précis",
+        "performance.now() est interdit dans un service worker",
+        "performance.now() repart de zéro à chaque chargement de page, donc il ne survit pas à un rechargement"
+      ],
+      "bonne": 3,
+      "explication": "C'est une horloge relative à la page. L'avantage du modèle actuel est justement la reprise après rechargement. Le prix est la sensibilité à un changement d'heure système, limite connue."
+    }
+  ]
+}

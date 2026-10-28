@@ -1,0 +1,49 @@
+{
+  "fiche": "pirb-signaler-masquer-contenu-utilisateur",
+  "questions": [
+    {
+      "question": "Pourquoi les stores exigent-ils un bouton « Signaler » et un moyen de bloquer dans l'app Venaball ?",
+      "choix": [
+        "Parce que l'app utilise la caméra",
+        "Parce que l'app affiche du contenu publié par les utilisatrices (bio, liens de highlights, fil commu)",
+        "Parce que l'app contient un jeu hors ligne",
+        "Parce que l'app envoie des notifications push"
+      ],
+      "bonne": 1,
+      "explication": "La règle Apple 1.2 vise le contenu généré par les utilisateurs : dès qu'une utilisatrice peut publier quelque chose que d'autres voient, il faut signaler, bloquer et un contact de modération. La caméra a ses propres exigences (texte de permission), mais elle ne déclenche pas celle-ci : l'image reste sur le téléphone."
+    },
+    {
+      "question": "Dans src/services/moderation.ts, que fait concrètement « Signaler ce contenu » en V1 ?",
+      "choix": [
+        "Il envoie un POST à une route /api/pirb/signalements qui enregistre le signalement en base",
+        "Il masque automatiquement la joueuse et prévient son coach par push",
+        "Il ouvre un mail pré-rempli vers contact@velito.fr avec le type de contenu, l'id de la joueuse et la référence",
+        "Il supprime le contenu du serveur en attendant la décision d'un modérateur"
+      ],
+      "bonne": 2,
+      "explication": "La V1 n'a volontairement aucun nouvel endpoint : un mailto: avec les identifiants techniques, pour que le modérateur retrouve le contenu sans chercher. Le POST vers une route de signalements est le piège : c'est la version suivante que je décris au jury, elle n'existe pas encore."
+    },
+    {
+      "question": "Une joueuse masque une autre joueuse depuis l'accueil, puis réinstalle l'app. Que devient le masquage ?",
+      "choix": [
+        "Il est perdu : la liste des joueuses masquées est stockée sur le téléphone (AsyncStorage), pas sur le serveur",
+        "Il est conservé, car il est rattaché au compte côté serveur",
+        "Il est conservé, car il est stocké dans expo-secure-store avec le jeton",
+        "Il est transféré au club, qui doit le valider"
+      ],
+      "bonne": 0,
+      "explication": "moderation.ts range les ids masqués sous la clé venaball.moderation.masquees.v1 dans AsyncStorage : local, immédiat, réversible, mais lié à l'installation. C'est la limite que j'assume au jury. Le secure-store est réservé au jeton de session, une liste d'ids n'a rien de secret."
+    },
+    {
+      "question": "Pourquoi ai-je créé le hook useJoueusesMasquees le 05/10 ?",
+      "choix": [
+        "Pour que le serveur filtre les joueuses masquées dans ses réponses",
+        "Pour stocker la liste masquée dans le state React plutôt que dans AsyncStorage",
+        "Pour rendre le masquage définitif, sans possibilité de retour",
+        "Parce que plusieurs écrans recopiaient le même abonnement au module : une joueuse masquée sur l'accueil doit disparaître aussi de la recherche, sans recharger"
+      ],
+      "bonne": 3,
+      "explication": "Le hook factorise l'abonnement à moderation.ts (abonner, idsMasquees, désabonnement au démontage). Tous les écrans se refiltrent en direct au même signal. Le filtrage serveur serait mieux, mais il n'existe pas : le hook filtre côté app."
+    }
+  ]
+}

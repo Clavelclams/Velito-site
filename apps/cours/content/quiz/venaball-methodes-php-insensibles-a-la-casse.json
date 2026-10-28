@@ -1,0 +1,49 @@
+{
+  "fiche": "venaball-methodes-php-insensibles-a-la-casse",
+  "questions": [
+    {
+      "question": "Dans une classe PHP, lequel de ces couples provoque une erreur fatale « Cannot redeclare » ?",
+      "choix": [
+        "Les propriétés private $codeEmarque et private $codeEMarque",
+        "Une propriété $codeEMarque et une méthode getCodeEMarque()",
+        "Les méthodes getCodeEmarque() et getCodeEMarque()",
+        "Une constante CODE et une propriété $code"
+      ],
+      "bonne": 2,
+      "explication": "Les noms de méthodes, fonctions et classes sont insensibles à la casse en PHP : ces deux getters sont la même méthode déclarée deux fois. Les propriétés, elles, sont sensibles à la casse et auraient pu cohabiter, ce qui rend le piège encore plus discret."
+    },
+    {
+      "question": "Après le correctif 2fa7cbc, RencontreController appelle toujours $rencontre->setCodeEmarque($code) (m minuscule) alors que la méthode s'appelle setCodeEMarque(). Que se passe-t-il ?",
+      "choix": [
+        "Erreur « Call to undefined method »",
+        "Ça fonctionne : PHP retrouve setCodeEMarque() sans tenir compte de la casse",
+        "Doctrine intercepte l'appel et écrit dans une nouvelle colonne",
+        "PHP appelle la méthode magique __call()"
+      ],
+      "bonne": 1,
+      "explication": "La même règle qui a causé la 500 fait ici marcher l'appel : la résolution des méthodes ignore la casse. __call() n'est sollicitée que si aucune méthode ne correspond, ce qui n'est pas le cas."
+    },
+    {
+      "question": "Le projet utilise la stratégie de nommage Doctrine underscore_number_aware. Quelle colonne SQL correspond aux propriétés codeEMarque et codeEmarque ?",
+      "choix": [
+        "code_emarque pour les deux, donc la nouvelle migration ADD code_emarque aurait aussi échoué",
+        "code_e_marque pour codeEMarque et code_emarque pour codeEmarque",
+        "codeEMarque et codeEmarque, Doctrine garde le nom de la propriété",
+        "code_emarque_1 et code_emarque_2, Doctrine numérote les doublons"
+      ],
+      "bonne": 0,
+      "explication": "La stratégie n'ajoute un _ que devant une majuscule précédée d'une minuscule ou d'un chiffre : le M de codeEMarque suit un E majuscule, pas de _ devant. Les deux donnent code_emarque, colonne créée dès juin par Version20260610140000."
+    },
+    {
+      "question": "Quelle commande, lancée avant d'ajouter le champ, aurait évité l'incident du 03/10 ?",
+      "choix": [
+        "grep -rn \"codeEmarque\" src templates migrations",
+        "php bin/console doctrine:schema:validate sur la prod",
+        "git log --oneline",
+        "grep -rni \"codeEmarque\" src templates migrations"
+      ],
+      "bonne": 3,
+      "explication": "Le -i (insensible à la casse) est tout l'intérêt de la règle écrite dans CLAUDE.md : sans lui, chercher codeEmarque ne trouve pas codeEMarque, exactement comme lors de l'incident."
+    }
+  ]
+}

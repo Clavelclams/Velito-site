@@ -1,0 +1,60 @@
+{
+  "fiche": "tests-09-integration-continue-github-actions",
+  "questions": [
+    {
+      "question": "Quel est le seul workflow présent aujourd'hui dans mabb-site/.github/workflows/ ?",
+      "choix": [
+        "Un ci.yml qui lance php bin/phpunit à chaque push",
+        "Un workflow qui déploie automatiquement sur le serveur MABB",
+        "parse-positions-ffbb.yml, une tâche planifiée qui lit les PDF de positions de tirs par OCR",
+        "Aucun, le dossier .github n'existe pas"
+      ],
+      "bonne": 2,
+      "explication": "mabb-site a un seul workflow, planifié le lundi matin, qui ne lance aucun test. C'est Velito-site qui n'a pas de dossier .github du tout."
+    },
+    {
+      "question": "Dans GitHub Actions, qu'est-ce qu'un runner ?",
+      "choix": [
+        "La machine (par exemple ubuntu-latest) qui exécute un job, neuve à chaque fois",
+        "Une commande shell dans une étape",
+        "Le fichier YAML qui décrit le scénario",
+        "L'événement qui déclenche le workflow"
+      ],
+      "bonne": 0,
+      "explication": "Le fichier YAML est le workflow, l'événement est le déclencheur (on:), la commande est une step. Le runner est la machine, et sa neutralité rend le verdict fiable."
+    },
+    {
+      "question": "Pourquoi le ci.yml proposé démarre-t-il un service MySQL plutôt que d'utiliser SQLite ?",
+      "choix": [
+        "Parce que PHPUnit ne sait pas parler à SQLite",
+        "Parce que GitHub interdit SQLite sur ses runners",
+        "Parce que SQLite est payant",
+        "Parce que les tests fonctionnels ont besoin d'une base et que la prod tourne sur MySQL/MariaDB avec des migrations en syntaxe MySQL : tester sur un autre moteur pourrait donner un faux vert"
+      ],
+      "bonne": 3,
+      "explication": "PirbSeancesIdorTest ouvre une transaction Doctrine dans setUp() : sans base, il plante. On teste sur le moteur de la prod pour que le vert veuille dire quelque chose."
+    },
+    {
+      "question": "Dans mabb-site, .env.test est ignoré par Git. Quelle conséquence pour la CI ?",
+      "choix": [
+        "Aucune, GitHub récupère aussi les fichiers ignorés",
+        "Les variables de test (APP_ENV, KERNEL_CLASS, DATABASE_URL) doivent être données dans le bloc env: du workflow, et une vraie variable d'environnement passe avant les fichiers .env",
+        "Il faut commiter .env.local à la place",
+        "Il faut copier le mot de passe de la base de prod dans le workflow"
+      ],
+      "bonne": 1,
+      "explication": "Le runner ne voit que ce qui est dans Git. On passe des valeurs jetables dans le workflow ; un vrai secret irait dans secrets.NOM, jamais en clair, et jamais celui de la prod."
+    },
+    {
+      "question": "Le dernier commit de main porte une croix rouge sur GitHub. Que fais-tu ?",
+      "choix": [
+        "Tu ne déploies pas : tu lis le journal de l'étape rouge, tu corriges, tu repousses, et tu attends le vert",
+        "Tu déploies quand même, la CI se trompe souvent",
+        "Tu supprimes le workflow pour retrouver un dépôt sans croix",
+        "Tu déploies sur MABB seulement, pas sur Venaball"
+      ],
+      "bonne": 0,
+      "explication": "On ne déploie pas sur rouge. Si le rouge vient de l'environnement de CI et pas du code, on corrige le workflow, mais on ne l'ignore pas."
+    }
+  ]
+}

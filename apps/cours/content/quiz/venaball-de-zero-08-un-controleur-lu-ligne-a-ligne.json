@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-de-zero-08-un-controleur-lu-ligne-a-ligne",
+  "questions": [
+    {
+      "question": "Un coach (pas dirigeant) d'un club tape à la main l'adresse POST /equipes/12/archiver d'une équipe de son club. Que se passe-t-il ?",
+      "choix": [
+        "L'équipe est archivée, car le bouton était seulement caché",
+        "denyAccessUnlessGranted(ClubVoter::CLUB_ADMIN, $equipe) refuse l'accès avant toute modification",
+        "Le jeton CSRF est accepté puisqu'il est connecté",
+        "Symfony renvoie une page 404 car l'équipe n'existe pas"
+      ],
+      "bonne": 1,
+      "explication": "La première ligne de archive() exige le droit CLUB_ADMIN, c'est-à-dire le rôle DIRIGEANT dans le club de l'équipe. Cacher le bouton dans Twig n'est qu'un confort, la vraie barrière est dans le contrôleur. L'équipe existe, donc pas de 404."
+    },
+    {
+      "question": "Dans archive(Request $request, Equipe $equipe), d'où vient l'objet $equipe ?",
+      "choix": [
+        "Symfony le charge depuis la base grâce au paramètre {id} de la route, ou répond 404 s'il n'existe pas",
+        "Le formulaire envoie l'objet complet en champ caché",
+        "Il est créé vide par new Equipe()",
+        "Il est lu dans la session de l'utilisateur"
+      ],
+      "bonne": 0,
+      "explication": "Symfony voit qu'on attend une Equipe et qu'il y a un {id} dans l'adresse : il va chercher la ligne avec Doctrine avant d'entrer dans la méthode. Un navigateur ne peut pas envoyer un objet PHP, et new Equipe() servirait à créer, pas à archiver."
+    },
+    {
+      "question": "Pourquoi archive() se termine-t-il par redirectToRoute('manager_equipe_index') plutôt que par render() ?",
+      "choix": [
+        "Parce que render() est interdit sur une route POST",
+        "Parce que redirectToRoute() enregistre les modifications en base",
+        "Pour renvoyer le navigateur vers la liste, qui affiche le flash ; un F5 recharge alors la liste et pas l'archivage",
+        "Pour vider la session de l'utilisateur"
+      ],
+      "bonne": 2,
+      "explication": "Après un POST, on redirige vers une page en GET : le message flash s'y affiche une fois, et recharger la page ne renvoie pas le formulaire. C'est flush() qui enregistre en base, pas la redirection. render() reste possible en POST, new() l'utilise quand le formulaire a des erreurs."
+    },
+    {
+      "question": "Que protège la vérification isCsrfTokenValid('archive_equipe_' . $equipe->getId(), $token) ?",
+      "choix": [
+        "Elle vérifie que le mot de passe du dirigeant est correct",
+        "Elle empêche deux dirigeants d'archiver en même temps",
+        "Elle vérifie que l'équipe appartient au bon club",
+        "Elle empêche un site extérieur de faire envoyer ce formulaire à ton insu pendant que tu es connecté"
+      ],
+      "bonne": 3,
+      "explication": "Le jeton CSRF est généré par Venaball dans le formulaire et un site piégé ne peut pas le deviner. La vérification du club est le travail du ClubVoter, pas du jeton, et le mot de passe est vérifié à la connexion."
+    },
+    {
+      "question": "RencontreController.php fait 1 466 lignes et 25 routes. Quel est le principal problème d'un tel contrôleur obèse ?",
+      "choix": [
+        "PHP refuse les fichiers de plus de 1 000 lignes",
+        "Il est difficile à lire et à tester, et chaque modification risque de casser une autre action",
+        "Il ralentit forcément toutes les pages du site",
+        "Il empêche l'utilisation du ClubVoter"
+      ],
+      "bonne": 1,
+      "explication": "La logique enfermée dans un gros contrôleur est dure à comprendre, ne se teste qu'en simulant des requêtes et invite à recopier des règles ailleurs. Le remède est de déplacer la logique dans des services. PHP n'impose aucune limite de taille, et la vitesse n'est pas l'enjeu principal."
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "fiche": "deploiement-10-site-statique-sur-ovh-multisite-scp-et-droits",
+  "questions": [
+    {
+      "question": "Après l'envoi de la table de marque, index.html s'affiche mais chaque fichier de js/ répond 403. ls -la montre js/ en drwx------. Quelle est la cause ?",
+      "choix": [
+        "Le certificat HTTPS n'est pas encore actif",
+        "Le service worker bloque les scripts",
+        "Apache n'a pas le droit de traverser js/ : 700 ne donne rien au groupe ni aux autres",
+        "OVH interdit les fichiers .js sur le mutualisé"
+      ],
+      "bonne": 2,
+      "explication": "Apache ne tourne pas sous ton utilisateur : il lui faut x sur le dossier et r sur le fichier, via le groupe ou les autres. Un problème de certificat donnerait une erreur sur toute la page, pas un 403 ciblé."
+    },
+    {
+      "question": "Que fait exactement chmod -R u=rwX,go=rX . ?",
+      "choix": [
+        "Met tout en 777",
+        "Dossiers en 755 et fichiers en 644 : le X majuscule n'ajoute l'exécution qu'aux dossiers (et aux fichiers déjà exécutables)",
+        "Met tous les fichiers en exécutable",
+        "Retire tous les droits aux autres utilisateurs"
+      ],
+      "bonne": 1,
+      "explication": "x minuscule rendrait aussi les fichiers exécutables, ce qui est inutile pour du HTML ou du JS servi. 777 ouvrirait l'écriture à tout le monde sur la machine."
+    },
+    {
+      "question": "Le dossier tabledemarque existe déjà sur le serveur. Tu lances scp -r emarque-unss login@...:tabledemarque. Où arrive index.html ?",
+      "choix": [
+        "Dans tabledemarque/emarque-unss/index.html, un niveau trop bas",
+        "Dans tabledemarque/index.html",
+        "Nulle part : scp refuse d'écraser un dossier",
+        "À la racine de l'hébergement"
+      ],
+      "bonne": 0,
+      "explication": "Comme cp -r, copier un dossier vers un dossier existant le range dedans. Envoyer le contenu (emarque-unss\\*) ou vérifier avec ls juste après évite le piège."
+    },
+    {
+      "question": "Pourquoi le https n'est-il pas facultatif pour tabledemarque.velito.fr ?",
+      "choix": [
+        "Parce que OVH refuse le http sur un multisite",
+        "Parce que Tailwind CDN ne se charge qu'en https",
+        "Parce que localStorage n'existe pas en http",
+        "Parce que le service worker et crypto.subtle n'existent qu'en contexte sécurisé : sans https, ni hors ligne ni empreinte SHA-256"
+      ],
+      "bonne": 3,
+      "explication": "localStorage fonctionne en http. Ce sont les API sensibles (service worker, Web Crypto) qui exigent un contexte sécurisé. Sans elles, l'app tourne mais perd le hors ligne et passe à l'empreinte simple:."
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-de-zero-05-la-base-de-donnees-de-venaball",
+  "questions": [
+    {
+      "question": "Dans la table joueur de Venaball, que contient la colonne club_id d'une ligne ?",
+      "choix": [
+        "Le nom du club écrit en toutes lettres",
+        "Le numéro id de la ligne du club dans la table club",
+        "Le numéro de licence FFBB de la joueuse",
+        "Le nombre de clubs auxquels la joueuse appartient"
+      ],
+      "bonne": 1,
+      "explication": "club_id est une clé étrangère : elle contient l'id d'une ligne d'une autre table, ici club. On ne recopie pas le nom du club sur chaque fiche, on renvoie vers sa fiche, ce qui permet de corriger le nom à un seul endroit. Le numéro de licence est une autre colonne (licence)."
+    },
+    {
+      "question": "Léa, U15, joue aussi en U18 cette saison (surclassement). Où Venaball enregistre-t-il cette double appartenance ?",
+      "choix": [
+        "Dans deux colonnes equipe_id sur la fiche joueur",
+        "En créant une deuxième fiche joueur pour Léa dans l'équipe U18",
+        "Dans la table pivot joueur_equipe, avec un type et une saison pour chaque affectation",
+        "Dans la table user_club_role, avec le rôle JOUEUR"
+      ],
+      "bonne": 2,
+      "explication": "joueur_equipe est une table pivot enrichie : une ligne par affectation, avec type (principale, surclassement, doublage, reserve), saison et actif. Dupliquer la fiche de Léa casserait ses stats et ses présences ; user_club_role décrit les rôles des comptes, pas les équipes."
+    },
+    {
+      "question": "Pourquoi l'ADR-0003 impose-t-elle une colonne club_id sur chaque table métier ?",
+      "choix": [
+        "Parce que Venaball utilise une seule base pour tous les clubs et doit savoir à quel club appartient chaque fiche",
+        "Parce que MySQL refuse une table sans clé étrangère",
+        "Parce que chaque club a sa propre base de données et club_id indique laquelle",
+        "Pour accélérer l'affichage des pages"
+      ],
+      "bonne": 0,
+      "explication": "L'ADR-0003 choisit une base unique avec isolation logique : chaque fiche porte le tampon de son club, et chaque requête doit filtrer dessus. L'option une base par club a justement été écartée. MySQL accepte très bien des tables sans clé étrangère."
+    },
+    {
+      "question": "Pourquoi la table joueur est-elle séparée de la table user ?",
+      "choix": [
+        "Pour respecter une règle de MySQL sur les mots réservés",
+        "Parce que les joueuses n'ont pas de date de naissance",
+        "Pour stocker les mots de passe deux fois par sécurité",
+        "Parce qu'une licenciée n'a pas toujours de compte et qu'un compte parent peut suivre plusieurs joueuses"
+      ],
+      "bonne": 3,
+      "explication": "Le commentaire de Joueur.php l'explique : beaucoup de jeunes licenciées ne s'inscrivent jamais sur l'app, et un User peut être rattaché à plusieurs joueuses. Le lien vers user est donc facultatif. Le mot réservé concerne seulement le nom `user` entouré d'accents graves, pas la séparation."
+    },
+    {
+      "question": "Un membre du jury te demande le schéma de ta base. Quelle est la source la plus fiable de l'état réel ?",
+      "choix": [
+        "Le fichier shemas/dictionnaire_db.md",
+        "L'ADR-0006 qui décrit les tables Role et ClubUserRole",
+        "Les entités de src/Entity et les migrations de migrations/",
+        "Le cahier des charges initial"
+      ],
+      "bonne": 2,
+      "explication": "Les entités décrivent ce que Doctrine attend et les migrations ce qui a réellement été appliqué en base. Le dictionnaire a été écrit avant le code (il annonce même un backend Node.js) et ses noms de tables diffèrent ; l'ADR-0006 décrit des tables qui n'existent pas dans le code."
+    }
+  ]
+}

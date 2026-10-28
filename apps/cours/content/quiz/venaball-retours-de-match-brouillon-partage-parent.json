@@ -1,0 +1,49 @@
+{
+  "fiche": "venaball-retours-de-match-brouillon-partage-parent",
+  "questions": [
+    {
+      "question": "Dans RetourMatch, le coach a déjà envoyé « Bon match » puis clique une seconde fois sur « Enregistrer et envoyer les retours » sans rien changer. Que se passe-t-il ?",
+      "choix": [
+        "La joueuse reçoit une deuxième notification et un deuxième push",
+        "Rien n'est renvoyé : isAEnvoyer() est faux car le brouillon est identique à la version publiée",
+        "Une deuxième ligne RetourMatch est créée pour garder l'historique",
+        "Le retour publié est effacé puis recréé avec une nouvelle date"
+      ],
+      "bonne": 1,
+      "explication": "isAEnvoyer() exige un brouillon non vide ET différent de publie. Un double clic ne spamme donc pas la joueuse. Une deuxième ligne est impossible de toute façon : l'index unique joueur + rencontre + auteur l'interdit."
+    },
+    {
+      "question": "Pourquoi RetourCoachService::envoyer() envoie-t-il le push Expo après le flush et pas avant ?",
+      "choix": [
+        "Parce qu'Expo exige l'identifiant du retour, qui n'existe qu'après le flush",
+        "Parce que le push est plus rapide quand la base est libérée",
+        "Pour qu'une panne d'Expo ne puisse pas empêcher l'enregistrement : le retour est en base, le push est un bonus",
+        "Pour que le push parte aussi aux parents rattachés"
+      ],
+      "bonne": 2,
+      "explication": "Le service externe passe en dernier : si Expo échoue, le service journalise et le retour reste publié et visible dans l'app. Les parents ne sont jamais notifiés, c'est une décision explicite."
+    },
+    {
+      "question": "Le parent d'une joueuse de 15 ans ouvre sa fiche dans le Manager. Quels retours voit-il ?",
+      "choix": [
+        "Tous les retours publiés, puisqu'il est le représentant légal",
+        "Tous les retours, brouillons compris",
+        "Aucun, les parents n'ont jamais accès aux retours",
+        "Seulement les retours publiés que sa fille a choisi de partager (visibleParent = true), filtrés dans la requête côté serveur"
+      ],
+      "bonne": 3,
+      "explication": "retoursEnvoyes(..., seulementPartages: true) ajoute rm.visibleParent = true dans la requête Doctrine. Le piège « tout, car représentant légal » est l'intuition courante, mais j'ai choisi de laisser la décision à la joueuse pour cet échange sportif, non par défaut."
+    },
+    {
+      "question": "Une joueuse appelle POST /api/pirb/retours/42/parent alors que le retour 42 appartient à une autre joueuse. Que répond PirbApiController::retourParent() ?",
+      "choix": [
+        "404 « Retour introuvable », sans révéler que le retour existe",
+        "403, car elle n'a pas le droit de modifier ce retour",
+        "200 et le partage est appliqué, puisqu'elle est authentifiée",
+        "400, car le corps JSON est invalide"
+      ],
+      "bonne": 0,
+      "explication": "Le contrôleur vérifie que le retour est publié et que son joueur est celui du compte connecté ; sinon même 404 que pour un id inexistant. C'est la protection anti-IDOR : ne pas confirmer l'existence d'une ressource qui n'est pas à toi. Une 403 dirait « ce retour existe »."
+    }
+  ]
+}

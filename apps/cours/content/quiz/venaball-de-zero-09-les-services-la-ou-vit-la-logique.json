@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-de-zero-09-les-services-la-ou-vit-la-logique",
+  "questions": [
+    {
+      "question": "Avec la règle de SaisonService::pourDate(), à quelle saison est rattachée une cotisation saisie le 15/07/2026 ?",
+      "choix": [
+        "2025-2026",
+        "2026-2027",
+        "2027-2028",
+        "Cela dépend du navigateur de la secrétaire"
+      ],
+      "bonne": 1,
+      "explication": "MOIS_BASCULE vaut 7 : à partir de juillet, la saison est année-année+1, donc 2026-2027. Avant le commit d00f6ed, CotisationJoueur basculait en septembre et aurait répondu 2025-2026, d'où l'incohérence entre écrans. Le calcul se fait sur le serveur, le navigateur n'y est pour rien."
+    },
+    {
+      "question": "Avec CategorieCalculator, quelle est la catégorie en saison 2026-2027 d'une joueuse née en 2013 ?",
+      "choix": [
+        "U13",
+        "U14",
+        "U18",
+        "U15"
+      ],
+      "bonne": 3,
+      "explication": "Âge de référence = année de fin de saison moins année de naissance : 2027 - 2013 = 14. La première borne de TRANCHES supérieure ou égale à 14 est 15, donc U15. U14 serait le libellé individuel, pas la catégorie fédérale, et l'anniversaire ne compte pas."
+    },
+    {
+      "question": "Quel problème concret le commit d00f6ed « saisons 3a: regle unique » a-t-il corrigé ?",
+      "choix": [
+        "La règle de saison était recopiée dans plusieurs fichiers avec des mois de bascule différents, donc une même saisie pouvait tomber sur deux saisons",
+        "Le site affichait les saisons dans le désordre",
+        "Les migrations ne connaissaient pas la saison",
+        "Les joueuses ne pouvaient pas changer d'équipe"
+      ],
+      "bonne": 0,
+      "explication": "CotisationJoueur et XpCalculator basculaient en septembre, le sélecteur en juillet, et EquipeController avait sa propre grille de catégories. Le commit fait appeler partout SaisonService et CategorieCalculator. L'ordre d'affichage et les migrations ne sont pas concernés."
+    },
+    {
+      "question": "EquipeController reçoit SaisonService dans son constructeur sans jamais écrire new SaisonService(). Qui le lui fournit ?",
+      "choix": [
+        "Doctrine, en le lisant dans la base",
+        "Le template Twig de la page",
+        "Le conteneur de services de Symfony, grâce à l'autowiring configuré dans config/services.yaml",
+        "La session de l'utilisateur"
+      ],
+      "bonne": 2,
+      "explication": "C'est l'injection de dépendances : la classe déclare ses besoins, le conteneur (autowire: true) les construit et les fournit, y compris le RequestStack dont SaisonService a lui-même besoin. Doctrine gère les entités, pas les services, et Twig ne fait qu'afficher."
+    },
+    {
+      "question": "Pourquoi pourDate() est-elle une méthode static dans SaisonService ?",
+      "choix": [
+        "Parce que les méthodes static sont plus rapides",
+        "Pour que les entités et la gamification, qui ne reçoivent pas de service par injection, puissent appeler la même règle",
+        "Pour empêcher les contrôleurs de l'utiliser",
+        "Parce que PHP impose static pour les calculs de dates"
+      ],
+      "bonne": 1,
+      "explication": "Le commentaire du fichier l'explique : CotisationJoueur (une entité), XpCalculator et BadgeChecker avaient chacun leur copie de la règle. En static, ils appellent SaisonService::pourDate() sans avoir besoin d'un objet injecté. Les contrôleurs peuvent toujours l'utiliser, et PHP n'impose rien de tel."
+    }
+  ]
+}

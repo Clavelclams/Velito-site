@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-de-zero-13-la-convocation-de-bout-en-bout",
+  "questions": [
+    {
+      "question": "La coach convoque depuis le web, puis corrige depuis l'app Club. Quel fichier applique les règles métier dans les deux cas ?",
+      "choix": [
+        "src/Service/ConvocationManager.php, appelé par les deux contrôleurs",
+        "ConvocationController pour le web, ApiClubConvocationController pour l'app, chacun avec sa copie des règles",
+        "L'app Club elle-même, qui calcule qui ajouter et retirer",
+        "src/Entity/Sport/Convocation.php"
+      ],
+      "bonne": 0,
+      "explication": "Les deux contrôleurs appellent ConvocationManager::appliquer(). Ils ne gardent que ce qui est propre à leur canal (CSRF et redirection pour le web, JSON pour l'API). L'entité décrit la table, elle ne contient pas la logique de convocation."
+    },
+    {
+      "question": "La coach rouvre sa liste et renvoie la même sélection, plus une joueuse. Combien de notifications partent ?",
+      "choix": [
+        "Une par joueuse de la liste, puisque tout est renvoyé",
+        "Aucune : un renvoi annule les notifications",
+        "Une seule, pour la nouvelle joueuse : les déjà convoquées sont sautées par le continue",
+        "Cela dépend du nombre d'appareils de la coach"
+      ],
+      "bonne": 2,
+      "explication": "Dans appliquer(), une joueuse déjà convoquée déclenche continue : ni nouvelle ligne, ni notification, ni push. Seules les nouvelles sont prévenues. Le nombre d'appareils concerne le destinataire, pas la coach."
+    },
+    {
+      "question": "Un client bricolé envoie {\"joueurs\": [12, 999]}, où 999 est une joueuse d'un autre club. Que devient 999 ?",
+      "choix": [
+        "Elle est convoquée, puisque l'identifiant existe en base",
+        "Elle est écartée par array_intersect avec l'effectif réel de l'équipe, sans erreur",
+        "Le serveur répond 500",
+        "Elle est convoquée mais ne reçoit pas de notification"
+      ],
+      "bonne": 1,
+      "explication": "ConvocationManager ne part jamais de la liste du client : il garde seulement les identifiants présents dans effectifConvocable(). 999 disparaît simplement. C'est ce qui empêche de convoquer, et d'exposer, une joueuse d'un autre club."
+    },
+    {
+      "question": "Léa tente de répondre « present » à une convocation dont le match était hier. Que répond PirbApiConvocationController ?",
+      "choix": [
+        "200, la réponse est enregistrée quand même",
+        "403, ce n'est pas sa convocation",
+        "400, la réponse est invalide",
+        "409, la rencontre est déjà passée (peutRepondre() est faux)"
+      ],
+      "bonne": 3,
+      "explication": "Le troisième garde-fou, peutRepondre(), compare la date du match à maintenant et renvoie 409 (conflit avec l'état actuel). 403 est réservé au cas où la convocation n'est pas la sienne, 400 à une réponse hors liste blanche."
+    },
+    {
+      "question": "Qu'est-ce qui est vrai sur le push de convocation aujourd'hui ?",
+      "choix": [
+        "Il est envoyé avant l'enregistrement en base pour aller plus vite",
+        "Il est envoyé aussi aux parents de la joueuse",
+        "Il part après le flush, via Expo, mais n'a jamais été vérifié sur un vrai téléphone et l'app Club n'a jamais été compilée",
+        "Il fait échouer la convocation si Expo est en panne"
+      ],
+      "bonne": 2,
+      "explication": "Ordre persist, flush, push : on ne prévient pas d'une convocation inexistante. ExpoPushService attrape toute erreur et ne fait jamais échouer l'action métier. Seule la joueuse ($joueur->getUser()) est prévenue. Et l'arrivée réelle sur un téléphone n'est documentée nulle part."
+    }
+  ]
+}

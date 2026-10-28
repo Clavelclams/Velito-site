@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-notifier-un-service-trois-canaux",
+  "questions": [
+    {
+      "question": "Dans OtmNotifier::envoyer(), qui reçoit un mail ?",
+      "choix": [
+        "Tout le monde, en plus du push, pour être sûr",
+        "Seulement les responsables OTM et les dirigeants",
+        "Seulement les personnes qui n'ont aucun jeton push enregistré (pas d'app installée)",
+        "Seulement les personnes dont le push a échoué"
+      ],
+      "bonne": 2,
+      "explication": "Le mail est un repli : si tokenRepo->findByUser() renvoie au moins un jeton, la personne a l'app et le push suffit. On ne double pas push et mail. Le service ne sait pas si le push a réellement échoué."
+    },
+    {
+      "question": "Dans OtmNotifier, que se passe-t-il si l'enregistrement de la notification in-app lève une exception ?",
+      "choix": [
+        "L'erreur est journalisée, puis le service tente quand même le push et le mail",
+        "L'exception remonte et le placement du bénévole est annulé",
+        "Le service s'arrête sans envoyer de push ni de mail",
+        "Le service relance l'enregistrement trois fois avant d'abandonner"
+      ],
+      "bonne": 0,
+      "explication": "Chaque canal a son propre try/catch. Un échec in-app est journalisé (« notification in-app non enregistrée ») et la suite continue : « c'est mieux que rien ». Rien ne remonte vers l'action métier."
+    },
+    {
+      "question": "Pourquoi les contrôleurs n'appellent-ils OtmNotifier qu'APRÈS le flush de l'action métier ?",
+      "choix": [
+        "Parce que Doctrine interdit d'appeler un service avant un flush",
+        "Pour ne jamais prévenir quelqu'un d'une affectation qui n'existe pas encore en base",
+        "Pour que le push parte plus vite",
+        "Parce que le flush envoie lui-même les mails"
+      ],
+      "bonne": 1,
+      "explication": "Si l'enregistrement échouait après l'envoi, le bénévole aurait reçu « Tu es placé » pour une affectation inexistante. Enregistrer d'abord, prévenir ensuite."
+    },
+    {
+      "question": "Quel est l'intérêt principal de faire passer tous les événements OTM par OtmNotifier plutôt que d'envoyer push et mail dans chaque contrôleur ?",
+      "choix": [
+        "Les notifications partent plus vite",
+        "Les contrôleurs n'ont plus besoin de vérifier les droits",
+        "Le service rend les mails impossibles à faire échouer",
+        "Une seule logique pour le web, l'API et les crons : un canal ou un texte se change dans un seul fichier"
+      ],
+      "bonne": 3,
+      "explication": "Les événements partent de deux contrôleurs web et API et de deux commandes cron. Centraliser évite cinq copies de la même logique qui divergeraient. Les droits restent vérifiés dans les contrôleurs."
+    },
+    {
+      "question": "Un mail OTM est généré par le cron de 2 h 30. Quel risque la doc 45 signale-t-elle sur le lien qu'il contient ?",
+      "choix": [
+        "Le lien est toujours relatif, donc inutilisable dans un mail",
+        "Le lien contient le jeton d'authentification de l'utilisateur",
+        "Sans requête HTTP, l'URL absolue dépend de la configuration (default_uri) et peut sortir en http://localhost",
+        "Le lien pointe toujours vers l'instance MABB, même pour un club Venaball"
+      ],
+      "bonne": 2,
+      "explication": "En ligne de commande, Symfony ne connaît pas le domaine de la requête. L'URL générée s'appuie sur default_uri (variable DEFAULT_URI). Si elle est mal réglée sur le serveur, le lien est faux. C'est listé comme à vérifier, non prouvé."
+    }
+  ]
+}

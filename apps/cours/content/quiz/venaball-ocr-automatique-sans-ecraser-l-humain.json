@@ -1,0 +1,60 @@
+{
+  "fiche": "venaball-ocr-automatique-sans-ecraser-l-humain",
+  "questions": [
+    {
+      "question": "En mode --auto, quelles rencontres ProcessFfbbResumesOcrCommand envoie-t-elle à Google Vision ?",
+      "choix": [
+        "Toutes les rencontres de la saison qui ont un PDF résumé",
+        "Celles jamais lues (resumeOcrAt nul) ou dont l'empreinte sha1 du PDF a changé",
+        "Uniquement celles qui n'ont encore aucune EvaluationMatch",
+        "Celles dont le match a eu lieu dans les dernières 24 heures"
+      ],
+      "bonne": 1,
+      "explication": "Le marqueur date + empreinte permet d'ignorer un PDF déjà lu et inchangé. Un PDF remplacé par le coach change d'empreinte et est relu. C'est ce qui rend le cron relançable sans coût ni effet de bord."
+    },
+    {
+      "question": "Dans ProcessFfbbResumesOcrCommand, que se passe-t-il si l'appel à Google Vision lève une exception pour une rencontre ?",
+      "choix": [
+        "Le marqueur est posé quand même pour ne pas reboucler",
+        "Toute la commande s'arrête et les rencontres suivantes ne sont pas traitées",
+        "L'erreur est attrapée, le marqueur n'est pas posé, et la rencontre sera retentée au passage suivant",
+        "La commande renvoie Command::FAILURE et le cron envoie une alerte"
+      ],
+      "bonne": 2,
+      "explication": "Le catch (\\Throwable) affiche l'échec et passe à la rencontre suivante. Le marqueur n'est posé qu'après un succès, donc le prochain passage réessaie. En revanche la commande finit sur SUCCESS : l'échec ne remonte pas dans le code de sortie."
+    },
+    {
+      "question": "Un coach a corrigé à la main les fautes de Léa (source manuel). Le PDF est remplacé et relu par l'OCR. Que devient la correction ?",
+      "choix": [
+        "Elle est conservée : FfbbResumeOcrParser passe à la joueuse suivante sans toucher l'évaluation",
+        "Elle est écrasée par la valeur lue dans le PDF, qui fait foi",
+        "Elle est fusionnée : la moyenne des deux valeurs est enregistrée",
+        "L'évaluation est dupliquée, une ligne manuel et une ligne ffbb"
+      ],
+      "bonne": 0,
+      "explication": "Depuis le commit c443cc1, une évaluation de source manuel n'est jamais réécrite par l'OCR (compteur evals_conservees). L'humain a le dernier mot."
+    },
+    {
+      "question": "Pourquoi le cron passe-t-il par bin/cron-ffbb-ocr.php au lieu d'appeler directement bin/console ?",
+      "choix": [
+        "Parce que bin/console ne fonctionne pas en environnement prod",
+        "Pour exécuter la commande en parallèle sur plusieurs processeurs",
+        "Pour contourner la limite de temps d'exécution de PHP",
+        "Parce que l'interface de tâches planifiées OVH lance un script PHP sans pouvoir lui passer d'arguments"
+      ],
+      "bonne": 3,
+      "explication": "Le script fixe la commande et ses options (--auto, --no-interaction, --env=prod) puis lance php bin/console dans un sous-processus. C'est une contrainte de l'hébergement mutualisé, pas un choix d'architecture."
+    },
+    {
+      "question": "Un jury demande si le cron OCR tourne en production. Quelle réponse est honnête au 04/10/2026 ?",
+      "choix": [
+        "Oui, le script bin/cron-ffbb-ocr.php le prouve",
+        "Non prouvé : la création des crons OVH est encore listée à faire dans le document maître, et un échec ne changerait pas le code de sortie",
+        "Oui, car la migration Version20260930160000 a été jouée",
+        "Non, car Symfony interdit les commandes lancées par cron"
+      ],
+      "bonne": 1,
+      "explication": "L'existence du script ne prouve pas que la tâche est posée sur OVH. Le document 00_ECOSYSTEME liste encore « crons OVH créés » dans les tâches restantes. Il faut une preuve : la tâche visible dans OVH et une trace dans les logs."
+    }
+  ]
+}

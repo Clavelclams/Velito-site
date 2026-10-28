@@ -1,0 +1,49 @@
+{
+  "fiche": "table-de-marque-reducer-pur",
+  "questions": [
+    {
+      "question": "Dans store.js, dispatch commence par : if (suivant === etat) return; Dans quel cas cette ligne s'applique-t-elle ?",
+      "choix": [
+        "Quand l'action contient une erreur de syntaxe",
+        "Quand le localStorage est plein",
+        "Quand deux actions arrivent dans la même milliseconde",
+        "Quand le réducteur a refusé l'action et renvoyé le même objet, par exemple une action sur une feuille verrouillée"
+      ],
+      "bonne": 3,
+      "explication": "Un réducteur qui refuse renvoie l'état reçu, tel quel. Comparer les références suffit alors à savoir que rien n'a changé : pas de sauvegarde, pas de redessin. Le localStorage plein est géré ailleurs, dans sauvegarder()."
+    },
+    {
+      "question": "Pourquoi l'action MATCH_DEMARRER contient-elle un champ maintenant au lieu que le réducteur appelle Date.now() ?",
+      "choix": [
+        "Pour que le réducteur reste pur : mêmes entrées, même sortie, donc testable avec des heures fixes",
+        "Parce que Date.now() n'existe pas dans un module ES",
+        "Pour que le chrono soit plus précis",
+        "Pour pouvoir démarrer le match dans le passé"
+      ],
+      "bonne": 0,
+      "explication": "Une fonction qui lit l'horloge donne un résultat différent à chaque appel. En passant l'heure dans l'action, un test peut rejouer un match entier avec des instants choisis. La précision est la même."
+    },
+    {
+      "question": "L'écran cache déjà le bouton Signer tant que le match n'est pas terminé. Pourquoi MATCH_SIGNATURE le revérifie-t-il dans match.js ?",
+      "choix": [
+        "C'est un oubli de refactorisation",
+        "Parce que le localStorage pourrait refuser l'écriture",
+        "Double sécurité : le réducteur refuse ce que l'écran aurait dû empêcher, quel que soit le chemin de l'action",
+        "Pour afficher un message d'erreur à l'utilisateur"
+      ],
+      "bonne": 2,
+      "explication": "Cacher un bouton est du confort d'interface. La règle métier vit dans le réducteur, seul passage obligé. Il ne produit d'ailleurs aucun message : il renvoie l'état inchangé."
+    },
+    {
+      "question": "Le jury demande où sont les tests de ce réducteur pur. Quelle réponse est exacte pour ce projet ?",
+      "choix": [
+        "Ils sont dans tests/ et tournent avec Vitest",
+        "Il n'y en a pas dans le dossier : des tests ont été faits en Node pendant la session, mais pas gardés",
+        "Un réducteur pur n'a pas besoin de tests",
+        "Ils tournent dans le service worker à chaque chargement"
+      ],
+      "bonne": 1,
+      "explication": "Être pur rend le test facile, pas inutile. Dire honnêtement qu'ils manquent, puis expliquer comment les remettre (node --test, heures fixes), tient mieux devant un jury qu'un test inventé."
+    }
+  ]
+}

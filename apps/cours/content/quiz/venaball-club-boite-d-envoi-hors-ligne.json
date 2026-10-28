@@ -1,0 +1,49 @@
+{
+  "fiche": "venaball-club-boite-d-envoi-hors-ligne",
+  "questions": [
+    {
+      "question": "En plein quart-temps, le jeton de la bénévole expire et le serveur répond 401 à l'envoi d'une action. Que fait fileAttente.synchroniser() ?",
+      "choix": [
+        "Elle supprime l'action et passe à la suivante",
+        "Elle réessaie toutes les 2 secondes jusqu'à ce que le serveur accepte",
+        "Elle range l'action dans rejetes avec le message du serveur",
+        "Elle met la file en pause sans rien jeter ; l'écran de connexion appelle reprendre() après une reconnexion réussie"
+      ],
+      "bonne": 3,
+      "explication": "Un 401 ne dit rien de l'action, il dit que le jeton n'est plus bon : réessayer ne sert à rien et jeter serait une perte. La v1 traitait le 401 comme un refus et vidait la file ; la v2 met enPause à 'auth'. Ranger dans rejetes est le traitement des autres 4xx, pas du 401."
+    },
+    {
+      "question": "Pourquoi le timeout ajouté dans appeler() (src/services/api.ts) était-il indispensable à la boîte d'envoi ?",
+      "choix": [
+        "Sans timeout, une 4G qui pend ne rejetait jamais : aucune erreur de status 0, donc la file ne réessayait pas et l'écran restait bloqué",
+        "Pour que le serveur mutualisé ne reçoive pas plus d'une requête toutes les 12 secondes",
+        "Pour que le jeton expire plus vite et soit renouvelé plus souvent",
+        "Pour limiter la taille des réponses JSON du serveur"
+      ],
+      "bonne": 0,
+      "explication": "Le tri de la file repose sur le status de l'erreur. Une requête qui ne répond jamais ne produit aucune erreur : elle bloque tout. L'AbortController coupe à 8 s en lecture et 12 s en écriture et transforme la coupure en ApiError de status 0, que la file sait traiter. Le distracteur sur le débit confond timeout et limitation de débit."
+    },
+    {
+      "question": "La bénévole enregistre la sortie d'une joueuse. La réponse se perd, la file renvoie la sortie, le serveur répond 409 « cette joueuse n'est pas sur le terrain ». Que fait envoyer() ?",
+      "choix": [
+        "Elle range la sortie dans rejetes, car un 409 est un refus",
+        "Elle met la file en pause en attendant une correction manuelle",
+        "Elle considère l'envoi comme réussi : le premier envoi est passé, seule sa réponse s'est perdue",
+        "Elle renvoie une entrée puis une sortie pour remettre le serveur d'accord"
+      ],
+      "bonne": 2,
+      "explication": "Un renvoi de sortie après une réponse perdue tombe forcément sur ce 409 : c'est la preuve que la première sortie a été enregistrée. Le code traite ce cas comme un succès, comme pour « terminer ». Le classer en rejet afficherait un faux échec en rouge à la bénévole."
+    },
+    {
+      "question": "Le serveur répond 500 à chaque envoi d'une action précise, à cause d'un bug serveur. Que se passe-t-il pour les actions saisies après elle ?",
+      "choix": [
+        "Elles partent normalement, la file saute l'action en erreur",
+        "Elles attendent derrière : en FIFO strict, l'action en tête est réessayée jusqu'à 30 s d'écart et bloque la suite",
+        "Elles sont toutes rangées dans rejetes",
+        "Elles sont fusionnées avec l'action en erreur et envoyées en un seul appel"
+      ],
+      "bonne": 1,
+      "explication": "Un 5xx est traité comme temporaire : on garde l'élément en tête et on réessaie avec backoff. Si l'erreur est permanente, c'est un blocage en tête de file, limite que j'assume au jury. La correction proposée : au-delà d'un nombre de tentatives, passer l'élément dans rejetes. La file ne saute jamais un élément aujourd'hui, le premier choix est le piège."
+    }
+  ]
+}
