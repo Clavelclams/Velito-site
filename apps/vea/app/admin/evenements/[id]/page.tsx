@@ -79,7 +79,7 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
     .select(`
       id, motif, heures_aide, participant_id, horodatage, scanned_by,
       participants:participant_id (
-        id, prenom, nom, pseudo, sexe, date_naissance, pre_inscrit
+        id, prenom, nom, pseudo, sexe, date_naissance, pre_inscrit, user_id, annee_naissance, quartier, phone
       )
     `)
     .eq("event_slug", event.event_slug);
@@ -96,6 +96,10 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
       prenom: string;
       nom: string;
       pseudo: string | null;
+      user_id: string | null;
+      annee_naissance: number | null;
+      quartier: string | null;
+      phone: string | null;
       sexe: "F" | "M" | "X" | null;
       date_naissance: string | null;
       pre_inscrit: boolean;
@@ -174,6 +178,15 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
       preInscrit: p.participants!.pre_inscrit,
       ajoutePar: p.scanned_by ? nomAuteur.get(p.scanned_by) ?? null : null,
       ajouteLe: p.horodatage,
+      // [28/10/2026] Pour compléter la fiche d'un pré-inscrit au clic. Le
+      // téléphone n'est transmis que pour les fiches SANS compte (donnée minimale).
+      aUnCompte: !!p.participants!.user_id,
+      sexe: p.participants!.sexe,
+      annee:
+        p.participants!.annee_naissance ??
+        (p.participants!.date_naissance ? Number(p.participants!.date_naissance.slice(0, 4)) : null),
+      quartier: p.participants!.quartier,
+      phone: p.participants!.user_id ? null : p.participants!.phone,
     }))
     .sort((a, b) => `${a.prenom}${a.nom}`.localeCompare(`${b.prenom}${b.nom}`, "fr"));
   const retraits: RetraitRow[] = archives.map((a) => ({

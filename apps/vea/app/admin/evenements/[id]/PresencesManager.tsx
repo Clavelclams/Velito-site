@@ -20,6 +20,7 @@ import {
   addPresenceAction,
   createPreinscritAndAddAction,
   removePresenceAction,
+  completerPreinscritAction,
   type Motif,
   type ResultatRecherche,
 } from "./presences-actions";
@@ -34,6 +35,12 @@ export interface PresentRow {
   preInscrit: boolean;
   ajoutePar: string | null;
   ajouteLe: string | null; // ISO
+  /** [28/10/2026] Champs de la fiche, pour la compléter au clic (pré-inscrits seulement). */
+  aUnCompte: boolean;
+  sexe: "F" | "M" | "X" | null;
+  annee: number | null;
+  quartier: string | null;
+  phone: string | null;
 }
 
 export interface RetraitRow {
@@ -77,6 +84,49 @@ export default function PresencesManager({
   const [creation, setCreation] = useState(false);
   const [f, setF] = useState({ prenom: "", nom: "", sexe: "", annee: "", quartier: "" });
   const [doublons, setDoublons] = useState<ResultatRecherche[] | null>(null);
+
+  // [28/10/2026] Fiche ouverte au clic sur un présent (une seule à la fois).
+  const [ouvert, setOuvert] = useState<string | null>(null);
+  const [fiche, setFiche] = useState({ prenom: "", nom: "", sexe: "", annee: "", quartier: "", phone: "" });
+
+  function ouvrirFiche(p: PresentRow) {
+    if (ouvert === p.participantId) {
+      setOuvert(null);
+      return;
+    }
+    setOuvert(p.participantId);
+    setFiche({
+      prenom: p.prenom,
+      nom: p.nom === "À compléter" ? "" : p.nom,
+      sexe: p.sexe ?? "",
+      annee: p.annee ? String(p.annee) : "",
+      quartier: p.quartier ?? "",
+      phone: p.phone ?? "",
+    });
+  }
+
+  function enregistrerFiche(p: PresentRow) {
+    setMessage(null);
+    startTransition(async () => {
+      const r = await completerPreinscritAction({
+        eventSlug,
+        participantId: p.participantId,
+        prenom: fiche.prenom,
+        nom: fiche.nom,
+        sexe: fiche.sexe as "F" | "M" | "X" | "",
+        annee: fiche.annee ? Number(fiche.annee) : null,
+        quartier: fiche.quartier,
+        phone: fiche.phone,
+      });
+      if (!r.success) {
+        setMessage({ ok: false, texte: r.error ?? "Erreur." });
+        return;
+      }
+      setMessage({ ok: true, texte: `Fiche de ${fiche.prenom} enregistrée.` });
+      setOuvert(null);
+      router.refresh();
+    });
+  }
 
   // Recherche automatique 300 ms après la dernière frappe.
   const minuteur = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -322,28 +372,86 @@ export default function PresencesManager({
       ) : (
         <ul className="card-clean divide-y divide-vea-border">
           {presents.map((p) => (
-            <li key={p.participantId} className="p-3 flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-sm font-bold text-vea-text">
-                  {p.prenom} {p.nom}
-                  {p.pseudo && <span className="font-normal text-vea-text-muted"> · {p.pseudo}</span>}
-                </p>
-                <p className="text-xs text-vea-text-dim">
-                  <span className="font-semibold text-vea-text-muted">
-                    {p.motif === "aider" ? `Aider ${p.heures} h` : p.motif === "jouer" ? "Jouer" : "Regarder"}
-                  </span>
-                  {p.preInscrit && " · pré-inscrit"}
-                  {(p.ajoutePar || p.ajouteLe) && ` · ajouté${p.ajoutePar ? ` par ${p.ajoutePar}` : ""}${p.ajouteLe ? ` le ${fmt(p.ajouteLe)}` : ""}`}
-                </p>
+            <li key={p.participantId} className="p-3">
+              <div className="flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => ouvrirFiche(p)}
+                  aria-expanded={ouvert === p.participantId}
+                  className="min-w-0 text-left flex-1"
+                >
+                  <p className="text-sm font-bold text-vea-text">
+                    {p.prenom} {p.nom}
+                    {p.pseudo && <span className="font-normal text-vea-text-muted"> · {p.pseudo}</span>}
+                    {!p.aUnCompte && (p.nom === "À compléter" || !p.sexe || !p.annee) && (
+                      <span className="ml-2 text-[10px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">à compléter</span>
+                    )}
+                  </p>
+                  <p className="text-xs text-vea-text-dim">
+                    <span className="font-semibold text-vea-text-muted">
+                      {p.motif === "aider" ? `Aider ${p.heures} h` : p.motif === "jouer" ? "Jouer" : "Regarder"}
+                    </span>
+                    {p.aUnCompte ? " · compte" : " · pré-inscrit"}
+                    {(p.ajoutePar || p.ajouteLe) && ` · ajouté${p.ajoutePar ? ` par ${p.ajoutePar}` : ""}${p.ajouteLe ? ` le ${fmt(p.ajouteLe)}` : ""}`}
+                  </p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => retirer(p)}
+                  disabled={isPending}
+                  className="shrink-0 px-3 py-2 rounded-full border border-red-200 text-red-700 text-xs font-bold disabled:opacity-50"
+                >
+                  Retirer
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => retirer(p)}
-                disabled={isPending}
-                className="shrink-0 px-3 py-2 rounded-full border border-red-200 text-red-700 text-xs font-bold disabled:opacity-50"
-              >
-                Retirer
-              </button>
+
+              {ouvert === p.participantId && (
+                p.aUnCompte ? (
+                  <p className="mt-3 text-xs text-vea-text-muted bg-vea-bg rounded-lg p-3">
+                    {p.prenom} a un compte : c&apos;est lui ou elle qui complète sa fiche, depuis son profil.
+                  </p>
+                ) : (
+                  <div className="mt-3 border-t border-vea-border pt-3 space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className="text-xs text-vea-text-muted">Prénom *
+                        <input value={fiche.prenom} onChange={(e) => setFiche({ ...fiche, prenom: e.target.value })} className={input} autoComplete="off" />
+                      </label>
+                      <label className="text-xs text-vea-text-muted">Nom
+                        <input value={fiche.nom} onChange={(e) => setFiche({ ...fiche, nom: e.target.value })} className={input} placeholder="À compléter" autoComplete="off" />
+                      </label>
+                      <label className="text-xs text-vea-text-muted">Sexe
+                        <select value={fiche.sexe} onChange={(e) => setFiche({ ...fiche, sexe: e.target.value })} className={input}>
+                          <option value="">Non renseigné</option>
+                          <option value="F">Fille</option>
+                          <option value="M">Garçon</option>
+                          <option value="X">Autre</option>
+                        </select>
+                      </label>
+                      <label className="text-xs text-vea-text-muted">Année de naissance
+                        <input value={fiche.annee} onChange={(e) => setFiche({ ...fiche, annee: e.target.value.replace(/\D/g, "").slice(0, 4) })} inputMode="numeric" className={input} placeholder="2012" />
+                      </label>
+                      <label className="text-xs text-vea-text-muted">Quartier
+                        <input value={fiche.quartier} onChange={(e) => setFiche({ ...fiche, quartier: e.target.value })} className={input} placeholder="Étouvie…" />
+                      </label>
+                      <label className="text-xs text-vea-text-muted">Téléphone
+                        <input value={fiche.phone} onChange={(e) => setFiche({ ...fiche, phone: e.target.value })} type="tel" inputMode="tel" className={input} placeholder="06…" />
+                      </label>
+                    </div>
+                    <p className="text-[11px] text-vea-text-dim">
+                      Téléphone du jeune ou d&apos;un parent. Il sert à rattacher automatiquement cette fiche (et ses points)
+                      à son compte le jour où il s&apos;inscrit avec le même numéro, prénom et nom.
+                    </p>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={() => enregistrerFiche(p)} disabled={isPending || fiche.prenom.trim().length < 2} className="flex-1 py-3 rounded-full bg-vea-accent text-white text-sm font-bold disabled:opacity-50">
+                        {isPending ? "…" : "Enregistrer la fiche"}
+                      </button>
+                      <button type="button" onClick={() => setOuvert(null)} className="px-4 py-3 rounded-full border border-vea-border text-sm font-bold">
+                        Fermer
+                      </button>
+                    </div>
+                  </div>
+                )
+              )}
             </li>
           ))}
         </ul>
