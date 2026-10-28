@@ -30,16 +30,8 @@ export interface EventArchive {
 
 export const EVENTS_ARCHIVE: EventArchive[] = [
   // ===== 2026 =====
-  {
-    id: "archive-2026-intercup",
-    titre: "INTERCUP 2026 — Top 8 national",
-    description:
-      "Plus grande delegation VEA jamais envoyee en competition nationale : 12 jeunes amienois dont 4 jeunes filles. Quart de finale, organise par OMNE Esport.",
-    date: "2026-02-28",
-    lieu: "Courbevoie (region parisienne)",
-    type: "COMPETITION",
-    actif: false,
-  },
+  // [28/10/2026] INTERCUP et Parcours du Coeur deplaces dans Supabase (vea.evenements),
+  // sinon ils apparaitraient deux fois sur /agenda.
   {
     id: "archive-2026-tour-marais-fev",
     titre: "Intervention Tour du Marais — fevrier",
@@ -58,16 +50,6 @@ export const EVENTS_ARCHIVE: EventArchive[] = [
     type: "ANIMATION",
     actif: false,
   },
-  {
-    id: "archive-2026-parcours-coeur",
-    titre: "Parcours du Coeur — Saint-Just",
-    description: "Animation pour environ 150 eleves dans le cadre du Parcours du Coeur.",
-    date: "2026-05-04",
-    lieu: "Saint-Just, Amiens",
-    type: "ANIMATION",
-    actif: false,
-  },
-
   // ===== 2025 =====
   {
     id: "archive-2025-pleiade",

@@ -6,7 +6,7 @@
  */
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { hasPermission, getUserScope } from "@/lib/supabase/permissions";
+import { hasPermission, getUserScope, hasPresenceAccess } from "@/lib/supabase/permissions";
 import AdminDashboard from "./AdminDashboard";
 
 export default async function AdminPage() {
@@ -21,6 +21,11 @@ export default async function AdminPage() {
 
   const scope = await getUserScope("vea");
   const canEdit = await hasPermission("vea", "editor");
+
+  // [28/10/2026] Bénévole avec le seul droit "presences" : son admin, c'est la liste des événements.
+  if (!canEdit && (await hasPresenceAccess())) {
+    redirect("/admin/evenements");
+  }
 
   if (!canEdit) {
     // L'user est connecte mais n'a pas les droits admin VEA

@@ -20,6 +20,7 @@ const FOOTER_LINKS = [
   { label: "Medias", href: "/medias" },
   { label: "Partenaires", href: "/partenaires" },
   { label: "Prestations", href: "/prestations" },
+  { label: "Stages", href: "/stages" },
   { label: "Contact", href: "/contact" },
   { label: "Inscription", href: "/inscription" },
 ];

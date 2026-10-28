@@ -1,7 +1,8 @@
 /**
  * /admin/evenements/[id] — Detail event admin avec edition motifs.
  *
- * Server Component. Permission editor+ sur vea requise.
+ * Server Component. editor+ : tout. Droit "presences" (bénévoles, 28/10/2026) :
+ * en-tête, stats et saisie des présents seulement (pas d'édition, pas de bilan, pas d'XP manuel).
  *
  * Recap :
  *   1. Lit l'event via [id] (le slug ou l'UUID — on essaie les 2)
@@ -16,10 +17,10 @@ import { redirect, notFound } from "next/navigation";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { hasPermission } from "@/lib/supabase/permissions";
+import { hasPermission, hasPresenceAccess } from "@/lib/supabase/permissions";
 import { getScanUrl, getQRCodeUrl } from "@/lib/qrcode";
-import ParticipantsList, { type ParticipantRow } from "./ParticipantsList";
-import AddManualParticipantForm from "./AddManualParticipantForm";
+import { type ParticipantRow } from "./ParticipantsList";
+import PresencesManager, { type PresentRow, type RetraitRow } from "./PresencesManager";
 import EditEventForm from "./EditEventForm";
 import BilanEventForm from "./BilanEventForm";
 
@@ -34,8 +35,11 @@ type Motif = "jouer" | "aider" | "regarder";
 export default async function AdminEventDetailPage({ params }: PageProps) {
   const { id } = await params;
 
+  // [28/10/2026] Deux niveaux : editor+ voit tout ; le droit "presences"
+  // (bénévoles) ne voit que l'en-tête et les présents.
   const canEdit = await hasPermission("vea", "editor");
-  if (!canEdit) redirect("/admin?denied=events");
+  const canPresences = canEdit || (await hasPresenceAccess());
+  if (!canPresences) redirect("/admin?denied=events");
 
   const supabase = await createClient();
 
@@ -43,7 +47,7 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
   let { data: event } = await supabase
     .schema("vea")
     .from("evenements")
-    .select("id, nom, event_slug, date, heure, lieu, type, description, statut, token, scan_actif, capacite, bilan_public, bilan_recap, bilan_nb_total, bilan_nb_filles, bilan_nb_garcons, bilan_nb_joueurs, bilan_nb_spectateurs, bilan_nb_benevoles, bilan_show_total, bilan_show_genre, bilan_show_joueurs, bilan_show_spectateurs, bilan_show_benevoles")
+    .select("id, nom, event_slug, date, heure, lieu, type, description, statut, token, scan_actif, capacite, bilan_public, bilan_recap, bilan_nb_total, bilan_nb_filles, bilan_nb_garcons, bilan_nb_joueurs, bilan_nb_spectateurs, bilan_nb_benevoles, bilan_show_total, bilan_show_genre, bilan_show_joueurs, bilan_show_spectateurs, bilan_show_benevoles, duree_estimee_heures")
     .eq("event_slug", id)
     .maybeSingle();
 
@@ -51,7 +55,7 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
     const r = await supabase
       .schema("vea")
       .from("evenements")
-      .select("id, nom, event_slug, date, heure, lieu, type, description, statut, token, scan_actif, capacite, bilan_public, bilan_recap, bilan_nb_total, bilan_nb_filles, bilan_nb_garcons, bilan_nb_joueurs, bilan_nb_spectateurs, bilan_nb_benevoles, bilan_show_total, bilan_show_genre, bilan_show_joueurs, bilan_show_spectateurs, bilan_show_benevoles")
+      .select("id, nom, event_slug, date, heure, lieu, type, description, statut, token, scan_actif, capacite, bilan_public, bilan_recap, bilan_nb_total, bilan_nb_filles, bilan_nb_garcons, bilan_nb_joueurs, bilan_nb_spectateurs, bilan_nb_benevoles, bilan_show_total, bilan_show_genre, bilan_show_joueurs, bilan_show_spectateurs, bilan_show_benevoles, duree_estimee_heures")
       .eq("id", id)
       .maybeSingle();
     event = r.data;
@@ -73,9 +77,9 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
     .schema("vea")
     .from("presences")
     .select(`
-      id, motif, heures_aide, participant_id,
+      id, motif, heures_aide, participant_id, horodatage, scanned_by,
       participants:participant_id (
-        id, prenom, nom, sexe, date_naissance, phone, pre_inscrit
+        id, prenom, nom, pseudo, sexe, date_naissance, pre_inscrit
       )
     `)
     .eq("event_slug", event.event_slug);
@@ -85,13 +89,15 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
     motif: Motif;
     heures_aide: number;
     participant_id: string;
+    horodatage: string | null;
+    scanned_by: string | null;
     participants: {
       id: string;
       prenom: string;
       nom: string;
+      pseudo: string | null;
       sexe: "F" | "M" | "X" | null;
       date_naissance: string | null;
-      phone: string | null;
       pre_inscrit: boolean;
     } | null;
   };
@@ -114,7 +120,7 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
         nom: p.participants.nom,
         sexe: p.participants.sexe,
         date_naissance: p.participants.date_naissance,
-        phone: p.participants.phone,
+        phone: null, // [28/10/2026] plus chargé : inutile pour la saisie (donnée minimale)
         pre_inscrit: p.participants.pre_inscrit,
         motifs: [p.motif],
         heures_aide: p.motif === "aider" ? p.heures_aide : 0,
@@ -125,6 +131,56 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
   const participants = [...byParticipant.values()].sort((a, b) =>
     `${a.nom}${a.prenom}`.localeCompare(`${b.nom}${b.prenom}`)
   );
+
+  // [28/10/2026] Lignes pour PresencesManager : une par présence (la base
+  // n'autorise qu'une présence par personne et par événement), avec la trace
+  // "ajouté par / le" (scanned_by + horodatage) et les retraits archivés.
+  const presencesTyped = (presencesRaw ?? []) as unknown as PresenceRow[];
+  const { data: retraitsRaw } = await supabase
+    .schema("vea")
+    .from("presences_archive")
+    .select("participant_id, archived_at, archived_by")
+    .eq("event_slug", event.event_slug)
+    .order("archived_at", { ascending: false })
+    .limit(30);
+  type ArchiveRow = { participant_id: string; archived_at: string; archived_by: string | null };
+  const archives = (retraitsRaw ?? []) as ArchiveRow[];
+
+  // Noms des personnes qui ont ajouté / retiré (comptes = participants.user_id)
+  // et des personnes retirées.
+  const userIds = [...new Set([
+    ...presencesTyped.map((p) => p.scanned_by),
+    ...archives.map((a) => a.archived_by),
+  ].filter((x): x is string => !!x))];
+  const { data: auteurs } = userIds.length
+    ? await supabase.schema("vea").from("participants").select("user_id, prenom, nom").in("user_id", userIds)
+    : { data: [] as { user_id: string; prenom: string; nom: string }[] };
+  const nomAuteur = new Map((auteurs ?? []).map((a) => [a.user_id as string, `${a.prenom} ${String(a.nom).charAt(0)}.`]));
+  const retiresIds = [...new Set(archives.map((a) => a.participant_id))];
+  const { data: retiresRaw } = retiresIds.length
+    ? await supabase.schema("vea").from("participants").select("id, prenom, nom").in("id", retiresIds)
+    : { data: [] as { id: string; prenom: string; nom: string }[] };
+  const nomRetire = new Map((retiresRaw ?? []).map((r) => [r.id as string, `${r.prenom} ${r.nom}`]));
+
+  const presents: PresentRow[] = presencesTyped
+    .filter((p) => p.participants)
+    .map((p) => ({
+      participantId: p.participant_id,
+      prenom: p.participants!.prenom,
+      nom: p.participants!.nom,
+      pseudo: p.participants!.pseudo,
+      motif: p.motif,
+      heures: Number(p.heures_aide ?? 0),
+      preInscrit: p.participants!.pre_inscrit,
+      ajoutePar: p.scanned_by ? nomAuteur.get(p.scanned_by) ?? null : null,
+      ajouteLe: p.horodatage,
+    }))
+    .sort((a, b) => `${a.prenom}${a.nom}`.localeCompare(`${b.prenom}${b.nom}`, "fr"));
+  const retraits: RetraitRow[] = archives.map((a) => ({
+    nom: nomRetire.get(a.participant_id) ?? "Fiche supprimée",
+    retireLe: a.archived_at,
+    retirePar: a.archived_by ? nomAuteur.get(a.archived_by) ?? null : null,
+  }));
 
   // Previsionnel "monde attendu" (table vea.preinscriptions_event).
   // Tolerant : si la table n'existe pas encore (migration non lancee), data=null -> 0.
@@ -194,6 +250,7 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
           </div>
         </div>
 
+        {canEdit && (<>
         {/* Édition de l'événement (date, lieu, infos) */}
         <EditEventForm
           event={{
@@ -229,6 +286,7 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
             bilan_show_benevoles: (event as { bilan_show_benevoles?: boolean }).bilan_show_benevoles ?? false,
           }}
         />
+        </>)}
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
@@ -281,7 +339,8 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
           )}
         </div>
 
-        {/* Raccourci action exceptionnelle / urgence benevole (20/05/2026) */}
+        {/* Raccourci action exceptionnelle / urgence benevole (20/05/2026) — editor+ seulement */}
+        {canEdit && (
         <div className="card-clean p-4 mb-6 border border-vea-accent/20 bg-vea-accent-soft/30">
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <div className="flex-1 min-w-0">
@@ -302,24 +361,15 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
             </Link>
           </div>
         </div>
+        )}
 
-        <h2 className="text-lg font-bold text-vea-text mb-4">
-          Participants ({participants.length})
-        </h2>
-
-        <p className="text-xs text-vea-text-muted mb-4 leading-relaxed">
-          Coche / decoche les motifs. Au moins 1 motif doit rester coche
-          (sinon utilise &quot;Retirer&quot; pour sortir le participant).
-          Les XP sont recalcules automatiquement quand tu modifies.
-        </p>
-
-        {/* Form pour ajouter un participant qui n'a pas pu scanner */}
-        <AddManualParticipantForm
-          eventToken={event.token}
-          eventName={event.nom}
+        {/* [28/10/2026] Saisie des présents (recherche, création pré-inscrit, retrait) */}
+        <PresencesManager
+          eventSlug={event.event_slug}
+          dureeParDefaut={Number((event as { duree_estimee_heures?: number | null }).duree_estimee_heures ?? 2)}
+          presents={presents}
+          retraits={retraits}
         />
-
-        <ParticipantsList eventSlug={event.event_slug} participants={participants} />
       </div>
     </div>
   );

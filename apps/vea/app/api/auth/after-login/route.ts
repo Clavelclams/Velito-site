@@ -10,7 +10,7 @@
  */
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { hasPermission } from "@/lib/supabase/permissions";
+import { hasPermission, hasPresenceAccess } from "@/lib/supabase/permissions";
 
 export async function GET(request: Request) {
   const supabase = await createClient();
@@ -25,7 +25,8 @@ export async function GET(request: Request) {
   }
 
   const canEdit = await hasPermission("vea", "editor");
-  const target = canEdit ? "/admin" : "/profil";
+  // [28/10/2026] Droit "presences" seul (bénévole) -> liste des événements.
+  const target = canEdit ? "/admin" : (await hasPresenceAccess()) ? "/admin/evenements" : "/profil";
 
   return NextResponse.redirect(`${origin}${target}`);
 }

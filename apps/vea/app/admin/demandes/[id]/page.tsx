@@ -10,6 +10,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { hasPermission } from "@/lib/supabase/permissions";
 import DemandeManager from "./DemandeManager";
+import { periodesEnConflit, dateEnFrancais } from "@/lib/stages.config";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,99 @@ export default async function AdminDemandeDetailPage({ params }: PageProps) {
     .maybeSingle();
 
   if (!d) notFound();
+
+  // [16/10/2026] Candidature de stage : affichage dédié, même gestion de statut.
+  if (d.type === "stage") {
+    const conflits =
+      d.stage_debut && d.stage_fin
+        ? periodesEnConflit({ debut: d.stage_debut, fin: d.stage_fin })
+        : [];
+    const mailtoStage = `mailto:${d.email}?subject=${encodeURIComponent(
+      "Ta candidature de stage chez VEA",
+    )}&body=${encodeURIComponent(
+      `Bonjour ${d.referent_prenom},\n\nMerci pour ta candidature de stage.\n\n[Ta réponse ici]\n\nL'équipe VEA, Velito Esport Amiens\ncontact@velito.fr`,
+    )}`;
+
+    return (
+      <div className="min-h-screen bg-vea-bg pt-28 pb-20 px-4">
+        <div className="max-w-3xl mx-auto">
+          <div className="mb-6">
+            <Link href="/admin/demandes?type=stage" className="text-xs text-vea-text-dim hover:text-vea-accent">
+              ← Toutes les candidatures de stage
+            </Link>
+          </div>
+
+          <div className="flex items-start justify-between gap-4 flex-wrap mb-6">
+            <div>
+              <span className="badge-red mb-3 inline-block">Candidature de stage</span>
+              <h1 className="text-2xl sm:text-3xl font-black text-vea-text">
+                {d.referent_prenom} {d.referent_nom}
+              </h1>
+              <p className="text-sm text-vea-text-muted mt-1">
+                Reçue le {new Date(d.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+              </p>
+            </div>
+            <a
+              href={mailtoStage}
+              className="px-4 py-2 rounded-full bg-vea-accent text-white text-sm font-bold hover:bg-vea-accent-hover transition-colors"
+            >
+              Répondre par email
+            </a>
+          </div>
+
+          <div className="space-y-6">
+            {conflits.length > 0 && (
+              <div role="note" className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                <strong>Période déjà prise</strong> (d&apos;après lib/stages.config.ts aujourd&apos;hui) :{" "}
+                {conflits.map((p) => `du ${dateEnFrancais(p.debut)} au ${dateEnFrancais(p.fin)}`).join(", ")}.
+              </div>
+            )}
+
+            <section className="card-clean p-5">
+              <h2 className="text-xs font-black uppercase tracking-widest text-vea-accent mb-4">Contact</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="Email" value={<a href={`mailto:${d.email}`} className="text-vea-accent hover:underline break-all">{d.email}</a>} />
+                <Field label="Téléphone" value={d.telephone ? <a href={`tel:${d.telephone}`} className="text-vea-accent hover:underline">{d.telephone}</a> : null} />
+                <Field label="Mineur" value={d.mineur ? "Oui" : "Non"} />
+                <Field
+                  label="Email parent / responsable légal"
+                  value={d.email_parent ? <a href={`mailto:${d.email_parent}`} className="text-vea-accent hover:underline break-all">{d.email_parent}</a> : null}
+                />
+              </div>
+            </section>
+
+            <section className="card-clean p-5">
+              <h2 className="text-xs font-black uppercase tracking-widest text-vea-accent mb-4">Stage</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="Établissement" value={d.etablissement} />
+                <Field label="Formation et niveau" value={d.formation} />
+                <Field label="Du" value={d.stage_debut ? dateEnFrancais(d.stage_debut) : null} />
+                <Field label="Au" value={d.stage_fin ? dateEnFrancais(d.stage_fin) : null} />
+              </div>
+            </section>
+
+            {d.motivation && (
+              <section className="card-clean p-5">
+                <h2 className="text-xs font-black uppercase tracking-widest text-vea-accent mb-3">Motivation</h2>
+                <p className="text-sm text-vea-text whitespace-pre-wrap leading-relaxed">{d.motivation}</p>
+              </section>
+            )}
+
+            <DemandeManager
+              id={d.id}
+              type="stage"
+              statut={d.statut ?? "nouveau"}
+              notesInternes={d.notes_internes ?? null}
+            />
+
+            <p className="text-[10px] text-vea-text-dim italic text-center">
+              Consentement RGPD : {d.rgpd_consent ? "oui" : "non"} · supprimée automatiquement 12 mois après réception.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const presta = Array.isArray(d.prestations_demandees)
     ? (d.prestations_demandees as string[]).join(", ")
@@ -127,6 +221,7 @@ export default async function AdminDemandeDetailPage({ params }: PageProps) {
 
           <DemandeManager
             id={d.id}
+            type="devis"
             statut={d.statut ?? "nouveau"}
             notesInternes={d.notes_internes ?? null}
           />

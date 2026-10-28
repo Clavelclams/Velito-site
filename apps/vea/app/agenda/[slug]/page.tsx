@@ -30,6 +30,8 @@ type BilanEvent = {
   type: string | null;
   bilan_public: boolean;
   bilan_recap: string | null;
+  heure: string | null;
+  partenaires: string[] | null;
   bilan_nb_total: number | null;
   bilan_nb_filles: number | null;
   bilan_nb_garcons: number | null;
@@ -44,7 +46,7 @@ type BilanEvent = {
 };
 
 const SELECT =
-  "nom, event_slug, date, lieu, type, bilan_public, bilan_recap, bilan_nb_total, bilan_nb_filles, bilan_nb_garcons, bilan_nb_joueurs, bilan_nb_spectateurs, bilan_nb_benevoles, bilan_show_total, bilan_show_genre, bilan_show_joueurs, bilan_show_spectateurs, bilan_show_benevoles";
+  "nom, event_slug, date, heure, lieu, type, partenaires, bilan_public, bilan_recap, bilan_nb_total, bilan_nb_filles, bilan_nb_garcons, bilan_nb_joueurs, bilan_nb_spectateurs, bilan_nb_benevoles, bilan_show_total, bilan_show_genre, bilan_show_joueurs, bilan_show_spectateurs, bilan_show_benevoles";
 
 async function fetchBilan(slug: string): Promise<BilanEvent | null> {
   const supabase = await createClient();
@@ -174,6 +176,29 @@ export default async function BilanPublicPage({ params }: PageProps) {
               <p className="text-vea-text-muted leading-relaxed whitespace-pre-line">
                 {ev.bilan_recap}
               </p>
+            </div>
+          )}
+
+          {/* [28/10/2026] Partenaires de l'événement */}
+          {ev.partenaires && ev.partenaires.length > 0 && (
+            <div className="card-clean p-6 mb-10">
+              <h2 className="text-lg font-bold text-vea-text mb-3">Avec nos partenaires</h2>
+              <ul className="flex flex-wrap gap-2">
+                {ev.partenaires.map((p) => (
+                  <li key={p} className="text-sm px-3 py-1 rounded-full bg-vea-accent-soft text-vea-accent font-semibold">{p}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* [28/10/2026] Emplacements photo tant que l'événement n'a pas de galerie (lib/galleries.ts) */}
+          {!hasGallery(ev.event_slug) && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-10" aria-label="Photos à venir">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="aspect-[4/3] rounded-xl border-2 border-dashed border-vea-border bg-vea-surface-soft flex items-center justify-center text-xs text-vea-text-dim">
+                  Photo à venir
+                </div>
+              ))}
             </div>
           )}
 
