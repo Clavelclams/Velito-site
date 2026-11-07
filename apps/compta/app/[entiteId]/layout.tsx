@@ -45,6 +45,8 @@ export default async function EntiteLayout({
   const liens = [
     { href: `/${entiteId}`, libelle: "Tableau de bord" },
     { href: `/${entiteId}/transactions`, libelle: "Transactions" },
+    // [07/11/2026] File des lignes importées à classer et valider.
+    { href: `/${entiteId}/a-traiter`, libelle: "À traiter" },
     // [07/11/2026] Lot 6 : comptes réels, relevés, virements, contrôle mensuel.
     { href: `/${entiteId}/tresorerie`, libelle: "Trésorerie" },
     { href: `/${entiteId}/import`, libelle: "Importer" },

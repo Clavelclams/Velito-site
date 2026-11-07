@@ -74,6 +74,21 @@ export async function creerTransactionsEnLot(
 }
 
 /**
+ * [07/11/2026] Mise à jour PARTIELLE (classement, validation, conversion en
+ * virement) : on n'envoie que les colonnes décidées par le service, le reste
+ * de la ligne (provenance, clé d'import, montants) n'est pas touché.
+ */
+export async function mettreAJourTransaction(
+  supabase: SupabaseClient,
+  id: string,
+  champs: Partial<Omit<NouvelleTransaction, "entite_id">>,
+): Promise<Transaction> {
+  const { data, error } = await supabase.from("transaction").update(champs).eq("id", id).select().single();
+  if (error) throw new Error(`Mise à jour de la ligne impossible : ${error.message}`);
+  return data as Transaction;
+}
+
+/**
  * [07/11/2026] Parmi ces clés source, lesquelles existent déjà pour l'entité ?
  * Sert à l'aperçu d'un import de relevé : montrer AVANT d'écrire ce qui sera
  * ignoré comme doublon. Une requête, filtre « in » paramétré.
