@@ -52,8 +52,12 @@ export async function middleware(request: NextRequest) {
         // 2. Response régénérée avec les cookies à jour.
         response = NextResponse.next({ request });
         // 3. Sur la response : ce que le navigateur recevra et stockera.
+        // [07/11/2026] Même domaine partagé que le hub (voir lib/supabase/server.ts).
         cookiesToSet.forEach(({ name, value, options }) =>
-          response.cookies.set(name, value, options),
+          response.cookies.set(name, value, {
+            ...options,
+            ...(process.env.COOKIE_DOMAIN ? { domain: process.env.COOKIE_DOMAIN } : {}),
+          }),
         );
       },
     },

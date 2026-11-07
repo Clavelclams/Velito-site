@@ -68,17 +68,31 @@ await ok("02_rls_noyau.sql s'exécute sans erreur", () =>
   db.exec(readFileSync(join(SQL_DIR, "02_rls_noyau.sql"), "utf8")),
 );
 
-await ok("06_tresorerie_associative.sql s'exécute sans erreur", () =>
-  db.exec(readFileSync(join(SQL_DIR, "06_tresorerie_associative.sql"), "utf8")),
-);
-
 // ---------- 2. Rôle "authenticated" comme sur Supabase ----------
 await db.exec(`
   create role authenticated;
+  create role anon;
   grant usage on schema public to authenticated;
   grant all on all tables in schema public to authenticated;
   grant execute on all functions in schema public to authenticated;
 `);
+
+// [07/11/2026] 06 et 07 sont chargées APRÈS le « grant all » ci-dessus, comme
+// en production où Supabase n'accorde plus de droits aux nouvelles tables.
+// Avant, le test accordait tout à tout et n'a pas vu l'oubli de GRANT de la 06
+// (pages Trésorerie en erreur 500 en prod). Désormais, sans la 07, les tests
+// de trésorerie échouent ici aussi.
+await ok("06_tresorerie_associative.sql s'exécute sans erreur", () =>
+  db.exec(readFileSync(join(SQL_DIR, "06_tresorerie_associative.sql"), "utf8")),
+);
+await ok("07_droits_tresorerie.sql s'exécute sans erreur", () =>
+  db.exec(readFileSync(join(SQL_DIR, "07_droits_tresorerie.sql"), "utf8")),
+);
+await ok("droits réels : authenticated peut lire compte_tresorerie, anon non", async () => {
+  const r = await q(`select has_table_privilege('authenticated','public.compte_tresorerie','select') as a,
+                            has_table_privilege('anon','public.compte_tresorerie','select') as b`);
+  if (r.rows[0].a !== true || r.rows[0].b !== false) throw new Error(JSON.stringify(r.rows[0]));
+});
 
 // ---------- 3. Deux comptes -> trigger de profil ----------
 console.log("\n== Trigger profil ==");

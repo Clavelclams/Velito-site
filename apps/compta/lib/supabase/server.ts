@@ -3,11 +3,11 @@
  * Adapté de apps/hub/src/lib/supabase/server.ts, avec DEUX simplifications
  * volontaires par rapport au hub :
  *
- * 1. PAS de COOKIE_DOMAIN : le hub pose son cookie sur `.velito.fr` pour le
- *    SSO cross-sous-domaines. Compta est un outil interne ISOLÉ : sa session
- *    reste sur compta.velito.fr, personne d'autre ne la lit. Le jour où
- *    Compta rejoint le SSO, on réintroduit cette option — un seul fichier
- *    à toucher, c'est tout l'intérêt d'avoir isolé la création du client.
+ * 1. COOKIE_DOMAIN : [07/11/2026] Compta REJOINT le SSO (« Se connecter avec
+ *    Velito ») : comme prévu, l'option est réintroduite ici (et dans le
+ *    middleware). L'isolement initial venait d'un formulaire propre à compta,
+ *    cassé par la protection hCaptcha de Supabase. La barrière d'accès reste
+ *    la liste blanche COMPTA_EMAILS_AUTORISES du middleware.
  *
  * 2. Leçon héritée du hub (bug devis VENA) conservée : on lit SUPABASE_URL /
  *    SUPABASE_ANON_KEY (runtime) en priorité, avec fallback NEXT_PUBLIC_*
@@ -44,8 +44,15 @@ export async function createClient() {
         cookiesToSet: { name: string; value: string; options: CookieOptions }[],
       ) {
         try {
+          // [07/11/2026] SSO : avec COOKIE_DOMAIN=.velito.fr, la session est
+          // (ré)écrite sur le domaine PARTAGÉ, comme le hub. Sans ça, un
+          // rafraîchissement ou une déconnexion côté compta n'écrirait qu'un
+          // cookie local, en doublon de celui du hub.
           cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options),
+            cookieStore.set(name, value, {
+              ...options,
+              ...(process.env.COOKIE_DOMAIN ? { domain: process.env.COOKIE_DOMAIN } : {}),
+            }),
           );
         } catch {
           // Appelé depuis un Server Component pur (pas de réponse HTTP à
