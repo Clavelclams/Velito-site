@@ -82,6 +82,8 @@ export interface Transaction {
   /** Clé stable d'import (anti-doublon au réimport). */
   source_cle: string | null;
   commentaire: string | null;
+  /** [07/11/2026] sql/08 : dossier de subvention lié (financement lié), distinct de la catégorie. */
+  subvention_id: string | null;
   cree_le: string;
   modifie_le: string;
 }
@@ -151,6 +153,7 @@ export interface NouvelleTransaction {
   source_ref?: string | null;
   source_cle?: string | null;
   commentaire?: string | null;
+  subvention_id?: string | null;
 }
 
 /**
@@ -205,3 +208,55 @@ export interface NouveauCompte {
   libelle: string;
   classe: number;
 }
+
+// ---------------------------------------------------------------------------
+// [07/11/2026] sql/08 : subventions et contributions volontaires en nature
+// ---------------------------------------------------------------------------
+
+/** Miroir du CHECK sur subvention.statut. */
+export type StatutSubvention = "a_preparer" | "deposee" | "notifiee" | "soldee" | "refusee";
+
+export interface Subvention {
+  id: string;
+  entite_id: string;
+  financeur: string;
+  action: string;
+  exercice: number;
+  statut: StatutSubvention;
+  /** null = inconnu (jamais 0 par défaut). */
+  montant_demande_centimes: number | null;
+  montant_notifie_centimes: number | null;
+  date_depot: string | null;
+  date_notification: string | null;
+  echeance: string | null;
+  commentaire: string | null;
+  cree_le: string;
+  modifie_le: string;
+}
+
+export type NouvelleSubvention = Omit<Subvention, "id" | "cree_le" | "modifie_le">;
+
+/** Miroir des CHECK sur contribution_nature. */
+export type TypeContribution = "heures_benevoles" | "don_nature" | "frais_abandonnes";
+export type StatutContribution = "brouillon" | "a_verifier" | "verifie" | "annule";
+
+export interface ContributionNature {
+  id: string;
+  entite_id: string;
+  type: TypeContribution;
+  date_contribution: string;
+  libelle: string;
+  statut: StatutContribution;
+  minutes: number | null;
+  taux_horaire_centimes: number | null;
+  nb_personnes: number | null;
+  valeur_centimes: number;
+  date_renonciation: string | null;
+  commentaire: string | null;
+  source: string | null;
+  source_cle: string | null;
+  cree_le: string;
+  modifie_le: string;
+}
+
+export type NouvelleContribution = Omit<ContributionNature, "id" | "cree_le" | "modifie_le">;

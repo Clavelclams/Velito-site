@@ -88,6 +88,9 @@ await ok("06_tresorerie_associative.sql s'exécute sans erreur", () =>
 await ok("07_droits_tresorerie.sql s'exécute sans erreur", () =>
   db.exec(readFileSync(join(SQL_DIR, "07_droits_tresorerie.sql"), "utf8")),
 );
+await ok("08_subventions_benevolat.sql s'exécute sans erreur", () =>
+  db.exec(readFileSync(join(SQL_DIR, "08_subventions_benevolat.sql"), "utf8")),
+);
 await ok("droits réels : authenticated peut lire compte_tresorerie, anon non", async () => {
   const r = await q(`select has_table_privilege('authenticated','public.compte_tresorerie','select') as a,
                             has_table_privilege('anon','public.compte_tresorerie','select') as b`);
@@ -307,6 +310,53 @@ await ok("B ne voit ni les comptes ni les relevés de A", async () => {
   const o = await q(`select count(*)::int as n from public.solde_observe`);
   await db.exec(`select set_config('app.uid','${A}', false);`);
   if (c.rows[0].n !== 0 || o.rows[0].n !== 0) throw new Error("fuite inter-utilisateurs");
+});
+
+// ---------- 6 bis. Subventions et contributions (migration 08) ----------
+console.log("\n== Subventions et bénévolat (migration 08) ==");
+let subVEA;
+await ok("droits réels : authenticated sur subvention, anon non", async () => {
+  const r = await q(`select has_table_privilege('authenticated','public.subvention','insert') as a,
+                            has_table_privilege('anon','public.contribution_nature','select') as b`);
+  if (r.rows[0].a !== true || r.rows[0].b !== false) throw new Error(JSON.stringify(r.rows[0]));
+});
+await ok("créer un dossier : notifié inconnu reste NULL", async () => {
+  const r = await q(`insert into public.subvention (entite_id, financeur, action, exercice, montant_demande_centimes)
+                     values ($1, 'FDVA', 'Fonctionnement', 2026, 300000) returning id, montant_notifie_centimes, statut`, [VEA]);
+  subVEA = r.rows[0].id;
+  if (r.rows[0].montant_notifie_centimes !== null || r.rows[0].statut !== "a_preparer") throw new Error(JSON.stringify(r.rows[0]));
+});
+await mustFail("statut de dossier inconnu refusé",
+  `insert into public.subvention (entite_id, financeur, action, exercice, statut) values ($1,'X','Y',2026,'payee')`, [VEA]);
+await ok("une recette se rattache au dossier (financement lié)", async () => {
+  await q(`insert into public.transaction (entite_id, type, statut, date_transaction, libelle, montant_ttc_centimes, subvention_id)
+           values ($1,'recette','a_classer','2026-06-01','Versement FDVA', 150000, $2)`, [VEA, subVEA]);
+});
+await mustFail("rattacher une ligne VENA à un dossier VEA : refusé (FK composite)",
+  `insert into public.transaction (entite_id, type, statut, date_transaction, libelle, montant_ttc_centimes, subvention_id)
+   values ($1,'recette','a_classer','2026-06-01','x', 100, $2)`, [VENA, subVEA]);
+await ok("supprimer le dossier garde la transaction, sans lien", async () => {
+  await q(`delete from public.subvention where id = $1`, [subVEA]);
+  const r = await q(`select count(*)::int as n, count(subvention_id)::int as liees from public.transaction where libelle = 'Versement FDVA'`);
+  if (r.rows[0].n !== 1 || r.rows[0].liees !== 0) throw new Error(JSON.stringify(r.rows[0]));
+});
+await ok("heures de bénévolat complètes acceptées", async () => {
+  await q(`insert into public.contribution_nature (entite_id, type, date_contribution, libelle, minutes, taux_horaire_centimes, valeur_centimes, source_cle)
+           values ($1,'heures_benevoles','2026-03-10','Tournoi', 600, 1200, 12000, 'vea-presences:tournoi')`, [VEA]);
+});
+await mustFail("heures sans taux refusées",
+  `insert into public.contribution_nature (entite_id, type, date_contribution, libelle, minutes, valeur_centimes) values ($1,'heures_benevoles','2026-03-10','x', 60, 0)`, [VEA]);
+await mustFail("même clé source deux fois : refusée (pas de doublon à la reprise)",
+  `insert into public.contribution_nature (entite_id, type, date_contribution, libelle, minutes, taux_horaire_centimes, valeur_centimes, source_cle)
+   values ($1,'heures_benevoles','2026-03-10','Tournoi', 600, 1200, 12000, 'vea-presences:tournoi')`, [VEA]);
+await mustFail("frais abandonnés vérifiés sans date de renonciation : refusés",
+  `insert into public.contribution_nature (entite_id, type, date_contribution, libelle, valeur_centimes, statut) values ($1,'frais_abandonnes','2026-03-10','Essence', 4000, 'verifie')`, [VEA]);
+await ok("B ne voit ni les dossiers ni les contributions de A", async () => {
+  await db.exec(`select set_config('app.uid','${B}', false);`);
+  const s1 = await q(`select count(*)::int as n from public.subvention`);
+  const c1 = await q(`select count(*)::int as n from public.contribution_nature`);
+  await db.exec(`select set_config('app.uid','${A}', false);`);
+  if (s1.rows[0].n !== 0 || c1.rows[0].n !== 0) throw new Error("fuite inter-utilisateurs");
 });
 
 // ---------- 7. Anonyme = zéro accès ----------

@@ -50,6 +50,9 @@ export default async function EntiteLayout({
     // [07/11/2026] Lot 6 : comptes réels, relevés, virements, contrôle mensuel.
     { href: `/${entiteId}/tresorerie`, libelle: "Trésorerie" },
     { href: `/${entiteId}/import`, libelle: "Importer" },
+    // [07/11/2026] sql/08 : dossiers de subvention et contributions en nature.
+    { href: `/${entiteId}/subventions`, libelle: "Subventions" },
+    { href: `/${entiteId}/benevolat`, libelle: "Bénévolat" },
     { href: `/${entiteId}/categories`, libelle: "Catégories" },
     { href: `/${entiteId}/comptabilite`, libelle: "Comptabilité" },
     { href: `/${entiteId}/export`, libelle: "Export" },
