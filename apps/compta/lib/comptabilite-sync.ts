@@ -42,6 +42,11 @@ export async function synchroniserEcriture(
 
   await supprimerEcrituresParTransaction(supabase, tx.id);
 
+  // [07/11/2026] Lot 6 : un virement interne (courant → livret) n'est ni une
+  // charge ni un produit. Le pont actuel l'écrirait en 606/706 : on n'en
+  // génère pas. (Évolution possible : 512 ↔ 5121 ou 58 « virements internes ».)
+  if (tx.virement_id) return;
+
   let contrepartie: string | null = null;
   if (tx.categorie_id) {
     const cat = await getCategorie(supabase, tx.categorie_id);

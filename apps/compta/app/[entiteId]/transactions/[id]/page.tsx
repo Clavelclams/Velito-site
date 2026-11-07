@@ -11,6 +11,7 @@ import { getTransaction } from "@/lib/repositories/transactions";
 import { listerCategories } from "@/lib/repositories/categories";
 import { listerParTransaction } from "@/lib/repositories/justificatifs";
 import { createClient } from "@/lib/supabase/server";
+import { listerComptesTresorerie } from "@/lib/repositories/tresorerie";
 import { FormulaireTransaction } from "@/components/FormulaireTransaction";
 import { GestionJustificatifs } from "@/components/GestionJustificatifs";
 import type { Categorie } from "@/types/database";
@@ -23,10 +24,11 @@ export default async function EditionTransactionPage({
   const { entiteId, id } = await params;
   const supabase = await createClient();
 
-  const [transaction, categoriesActives, justificatifs] = await Promise.all([
+  const [transaction, categoriesActives, justificatifs, comptes] = await Promise.all([
     getTransaction(supabase, id),
     listerCategories(supabase, entiteId, true),
     listerParTransaction(supabase, id),
+    listerComptesTresorerie(supabase, entiteId),
   ]);
 
   if (!transaction) {
@@ -57,11 +59,35 @@ export default async function EditionTransactionPage({
         </Link>
       </div>
 
-      <FormulaireTransaction
-        entiteId={entiteId}
-        categories={categories}
-        transaction={transaction}
-      />
+      {transaction.virement_id ? (
+        // [07/11/2026] Lot 6 : une jambe de virement ne s'édite pas seule
+        // (on casserait l'égalité sortie = entrée). On la gère depuis Trésorerie.
+        <div className="rounded-lg border border-compta-border bg-compta-surface p-5 text-sm">
+          C&apos;est une jambe d&apos;un <strong>virement interne</strong>. Pour
+          le corriger, supprime le virement depuis la page{" "}
+          <Link href={`/${entiteId}/tresorerie`} className="text-compta-accent hover:underline">
+            Trésorerie
+          </Link>{" "}
+          et saisis-le à nouveau : les deux mouvements partent ensemble.
+        </div>
+      ) : (
+        <FormulaireTransaction
+          entiteId={entiteId}
+          categories={categories}
+          transaction={transaction}
+          comptes={comptes
+            .filter((c) => c.active || c.id === transaction.compte_tresorerie_id)
+            .map((c) => ({ id: c.id, nom: c.nom }))}
+        />
+      )}
+
+      {/* Provenance : jamais modifiable, c'est la trace de l'origine (règle Nova). */}
+      {transaction.source_fichier && (
+        <p className="rounded-lg border border-compta-border bg-compta-surface p-5 text-sm text-compta-text-muted">
+          Provenance : {transaction.source_fichier}
+          {transaction.source_ref ? ` (${transaction.source_ref})` : ""}
+        </p>
+      )}
 
       <GestionJustificatifs
         entiteId={entiteId}

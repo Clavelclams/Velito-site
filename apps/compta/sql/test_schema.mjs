@@ -12,6 +12,8 @@
  *  4. les contraintes CHECK et la FK composite refusent les données invalides ;
  *  5. la RLS cloisonne : un utilisateur B ne lit NI n'écrit chez A, et
  *     un non-connecté ne voit rien.
+ *  6. [07/11/2026] migration 06 (trésorerie) : comptes réels, statuts,
+ *     virements, clé anti-doublon, soldes observés, cloisonnement.
  *
  * Le schéma auth de Supabase est simulé : auth.users (table) + auth.uid()
  * (fonction qui lit un réglage de session, comme Supabase lit le JWT).
@@ -64,6 +66,10 @@ await ok("01_schema_noyau.sql s'exécute sans erreur", () =>
 );
 await ok("02_rls_noyau.sql s'exécute sans erreur", () =>
   db.exec(readFileSync(join(SQL_DIR, "02_rls_noyau.sql"), "utf8")),
+);
+
+await ok("06_tresorerie_associative.sql s'exécute sans erreur", () =>
+  db.exec(readFileSync(join(SQL_DIR, "06_tresorerie_associative.sql"), "utf8")),
 );
 
 // ---------- 2. Rôle "authenticated" comme sur Supabase ----------
@@ -178,6 +184,115 @@ await ok("A ne voit pas l'entité de B (cloisonnement dans les 2 sens)", async (
   await db.exec(`select set_config('app.uid','${A}', false);`);
   const r = await q(`select count(*)::int as n from public.entite`);
   if (r.rows[0].n !== 2) throw new Error(`A voit ${r.rows[0].n} entités au lieu de 2`);
+});
+
+// ---------- 6 bis. Trésorerie (sql/06), en tant que A ----------
+console.log("\n== Trésorerie (migration 06) ==");
+await db.exec(`select set_config('app.uid','${A}', false);`);
+let courant, livret;
+await ok("A crée un compte courant au solde initial INCONNU (null)", async () => {
+  const r = await q(
+    `insert into public.compte_tresorerie (entite_id, nom, nature) values ($1,'Courant','courant') returning id`,
+    [VEA],
+  );
+  courant = r.rows[0].id;
+});
+await ok("A crée un livret avec solde initial daté", async () => {
+  const r = await q(
+    `insert into public.compte_tresorerie (entite_id, nom, nature, solde_initial_centimes, date_solde_initial)
+     values ($1,'Livret','livret', 350000, '2025-01-01') returning id`,
+    [VEA],
+  );
+  livret = r.rows[0].id;
+});
+await mustFail(
+  "solde initial sans sa date",
+  `insert into public.compte_tresorerie (entite_id, nom, nature, solde_initial_centimes) values ($1,'Caisse','caisse', 100)`,
+  [VEA],
+);
+await mustFail(
+  "nature de compte libre ('coffre')",
+  `insert into public.compte_tresorerie (entite_id, nom, nature) values ($1,'Coffre','coffre')`,
+  [VEA],
+);
+await mustFail(
+  "opération VENA rattachée à un compte de VEA (FK composite)",
+  `insert into public.transaction (entite_id, type, statut, date_transaction, libelle, montant_ttc_centimes, compte_tresorerie_id)
+   values ($1,'depense','a_classer','2026-07-02','Mélange', 1000, $2)`,
+  [VENA, courant],
+);
+await ok("opération 'à classer' sans catégorie acceptée", () =>
+  q(
+    `insert into public.transaction (entite_id, type, statut, date_transaction, libelle, montant_ttc_centimes, compte_tresorerie_id)
+     values ($1,'depense','a_classer','2026-07-02','Ticket', 1000, $2)`,
+    [VEA, courant],
+  ),
+);
+await mustFail(
+  "opération 'validée' sans catégorie",
+  `insert into public.transaction (entite_id, type, statut, date_transaction, libelle, montant_ttc_centimes)
+   values ($1,'depense','validee','2026-07-02','Validée à tort', 1000)`,
+  [VEA],
+);
+await mustFail(
+  "statut libre ('payee')",
+  `insert into public.transaction (entite_id, type, statut, date_transaction, libelle, montant_ttc_centimes)
+   values ($1,'depense','payee','2026-07-02','Statut inventé', 1000)`,
+  [VEA],
+);
+await ok("virement interne : deux jambes validées sans catégorie", () =>
+  q(
+    `insert into public.transaction (entite_id, type, statut, date_transaction, libelle, montant_ttc_centimes, compte_tresorerie_id, virement_id)
+     values ($1,'depense','validee','2026-07-03','Virement', 50000, $2, '11111111-1111-4111-8111-111111111111'),
+            ($1,'recette','validee','2026-07-03','Virement', 50000, $3, '11111111-1111-4111-8111-111111111111')`,
+    [VEA, courant, livret],
+  ),
+);
+await mustFail(
+  "jambe de virement sans compte",
+  `insert into public.transaction (entite_id, type, statut, date_transaction, libelle, montant_ttc_centimes, virement_id)
+   values ($1,'depense','validee','2026-07-03','Virement orphelin', 100, '22222222-2222-4222-8222-222222222222')`,
+  [VEA],
+);
+await ok("import : clé source posée une première fois", () =>
+  q(
+    `insert into public.transaction (entite_id, type, statut, date_transaction, libelle, montant_ttc_centimes, source_cle)
+     values ($1,'depense','a_classer','2026-07-04','CB CAFE', 250, 'csv:2026-07-04|-250|CB CAFE|#1')`,
+    [VEA],
+  ),
+);
+await ok("réimport : ON CONFLICT DO NOTHING n'ajoute rien", async () => {
+  await q(
+    `insert into public.transaction (entite_id, type, statut, date_transaction, libelle, montant_ttc_centimes, source_cle)
+     values ($1,'depense','a_classer','2026-07-04','CB CAFE', 250, 'csv:2026-07-04|-250|CB CAFE|#1')
+     on conflict (entite_id, source_cle) do nothing`,
+    [VEA],
+  );
+  const r = await q(`select count(*)::int as n from public.transaction where source_cle like 'csv:2026-07-04%'`);
+  if (r.rows[0].n !== 1) throw new Error(`${r.rows[0].n} lignes au lieu de 1`);
+});
+await ok("deux saisies manuelles sans clé (NULL) coexistent", async () => {
+  const r = await q(`select count(*)::int as n from public.transaction where source_cle is null and entite_id = $1`, [VEA]);
+  if (r.rows[0].n < 2) throw new Error(`${r.rows[0].n} ligne(s)`);
+});
+await ok("solde observé enregistré", () =>
+  q(
+    `insert into public.solde_observe (entite_id, compte_id, date_releve, solde_centimes, reference)
+     values ($1,$2,'2025-01-31', 352000, 'Relevé 01')`,
+    [VEA, livret],
+  ),
+);
+await mustFail(
+  "deux soldes observés le même jour sur le même compte",
+  `insert into public.solde_observe (entite_id, compte_id, date_releve, solde_centimes) values ($1,$2,'2025-01-31', 1)`,
+  [VEA, livret],
+);
+await ok("B ne voit ni les comptes ni les relevés de A", async () => {
+  await db.exec(`select set_config('app.uid','${B}', false);`);
+  const c = await q(`select count(*)::int as n from public.compte_tresorerie`);
+  const o = await q(`select count(*)::int as n from public.solde_observe`);
+  await db.exec(`select set_config('app.uid','${A}', false);`);
+  if (c.rows[0].n !== 0 || o.rows[0].n !== 0) throw new Error("fuite inter-utilisateurs");
 });
 
 // ---------- 7. Anonyme = zéro accès ----------

@@ -18,6 +18,7 @@
  */
 import type { Transaction } from "@/types/database";
 import { centimesVersSaisie } from "@/lib/services/montants";
+import { LIBELLES_STATUT } from "@/lib/services/tresorerie";
 
 /** Séparateur de colonnes et fin de ligne (CRLF = attendu par Excel). */
 const SEP = ";";
@@ -72,7 +73,8 @@ export function transactionVersLigne(
     centimesVersSaisie(t.montant_ttc_centimes),
     centimesVersSaisie(t.montant_tva_centimes),
     centimesVersSaisie(t.montant_ht_centimes),
-    t.statut === "a_verifier" ? "À vérifier" : "Validée",
+    // [07/11/2026] Lot 6 : trois statuts (À classer / À valider / Validé).
+    LIBELLES_STATUT[t.statut] ?? t.statut,
   ];
 }
 

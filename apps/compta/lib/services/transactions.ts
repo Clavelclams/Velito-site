@@ -13,7 +13,7 @@
  * la table transaction (montant > 0, TVA ≤ TTC, libellé 1..255) : on renvoie
  * un message clair AVANT l'insert ; la base reste le dernier rempart.
  */
-import type { NouvelleTransaction, TypeFlux } from "@/types/database";
+import type { NouvelleTransaction, StatutTransaction, TypeFlux } from "@/types/database";
 import {
   eurosVersCentimes,
   estMontantValide,
@@ -37,7 +37,14 @@ export interface SaisieTransaction {
   libelle: string;
   montantTtc: string; // "12,50"
   montantTva: string; // "" ou "2,50" → 0 par défaut
+  /** [07/11/2026] Lot 6 — optionnels : une saisie simple reste valide. */
+  compteId?: string | null; // compte réel ("" ou null = inconnu)
+  statut?: string; // "" = déduit (classée → validée, sinon à classer)
+  commentaire?: string;
 }
+
+/** Longueur max d'un commentaire — miroir du CHECK SQL (sql/06). */
+export const COMMENTAIRE_MAX = 1000;
 
 function estTypeFluxValide(v: string): v is TypeFlux {
   return v === "recette" || v === "depense";
@@ -97,6 +104,30 @@ export function preparerNouvelleTransaction(
     erreurs.push("La TVA ne peut pas dépasser le montant TTC.");
   }
 
+  // --- [07/11/2026] statut (règle Nova : on ne valide pas une ligne non classée) ---
+  const categorieId = saisie.categorieId || null;
+  const statutBrut = (saisie.statut ?? "").trim();
+  let statut: StatutTransaction;
+  if (statutBrut === "") {
+    // Pas de choix explicite : une ligne classée est validée (saisie manuelle
+    // d'une dépense connue), une ligne sans catégorie reste à classer.
+    statut = categorieId ? "validee" : "a_classer";
+  } else if (statutBrut === "a_classer" || statutBrut === "a_verifier" || statutBrut === "validee") {
+    statut = statutBrut;
+  } else {
+    erreurs.push("Statut inconnu.");
+    statut = "a_classer";
+  }
+  if (statut === "validee" && !categorieId) {
+    erreurs.push("Une opération validée doit avoir une catégorie : choisis-en une, ou laisse-la « À classer ».");
+  }
+
+  // --- commentaire ---
+  const commentaire = (saisie.commentaire ?? "").trim();
+  if (commentaire.length > COMMENTAIRE_MAX) {
+    erreurs.push(`Le commentaire ne peut pas dépasser ${COMMENTAIRE_MAX} caractères.`);
+  }
+
   if (erreurs.length > 0) {
     return { ok: false, erreurs };
   }
@@ -105,7 +136,10 @@ export function preparerNouvelleTransaction(
     ok: true,
     valeur: {
       entite_id: saisie.entiteId,
-      categorie_id: saisie.categorieId || null,
+      categorie_id: categorieId,
+      statut,
+      compte_tresorerie_id: saisie.compteId || null,
+      commentaire: commentaire || null,
       type: saisie.type as TypeFlux,
       date_transaction: saisie.dateTransaction,
       libelle,

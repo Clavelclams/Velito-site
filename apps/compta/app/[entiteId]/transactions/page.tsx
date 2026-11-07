@@ -9,30 +9,66 @@
  *
  * On charge deux petites listes plutôt qu'une jointure SQL : plus simple à
  * lire, à tester, et suffisant au volume d'un outil mono-utilisateur.
+ *
+ * [07/11/2026] Lot 6 : filtres par statut et par compte, passés dans l'URL
+ * (?statut=a_traiter&compte=…) pour qu'un filtre se partage et se recharge.
+ * Le filtrage est un service pur testé (filtrerOperations).
  */
 import Link from "next/link";
 import { listerTransactions } from "@/lib/repositories/transactions";
 import { listerCategories } from "@/lib/repositories/categories";
+import { listerComptesTresorerie } from "@/lib/repositories/tresorerie";
 import { createClient } from "@/lib/supabase/server";
 import { TableauTransactions } from "@/components/TableauTransactions";
+import { filtrerOperations, LIBELLES_STATUT } from "@/lib/services/tresorerie";
 
 export default async function TransactionsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ entiteId: string }>;
+  searchParams: Promise<{ statut?: string; compte?: string }>;
 }) {
   const { entiteId } = await params;
+  const { statut = "", compte = "" } = await searchParams;
   const supabase = await createClient();
 
-  const [transactions, categories] = await Promise.all([
+  const [toutes, categories, comptes] = await Promise.all([
     listerTransactions(supabase, entiteId),
     listerCategories(supabase, entiteId, false),
+    listerComptesTresorerie(supabase, entiteId),
   ]);
 
   const nomsCategories: Record<string, string> = {};
   for (const c of categories) {
     nomsCategories[c.id] = c.nom;
   }
+  const nomsComptes: Record<string, string> = {};
+  for (const c of comptes) nomsComptes[c.id] = c.nom;
+
+  const transactions = filtrerOperations(toutes, { statut, compteId: compte });
+
+  // Liens de filtre : on garde l'autre critère en changeant celui-ci.
+  const lien = (s: string, c: string) => {
+    const q = new URLSearchParams();
+    if (s) q.set("statut", s);
+    if (c) q.set("compte", c);
+    const chaine = q.toString();
+    return `/${entiteId}/transactions${chaine ? `?${chaine}` : ""}`;
+  };
+  const filtresStatut: { valeur: string; libelle: string }[] = [
+    { valeur: "", libelle: "Tout" },
+    { valeur: "a_traiter", libelle: "À traiter" },
+    { valeur: "a_classer", libelle: LIBELLES_STATUT.a_classer },
+    { valeur: "a_verifier", libelle: LIBELLES_STATUT.a_verifier },
+    { valeur: "validee", libelle: LIBELLES_STATUT.validee },
+  ];
+  const puce = (actif: boolean) =>
+    `rounded-full border px-3 py-1 text-xs transition-colors ${
+      actif
+        ? "border-compta-accent bg-compta-accent text-white"
+        : "border-compta-border text-compta-text-muted hover:border-compta-accent hover:text-compta-accent"
+    }`;
 
   return (
     <section className="space-y-6">
@@ -54,16 +90,51 @@ export default async function TransactionsPage({
         </div>
       </div>
 
-      {transactions.length === 0 ? (
+      {toutes.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex flex-wrap gap-2">
+            {filtresStatut.map((f) => (
+              <Link key={f.valeur || "tout"} href={lien(f.valeur, compte)} className={puce(statut === f.valeur)}>
+                {f.libelle}
+              </Link>
+            ))}
+          </div>
+          {comptes.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              <Link href={lien(statut, "")} className={puce(compte === "")}>
+                Tous les comptes
+              </Link>
+              {comptes.map((c) => (
+                <Link key={c.id} href={lien(statut, c.id)} className={puce(compte === c.id)}>
+                  {c.nom}
+                </Link>
+              ))}
+              <Link href={lien(statut, "sans")} className={puce(compte === "sans")}>
+                Compte inconnu
+              </Link>
+            </div>
+          )}
+          <p className="text-xs text-compta-text-muted">
+            {transactions.length} opération(s) affichée(s) sur {toutes.length}.
+          </p>
+        </div>
+      )}
+
+      {toutes.length === 0 ? (
         <div className="rounded-lg border border-dashed border-compta-border bg-compta-surface p-6 text-sm text-compta-text-muted">
           Aucune transaction pour l&apos;instant. Clique sur « Nouvelle
           transaction » pour saisir ta première recette ou dépense.
+        </div>
+      ) : transactions.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-compta-border bg-compta-surface p-6 text-sm text-compta-text-muted">
+          Aucune opération ne correspond à ce filtre.
         </div>
       ) : (
         <TableauTransactions
           entiteId={entiteId}
           transactions={transactions}
           nomsCategories={nomsCategories}
+          nomsComptes={nomsComptes}
         />
       )}
     </section>

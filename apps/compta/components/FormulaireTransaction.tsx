@@ -11,10 +11,15 @@
  *
  * Les catégories proposées se filtrent selon le type choisi (recette vs
  * dépense) : on ne propose jamais une catégorie de dépense pour une recette.
+ *
+ * [07/11/2026] Lot 6 : compte réel, statut (À classer / À valider / Validé)
+ * et commentaire. Le statut « Validé » exige une catégorie : le service le
+ * refuse avec un message clair, la base aussi (contrainte sql/06).
  */
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { Categorie, Transaction, TypeFlux } from "@/types/database";
+import { LIBELLES_STATUT } from "@/lib/services/tresorerie";
 import { centimesVersSaisie } from "@/lib/services/montants";
 import {
   creerTransactionAction,
@@ -31,10 +36,12 @@ export function FormulaireTransaction({
   entiteId,
   categories,
   transaction,
+  comptes = [],
 }: {
   entiteId: string;
   categories: Categorie[];
   transaction?: Transaction;
+  comptes?: { id: string; nom: string }[];
 }) {
   const router = useRouter();
   const edition = transaction !== undefined;
@@ -56,6 +63,12 @@ export function FormulaireTransaction({
   const [categorieId, setCategorieId] = useState<string>(
     transaction?.categorie_id ?? "",
   );
+  const [compteId, setCompteId] = useState<string>(
+    transaction ? (transaction.compte_tresorerie_id ?? "") : comptes.length === 1 ? comptes[0]!.id : "",
+  );
+  // "" en création = statut déduit par le service (classée → validée, sinon à classer).
+  const [statut, setStatut] = useState<string>(transaction?.statut ?? "");
+  const [commentaire, setCommentaire] = useState(transaction?.commentaire ?? "");
   const [erreur, setErreur] = useState<string | null>(null);
   const [enCours, demarrer] = useTransition();
   const [suppressionEnCours, demarrerSuppression] = useTransition();
@@ -83,6 +96,9 @@ export function FormulaireTransaction({
         libelle,
         montantTtc,
         montantTva,
+        compteId: compteId || null,
+        statut,
+        commentaire,
       };
       const r = edition
         ? await modifierTransactionAction(transaction!.id, saisie)
@@ -211,6 +227,47 @@ export function FormulaireTransaction({
           />
         </label>
       </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        {/* Compte réel */}
+        <label>
+          <span className="mb-1 block text-sm font-medium">Compte</span>
+          <select value={compteId} onChange={(e) => setCompteId(e.target.value)} className={styleChamp}>
+            <option value="">Non précisé</option>
+            {comptes.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nom}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {/* Statut */}
+        <label>
+          <span className="mb-1 block text-sm font-medium">Statut</span>
+          <select value={statut} onChange={(e) => setStatut(e.target.value)} className={styleChamp}>
+            {!edition && <option value="">Automatique (validé si classé)</option>}
+            <option value="a_classer">{LIBELLES_STATUT.a_classer}</option>
+            <option value="a_verifier">{LIBELLES_STATUT.a_verifier}</option>
+            <option value="validee">{LIBELLES_STATUT.validee}</option>
+          </select>
+        </label>
+      </div>
+
+      {/* Commentaire */}
+      <label className="block">
+        <span className="mb-1 block text-sm font-medium">
+          Commentaire <span className="text-compta-text-muted">(optionnel)</span>
+        </span>
+        <textarea
+          value={commentaire}
+          onChange={(e) => setCommentaire(e.target.value)}
+          rows={2}
+          maxLength={1000}
+          placeholder="Ce qui reste à vérifier, explication d'un écart…"
+          className={styleChamp}
+        />
+      </label>
 
       {erreur && (
         <p className="text-sm text-compta-depense" role="alert">

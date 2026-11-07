@@ -12,7 +12,7 @@
  *  - le SIGNE du montant porte le sens (négatif = dépense, positif = recette),
  *    ce qui colle aux relevés bancaires ; on ne stocke ensuite qu'un montant
  *    positif + un type (cohérent avec le schéma) ;
- *  - les lignes importées naissent en statut « à vérifier » (côté repository) :
+ *  - les lignes importées naissent « à classer » ([07/11/2026], côté repository) :
  *    elles sont à catégoriser/confirmer, pas encore validées.
  */
 import type { TypeFlux } from "@/types/database";
@@ -135,6 +135,34 @@ export function parseMontantSigne(
   const centimes = eurosVersCentimes(sansSigne);
   if (centimes === null || centimes === 0) return null;
   return { type: negatif ? "depense" : "recette", centimes };
+}
+
+/**
+ * [07/11/2026] Lot 6 — clés source anti-doublon.
+ *
+ * Un relevé CSV n'a pas d'identifiant de ligne. On en fabrique un STABLE à
+ * partir de ce qui décrit le mouvement : date, sens, montant, libellé
+ * normalisé, plus un rang d'occurrence (deux cafés identiques le même jour
+ * sont deux lignes distinctes : #1 et #2). Réimporter le même fichier
+ * redonne exactement les mêmes clés → la base ignore les doublons
+ * (contrainte unique entite_id + source_cle, sql/06).
+ *
+ * Calculé CÔTÉ SERVEUR sur les transactions déjà validées : le client ne peut
+ * pas fabriquer une clé pour écraser ou masquer une ligne.
+ */
+export function attribuerClesSource(
+  transactions: { date_transaction: string; type: string; montant_ttc_centimes: number; libelle: string }[],
+): string[] {
+  const vus = new Map<string, number>();
+  return transactions.map((t) => {
+    // Libellé tronqué AVANT d'ajouter le rang : la contrainte SQL limite la
+    // clé à 255 caractères, et couper la fin effacerait le « #2 ».
+    const libelle = t.libelle.trim().replace(/\s+/g, " ").toLocaleUpperCase("fr").slice(0, 200);
+    const base = `csv:${t.date_transaction}|${t.type === "recette" ? "+" : "-"}${t.montant_ttc_centimes}|${libelle}`;
+    const rang = (vus.get(base) ?? 0) + 1;
+    vus.set(base, rang);
+    return `${base}|#${rang}`;
+  });
 }
 
 /**

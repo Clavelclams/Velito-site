@@ -142,3 +142,21 @@ export async function definirActivite(
 
   return data as Categorie;
 }
+
+/**
+ * [07/11/2026] Lot 6 — insère plusieurs catégories d'un coup (plan associatif).
+ * L'appelant a déjà retiré celles qui existent (categoriesManquantes) ; en
+ * cas de course, l'unicité (entite_id, nom, type) fait ignorer les doublons.
+ */
+export async function creerCategoriesEnLot(
+  supabase: SupabaseClient,
+  nouvelles: NouvelleCategorie[],
+): Promise<number> {
+  if (nouvelles.length === 0) return 0;
+  const { data, error } = await supabase
+    .from("categorie")
+    .upsert(nouvelles, { onConflict: "entite_id,nom,type", ignoreDuplicates: true })
+    .select("id");
+  if (error) throw new Error(`Création des catégories impossible : ${error.message}`);
+  return (data ?? []).length;
+}

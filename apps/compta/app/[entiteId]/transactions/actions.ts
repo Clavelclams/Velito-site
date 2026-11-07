@@ -12,9 +12,11 @@
 import { revalidatePath } from "next/cache";
 import {
   creerTransaction,
+  getTransaction,
   modifierTransaction,
   supprimerTransaction,
 } from "@/lib/repositories/transactions";
+import { supprimerVirement } from "@/lib/repositories/tresorerie";
 import { supprimerEcrituresParTransaction } from "@/lib/repositories/ecritures";
 import {
   preparerNouvelleTransaction,
@@ -84,13 +86,20 @@ export async function supprimerTransactionAction(
 ): Promise<ResultatAction> {
   try {
     const supabase = await createClient();
-    // Retire l'écriture liée AVANT (sinon orpheline → FEC/états faussés).
-    try {
-      await supprimerEcrituresParTransaction(supabase, id);
-    } catch {
-      // best-effort
+    // [07/11/2026] Lot 6 : une jambe de virement ne part jamais seule (sinon
+    // il resterait une sortie sans entrée et les soldes seraient faux).
+    const tx = await getTransaction(supabase, id);
+    if (tx?.virement_id) {
+      await supprimerVirement(supabase, tx.virement_id);
+    } else {
+      // Retire l'écriture liée AVANT (sinon orpheline → FEC/états faussés).
+      try {
+        await supprimerEcrituresParTransaction(supabase, id);
+      } catch {
+        // best-effort
+      }
+      await supprimerTransaction(supabase, id);
     }
-    await supprimerTransaction(supabase, id);
   } catch (e) {
     return { success: false, error: (e as Error).message };
   }

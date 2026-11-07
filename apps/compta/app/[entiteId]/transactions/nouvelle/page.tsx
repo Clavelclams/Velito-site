@@ -6,6 +6,7 @@
 import Link from "next/link";
 import { listerCategories } from "@/lib/repositories/categories";
 import { createClient } from "@/lib/supabase/server";
+import { listerComptesTresorerie } from "@/lib/repositories/tresorerie";
 import { FormulaireTransaction } from "@/components/FormulaireTransaction";
 
 export default async function NouvelleTransactionPage({
@@ -18,6 +19,8 @@ export default async function NouvelleTransactionPage({
 
   // true = seulement les catégories actives (écran de saisie, pas de gestion).
   const categories = await listerCategories(supabase, entiteId, true);
+  // [07/11/2026] Lot 6 : comptes réels actifs proposés à la saisie.
+  const comptes = (await listerComptesTresorerie(supabase, entiteId)).filter((c) => c.active);
 
   return (
     <section className="space-y-6">
@@ -31,7 +34,11 @@ export default async function NouvelleTransactionPage({
         </Link>
       </div>
 
-      <FormulaireTransaction entiteId={entiteId} categories={categories} />
+      <FormulaireTransaction
+        entiteId={entiteId}
+        categories={categories}
+        comptes={comptes.map((c) => ({ id: c.id, nom: c.nom }))}
+      />
     </section>
   );
 }

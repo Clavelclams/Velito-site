@@ -77,5 +77,19 @@ ok("libellé nettoyé (trim)", (() => {
 ok("type invalide refusé", preparerNouvelleTransaction(saisie({ type: "virement" })).ok === false);
 ok("type recette accepté", preparerNouvelleTransaction(saisie({ type: "recette" })).ok === true);
 
+// --- [07/11/2026] statut, compte, commentaire (Lot 6) ---
+const sansCat = preparerNouvelleTransaction(saisie());
+ok("sans catégorie ni statut → à classer", sansCat.ok === true && sansCat.valeur.statut === "a_classer");
+const avecCat = preparerNouvelleTransaction(saisie({ categorieId: "cat1" }));
+ok("avec catégorie, sans statut → validée", avecCat.ok === true && avecCat.valeur.statut === "validee");
+ok("validée sans catégorie refusée", preparerNouvelleTransaction(saisie({ statut: "validee" })).ok === false);
+ok("à valider sans catégorie accepté", preparerNouvelleTransaction(saisie({ statut: "a_verifier" })).ok === true);
+ok("statut inconnu refusé", preparerNouvelleTransaction(saisie({ statut: "payee" })).ok === false);
+const avecCompte = preparerNouvelleTransaction(saisie({ compteId: "c1", commentaire: "  carte VEA  " }));
+ok("compte et commentaire repris (trim)", avecCompte.ok === true && avecCompte.valeur.compte_tresorerie_id === "c1" && avecCompte.valeur.commentaire === "carte VEA");
+const compteVide = preparerNouvelleTransaction(saisie({ compteId: "" }));
+ok("compte vide → null (inconnu)", compteVide.ok === true && compteVide.valeur.compte_tresorerie_id === null && compteVide.valeur.commentaire === null);
+ok("commentaire trop long refusé", preparerNouvelleTransaction(saisie({ commentaire: "x".repeat(1001) })).ok === false);
+
 console.log(`\n${pass} PASS / ${fail} FAIL`);
 if (fail > 0) process.exit(1);

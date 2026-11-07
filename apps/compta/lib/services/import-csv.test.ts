@@ -10,6 +10,7 @@ import {
   parseDate,
   parseMontantSigne,
   construireLignesImport,
+  attribuerClesSource,
   type OptionsImport,
 } from "./import-csv.ts";
 
@@ -92,6 +93,22 @@ ok("date ISO dans la saisie", lignes[1]!.saisie!.dateTransaction === "2026-07-10
 ok("ligne date invalide → erreur", !lignes[2]!.ok && lignes[2]!.erreur!.includes("Date"));
 ok("ligne libellé vide → erreur", !lignes[3]!.ok && lignes[3]!.erreur!.includes("Libellé"));
 ok("catégorie null (à catégoriser après)", lignes[0]!.saisie!.categorieId === null);
+
+// --- [07/11/2026] clés source anti-doublon ---
+{
+  const lot = [
+    { date_transaction: "2026-01-05", type: "depense", montant_ttc_centimes: 250, libelle: "CB  Café du coin" },
+    { date_transaction: "2026-01-05", type: "depense", montant_ttc_centimes: 250, libelle: "cb café du coin" },
+    { date_transaction: "2026-01-05", type: "recette", montant_ttc_centimes: 250, libelle: "CB Café du coin" },
+  ];
+  const cles = attribuerClesSource(lot);
+  ok("deux lignes identiques → rangs #1 et #2", cles[0]!.endsWith("#1") && cles[1]!.endsWith("#2") && cles[0] !== cles[1]);
+  ok("libellé normalisé (casse, espaces)", cles[0]!.replace("#1", "") === cles[1]!.replace("#2", ""));
+  ok("le sens fait partie de la clé", cles[2]!.includes("|+250|") && cles[2]!.endsWith("#1"));
+  ok("réimport du même lot → mêmes clés", JSON.stringify(attribuerClesSource(lot)) === JSON.stringify(cles));
+  const long = attribuerClesSource([{ ...lot[0]!, libelle: "x".repeat(400) }, { ...lot[0]!, libelle: "x".repeat(400) }]);
+  ok("libellé très long : clé ≤ 255 et rang conservé", long[1]!.length <= 255 && long[1]!.endsWith("#2"));
+}
 
 console.log(`\n${pass} PASS / ${fail} FAIL`);
 if (fail > 0) process.exit(1);

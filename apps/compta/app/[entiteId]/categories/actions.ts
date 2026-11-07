@@ -17,9 +17,12 @@
 import { revalidatePath } from "next/cache";
 import {
   creerCategorie,
+  creerCategoriesEnLot,
+  listerCategories,
   renommerCategorie,
   definirActivite,
 } from "@/lib/repositories/categories";
+import { categoriesManquantes } from "@/lib/services/tresorerie";
 import {
   preparerNouvelleCategorie,
   preparerRenommage,
@@ -93,4 +96,25 @@ export async function basculerActiviteAction(
 
   revalidatePath(`/${entiteId}/categories`);
   return { success: true };
+}
+
+/**
+ * [07/11/2026] Lot 6 — installe le plan de catégories associatif (modèle
+ * inspiré de la nomenclature Nova). Idempotent : seules les catégories
+ * absentes sont créées ; rien n'est renommé ni supprimé.
+ */
+export async function initialiserPlanAssociatifAction(entiteId: string): Promise<ResultatAction & { ajoutees?: number }> {
+  try {
+    const supabase = await createClient();
+    const existantes = await listerCategories(supabase, entiteId, false);
+    const manquantes = categoriesManquantes(existantes);
+    const ajoutees = await creerCategoriesEnLot(
+      supabase,
+      manquantes.map((c) => ({ entite_id: entiteId, nom: c.nom, type: c.type })),
+    );
+    revalidatePath(`/${entiteId}/categories`);
+    return { success: true, ajoutees };
+  } catch (e) {
+    return { success: false, error: (e as Error).message };
+  }
 }
