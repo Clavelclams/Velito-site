@@ -19,6 +19,7 @@ import {
 } from "@/lib/services/tableau-de-bord";
 import { RepartitionCategories } from "@/components/RepartitionCategories";
 import { horsVirements } from "@/lib/services/tresorerie";
+import { peutEcrire } from "@/lib/droits";
 
 /** Libellé "juillet 2026" pour le mois affiché. */
 function libelleMois(annee: number, mois: number): string {
@@ -37,9 +38,10 @@ export default async function TableauDeBordPage({
   const { entiteId } = await params;
   const supabase = await createClient();
 
-  const [toutes, categories] = await Promise.all([
+  const [toutes, categories, ecriture] = await Promise.all([
     listerTransactions(supabase, entiteId),
     listerCategories(supabase, entiteId, false),
+    peutEcrire(supabase, entiteId),
   ]);
   // [07/11/2026] Lot 6 : les virements internes ne sont ni des recettes ni des
   // dépenses de la structure ; sans ce filtre, un transfert vers le livret
@@ -68,14 +70,21 @@ export default async function TableauDeBordPage({
     return (
       <section>
         <div className="rounded-lg border border-dashed border-compta-border bg-compta-surface p-6 text-sm text-compta-text-muted">
-          Pas encore de données. Saisis ta première{" "}
-          <Link
-            href={`/${entiteId}/transactions/nouvelle`}
-            className="font-medium text-compta-accent hover:underline"
-          >
-            transaction
-          </Link>{" "}
-          pour voir apparaître ton solde et tes indicateurs.
+          {/* [07/11/2026] Lecteur : pas d'invitation à saisir. */}
+          {ecriture ? (
+            <>
+              Pas encore de données. Saisis ta première{" "}
+              <Link
+                href={`/${entiteId}/transactions/nouvelle`}
+                className="font-medium text-compta-accent hover:underline"
+              >
+                transaction
+              </Link>{" "}
+              pour voir apparaître ton solde et tes indicateurs.
+            </>
+          ) : (
+            "Pas encore de données pour cette structure."
+          )}
         </div>
       </section>
     );

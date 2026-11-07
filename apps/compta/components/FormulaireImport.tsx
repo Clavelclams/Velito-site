@@ -32,9 +32,12 @@ import { importerTransactionsAction } from "@/app/[entiteId]/import/actions";
 export function FormulaireImport({
   entiteId,
   comptes = [],
+  lectureSeule = false,
 }: {
   entiteId: string;
   comptes?: { id: string; nom: string }[];
+  /** [07/11/2026] Lecteur : la zone d'import n'est pas rendue. */
+  lectureSeule?: boolean;
 }) {
   const router = useRouter();
   const [texte, setTexte] = useState("");
@@ -119,6 +122,9 @@ export function FormulaireImport({
 
   const styleChamp =
     "rounded-md border border-compta-border bg-white px-3 py-2 text-sm outline-none focus:border-compta-accent";
+
+  // [07/11/2026] Après tous les hooks (ordre constant) : rien pour le lecteur.
+  if (lectureSeule) return null;
 
   return (
     <div className="space-y-6">

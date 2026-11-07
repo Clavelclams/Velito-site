@@ -8,6 +8,8 @@ import Link from "next/link";
 import { FormulaireImport } from "@/components/FormulaireImport";
 import { createClient } from "@/lib/supabase/server";
 import { listerComptesTresorerie } from "@/lib/repositories/tresorerie";
+import { peutEcrire } from "@/lib/droits";
+import { MESSAGE_LECTURE_SEULE } from "@/lib/services/droits";
 
 export default async function ImportPage({
   params,
@@ -18,6 +20,7 @@ export default async function ImportPage({
   const supabase = await createClient();
   // [07/11/2026] Lot 6 : le relevé appartient à un compte réel.
   const comptes = (await listerComptesTresorerie(supabase, entiteId)).filter((c) => c.active);
+  const ecriture = await peutEcrire(supabase, entiteId);
 
   return (
     <section className="space-y-6">
@@ -38,10 +41,17 @@ export default async function ImportPage({
         </Link>
       </div>
 
-      <FormulaireImport
-        entiteId={entiteId}
-        comptes={comptes.map((c) => ({ id: c.id, nom: c.nom }))}
-      />
+      {/* [07/11/2026] Lecteur : message à la place de la zone d'import. */}
+      {ecriture ? (
+        <FormulaireImport
+          entiteId={entiteId}
+          comptes={comptes.map((c) => ({ id: c.id, nom: c.nom }))}
+        />
+      ) : (
+        <p className="rounded-lg border border-compta-border bg-compta-surface p-5 text-sm text-compta-text-muted">
+          {MESSAGE_LECTURE_SEULE}
+        </p>
+      )}
     </section>
   );
 }

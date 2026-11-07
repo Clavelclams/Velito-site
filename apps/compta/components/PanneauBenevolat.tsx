@@ -21,11 +21,22 @@ import {
 const champ = "rounded-md border border-compta-border bg-white px-3 py-2 text-sm outline-none focus:border-compta-accent";
 const bouton = "rounded-md bg-compta-accent px-4 py-2 text-sm font-medium text-white hover:bg-compta-accent-hover disabled:opacity-50";
 
-export function RepriseVea({ entiteId, exercice }: { entiteId: string; exercice: number }) {
+export function RepriseVea({
+  entiteId,
+  exercice,
+  lectureSeule = false,
+}: {
+  entiteId: string;
+  exercice: number;
+  /** [07/11/2026] Lecteur : la reprise n'est pas rendue. */
+  lectureSeule?: boolean;
+}) {
   const router = useRouter();
   const [taux, setTaux] = useState("");
   const [message, setMessage] = useState<{ ok: boolean; texte: string } | null>(null);
   const [enCours, demarrer] = useTransition();
+  // [07/11/2026] Après les hooks (ordre constant) : rien pour le lecteur.
+  if (lectureSeule) return null;
   return (
     <form
       onSubmit={(e) => {
@@ -55,7 +66,14 @@ export function RepriseVea({ entiteId, exercice }: { entiteId: string; exercice:
   );
 }
 
-export function AjoutContribution({ entiteId }: { entiteId: string }) {
+export function AjoutContribution({
+  entiteId,
+  lectureSeule = false,
+}: {
+  entiteId: string;
+  /** [07/11/2026] Lecteur : le formulaire d'ajout n'est pas rendu. */
+  lectureSeule?: boolean;
+}) {
   const router = useRouter();
   const vide = { type: "heures_benevoles", date: "", libelle: "", duree: "", tauxHoraire: "", nbPersonnes: "", valeur: "", dateRenonciation: "", commentaire: "" };
   const [f, setF] = useState(vide);
@@ -63,6 +81,9 @@ export function AjoutContribution({ entiteId }: { entiteId: string }) {
   const [enCours, demarrer] = useTransition();
   const maj = (k: keyof typeof f) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value });
   const heures = f.type === "heures_benevoles";
+
+  // [07/11/2026] Après les hooks (ordre constant) : rien pour le lecteur.
+  if (lectureSeule) return null;
 
   return (
     <form
@@ -119,11 +140,14 @@ export function ActionsContribution({
   id,
   statut,
   type,
+  lectureSeule = false,
 }: {
   entiteId: string;
   id: string;
   statut: StatutContribution;
   type: TypeContribution;
+  /** [07/11/2026] Lecteur : aucun bouton (vérifier, annuler, supprimer). */
+  lectureSeule?: boolean;
 }) {
   const router = useRouter();
   const [erreur, setErreur] = useState<string | null>(null);
@@ -137,6 +161,8 @@ export function ActionsContribution({
     });
   };
   const lien = "text-xs text-compta-accent hover:underline disabled:opacity-50";
+  // [07/11/2026] Après les hooks (ordre constant) : rien pour le lecteur.
+  if (lectureSeule) return null;
   return (
     <span className="flex flex-wrap items-center justify-end gap-3">
       {statut !== "verifie" && statut !== "annule" && (

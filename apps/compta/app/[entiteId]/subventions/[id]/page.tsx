@@ -17,6 +17,11 @@ import { FormulaireSubvention } from "@/components/FormulaireSubvention";
 import { OperationsSubvention } from "@/components/OperationsSubvention";
 import { BoutonConfirmer } from "@/components/BoutonConfirmer";
 import { supprimerSubventionAction } from "../actions";
+import { peutEcrire } from "@/lib/droits";
+
+function dateFr(iso: string | null): string {
+  return iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}` : "à compléter";
+}
 
 export default async function DossierSubventionPage({ params }: { params: Promise<{ entiteId: string; id: string }> }) {
   const { entiteId, id } = await params;
@@ -24,7 +29,7 @@ export default async function DossierSubventionPage({ params }: { params: Promis
   const dossier = await getSubvention(supabase, id);
   if (!dossier || dossier.entite_id !== entiteId) notFound();
 
-  const transactions = await listerTransactions(supabase, entiteId);
+  const [transactions, ecriture] = await Promise.all([listerTransactions(supabase, entiteId), peutEcrire(supabase, entiteId)]);
   const aujourdHui = new Date().toISOString().slice(0, 10);
   const suivi = suiviSubvention(dossier, transactions, aujourdHui);
 
@@ -80,17 +85,43 @@ export default async function DossierSubventionPage({ params }: { params: Promis
         subventionId={dossier.id}
         liees={liees.map(vue)}
         candidates={candidates.map(vue)}
+        lectureSeule={!ecriture}
       />
 
       <div className="space-y-2">
         <h3 className="font-semibold">Fiche du dossier</h3>
-        <FormulaireSubvention entiteId={entiteId} dossier={dossier} />
+        {ecriture ? (
+          <FormulaireSubvention entiteId={entiteId} dossier={dossier} />
+        ) : (
+          // [07/11/2026] Lecteur : la fiche s'affiche en lecture, sans formulaire.
+          <dl className="grid grid-cols-1 gap-3 rounded-lg border border-compta-border bg-compta-surface p-4 text-sm sm:grid-cols-3">
+            <div>
+              <dt className="text-xs text-compta-text-muted">Date de dépôt</dt>
+              <dd>{dateFr(dossier.date_depot)}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-compta-text-muted">Date de notification</dt>
+              <dd>{dateFr(dossier.date_notification)}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-compta-text-muted">Échéance (compte rendu, justification)</dt>
+              <dd>{dateFr(dossier.echeance)}</dd>
+            </div>
+            {dossier.commentaire && (
+              <div className="sm:col-span-3">
+                <dt className="text-xs text-compta-text-muted">Commentaire</dt>
+                <dd className="whitespace-pre-line">{dossier.commentaire}</dd>
+              </div>
+            )}
+          </dl>
+        )}
       </div>
 
       <BoutonConfirmer
         action={supprimerSubventionAction.bind(null, entiteId, dossier.id)}
         question="Supprimer ce dossier ? Les opérations rattachées restent, seul le lien disparaît."
         libelle="Supprimer le dossier"
+        lectureSeule={!ecriture}
       />
     </section>
   );

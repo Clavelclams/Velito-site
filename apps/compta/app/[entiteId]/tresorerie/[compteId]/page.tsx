@@ -20,6 +20,7 @@ import { getCompteTresorerie, listerSoldesObserves } from "@/lib/repositories/tr
 import { formaterCentimes } from "@/lib/services/montants";
 import { controleMensuel, LIBELLES_NATURE, type EtatMois } from "@/lib/services/tresorerie";
 import { FormulaireSoldeInitial } from "@/components/FormulaireSoldeInitial";
+import { peutEcrire } from "@/lib/droits";
 
 const MOIS = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 
@@ -51,9 +52,10 @@ export default async function ControleComptePage({
   // Compte inconnu, pas à moi (RLS) ou d'une autre entité : 404 neutre.
   if (!compte || compte.entite_id !== entiteId) notFound();
 
-  const [transactions, observations] = await Promise.all([
+  const [transactions, observations, ecriture] = await Promise.all([
     listerTransactions(supabase, entiteId),
     listerSoldesObserves(supabase, entiteId),
+    peutEcrire(supabase, entiteId),
   ]);
 
   const aujourdHui = new Date().toISOString().slice(0, 10);
@@ -85,19 +87,22 @@ export default async function ControleComptePage({
           <Link href={`/${entiteId}/tresorerie`} className="text-sm text-compta-text-muted hover:text-compta-accent">
             ← Trésorerie
           </Link>
-          {/* [07/11/2026] Import d'un relevé PDF Crédit Mutuel dans ce compte. */}
-          <Link
-            href={`/${entiteId}/tresorerie/${compte.id}/releve`}
-            className="rounded-md border border-compta-accent px-3 py-1.5 text-sm text-compta-accent hover:bg-compta-accent hover:text-white"
-          >
-            Importer un relevé PDF
-          </Link>
+          {/* [07/11/2026] Import d'un relevé PDF Crédit Mutuel dans ce compte (masqué au lecteur). */}
+          {ecriture && (
+            <Link
+              href={`/${entiteId}/tresorerie/${compte.id}/releve`}
+              className="rounded-md border border-compta-accent px-3 py-1.5 text-sm text-compta-accent hover:bg-compta-accent hover:text-white"
+            >
+              Importer un relevé PDF
+            </Link>
+          )}
           {/* [07/11/2026] sql/10 : pointer les lignes sur le relevé (exigé à la clôture). */}
           <Link
             href={`/${entiteId}/tresorerie/${compte.id}/pointage?mois=${annee === anneeCourante ? aujourdHui.slice(0, 7) : `${annee}-12`}`}
             className="rounded-md border border-compta-border px-3 py-1.5 text-sm text-compta-text-muted hover:border-compta-accent hover:text-compta-accent"
           >
-            Pointer les lignes
+            {/* [07/11/2026] Lecteur : la page de pointage s'ouvre en consultation. */}
+            {ecriture ? "Pointer les lignes" : "Voir le pointage"}
           </Link>
         </div>
       </div>
@@ -120,10 +125,9 @@ export default async function ControleComptePage({
         <div className="space-y-3 rounded-lg border border-compta-accent/30 bg-compta-accent/5 p-4 text-sm">
           <p>
             Le <strong>solde initial</strong> de ce compte n&apos;est pas connu : les recettes et dépenses
-            de chaque mois s&apos;affichent, mais aucun solde ne peut être calculé ni comparé à un relevé.
-            Reprends le solde du premier relevé disponible.
+            de chaque mois s&apos;affichent, mais aucun solde ne peut être calculé ni comparé à un relevé.            {ecriture && " Reprends le solde du premier relevé disponible."}
           </p>
-          <FormulaireSoldeInitial entiteId={entiteId} compteId={compte.id} />
+          <FormulaireSoldeInitial entiteId={entiteId} compteId={compte.id} lectureSeule={!ecriture} />
         </div>
       )}
 

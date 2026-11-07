@@ -14,7 +14,16 @@ function euros(c: number | null): string {
   return c === null ? "" : (c / 100).toFixed(2).replace(".", ",");
 }
 
-export function FormulaireSubvention({ entiteId, dossier }: { entiteId: string; dossier?: Subvention }) {
+export function FormulaireSubvention({
+  entiteId,
+  dossier,
+  lectureSeule = false,
+}: {
+  entiteId: string;
+  dossier?: Subvention;
+  /** [07/11/2026] Lecteur : le formulaire n'est pas rendu (la page affiche la fiche en lecture). */
+  lectureSeule?: boolean;
+}) {
   const router = useRouter();
   const [f, setF] = useState({
     financeur: dossier?.financeur ?? "",
@@ -37,6 +46,9 @@ export function FormulaireSubvention({ entiteId, dossier }: { entiteId: string; 
   };
   const champ = "w-full rounded-md border border-compta-border bg-white px-3 py-2 text-sm outline-none focus:border-compta-accent";
   const etiquette = "block text-xs font-medium text-compta-text-muted";
+
+  // [07/11/2026] Après les hooks (ordre constant) : rien pour le lecteur.
+  if (lectureSeule) return null;
 
   return (
     <form

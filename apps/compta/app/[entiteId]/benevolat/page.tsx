@@ -13,6 +13,7 @@ import { listerContributions } from "@/lib/repositories/subventions";
 import { formaterCentimes } from "@/lib/services/montants";
 import { LIBELLES_STATUT_CONTRIBUTION, LIBELLES_TYPE_CONTRIBUTION, syntheseContributions } from "@/lib/services/benevolat";
 import { ActionsContribution, AjoutContribution, RepriseVea } from "@/components/PanneauBenevolat";
+import { peutEcrire } from "@/lib/droits";
 
 function dateFr(iso: string) {
   return `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
@@ -34,7 +35,11 @@ export default async function BenevolatPage({
   const { entiteId } = await params;
   const { exercice: brut } = await searchParams;
   const supabase = await createClient();
-  const [entite, fiches] = await Promise.all([getEntite(supabase, entiteId), listerContributions(supabase, entiteId)]);
+  const [entite, fiches, ecriture] = await Promise.all([
+    getEntite(supabase, entiteId),
+    listerContributions(supabase, entiteId),
+    peutEcrire(supabase, entiteId),
+  ]);
 
   const anneeCourante = new Date().getFullYear();
   const exercice = /^\d{4}$/.test(brut ?? "") ? Number(brut) : anneeCourante;
@@ -80,7 +85,7 @@ export default async function BenevolatPage({
         ))}
       </div>
 
-      {entite?.type_juridique === "association" && <RepriseVea entiteId={entiteId} exercice={exercice} />}
+      {entite?.type_juridique === "association" && <RepriseVea entiteId={entiteId} exercice={exercice} lectureSeule={!ecriture} />}
 
       <div className="overflow-x-auto rounded-lg border border-compta-border">
         <table className="w-full text-sm">
@@ -109,7 +114,7 @@ export default async function BenevolatPage({
                 <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums">{formaterCentimes(f.valeur_centimes)}</td>
                 <td className="px-3 py-2 text-xs">{LIBELLES_STATUT_CONTRIBUTION[f.statut]}</td>
                 <td className="px-3 py-2">
-                  <ActionsContribution entiteId={entiteId} id={f.id} statut={f.statut} type={f.type} />
+                  <ActionsContribution entiteId={entiteId} id={f.id} statut={f.statut} type={f.type} lectureSeule={!ecriture} />
                 </td>
               </tr>
             ))}
@@ -124,10 +129,13 @@ export default async function BenevolatPage({
         </table>
       </div>
 
-      <div className="space-y-2">
-        <h3 className="font-semibold">Ajouter une fiche</h3>
-        <AjoutContribution entiteId={entiteId} />
-      </div>
+      {/* [07/11/2026] Lecteur : ni titre ni formulaire d'ajout. */}
+      {ecriture && (
+        <div className="space-y-2">
+          <h3 className="font-semibold">Ajouter une fiche</h3>
+          <AjoutContribution entiteId={entiteId} />
+        </div>
+      )}
     </section>
   );
 }

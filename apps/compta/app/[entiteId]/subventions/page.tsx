@@ -12,6 +12,7 @@ import { listerTransactions } from "@/lib/repositories/transactions";
 import { formaterCentimes } from "@/lib/services/montants";
 import { LIBELLES_STATUT_SUBVENTION, suiviSubvention, totauxSubventions } from "@/lib/services/subventions";
 import { FormulaireSubvention } from "@/components/FormulaireSubvention";
+import { peutEcrire } from "@/lib/droits";
 
 function montant(c: number | null) {
   return c === null ? <span className="text-compta-accent">à compléter</span> : formaterCentimes(c);
@@ -20,7 +21,11 @@ function montant(c: number | null) {
 export default async function SubventionsPage({ params }: { params: Promise<{ entiteId: string }> }) {
   const { entiteId } = await params;
   const supabase = await createClient();
-  const [subs, transactions] = await Promise.all([listerSubventions(supabase, entiteId), listerTransactions(supabase, entiteId)]);
+  const [subs, transactions, ecriture] = await Promise.all([
+    listerSubventions(supabase, entiteId),
+    listerTransactions(supabase, entiteId),
+    peutEcrire(supabase, entiteId),
+  ]);
   const aujourdHui = new Date().toISOString().slice(0, 10);
   const exercices = [...new Set(subs.map((s) => s.exercice))].sort((a, b) => b - a);
 
@@ -89,10 +94,13 @@ export default async function SubventionsPage({ params }: { params: Promise<{ en
         );
       })}
 
-      <div className="space-y-2">
-        <h3 className="font-semibold">Nouveau dossier</h3>
-        <FormulaireSubvention entiteId={entiteId} />
-      </div>
+      {/* [07/11/2026] Lecteur : pas de création de dossier. */}
+      {ecriture && (
+        <div className="space-y-2">
+          <h3 className="font-semibold">Nouveau dossier</h3>
+          <FormulaireSubvention entiteId={entiteId} />
+        </div>
+      )}
     </section>
   );
 }

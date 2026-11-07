@@ -17,6 +17,7 @@ import { exercicesProposes, lignesSansJustification } from "@/lib/services/clotu
 import { formaterCentimes } from "@/lib/services/montants";
 import { createClient } from "@/lib/supabase/server";
 import { ExceptionJustificatif } from "@/components/ExceptionJustificatif";
+import { peutEcrire } from "@/lib/droits";
 
 function dateFr(iso: string): string {
   return `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
@@ -34,9 +35,10 @@ export default async function SansJustificatifPage({
   const exercice = /^\d{4}$/.test(brut ?? "") ? Number(brut) : null;
   const supabase = await createClient();
 
-  const [lignes, categories] = await Promise.all([
+  const [lignes, categories, ecriture] = await Promise.all([
     listerLignesJusquAu(supabase, entiteId, exercice === null ? "9999-12-31" : `${exercice}-12-31`),
     listerCategories(supabase, entiteId, false),
+    peutEcrire(supabase, entiteId),
   ]);
   const candidates = lignes.filter((t) => !t.virement_id && (exercice === null || t.date_transaction.startsWith(`${exercice}-`)));
   const avecPiece = await idsAvecPiece(supabase, candidates.map((t) => t.id));
@@ -56,8 +58,13 @@ export default async function SansJustificatifPage({
           <h2 className="text-lg font-semibold">Transactions sans justificatif</h2>
           <p className="mt-1 text-sm text-compta-text-muted">
             {manquantes.length} transaction{manquantes.length > 1 ? "s" : ""} sans pièce jointe ni exception
-            {exercice !== null ? ` en ${exercice}` : ""}. Ouvre-en une pour ajouter le ticket ou la facture ; si la
-            pièce n&apos;existe pas, explique pourquoi.
+            {exercice !== null ? ` en ${exercice}` : ""}.
+            {ecriture && (
+              <>
+                {" "}Ouvre-en une pour ajouter le ticket ou la facture ; si la pièce n&apos;existe pas, explique
+                pourquoi.
+              </>
+            )}
           </p>
         </div>
         <Link
@@ -101,7 +108,7 @@ export default async function SansJustificatifPage({
                   {formaterCentimes(t.montant_ttc_centimes)}
                 </span>
               </div>
-              <ExceptionJustificatif entiteId={entiteId} transactionId={t.id} />
+              <ExceptionJustificatif entiteId={entiteId} transactionId={t.id} lectureSeule={!ecriture} />
             </li>
           ))}
         </ul>

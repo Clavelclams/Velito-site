@@ -22,7 +22,8 @@ function dateFr(iso: string) {
   return `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
 }
 
-function Ligne({ op, action, libelle, enCours }: { op: Op; action: () => void; libelle: string; enCours: boolean }) {
+// [07/11/2026] action absente (lecteur) : la ligne s'affiche sans bouton.
+function Ligne({ op, action, libelle, enCours }: { op: Op; action?: () => void; libelle: string; enCours: boolean }) {
   return (
     <li className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
       <span className="min-w-0">
@@ -34,9 +35,11 @@ function Ligne({ op, action, libelle, enCours }: { op: Op; action: () => void; l
           {op.type === "recette" ? "+" : "−"}
           {formaterCentimes(op.montantCentimes)}
         </span>
-        <button type="button" disabled={enCours} onClick={action} className="text-xs text-compta-accent hover:underline disabled:opacity-50">
-          {libelle}
-        </button>
+        {action && (
+          <button type="button" disabled={enCours} onClick={action} className="text-xs text-compta-accent hover:underline disabled:opacity-50">
+            {libelle}
+          </button>
+        )}
       </span>
     </li>
   );
@@ -47,11 +50,14 @@ export function OperationsSubvention({
   subventionId,
   liees,
   candidates,
+  lectureSeule = false,
 }: {
   entiteId: string;
   subventionId: string;
   liees: Op[];
   candidates: Op[];
+  /** [07/11/2026] Lecteur : liste des opérations liées seule, sans détacher ni rattacher. */
+  lectureSeule?: boolean;
 }) {
   const router = useRouter();
   const [recherche, setRecherche] = useState("");
@@ -81,16 +87,25 @@ export function OperationsSubvention({
       <div>
         <h3 className="font-semibold">Opérations liées ({liees.length})</h3>
         {liees.length === 0 ? (
-          <p className="text-sm text-compta-text-muted">Aucune. Rattache ci-dessous le versement reçu et, si tu veux, les dépenses financées.</p>
+          <p className="text-sm text-compta-text-muted">
+            {lectureSeule ? "Aucune." : "Aucune. Rattache ci-dessous le versement reçu et, si tu veux, les dépenses financées."}
+          </p>
         ) : (
           <ul className="divide-y divide-compta-border rounded-lg border border-compta-border bg-compta-surface">
             {liees.map((op) => (
-              <Ligne key={op.id} op={op} enCours={enCours} libelle="Détacher" action={() => lier([op.id], false)} />
+              <Ligne
+                key={op.id}
+                op={op}
+                enCours={enCours}
+                libelle="Détacher"
+                action={lectureSeule ? undefined : () => lier([op.id], false)}
+              />
             ))}
           </ul>
         )}
       </div>
 
+      {!lectureSeule && (
       <div className="space-y-2">
         <h3 className="font-semibold">Rattacher une opération</h3>
         <div className="flex flex-wrap items-center gap-3 text-sm">
@@ -116,6 +131,7 @@ export function OperationsSubvention({
         )}
         {erreur && <p className="text-sm text-compta-depense">{erreur}</p>}
       </div>
+      )}
     </div>
   );
 }

@@ -24,7 +24,16 @@ function dateFr(iso: string): string {
   return `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
 }
 
-export function ImportReleveCm({ entiteId, compteId }: { entiteId: string; compteId: string }) {
+export function ImportReleveCm({
+  entiteId,
+  compteId,
+  lectureSeule = false,
+}: {
+  entiteId: string;
+  compteId: string;
+  /** [07/11/2026] Lecteur : la zone d'import n'est pas rendue. */
+  lectureSeule?: boolean;
+}) {
   const router = useRouter();
   const [fichier, setFichier] = useState<File | null>(null);
   const [apercu, setApercu] = useState<ApercuReleve | null>(null);
@@ -72,6 +81,9 @@ export function ImportReleveCm({ entiteId, compteId }: { entiteId: string; compt
   }
 
   const juste = apercu?.ecartCentimes === 0;
+
+  // [07/11/2026] Après tous les hooks (ordre constant) : rien pour le lecteur.
+  if (lectureSeule) return null;
 
   return (
     <div className="space-y-5">

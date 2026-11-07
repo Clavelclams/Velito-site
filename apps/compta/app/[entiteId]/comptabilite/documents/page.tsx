@@ -12,6 +12,8 @@ import { listerToutesLignes } from "@/lib/repositories/ecritures";
 import { createClient } from "@/lib/supabase/server";
 import { compteDeResultat } from "@/lib/services/etats-financiers";
 import { GenerateurDocuments } from "@/components/GenerateurDocuments";
+import { peutEcrire } from "@/lib/droits";
+import { MESSAGE_LECTURE_SEULE } from "@/lib/services/droits";
 
 export default async function DocumentsPage({
   params,
@@ -56,20 +58,28 @@ export default async function DocumentsPage({
     );
   }
 
-  const [lignes, comptes] = await Promise.all([
+  const [lignes, comptes, ecriture] = await Promise.all([
     listerToutesLignes(supabase, entiteId),
     listerComptes(supabase, entiteId, false),
+    peutEcrire(supabase, entiteId),
   ]);
   const { resultat } = compteDeResultat(lignes, comptes);
 
   return (
     <section className="space-y-6">
       {entete}
-      <GenerateurDocuments
-        entiteNom={entite.nom}
-        formeSociale="SASU"
-        resultatCentimes={resultat}
-      />
+      {/* [07/11/2026] Lecteur : une décision à signer ne se prépare pas en lecture seule. */}
+      {ecriture ? (
+        <GenerateurDocuments
+          entiteNom={entite.nom}
+          formeSociale="SASU"
+          resultatCentimes={resultat}
+        />
+      ) : (
+        <p className="rounded-lg border border-compta-border bg-compta-surface p-5 text-sm text-compta-text-muted">
+          {MESSAGE_LECTURE_SEULE}
+        </p>
+      )}
     </section>
   );
 }

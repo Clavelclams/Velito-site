@@ -17,6 +17,7 @@ import { ListeCategories } from "@/components/ListeCategories";
 import { BoutonConfirmer } from "@/components/BoutonConfirmer";
 import { categoriesManquantes } from "@/lib/services/tresorerie";
 import { initialiserPlanAssociatifAction } from "./actions";
+import { peutEcrire } from "@/lib/droits";
 
 export default async function CategoriesPage({
   params,
@@ -27,9 +28,10 @@ export default async function CategoriesPage({
   const supabase = await createClient();
 
   // false = on veut AUSSI les catégories archivées sur l'écran de gestion.
-  const [categories, comptes] = await Promise.all([
+  const [categories, comptes, ecriture] = await Promise.all([
     listerCategories(supabase, entiteId, false),
     listerComptes(supabase, entiteId, true), // comptes actifs pour le mapping
+    peutEcrire(supabase, entiteId),
   ]);
 
   return (
@@ -43,8 +45,8 @@ export default async function CategoriesPage({
         </p>
       </div>
 
-      {/* [07/11/2026] Lot 6 : plan associatif en un clic (idempotent). */}
-      {categoriesManquantes(categories).length > 0 && (
+      {/* [07/11/2026] Lot 6 : plan associatif en un clic (idempotent), masqué au lecteur. */}
+      {ecriture && categoriesManquantes(categories).length > 0 && (
         <div className="flex items-center justify-between gap-3 rounded-lg border border-compta-border bg-compta-surface p-4 text-sm">
           <span className="text-compta-text-muted">
             Plan associatif proposé : {categoriesManquantes(categories).length} catégorie(s) à ajouter
@@ -59,14 +61,14 @@ export default async function CategoriesPage({
         </div>
       )}
 
-      <FormulaireCategorie entiteId={entiteId} comptes={comptes} />
+      <FormulaireCategorie entiteId={entiteId} comptes={comptes} lectureSeule={!ecriture} />
 
       {categories.length === 0 ? (
         <p className="text-sm text-compta-text-muted">
-          Aucune catégorie pour l&apos;instant. Ajoute-en une ci-dessus.
+          Aucune catégorie pour l&apos;instant.{ecriture && " Ajoute-en une ci-dessus."}
         </p>
       ) : (
-        <ListeCategories categories={categories} entiteId={entiteId} />
+        <ListeCategories categories={categories} entiteId={entiteId} lectureSeule={!ecriture} />
       )}
     </section>
   );

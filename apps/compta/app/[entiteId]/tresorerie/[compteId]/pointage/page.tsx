@@ -15,6 +15,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCompteTresorerie, listerSoldesObserves } from "@/lib/repositories/tresorerie";
 import { estExerciceCloture, listerLignesJusquAu } from "@/lib/repositories/cloture";
 import { roleSurEntite } from "@/lib/repositories/membres";
+import { peutEcrireRole } from "@/lib/services/droits";
 import { formaterCentimes } from "@/lib/services/montants";
 import { controleMensuel, finDeMois, LIBELLES_NATURE } from "@/lib/services/tresorerie";
 import { estCompteBancaire, estMoisValide, estPointee, lignesAPointerDuMois, referenceReleve } from "@/lib/services/cloture";
@@ -57,7 +58,9 @@ export default async function PointagePage({
     estExerciceCloture(supabase, entiteId, annee),
     roleSurEntite(supabase, entiteId),
   ]);
-  const lectureSeule = cloture || role === "lecteur";
+  // [07/11/2026] Service droits : seuls propriétaire et trésorier pointent.
+  const ecriture = peutEcrireRole(role);
+  const lectureSeule = cloture || !ecriture;
 
   const controle = controleMensuel(compte, lignes, observations, annee, aujourdHui)[numero - 1]!;
   const duMois = lignes.filter((t) => t.compte_tresorerie_id === compte.id && t.date_transaction.startsWith(mois));
@@ -103,11 +106,16 @@ export default async function PointagePage({
 
       {cloture && (
         <p className="rounded-md bg-compta-accent/10 px-3 py-2 text-sm">
-          Exercice {annee} clôturé : le pointage est figé. Rouvre l&apos;exercice depuis la page{" "}
-          <Link href={`/${entiteId}/cloture?exercice=${annee}`} className="text-compta-accent hover:underline">
-            Clôture
-          </Link>{" "}
-          pour le modifier.
+          Exercice {annee} clôturé : le pointage est figé.
+          {ecriture && (
+            <>
+              {" "}Rouvre l&apos;exercice depuis la page{" "}
+              <Link href={`/${entiteId}/cloture?exercice=${annee}`} className="text-compta-accent hover:underline">
+                Clôture
+              </Link>{" "}
+              pour le modifier.
+            </>
+          )}
         </p>
       )}
 
@@ -126,10 +134,15 @@ export default async function PointagePage({
           </p>
         ) : (
           <p className="text-compta-text-muted">
-            Aucun relevé saisi pour ce mois : le pointage groupé n&apos;est pas possible.{" "}
-            <Link href={`/${entiteId}/tresorerie`} className="text-compta-accent hover:underline">
-              Saisir un solde de relevé
-            </Link>
+            Aucun relevé saisi pour ce mois : le pointage groupé n&apos;est pas possible.
+            {ecriture && (
+              <>
+                {" "}
+                <Link href={`/${entiteId}/tresorerie`} className="text-compta-accent hover:underline">
+                  Saisir un solde de relevé
+                </Link>
+              </>
+            )}
           </p>
         )}
         {!lectureSeule && lot.ok && (

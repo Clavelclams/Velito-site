@@ -15,6 +15,7 @@ import { listerCategories } from "@/lib/repositories/categories";
 import { listerComptesTresorerie } from "@/lib/repositories/tresorerie";
 import { lignesATraiter } from "@/lib/services/traitement";
 import { LigneATraiter } from "@/components/LigneATraiter";
+import { peutEcrire } from "@/lib/droits";
 
 export default async function ATraiterPage({
   params,
@@ -27,10 +28,11 @@ export default async function ATraiterPage({
   const { compte = "" } = await searchParams;
   const supabase = await createClient();
 
-  const [toutes, categories, comptes] = await Promise.all([
+  const [toutes, categories, comptes, ecriture] = await Promise.all([
     listerTransactions(supabase, entiteId),
     listerCategories(supabase, entiteId),
     listerComptesTresorerie(supabase, entiteId),
+    peutEcrire(supabase, entiteId),
   ]);
 
   const aTraiter = lignesATraiter(toutes).filter((t) =>
@@ -77,6 +79,7 @@ export default async function ATraiterPage({
             nomCompte={t.compte_tresorerie_id ? nomCompte.get(t.compte_tresorerie_id) ?? "?" : null}
             categories={categories.filter((c) => c.type === t.type).map((c) => ({ id: c.id, nom: c.nom }))}
             autresComptes={comptes.filter((c) => c.id !== t.compte_tresorerie_id).map((c) => ({ id: c.id, nom: c.nom }))}
+            lectureSeule={!ecriture}
           />
         ))}
       </ul>

@@ -8,6 +8,7 @@ import { listerComptes } from "@/lib/repositories/comptes";
 import { listerEcritures } from "@/lib/repositories/ecritures";
 import { createClient } from "@/lib/supabase/server";
 import { BoutonSeedPcg } from "@/components/BoutonSeedPcg";
+import { peutEcrire } from "@/lib/droits";
 
 export default async function ComptabilitePage({
   params,
@@ -17,9 +18,10 @@ export default async function ComptabilitePage({
   const { entiteId } = await params;
   const supabase = await createClient();
 
-  const [comptes, ecritures] = await Promise.all([
+  const [comptes, ecritures, ecriture] = await Promise.all([
     listerComptes(supabase, entiteId, false),
     listerEcritures(supabase, entiteId),
+    peutEcrire(supabase, entiteId),
   ]);
 
   const pcgInitialise = comptes.length > 0;
@@ -54,9 +56,11 @@ export default async function ComptabilitePage({
         <p className="mb-3 mt-1 text-sm text-compta-text-muted">
           {pcgInitialise
             ? "Plan comptable en place. Les nouvelles transactions génèrent leur écriture."
-            : "Initialise le plan comptable de référence pour activer la génération des écritures."}
+            : ecriture
+              ? "Initialise le plan comptable de référence pour activer la génération des écritures."
+              : "Plan comptable pas encore initialisé : aucune écriture n'est générée."}
         </p>
-        <BoutonSeedPcg entiteId={entiteId} dejaInitialise={pcgInitialise} />
+        <BoutonSeedPcg entiteId={entiteId} dejaInitialise={pcgInitialise} lectureSeule={!ecriture} />
       </div>
 
       {/* Journal & balance */}
@@ -101,7 +105,8 @@ export default async function ComptabilitePage({
         </a>
       </div>
 
-      {/* Documents juridiques */}
+      {/* Documents juridiques ([07/11/2026] masqué au lecteur : trames à signer) */}
+      {ecriture && (
       <div className="rounded-lg border border-compta-border bg-compta-surface p-5">
         <h3 className="text-sm font-semibold">Documents juridiques</h3>
         <p className="mt-1 text-sm text-compta-text-muted">
@@ -114,6 +119,7 @@ export default async function ComptabilitePage({
           Générer un document
         </a>
       </div>
+      )}
 
       {/* Export FEC */}
       <div className="rounded-lg border border-compta-border bg-compta-surface p-5">
@@ -128,7 +134,7 @@ export default async function ComptabilitePage({
         >
           Télécharger le FEC
         </a>
-        {ecritures.length === 0 && (
+        {ecritures.length === 0 && ecriture && (
           <p className="mt-2 text-xs text-compta-text-muted">
             (Aucune écriture pour l&apos;instant : initialise le plan comptable,
             puis saisis une transaction.)

@@ -21,6 +21,7 @@ import { LIBELLES_NATURE, soldeRepris } from "@/lib/services/tresorerie";
 import { FormulairesTresorerie } from "@/components/FormulairesTresorerie";
 import { BoutonConfirmer } from "@/components/BoutonConfirmer";
 import { supprimerSoldeObserveAction, supprimerVirementAction } from "./actions";
+import { peutEcrire } from "@/lib/droits";
 
 function dateFr(iso: string): string {
   const [a, m, j] = iso.split("-");
@@ -30,10 +31,11 @@ function dateFr(iso: string): string {
 export default async function TresoreriePage({ params }: { params: Promise<{ entiteId: string }> }) {
   const { entiteId } = await params;
   const supabase = await createClient();
-  const [comptes, transactions, observations] = await Promise.all([
+  const [comptes, transactions, observations, ecriture] = await Promise.all([
     listerComptesTresorerie(supabase, entiteId),
     listerTransactions(supabase, entiteId),
     listerSoldesObserves(supabase, entiteId),
+    peutEcrire(supabase, entiteId),
   ]);
 
   const aujourdHui = new Date().toISOString().slice(0, 10);
@@ -57,7 +59,8 @@ export default async function TresoreriePage({ params }: { params: Promise<{ ent
 
       {comptes.length === 0 ? (
         <div className="rounded-lg border border-dashed border-compta-border bg-compta-surface p-6 text-sm text-compta-text-muted">
-          Aucun compte pour l&apos;instant. Crée ton compte courant (et ta caisse si tu manipules des espèces) ci-dessous.
+          Aucun compte pour l&apos;instant.
+          {ecriture && " Crée ton compte courant (et ta caisse si tu manipules des espèces) ci-dessous."}
         </div>
       ) : (
         <div className="overflow-hidden rounded-lg border border-compta-border">
@@ -134,6 +137,7 @@ export default async function TresoreriePage({ params }: { params: Promise<{ ent
       <FormulairesTresorerie
         entiteId={entiteId}
         comptes={comptes.filter((c) => c.active).map((c) => ({ id: c.id, nom: c.nom }))}
+        lectureSeule={!ecriture}
       />
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -156,6 +160,7 @@ export default async function TresoreriePage({ params }: { params: Promise<{ ent
                       action={supprimerVirementAction.bind(null, entiteId, v.virement_id!)}
                       question="Supprimer ce virement (la sortie ET l'entrée) ?"
                       libelle="Supprimer"
+                      lectureSeule={!ecriture}
                     />
                   </span>
                 </li>
@@ -182,6 +187,7 @@ export default async function TresoreriePage({ params }: { params: Promise<{ ent
                       action={supprimerSoldeObserveAction.bind(null, entiteId, o.id)}
                       question="Supprimer ce solde de relevé ?"
                       libelle="Supprimer"
+                      lectureSeule={!ecriture}
                     />
                   </span>
                 </li>

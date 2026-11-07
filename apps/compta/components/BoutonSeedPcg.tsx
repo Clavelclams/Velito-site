@@ -14,9 +14,12 @@ import { seedPcgAction, resynchroniserToutAction } from "@/app/[entiteId]/compta
 export function BoutonSeedPcg({
   entiteId,
   dejaInitialise,
+  lectureSeule = false,
 }: {
   entiteId: string;
   dejaInitialise: boolean;
+  /** [07/11/2026] Lecteur : ni initialisation ni régénération, rien n'est rendu. */
+  lectureSeule?: boolean;
 }) {
   const router = useRouter();
   const [message, setMessage] = useState<string | null>(null);
@@ -47,6 +50,9 @@ export function BoutonSeedPcg({
       }
     });
   }
+
+  // [07/11/2026] Après les hooks (ordre constant) : rien pour le lecteur.
+  if (lectureSeule) return null;
 
   return (
     <div className="flex flex-wrap items-center gap-3">

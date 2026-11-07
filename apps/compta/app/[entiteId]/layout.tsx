@@ -58,6 +58,9 @@ export default async function EntiteLayout({
     { href: `/${entiteId}/benevolat`, libelle: "Bénévolat" },
     // [07/11/2026] sql/11 : budget prévisionnel et comparaison annuelle.
     { href: `/${entiteId}/budgets`, libelle: "Budgets" },
+    // [07/11/2026] sql/12 : notes de frais (avances des membres) et indemnités kilométriques.
+    { href: `/${entiteId}/notes-de-frais`, libelle: "Notes de frais" },
+    { href: `/${entiteId}/ik`, libelle: "IK" },
     // [07/11/2026] sql/10 : pointage, mois terminés, clôture et réouverture.
     { href: `/${entiteId}/cloture`, libelle: "Clôture" },
     // [07/11/2026] Dossier de fin d'exercice (AG, financeurs), imprimable.

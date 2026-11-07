@@ -22,12 +22,15 @@ export function LigneATraiter({
   nomCompte,
   categories,
   autresComptes,
+  lectureSeule = false,
 }: {
   entiteId: string;
   transaction: Transaction;
   nomCompte: string | null;
   categories: { id: string; nom: string }[];
   autresComptes: { id: string; nom: string }[];
+  /** [07/11/2026] Lecteur : la ligne s'affiche (libellé, montant, commentaire) sans champ ni bouton. */
+  lectureSeule?: boolean;
 }) {
   const router = useRouter();
   const [categorieId, setCategorieId] = useState(t.categorie_id ?? "");
@@ -68,6 +71,11 @@ export function LigneATraiter({
         </span>
       </div>
 
+      {/* [07/11/2026] Lecteur : commentaire existant en texte, aucun champ ni bouton. */}
+      {lectureSeule ? (
+        t.commentaire && <p className="whitespace-pre-line text-xs text-compta-text-muted">{t.commentaire}</p>
+      ) : (
+      <>
       <textarea
         value={commentaire}
         onChange={(e) => setCommentaire(e.target.value)}
@@ -140,6 +148,8 @@ export function LigneATraiter({
             Ni recette ni dépense de l&apos;association : l&apos;argent change seulement de compte. Pour annuler : supprime le virement, puis réimporte le relevé.
           </span>
         </div>
+      )}
+      </>
       )}
 
       {erreur && <p className="text-sm text-compta-depense">{erreur}</p>}

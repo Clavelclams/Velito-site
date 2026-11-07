@@ -20,6 +20,7 @@ export function TableauTransactions({
   transactions,
   nomsCategories,
   nomsComptes = {},
+  lectureSeule = false,
 }: {
   entiteId: string;
   transactions: Transaction[];
@@ -27,6 +28,8 @@ export function TableauTransactions({
   nomsCategories: Record<string, string>;
   /** { [compteId]: nom } — comptes réels (sql/06). */
   nomsComptes?: Record<string, string>;
+  /** [07/11/2026] Lecteur : le lien de ligne mène au même écran, libellé « Voir ». */
+  lectureSeule?: boolean;
 }) {
   return (
     <div className="overflow-hidden rounded-lg border border-compta-border">
@@ -83,7 +86,7 @@ export function TableauTransactions({
                     href={`/${entiteId}/transactions/${t.id}`}
                     className="text-xs text-compta-accent underline-offset-2 hover:underline"
                   >
-                    Modifier
+                    {lectureSeule ? "Voir" : "Modifier"}
                   </Link>
                 </td>
               </tr>

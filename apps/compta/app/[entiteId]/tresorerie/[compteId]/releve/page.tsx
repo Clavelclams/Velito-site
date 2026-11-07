@@ -8,6 +8,8 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCompteTresorerie } from "@/lib/repositories/tresorerie";
 import { ImportReleveCm } from "@/components/ImportReleveCm";
+import { peutEcrire } from "@/lib/droits";
+import { MESSAGE_LECTURE_SEULE } from "@/lib/services/droits";
 
 export default async function ImportRelevePage({
   params,
@@ -18,6 +20,7 @@ export default async function ImportRelevePage({
   const supabase = await createClient();
   const compte = await getCompteTresorerie(supabase, compteId);
   if (!compte || compte.entite_id !== entiteId) notFound();
+  const ecriture = await peutEcrire(supabase, entiteId);
 
   return (
     <section className="space-y-6">
@@ -33,6 +36,13 @@ export default async function ImportRelevePage({
         </Link>
       </div>
 
+      {/* [07/11/2026] Lecteur : message à la place de la zone d'import. */}
+      {!ecriture ? (
+        <p className="rounded-lg border border-compta-border bg-compta-surface p-5 text-sm text-compta-text-muted">
+          {MESSAGE_LECTURE_SEULE}
+        </p>
+      ) : (
+      <>
       <ul className="list-disc space-y-1 pl-5 text-sm text-compta-text-muted">
         <li>Le PDF est lu sur le serveur puis oublié : il n&apos;est pas stocké.</li>
         <li>L&apos;import n&apos;est possible que si le relevé tombe juste (ouverture + mouvements = clôture).</li>
@@ -41,6 +51,8 @@ export default async function ImportRelevePage({
       </ul>
 
       <ImportReleveCm entiteId={entiteId} compteId={compte.id} />
+      </>
+      )}
     </section>
   );
 }

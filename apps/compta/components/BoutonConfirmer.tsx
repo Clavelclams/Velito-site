@@ -13,15 +13,20 @@ export function BoutonConfirmer({
   question,
   libelle,
   ton = "danger",
+  lectureSeule = false,
 }: {
   action: () => Promise<{ success: boolean; error?: string }>;
   question: string;
   libelle: string;
   /** "danger" = lien rouge (suppression) ; "normal" = bouton principal. */
   ton?: "danger" | "normal";
+  /** [07/11/2026] Lecteur : le bouton n'est pas rendu (rien à confirmer, rien à écrire). */
+  lectureSeule?: boolean;
 }) {
   const router = useRouter();
   const [enCours, demarrer] = useTransition();
+  // Après les hooks : leur ordre d'appel reste le même d'un rendu à l'autre.
+  if (lectureSeule) return null;
   return (
     <button
       type="button"

@@ -18,9 +18,12 @@ import { creerCategorieAction } from "@/app/[entiteId]/categories/actions";
 export function FormulaireCategorie({
   entiteId,
   comptes,
+  lectureSeule = false,
 }: {
   entiteId: string;
   comptes: Compte[];
+  /** [07/11/2026] Lecteur : le formulaire d'ajout n'est pas rendu. */
+  lectureSeule?: boolean;
 }) {
   const [nom, setNom] = useState("");
   const [type, setType] = useState<TypeFlux>("depense");
@@ -56,6 +59,9 @@ export function FormulaireCategorie({
 
   const styleChamp =
     "w-full rounded-md border border-compta-border bg-white px-3 py-2 text-sm outline-none focus:border-compta-accent";
+
+  // [07/11/2026] Après les hooks (ordre constant) : rien pour le lecteur.
+  if (lectureSeule) return null;
 
   return (
     <form

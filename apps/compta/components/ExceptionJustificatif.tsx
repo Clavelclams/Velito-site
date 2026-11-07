@@ -10,13 +10,25 @@ import { useRouter } from "next/navigation";
 import { definirExceptionAction } from "@/app/[entiteId]/transactions/sans-justificatif/actions";
 import { EXCEPTION_MAX, EXCEPTION_MIN } from "@/lib/services/cloture";
 
-export function ExceptionJustificatif({ entiteId, transactionId }: { entiteId: string; transactionId: string }) {
+export function ExceptionJustificatif({
+  entiteId,
+  transactionId,
+  lectureSeule = false,
+}: {
+  entiteId: string;
+  transactionId: string;
+  /** [07/11/2026] Lecteur : rien n'est rendu (pas de saisie d'exception). */
+  lectureSeule?: boolean;
+}) {
   const router = useRouter();
   const [ouvert, setOuvert] = useState(false);
   const [texte, setTexte] = useState("");
   const [erreur, setErreur] = useState<string | null>(null);
   const [enCours, demarrer] = useTransition();
   const assezLong = texte.trim().length >= EXCEPTION_MIN;
+
+  // [07/11/2026] Après les hooks (ordre d'appel constant), on ne rend rien au lecteur.
+  if (lectureSeule) return null;
 
   if (!ouvert) {
     return (

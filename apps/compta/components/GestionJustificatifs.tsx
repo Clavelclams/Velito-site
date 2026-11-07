@@ -35,10 +35,13 @@ export function GestionJustificatifs({
   entiteId,
   transactionId,
   justificatifs,
+  lectureSeule = false,
 }: {
   entiteId: string;
   transactionId: string;
   justificatifs: Justificatif[];
+  /** [07/11/2026] Lecteur : consultation seule (« Voir »), ni ajout ni suppression. */
+  lectureSeule?: boolean;
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -104,23 +107,26 @@ export function GestionJustificatifs({
     <div className="space-y-3 rounded-lg border border-compta-border bg-compta-surface p-5">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold">Justificatifs</h3>
-        <label className="cursor-pointer rounded-md border border-compta-border px-3 py-1.5 text-sm transition-colors hover:bg-compta-bg">
-          {enCours ? "Envoi…" : "+ Ajouter"}
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp,application/pdf"
-            onChange={choisirFichier}
-            disabled={enCours}
-            className="hidden"
-          />
-        </label>
+        {!lectureSeule && (
+          <label className="cursor-pointer rounded-md border border-compta-border px-3 py-1.5 text-sm transition-colors hover:bg-compta-bg">
+            {enCours ? "Envoi…" : "+ Ajouter"}
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,application/pdf"
+              onChange={choisirFichier}
+              disabled={enCours}
+              className="hidden"
+            />
+          </label>
+        )}
       </div>
 
       {justificatifs.length === 0 ? (
         <p className="text-sm text-compta-text-muted">
-          Aucune pièce jointe. Ajoute une photo de ticket ou une facture (JPEG,
-          PNG, WebP ou PDF, 10 Mo max).
+          {lectureSeule
+            ? "Aucune pièce jointe."
+            : "Aucune pièce jointe. Ajoute une photo de ticket ou une facture (JPEG, PNG, WebP ou PDF, 10 Mo max)."}
         </p>
       ) : (
         <ul className="divide-y divide-compta-border">
@@ -140,14 +146,16 @@ export function GestionJustificatifs({
                 >
                   Voir
                 </button>
-                <button
-                  type="button"
-                  onClick={() => supprimer(j.id)}
-                  disabled={enCours}
-                  className="text-xs text-compta-depense hover:underline disabled:opacity-50"
-                >
-                  Supprimer
-                </button>
+                {!lectureSeule && (
+                  <button
+                    type="button"
+                    onClick={() => supprimer(j.id)}
+                    disabled={enCours}
+                    className="text-xs text-compta-depense hover:underline disabled:opacity-50"
+                  >
+                    Supprimer
+                  </button>
+                )}
               </span>
             </li>
           ))}

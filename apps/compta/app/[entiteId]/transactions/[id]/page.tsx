@@ -15,6 +15,9 @@ import { listerComptesTresorerie } from "@/lib/repositories/tresorerie";
 import { FormulaireTransaction } from "@/components/FormulaireTransaction";
 import { GestionJustificatifs } from "@/components/GestionJustificatifs";
 import type { Categorie } from "@/types/database";
+import { peutEcrire } from "@/lib/droits";
+import { formaterCentimes } from "@/lib/services/montants";
+import { LIBELLES_STATUT } from "@/lib/services/tresorerie";
 
 export default async function EditionTransactionPage({
   params,
@@ -24,11 +27,12 @@ export default async function EditionTransactionPage({
   const { entiteId, id } = await params;
   const supabase = await createClient();
 
-  const [transaction, categoriesActives, justificatifs, comptes] = await Promise.all([
+  const [transaction, categoriesActives, justificatifs, comptes, ecriture] = await Promise.all([
     getTransaction(supabase, id),
     listerCategories(supabase, entiteId, true),
     listerParTransaction(supabase, id),
     listerComptesTresorerie(supabase, entiteId),
+    peutEcrire(supabase, entiteId),
   ]);
 
   if (!transaction) {
@@ -50,7 +54,7 @@ export default async function EditionTransactionPage({
   return (
     <section className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Modifier la transaction</h2>
+        <h2 className="text-lg font-semibold">{ecriture ? "Modifier la transaction" : "Transaction"}</h2>
         <Link
           href={`/${entiteId}/transactions`}
           className="text-sm text-compta-text-muted transition-colors hover:text-compta-accent"
@@ -70,6 +74,49 @@ export default async function EditionTransactionPage({
           </Link>{" "}
           et saisis-le à nouveau : les deux mouvements partent ensemble.
         </div>
+      ) : !ecriture ? (
+        // [07/11/2026] Lecteur : fiche en lecture à la place du formulaire.
+        <dl className="grid grid-cols-1 gap-3 rounded-lg border border-compta-border bg-compta-surface p-5 text-sm sm:grid-cols-2">
+          <div>
+            <dt className="text-xs uppercase text-compta-text-muted">Date</dt>
+            <dd>{transaction.date_transaction.split("-").reverse().join("/")}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase text-compta-text-muted">Libellé</dt>
+            <dd>{transaction.libelle}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase text-compta-text-muted">
+              {transaction.type === "recette" ? "Recette TTC" : "Dépense TTC"}
+            </dt>
+            <dd className="tabular-nums">
+              {formaterCentimes(transaction.montant_ttc_centimes)}
+              {transaction.montant_tva_centimes > 0 && (
+                <span className="ml-2 text-xs text-compta-text-muted">
+                  dont TVA {formaterCentimes(transaction.montant_tva_centimes)}
+                </span>
+              )}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase text-compta-text-muted">Catégorie</dt>
+            <dd>{categories.find((c) => c.id === transaction.categorie_id)?.nom ?? "Non classée"}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase text-compta-text-muted">Compte</dt>
+            <dd>{comptes.find((c) => c.id === transaction.compte_tresorerie_id)?.nom ?? "Compte inconnu"}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase text-compta-text-muted">Statut</dt>
+            <dd>{LIBELLES_STATUT[transaction.statut]}</dd>
+          </div>
+          {transaction.commentaire && (
+            <div className="sm:col-span-2">
+              <dt className="text-xs uppercase text-compta-text-muted">Commentaire</dt>
+              <dd className="whitespace-pre-line">{transaction.commentaire}</dd>
+            </div>
+          )}
+        </dl>
       ) : (
         <FormulaireTransaction
           entiteId={entiteId}
@@ -93,6 +140,7 @@ export default async function EditionTransactionPage({
         entiteId={entiteId}
         transactionId={transaction.id}
         justificatifs={justificatifs}
+        lectureSeule={!ecriture}
       />
     </section>
   );

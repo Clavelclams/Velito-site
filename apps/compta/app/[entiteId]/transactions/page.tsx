@@ -21,6 +21,7 @@ import { listerComptesTresorerie } from "@/lib/repositories/tresorerie";
 import { createClient } from "@/lib/supabase/server";
 import { TableauTransactions } from "@/components/TableauTransactions";
 import { filtrerOperations, LIBELLES_STATUT } from "@/lib/services/tresorerie";
+import { peutEcrire } from "@/lib/droits";
 
 export default async function TransactionsPage({
   params,
@@ -33,10 +34,11 @@ export default async function TransactionsPage({
   const { statut = "", compte = "" } = await searchParams;
   const supabase = await createClient();
 
-  const [toutes, categories, comptes] = await Promise.all([
+  const [toutes, categories, comptes, ecriture] = await Promise.all([
     listerTransactions(supabase, entiteId),
     listerCategories(supabase, entiteId, false),
     listerComptesTresorerie(supabase, entiteId),
+    peutEcrire(supabase, entiteId),
   ]);
 
   const nomsCategories: Record<string, string> = {};
@@ -81,12 +83,15 @@ export default async function TransactionsPage({
           >
             Pièces manquantes
           </Link>
-          <Link
-            href={`/${entiteId}/transactions/nouvelle`}
-            className="rounded-md bg-compta-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-compta-accent-hover"
-          >
-            + Nouvelle transaction
-          </Link>
+          {/* [07/11/2026] Lecteur : pas de bouton de saisie. */}
+          {ecriture && (
+            <Link
+              href={`/${entiteId}/transactions/nouvelle`}
+              className="rounded-md bg-compta-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-compta-accent-hover"
+            >
+              + Nouvelle transaction
+            </Link>
+          )}
         </div>
       </div>
 
@@ -122,8 +127,9 @@ export default async function TransactionsPage({
 
       {toutes.length === 0 ? (
         <div className="rounded-lg border border-dashed border-compta-border bg-compta-surface p-6 text-sm text-compta-text-muted">
-          Aucune transaction pour l&apos;instant. Clique sur « Nouvelle
-          transaction » pour saisir ta première recette ou dépense.
+          {ecriture
+            ? "Aucune transaction pour l'instant. Clique sur « Nouvelle transaction » pour saisir ta première recette ou dépense."
+            : "Aucune transaction pour l'instant."}
         </div>
       ) : transactions.length === 0 ? (
         <div className="rounded-lg border border-dashed border-compta-border bg-compta-surface p-6 text-sm text-compta-text-muted">
@@ -135,6 +141,7 @@ export default async function TransactionsPage({
           transactions={transactions}
           nomsCategories={nomsCategories}
           nomsComptes={nomsComptes}
+          lectureSeule={!ecriture}
         />
       )}
     </section>

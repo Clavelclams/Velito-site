@@ -23,6 +23,7 @@ import {
   type ClotureExercice,
 } from "@/lib/services/cloture";
 import { FormulaireCloture, FormulaireReouverture } from "@/components/ActionsCloture";
+import { peutEcrireRole } from "@/lib/services/droits";
 
 const MOIS = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 
@@ -70,7 +71,8 @@ export default async function CloturePage({
   const checklist = checklistCloture(donnees);
   const mois = moisTermines(donnees);
   const active = clotureActive(clotures, exercice);
-  const peutEcrire = role === "proprietaire" || role === "tresorier";
+  // [07/11/2026] Règle unique du service droits (propriétaire ou trésorier).
+  const peutEcrire = peutEcrireRole(role);
   const annees = exercicesProposes(donnees.lignes, aujourdHui);
   if (!annees.includes(exercice)) annees.push(exercice);
   annees.sort((a, b) => b - a);
@@ -151,7 +153,7 @@ export default async function CloturePage({
                     ) : (
                       p.lien && (
                         <Link href={p.lien} className="mt-1 inline-block text-xs text-compta-accent hover:underline">
-                          Corriger
+                          {peutEcrire ? "Corriger" : "Voir"}
                         </Link>
                       )
                     )}

@@ -20,17 +20,23 @@ export function FormulaireCloture({
   exercice,
   signature,
   toutVert,
+  lectureSeule = false,
 }: {
   entiteId: string;
   exercice: number;
   /** Signature calculée à l'affichage : renvoyée telle quelle au serveur. */
   signature: string;
   toutVert: boolean;
+  /** [07/11/2026] Lecteur : le formulaire n'est pas rendu. */
+  lectureSeule?: boolean;
 }) {
   const router = useRouter();
   const [motif, setMotif] = useState("");
   const [erreur, setErreur] = useState<string | null>(null);
   const [enCours, demarrer] = useTransition();
+
+  // [07/11/2026] Après les hooks (ordre constant) : rien pour le lecteur.
+  if (lectureSeule) return null;
 
   return (
     <form
@@ -69,12 +75,24 @@ export function FormulaireCloture({
   );
 }
 
-export function FormulaireReouverture({ entiteId, exercice }: { entiteId: string; exercice: number }) {
+export function FormulaireReouverture({
+  entiteId,
+  exercice,
+  lectureSeule = false,
+}: {
+  entiteId: string;
+  exercice: number;
+  /** [07/11/2026] Lecteur : le formulaire n'est pas rendu. */
+  lectureSeule?: boolean;
+}) {
   const router = useRouter();
   const [motif, setMotif] = useState("");
   const [erreur, setErreur] = useState<string | null>(null);
   const [enCours, demarrer] = useTransition();
   const assezLong = motif.trim().length >= MOTIF_REOUVERTURE_MIN;
+
+  // [07/11/2026] Après les hooks (ordre constant) : rien pour le lecteur.
+  if (lectureSeule) return null;
 
   return (
     <form

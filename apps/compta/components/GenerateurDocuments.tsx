@@ -23,10 +23,13 @@ export function GenerateurDocuments({
   entiteNom,
   formeSociale,
   resultatCentimes,
+  lectureSeule = false,
 }: {
   entiteNom: string;
   formeSociale: string;
   resultatCentimes: number;
+  /** [07/11/2026] Lecteur : le générateur (trame d'une décision à signer) n'est pas rendu. */
+  lectureSeule?: boolean;
 }) {
   const annee = new Date().getFullYear() - 1; // exercice N-1 par défaut
   const [typeDoc, setTypeDoc] = useState<TypeDoc>("decision");
@@ -64,6 +67,9 @@ export function GenerateurDocuments({
 
   const styleChamp =
     "w-full rounded-md border border-compta-border bg-white px-3 py-2 text-sm outline-none focus:border-compta-accent";
+
+  // [07/11/2026] Après les hooks (ordre constant) : rien pour le lecteur.
+  if (lectureSeule) return null;
 
   return (
     <div className="space-y-4 rounded-lg border border-compta-border bg-compta-surface p-5">

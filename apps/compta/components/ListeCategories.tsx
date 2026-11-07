@@ -17,11 +17,13 @@ function GroupeCategories({
   couleur,
   categories,
   entiteId,
+  lectureSeule,
 }: {
   titre: string;
   couleur: string;
   categories: Categorie[];
   entiteId: string;
+  lectureSeule: boolean;
 }) {
   return (
     <div>
@@ -33,7 +35,7 @@ function GroupeCategories({
       ) : (
         <ul className="divide-y divide-compta-border rounded-md border border-compta-border bg-compta-surface">
           {categories.map((c) => (
-            <LigneCategorie key={c.id} categorie={c} entiteId={entiteId} />
+            <LigneCategorie key={c.id} categorie={c} entiteId={entiteId} lectureSeule={lectureSeule} />
           ))}
         </ul>
       )}
@@ -44,9 +46,11 @@ function GroupeCategories({
 function LigneCategorie({
   categorie,
   entiteId,
+  lectureSeule,
 }: {
   categorie: Categorie;
   entiteId: string;
+  lectureSeule: boolean;
 }) {
   const [erreur, setErreur] = useState<string | null>(null);
   const [enCours, demarrer] = useTransition();
@@ -71,14 +75,16 @@ function LigneCategorie({
       </span>
       <div className="flex items-center gap-3">
         {erreur && <span className="text-xs text-compta-depense">{erreur}</span>}
-        <button
-          type="button"
-          onClick={basculer}
-          disabled={enCours}
-          className="text-xs text-compta-text-muted underline-offset-2 transition-colors hover:text-compta-accent hover:underline disabled:opacity-50"
-        >
-          {categorie.active ? "Archiver" : "Réactiver"}
-        </button>
+        {!lectureSeule && (
+          <button
+            type="button"
+            onClick={basculer}
+            disabled={enCours}
+            className="text-xs text-compta-text-muted underline-offset-2 transition-colors hover:text-compta-accent hover:underline disabled:opacity-50"
+          >
+            {categorie.active ? "Archiver" : "Réactiver"}
+          </button>
+        )}
       </div>
     </li>
   );
@@ -87,9 +93,12 @@ function LigneCategorie({
 export function ListeCategories({
   categories,
   entiteId,
+  lectureSeule = false,
 }: {
   categories: Categorie[];
   entiteId: string;
+  /** [07/11/2026] Lecteur : liste seule, sans bouton Archiver ni Réactiver. */
+  lectureSeule?: boolean;
 }) {
   const recettes = categories.filter((c) => c.type === "recette");
   const depenses = categories.filter((c) => c.type === "depense");
@@ -101,12 +110,14 @@ export function ListeCategories({
         couleur="text-compta-recette"
         categories={recettes}
         entiteId={entiteId}
+        lectureSeule={lectureSeule}
       />
       <GroupeCategories
         titre="Dépenses"
         couleur="text-compta-depense"
         categories={depenses}
         entiteId={entiteId}
+        lectureSeule={lectureSeule}
       />
     </div>
   );

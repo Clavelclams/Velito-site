@@ -8,13 +8,25 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { definirSoldeInitialAction } from "@/app/[entiteId]/tresorerie/actions";
 
-export function FormulaireSoldeInitial({ entiteId, compteId }: { entiteId: string; compteId: string }) {
+export function FormulaireSoldeInitial({
+  entiteId,
+  compteId,
+  lectureSeule = false,
+}: {
+  entiteId: string;
+  compteId: string;
+  /** [07/11/2026] Lecteur : le formulaire n'est pas rendu. */
+  lectureSeule?: boolean;
+}) {
   const router = useRouter();
   const [solde, setSolde] = useState("");
   const [date, setDate] = useState("");
   const [erreur, setErreur] = useState<string | null>(null);
   const [enCours, demarrer] = useTransition();
   const champ = "rounded-md border border-compta-border bg-white px-3 py-2 text-sm outline-none focus:border-compta-accent";
+
+  // [07/11/2026] Après les hooks (ordre constant) : rien pour le lecteur.
+  if (lectureSeule) return null;
 
   return (
     <form

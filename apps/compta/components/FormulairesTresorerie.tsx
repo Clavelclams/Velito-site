@@ -57,9 +57,12 @@ function Bloc({
 export function FormulairesTresorerie({
   entiteId,
   comptes,
+  lectureSeule = false,
 }: {
   entiteId: string;
   comptes: { id: string; nom: string }[];
+  /** [07/11/2026] Lecteur : aucun des trois formulaires n'est rendu. */
+  lectureSeule?: boolean;
 }) {
   const router = useRouter();
   const [enCours, demarrer] = useTransition();
@@ -139,6 +142,9 @@ export function FormulairesTresorerie({
       } else setMsgVir({ ok: false, texte: r.error ?? "Virement impossible." });
     });
   }
+
+  // [07/11/2026] Après tous les hooks (ordre constant), rien pour le lecteur.
+  if (lectureSeule) return null;
 
   return (
     <div className="grid gap-4 lg:grid-cols-3">
