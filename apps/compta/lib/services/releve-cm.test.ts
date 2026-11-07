@@ -132,6 +132,10 @@ if (r.ok) {
   ok("péage reconnu", lignes[4]!.categorie === "Frais de déplacement" && e!.type === "depense");
   ok("virement de personne : pas de catégorie devinée", lignes[3]!.categorie === null);
   ok("aucune ligne n'arrive validée", lignes.every((l) => l.transaction.statut === undefined && l.transaction.categorie_id === null));
+  // [07/11/2026] sql/10 : pointée sur le relevé, à sa date de clôture (même la ligne décalée).
+  ok("chaque ligne arrive pointée au 31/08/2025", lignes.every((l) => l.transaction.pointe_le === "2025-08-31"));
+  ok("référence de pointage lisible", a!.pointe_ref === "Relevé Crédit Mutuel au 31/08/2025");
+  ok("pointage jamais antérieur à la date de la ligne", lignes.every((l) => l.transaction.pointe_le >= l.transaction.date_transaction));
 }
 
 // --- libellé et détails ---------------------------------------------------

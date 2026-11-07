@@ -21,8 +21,25 @@ import {
 } from "@/lib/repositories/justificatifs";
 import { validerFichier } from "@/lib/services/justificatifs";
 import { createClient } from "@/lib/supabase/server";
+import { getTransaction } from "@/lib/repositories/transactions";
+import { estExerciceCloture } from "@/lib/repositories/cloture";
+import { exerciceDe } from "@/lib/services/cloture";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 const BUCKET = "justificatifs";
+
+/**
+ * [07/11/2026] sql/10 : la base refuse tout justificatif d'un exercice
+ * clôturé. Le fichier, lui, vit dans Storage, que les triggers ne voient pas :
+ * on vérifie AVANT de toucher au fichier, sinon une suppression effacerait le
+ * fichier puis échouerait sur la ligne (fichier perdu, métadonnée orpheline).
+ */
+async function messageSiExerciceCloture(supabase: SupabaseClient, transactionId: string): Promise<string | null> {
+  const tx = await getTransaction(supabase, transactionId);
+  if (!tx) return null;
+  const annee = exerciceDe(tx.date_transaction);
+  return (await estExerciceCloture(supabase, tx.entite_id, annee)) ? `Exercice ${annee} clôturé : rouvre-le d'abord.` : null;
+}
 
 interface ResultatAction {
   success: boolean;
@@ -52,6 +69,12 @@ export async function enregistrerJustificatifAction(
 
   try {
     const supabase = await createClient();
+    const cloture = await messageSiExerciceCloture(supabase, transactionId);
+    if (cloture) {
+      // Le fichier vient d'être déposé par le navigateur : on le retire.
+      await supabase.storage.from(BUCKET).remove([meta.chemin]);
+      return { success: false, error: cloture };
+    }
     await creerJustificatif(supabase, {
       transaction_id: transactionId,
       chemin_stockage: meta.chemin,
@@ -97,6 +120,8 @@ export async function supprimerJustificatifAction(
     const supabase = await createClient();
     const justificatif = await getJustificatif(supabase, id);
     if (!justificatif) return { success: false, error: "Justificatif introuvable." };
+    const cloture = await messageSiExerciceCloture(supabase, justificatif.transaction_id);
+    if (cloture) return { success: false, error: cloture };
 
     // 1. Storage d'abord : si ça échoue, la métadonnée reste (on peut réessayer).
     const { error: erreurStorage } = await supabase.storage

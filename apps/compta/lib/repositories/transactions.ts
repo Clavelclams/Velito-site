@@ -119,18 +119,29 @@ export async function listerTransactions(
   supabase: SupabaseClient,
   entiteId: string,
 ): Promise<Transaction[]> {
-  const { data, error } = await supabase
-    .from("transaction")
-    .select("*")
-    .eq("entite_id", entiteId)
-    .order("date_transaction", { ascending: false })
-    .order("cree_le", { ascending: false });
+  // [07/11/2026] Lecture par pages de 1 000 : l'API Supabase plafonne chaque
+  // réponse à 1 000 lignes. Sans cette boucle, au-delà, soldes et totaux
+  // seraient faux sans aucun message. L'id départage les lignes identiques
+  // pour que l'ordre (donc le découpage en pages) soit stable.
+  const PAGE = 1000;
+  const toutes: Transaction[] = [];
+  for (let debut = 0; ; debut += PAGE) {
+    const { data, error } = await supabase
+      .from("transaction")
+      .select("*")
+      .eq("entite_id", entiteId)
+      .order("date_transaction", { ascending: false })
+      .order("cree_le", { ascending: false })
+      .order("id", { ascending: true })
+      .range(debut, debut + PAGE - 1);
 
-  if (error) {
-    throw new Error(`Chargement des transactions impossible : ${error.message}`);
+    if (error) {
+      throw new Error(`Chargement des transactions impossible : ${error.message}`);
+    }
+    toutes.push(...((data ?? []) as Transaction[]));
+    if (!data || data.length < PAGE) break;
   }
-
-  return (data ?? []) as Transaction[];
+  return toutes;
 }
 
 /**

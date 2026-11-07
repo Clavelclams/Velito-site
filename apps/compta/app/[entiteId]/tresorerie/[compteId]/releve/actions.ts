@@ -21,7 +21,12 @@ import { lignesDuPdf } from "@/lib/pdf/lignes-pdf";
 import { lireReleveCm, preparerImportReleve, type LigneAImporter, type ReleveCm } from "@/lib/services/releve-cm";
 import { clesSourceExistantes, creerTransactionsEnLot, listerTransactions } from "@/lib/repositories/transactions";
 import { listerCategories } from "@/lib/repositories/categories";
-import { definirSoldeInitial, enregistrerSoldeObserve, getCompteTresorerie } from "@/lib/repositories/tresorerie";
+import {
+  definirSoldeInitial,
+  enregistrerSoldeObserve,
+  getCompteTresorerie,
+  listerSoldesObserves,
+} from "@/lib/repositories/tresorerie";
 import { genererEcrituresLot } from "@/lib/comptabilite-sync";
 
 /** Un relevé mensuel fait quelques dizaines de Ko : 2 Mo laisse de la marge. */
@@ -155,6 +160,23 @@ export async function importerReleveAction(
       return { ...l.transaction, categorie_id: cat?.id ?? null };
     });
 
+    // [07/11/2026] sql/10 : les soldes lus s'écrivent EN PREMIER. Si l'exercice
+    // est clôturé, la base refuse ici, avant toute ligne insérée (pas d'import
+    // à moitié fait). Un solde déjà enregistré à l'identique n'est pas
+    // réécrit : le solde d'ouverture d'un relevé de janvier tombe le 31/12 de
+    // l'exercice précédent, qui peut être clôturé.
+    const dejaLus = (await listerSoldesObserves(supabase, entiteId)).filter((o) => o.compte_id === compteId);
+    for (const s of [lu.releve.ouverture, lu.releve.cloture]) {
+      if (dejaLus.some((o) => o.date_releve === s.date && o.solde_centimes === s.soldeCentimes)) continue;
+      await enregistrerSoldeObserve(supabase, {
+        entite_id: entiteId,
+        compte_id: compteId,
+        date_releve: s.date,
+        solde_centimes: s.soldeCentimes,
+        reference: `Relevé Crédit Mutuel (${lu.nomFichier})`.slice(0, 120),
+      });
+    }
+
     // Solde initial : seulement s'il est inconnu ET qu'aucune opération du
     // compte n'est antérieure à l'ouverture du relevé (sinon il serait faux).
     let soldeInitialDefini = false;
@@ -168,16 +190,8 @@ export async function importerReleveAction(
       }
     }
 
+    // Les lignes arrivent pointées sur ce relevé (preparerImportReleve).
     const inserees = await creerTransactionsEnLot(supabase, aInserer);
-    for (const s of [lu.releve.ouverture, lu.releve.cloture]) {
-      await enregistrerSoldeObserve(supabase, {
-        entite_id: entiteId,
-        compte_id: compteId,
-        date_releve: s.date,
-        solde_centimes: s.soldeCentimes,
-        reference: `Relevé Crédit Mutuel (${lu.nomFichier})`.slice(0, 120),
-      });
-    }
 
     try {
       await genererEcrituresLot(supabase, inserees);

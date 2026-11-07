@@ -242,8 +242,18 @@ function dateFr(iso: string): string {
   return `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
 }
 
+/**
+ * [07/11/2026] sql/10 : une ligne lue sur le relevé arrive POINTÉE sur ce
+ * relevé. Les colonnes de pointage ne sont pas encore dans types/database :
+ * on les ajoute ici, le type reste compatible avec NouvelleTransaction.
+ */
+export type NouvelleTransactionPointee = NouvelleTransaction & {
+  pointe_le: string;
+  pointe_ref: string;
+};
+
 export interface LigneAImporter {
-  transaction: NouvelleTransaction;
+  transaction: NouvelleTransactionPointee;
   /** Nom de catégorie proposé (résolu en id par l'action), ou null. */
   categorie: string | null;
   /** true si la date a été décalée au jour de passage en banque. */
@@ -261,6 +271,10 @@ export interface LigneAImporter {
  * Clé anti-doublon : « releve-cm:date imprimée|±montant|LIBELLÉ|#rang ». Même
  * format que l'import SQL du 07/11/2026 : réimporter un relevé déjà chargé
  * par ce script n'ajoute rien.
+ *
+ * Pointage : la ligne est vue sur ce relevé, elle est pointée à sa date de
+ * clôture (« Relevé Crédit Mutuel au JJ/MM/AAAA »). Pointée ne veut pas dire
+ * validée : elle reste « à classer » ou « à valider ».
  */
 export function preparerImportReleve(
   releve: ReleveCm,
@@ -297,6 +311,8 @@ export function preparerImportReleve(
         source_fichier: nomFichier,
         source_ref: `relevé au ${releve.cloture.date}`,
         source_cle: `${base}|#${rang}`,
+        pointe_le: releve.cloture.date,
+        pointe_ref: `Relevé Crédit Mutuel au ${dateFr(releve.cloture.date)}`,
       },
     };
   });

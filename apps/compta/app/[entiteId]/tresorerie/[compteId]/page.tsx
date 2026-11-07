@@ -9,8 +9,8 @@
  * L'année se choisit dans l'URL (?annee=2025). Le calcul est le service pur
  * controleMensuel ; « aujourd'hui » lui est passé en paramètre.
  *
- * Ce contrôle ne VERROUILLE rien encore : la clôture d'exercice (instantané,
- * verrouillage, réouverture motivée) est le lot suivant.
+ * Ce contrôle ne verrouille rien : c'est la clôture d'exercice (sql/10, page
+ * /cloture) qui fige une année. [07/11/2026] Liens vers le pointage du mois.
  */
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -92,6 +92,13 @@ export default async function ControleComptePage({
           >
             Importer un relevé PDF
           </Link>
+          {/* [07/11/2026] sql/10 : pointer les lignes sur le relevé (exigé à la clôture). */}
+          <Link
+            href={`/${entiteId}/tresorerie/${compte.id}/pointage?mois=${annee === anneeCourante ? aujourdHui.slice(0, 7) : `${annee}-12`}`}
+            className="rounded-md border border-compta-border px-3 py-1.5 text-sm text-compta-text-muted hover:border-compta-accent hover:text-compta-accent"
+          >
+            Pointer les lignes
+          </Link>
         </div>
       </div>
 
@@ -149,6 +156,14 @@ export default async function ControleComptePage({
                   <span className="block text-xs text-compta-text-muted">
                     {l.nbOperations} op.{l.nbNonValidees > 0 ? ` · ${l.nbNonValidees} à traiter` : ""}
                   </span>
+                  {l.nbOperations > 0 && (
+                    <Link
+                      href={`/${entiteId}/tresorerie/${compte.id}/pointage?mois=${annee}-${String(l.mois).padStart(2, "0")}`}
+                      className="text-xs text-compta-accent hover:underline"
+                    >
+                      Pointage
+                    </Link>
+                  )}
                 </td>
                 <td className="px-3 py-2 text-right tabular-nums">{montant(l.ouverture)}</td>
                 <td className="px-3 py-2 text-right tabular-nums text-compta-recette">{formaterCentimes(l.recettes)}</td>

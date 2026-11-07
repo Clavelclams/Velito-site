@@ -56,6 +56,12 @@ export default async function EntiteLayout({
     // [07/11/2026] sql/08 : dossiers de subvention et contributions en nature.
     { href: `/${entiteId}/subventions`, libelle: "Subventions" },
     { href: `/${entiteId}/benevolat`, libelle: "Bénévolat" },
+    // [07/11/2026] sql/11 : budget prévisionnel et comparaison annuelle.
+    { href: `/${entiteId}/budgets`, libelle: "Budgets" },
+    // [07/11/2026] sql/10 : pointage, mois terminés, clôture et réouverture.
+    { href: `/${entiteId}/cloture`, libelle: "Clôture" },
+    // [07/11/2026] Dossier de fin d'exercice (AG, financeurs), imprimable.
+    { href: `/${entiteId}/dossier-ag`, libelle: "Dossier d'AG" },
     { href: `/${entiteId}/categories`, libelle: "Catégories" },
     { href: `/${entiteId}/comptabilite`, libelle: "Comptabilité" },
     { href: `/${entiteId}/export`, libelle: "Export" },

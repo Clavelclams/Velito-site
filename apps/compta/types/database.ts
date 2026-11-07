@@ -84,6 +84,10 @@ export interface Transaction {
   commentaire: string | null;
   /** [07/11/2026] sql/08 : dossier de subvention lié (financement lié), distinct de la catégorie. */
   subvention_id: string | null;
+  /** [07/11/2026] sql/10 : pointage sur le relevé (date + référence) et exception de justificatif motivée. */
+  pointe_le: string | null;
+  pointe_ref: string | null;
+  exception_justificatif: string | null;
   cree_le: string;
   modifie_le: string;
 }
@@ -154,6 +158,9 @@ export interface NouvelleTransaction {
   source_cle?: string | null;
   commentaire?: string | null;
   subvention_id?: string | null;
+  pointe_le?: string | null;
+  pointe_ref?: string | null;
+  exception_justificatif?: string | null;
 }
 
 /**
