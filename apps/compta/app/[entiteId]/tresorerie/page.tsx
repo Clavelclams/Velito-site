@@ -6,7 +6,10 @@
  * force jamais un écart à zéro, on le montre). Puis les formulaires (compte,
  * relevé, virement), les derniers virements et les derniers relevés saisis.
  *
- * Tous les calculs viennent du service pur (soldeAu, horsVirements) ; la page
+ * [07/11/2026] Soldes repris du dernier relevé lu (soldeRepris) : un relevé
+ * manquant ne fausse plus le solde ni l'écart affichés.
+ *
+ * Tous les calculs viennent du service pur (soldeRepris, horsVirements) ; la page
  * ne fait que charger et afficher.
  */
 import Link from "next/link";
@@ -14,7 +17,7 @@ import { createClient } from "@/lib/supabase/server";
 import { listerTransactions } from "@/lib/repositories/transactions";
 import { listerComptesTresorerie, listerSoldesObserves } from "@/lib/repositories/tresorerie";
 import { formaterCentimes } from "@/lib/services/montants";
-import { LIBELLES_NATURE, soldeAu } from "@/lib/services/tresorerie";
+import { LIBELLES_NATURE, soldeRepris } from "@/lib/services/tresorerie";
 import { FormulairesTresorerie } from "@/components/FormulairesTresorerie";
 import { BoutonConfirmer } from "@/components/BoutonConfirmer";
 import { supprimerSoldeObserveAction, supprimerVirementAction } from "./actions";
@@ -70,9 +73,9 @@ export default async function TresoreriePage({ params }: { params: Promise<{ ent
             </thead>
             <tbody className="divide-y divide-compta-border bg-compta-surface">
               {comptes.map((c) => {
-                const calcule = soldeAu(c, transactions, aujourdHui);
+                const calcule = soldeRepris(c, transactions, observations, aujourdHui);
                 const dernier = observations.find((o) => o.compte_id === c.id) ?? null; // triées récentes d'abord
-                const calculeAuReleve = dernier ? soldeAu(c, transactions, dernier.date_releve) : null;
+                const calculeAuReleve = dernier ? soldeRepris(c, transactions, observations, dernier.date_releve, true) : null;
                 const ecart = dernier && calculeAuReleve !== null ? dernier.solde_centimes - calculeAuReleve : null;
                 const nb = transactions.filter((t) => t.compte_tresorerie_id === c.id).length;
                 return (

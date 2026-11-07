@@ -18,6 +18,7 @@ import {
   preparerVirement,
   saisieSigneeVersCentimes,
   soldeAu,
+  soldeRepris,
 } from "./tresorerie.ts";
 import type { CompteTresorerie, Transaction } from "@/types/database";
 
@@ -151,6 +152,35 @@ ok("mois du solde initial : ouverture = solde initial", ctrlAvant[2]!.ouverture 
 
 const ctrlNonValide = controleMensuel(compte(), [tx("2025-01-05", "depense", 100, { statut: "a_classer" })], [], 2025, "2025-12-31");
 ok("compte les opérations non validées", ctrlNonValide[0]!.nbNonValidees === 1);
+
+// --- [07/11/2026] relevés manquants : on repart du dernier solde LU ---
+// Compte ouvert à 1000 € début 2023, relevés jusqu'à fin 2023, puis rien
+// jusqu'à 2026 (relevés perdus). Les tickets 2024-2025 sont saisis, mais pas
+// les mouvements bancaires de ces deux ans : le calcul depuis l'ouverture est faux.
+const trou = [
+  tx("2023-06-10", "depense", 10000),
+  tx("2024-05-01", "depense", 4000), // ticket saisi, relevé perdu
+  tx("2026-01-10", "depense", 2000),
+  tx("2026-01-20", "recette", 5000),
+];
+const obsTrou = [
+  { compte_id: "c1", date_releve: "2023-12-31", solde_centimes: 90000, reference: "Relevé 12/2023" },
+  // Import du relevé de janvier 2026 : solde d'ouverture ET de clôture enregistrés.
+  { compte_id: "c1", date_releve: "2025-12-31", solde_centimes: 30000, reference: "Ouverture relevé 01/2026" },
+  { compte_id: "c1", date_releve: "2026-01-31", solde_centimes: 33000, reference: "Relevé 01/2026" },
+];
+const c2023 = compte({ date_solde_initial: "2023-01-01" });
+ok("soldeRepris : repart du solde lu, pas de l'ouverture du compte", soldeRepris(c2023, trou, obsTrou, "2026-01-15") === 28000);
+ok("soldeRepris strict : ignore le relevé du jour même", soldeRepris(c2023, trou, obsTrou, "2026-01-31", true) === 33000);
+ok("soldeRepris sans relevé antérieur : retombe sur le solde initial", soldeRepris(c2023, trou, obsTrou, "2023-06-30") === 90000);
+const ctrl2026 = controleMensuel(c2023, trou, obsTrou, 2026, "2026-06-15");
+ok("janvier 2026 : ouverture = solde imprimé au 31/12/2025", ctrl2026[0]!.ouverture === 30000);
+ok("janvier 2026 concorde malgré deux ans de relevés manquants", ctrl2026[0]!.etat === "concorde" && ctrl2026[0]!.ecart === 0);
+const ctrl2025 = controleMensuel(c2023, trou, obsTrou, 2025, "2026-06-15");
+ok("décembre 2025 : l'écart montre le trou (mouvements non saisis)", ctrl2025[11]!.etat === "ecart" && ctrl2025[11]!.ecart === 30000 - (90000 - 4000));
+ok("mois sans relevé du trou : relevé à saisir", ctrl2025[5]!.etat === "non_observe");
+const sansInitial = controleMensuel(compte({ solde_initial_centimes: null, date_solde_initial: null }), trou, obsTrou, 2026, "2026-06-15");
+ok("solde initial inconnu mais relevé disponible : contrôle possible", sansInitial[0]!.etat === "concorde");
 
 // --- plan associatif ---
 const manquantes = categoriesManquantes([{ nom: "assurance", type: "depense" }, { nom: "Assurance", type: "recette" }]);

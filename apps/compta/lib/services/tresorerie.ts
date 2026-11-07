@@ -265,6 +265,39 @@ export function soldeAu(
   return s;
 }
 
+type ObservationSolde = Pick<SoldeObserve, "compte_id" | "date_releve" | "solde_centimes">;
+
+/**
+ * [07/11/2026] Solde à la fin d'une journée, en repartant du DERNIER SOLDE LU
+ * sur un relevé (au plus tard ce jour-là, ou strictement avant si `strict`),
+ * plus les mouvements qui suivent. Sans relevé antérieur : soldeAu (depuis le
+ * solde initial).
+ *
+ * Pourquoi : c'est la règle du rapprochement bancaire, période par période.
+ * Si des relevés manquent (deux ans perdus), un calcul depuis l'ouverture du
+ * compte serait faux pour toujours ; en repartant du solde imprimé sur chaque
+ * relevé (l'import enregistre le solde d'ouverture ET de clôture), chaque
+ * période complète se contrôle seule, et un trou ne contamine pas la suite.
+ */
+export function soldeRepris(
+  compte: CompteTresorerie,
+  transactions: TxSolde[],
+  observations: ObservationSolde[],
+  dateIncluse: string,
+  strict = false,
+): number | null {
+  const base = observations
+    .filter((o) => o.compte_id === compte.id && (strict ? o.date_releve < dateIncluse : o.date_releve <= dateIncluse))
+    .sort((a, b) => b.date_releve.localeCompare(a.date_releve))[0];
+  if (!base) return soldeAu(compte, transactions, dateIncluse);
+  let s = base.solde_centimes;
+  for (const t of transactions) {
+    if (t.compte_tresorerie_id !== compte.id) continue;
+    if (t.date_transaction > base.date_releve && t.date_transaction <= dateIncluse) s += signe(t);
+  }
+  return s;
+}
+
 /** Dernier jour d'un mois au format AAAA-MM-JJ (gère février et les bissextiles). */
 export function finDeMois(annee: number, mois: number): string {
   const jour = new Date(Date.UTC(annee, mois, 0)).getUTCDate();
@@ -343,20 +376,28 @@ export function controleMensuel(
 
     if (compte.date_solde_initial !== null && fin < compte.date_solde_initial) {
       etat = "avant_ouverture";
-    } else if (compte.solde_initial_centimes === null) {
+    } else if (
+      compte.solde_initial_centimes === null &&
+      !obsCompte.some((o) => o.date_releve <= veille)
+    ) {
       etat = debut > aujourdHui ? "a_venir" : "solde_initial_inconnu";
     } else {
-      // Si le solde initial tombe dans ce mois, l'ouverture est ce solde.
+      // [07/11/2026] Ouverture et écart repartent du dernier solde LU sur un
+      // relevé (soldeRepris) : un relevé manquant ne fausse plus les mois
+      // suivants. Si le solde initial tombe dans ce mois, l'ouverture est lui.
       ouverture =
-        compte.date_solde_initial !== null && compte.date_solde_initial >= debut
+        compte.solde_initial_centimes !== null && compte.date_solde_initial !== null && compte.date_solde_initial >= debut
           ? compte.solde_initial_centimes
-          : (soldeAu(compte, transactions, veille) as number);
+          : (soldeRepris(compte, transactions, obsCompte, veille) as number);
       cloture = ouverture + recettes - depenses;
       if (observe) {
-        ecart = observe.solde - (soldeAu(compte, transactions, observe.date) as number);
+        // Comparé au solde reconstruit depuis le relevé PRÉCÉDENT (strict).
+        const attendu = soldeRepris(compte, transactions, obsCompte, observe.date, true);
+        ecart = attendu === null ? null : observe.solde - attendu;
       }
       if (fin >= aujourdHui && !observe) etat = "a_venir";
       else if (!observe) etat = "non_observe";
+      else if (ecart === null) etat = "solde_initial_inconnu";
       else etat = ecart === 0 ? "concorde" : "ecart";
     }
 
