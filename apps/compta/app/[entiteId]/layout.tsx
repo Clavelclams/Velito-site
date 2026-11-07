@@ -18,6 +18,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getEntite } from "@/lib/repositories/entites";
 import { createClient } from "@/lib/supabase/server";
+import { LIBELLES_ROLE, roleSurEntite } from "@/lib/repositories/membres";
 
 /**
  * En Next 16, `params` est asynchrone (Promise) : on l'attend avant de lire
@@ -34,6 +35,8 @@ export default async function EntiteLayout({
   const supabase = await createClient();
 
   const entite = await getEntite(supabase, entiteId);
+  // [07/11/2026] sql/09 : propriétaire, trésorier ou lecteur.
+  const role = entite ? await roleSurEntite(supabase, entiteId) : null;
 
   // La RLS n'a rien renvoyé : id inexistant OU pas à moi. Même réponse : 404.
   if (!entite) {
@@ -56,6 +59,7 @@ export default async function EntiteLayout({
     { href: `/${entiteId}/categories`, libelle: "Catégories" },
     { href: `/${entiteId}/comptabilite`, libelle: "Comptabilité" },
     { href: `/${entiteId}/export`, libelle: "Export" },
+    { href: `/${entiteId}/membres`, libelle: "Membres" },
   ];
 
   return (
@@ -76,7 +80,17 @@ export default async function EntiteLayout({
               ? "Association loi 1901"
               : "Société (SASU)"}
           </span>
+          {role && (
+            <span className="rounded-full border border-compta-border px-2 py-0.5 text-xs text-compta-text-muted">
+              {LIBELLES_ROLE[role]}
+            </span>
+          )}
         </div>
+        {role === "lecteur" && (
+          <p className="mt-3 rounded-md bg-compta-accent/10 px-3 py-2 text-sm">
+            Lecture seule : tu peux tout consulter. Les modifications seront refusées par la base.
+          </p>
+        )}
       </header>
 
       {/* ---- Navigation interne de l'entité ---- */}

@@ -91,6 +91,9 @@ await ok("07_droits_tresorerie.sql s'exécute sans erreur", () =>
 await ok("08_subventions_benevolat.sql s'exécute sans erreur", () =>
   db.exec(readFileSync(join(SQL_DIR, "08_subventions_benevolat.sql"), "utf8")),
 );
+await ok("09_membres_roles.sql s'exécute sans erreur", () =>
+  db.exec(readFileSync(join(SQL_DIR, "09_membres_roles.sql"), "utf8")),
+);
 await ok("droits réels : authenticated peut lire compte_tresorerie, anon non", async () => {
   const r = await q(`select has_table_privilege('authenticated','public.compte_tresorerie','select') as a,
                             has_table_privilege('anon','public.compte_tresorerie','select') as b`);
@@ -357,6 +360,91 @@ await ok("B ne voit ni les dossiers ni les contributions de A", async () => {
   const c1 = await q(`select count(*)::int as n from public.contribution_nature`);
   await db.exec(`select set_config('app.uid','${A}', false);`);
   if (s1.rows[0].n !== 0 || c1.rows[0].n !== 0) throw new Error("fuite inter-utilisateurs");
+});
+
+// ---------- 6 ter. Membres et rôles (migration 09) ----------
+console.log("\n== Membres et rôles (migration 09) ==");
+const C = "cccccccc-cccc-4ccc-8ccc-cccccccccccc"; // futur trésorier
+const D = "dddddddd-dddd-4ddd-8ddd-dddddddddddd"; // futur lecteur
+await db.exec(`reset role; insert into auth.users values ('${C}','tresorier@test.fr'),('${D}','lecteur@test.fr');
+  set role authenticated; select set_config('app.uid','${A}', false);`);
+const comme = (uid) => db.exec(`select set_config('app.uid','${uid}', false);`);
+await ok("le propriétaire ajoute un trésorier et un lecteur par e-mail", async () => {
+  const r1 = await q(`select public.ajouter_membre_entite($1,'TRESORIER@test.fr','tresorier') as r`, [VEA]);
+  const r2 = await q(`select public.ajouter_membre_entite($1,'lecteur@test.fr','lecteur') as r`, [VEA]);
+  if (r1.rows[0].r !== "ok" || r2.rows[0].r !== "ok") throw new Error(JSON.stringify([r1.rows, r2.rows]));
+});
+await ok("e-mail sans compte : signalé, rien ajouté", async () => {
+  const r = await q(`select public.ajouter_membre_entite($1,'personne@test.fr','lecteur') as r`, [VEA]);
+  if (r.rows[0].r !== "compte_inconnu") throw new Error(r.rows[0].r);
+});
+await ok("trésorier : voit VEA mais pas VENA", async () => {
+  await comme(C);
+  const r = await q(`select nom from public.entite order by nom`);
+  await comme(A);
+  if (r.rows.map((x) => x.nom).join() !== "VEA") throw new Error(JSON.stringify(r.rows));
+});
+await ok("trésorier : saisit, modifie et supprime une opération VEA", async () => {
+  await comme(C);
+  const r = await q(`insert into public.transaction (entite_id, type, statut, date_transaction, libelle, montant_ttc_centimes)
+                     values ($1,'depense','a_classer','2026-02-01','Saisie tresorier', 500) returning id`, [VEA]);
+  await q(`update public.transaction set libelle = 'Corrigee' where id = $1`, [r.rows[0].id]);
+  const d = await q(`delete from public.transaction where id = $1 returning id`, [r.rows[0].id]);
+  await comme(A);
+  if (d.rows.length !== 1) throw new Error("suppression refusée");
+});
+await ok("trésorier : ne peut pas renommer la structure", async () => {
+  await comme(C);
+  const r = await q(`update public.entite set nom = 'Pirate' where id = $1 returning id`, [VEA]);
+  await comme(A);
+  if (r.rows.length !== 0) throw new Error("renommage accepté !");
+});
+await ok("trésorier : ne peut pas gérer les membres", async () => {
+  await comme(C);
+  let refuse = false;
+  try { await q(`select public.ajouter_membre_entite($1,'lecteur@test.fr','tresorier')`, [VEA]); } catch { refuse = true; }
+  await comme(A);
+  if (!refuse) throw new Error("promotion acceptée !");
+});
+await ok("lecteur : lit les opérations de VEA", async () => {
+  await comme(D);
+  const r = await q(`select count(*)::int as n from public.transaction`);
+  await comme(A);
+  if (r.rows[0].n === 0) throw new Error("ne voit rien");
+});
+await ok("lecteur : aucune écriture (ajout, modification, suppression)", async () => {
+  await comme(D);
+  let ajout = false;
+  try {
+    await q(`insert into public.transaction (entite_id, type, statut, date_transaction, libelle, montant_ttc_centimes)
+             values ($1,'depense','a_classer','2026-02-01','x', 1)`, [VEA]);
+    ajout = true;
+  } catch { /* refusé */ }
+  const m = await q(`update public.transaction set libelle = 'x' returning id`);
+  const s = await q(`delete from public.categorie returning id`);
+  await comme(A);
+  if (ajout || m.rows.length || s.rows.length) throw new Error("écriture acceptée !");
+});
+await ok("role_entite : proprietaire / tresorier / lecteur / null", async () => {
+  const roles = [];
+  for (const u of [A, C, D, B]) { await comme(u); roles.push((await q(`select public.role_entite($1) as r`, [VEA])).rows[0].r); }
+  await comme(A);
+  if (roles.join() !== "proprietaire,tresorier,lecteur,") throw new Error(roles.join());
+});
+await ok("membres_entite : visible du lecteur, vide pour un inconnu", async () => {
+  await comme(D);
+  const vu = await q(`select count(*)::int as n from public.membres_entite($1)`, [VEA]);
+  await comme(B);
+  const inconnu = await q(`select count(*)::int as n from public.membres_entite($1)`, [VEA]);
+  await comme(A);
+  if (vu.rows[0].n !== 2 || inconnu.rows[0].n !== 0) throw new Error(JSON.stringify([vu.rows, inconnu.rows]));
+});
+await ok("retirer le trésorier : il ne voit plus rien", async () => {
+  await q(`select public.retirer_membre_entite($1,$2)`, [VEA, C]);
+  await comme(C);
+  const r = await q(`select count(*)::int as n from public.transaction`);
+  await comme(A);
+  if (r.rows[0].n !== 0) throw new Error("voit encore");
 });
 
 // ---------- 7. Anonyme = zéro accès ----------
