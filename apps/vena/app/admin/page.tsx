@@ -14,8 +14,32 @@ import DemandesManager, { type Demande } from "./DemandesManager";
 export const dynamic = "force-dynamic";
 
 export default async function AdminVenaPage() {
+  // [07/11/2026] Deux cas distincts, pour ne plus tourner en boucle :
+  //  - personne n'est connecté → page de connexion ;
+  //  - quelqu'un est connecté SANS la permission « vena » → message clair.
+  //    (Avant : redirection vers /login, qui renvoyait vers /admin… à l'infini.)
   const canRead = await hasPermission("vena", "editor");
-  if (!canRead) redirect("/login?redirect=/admin");
+  if (!canRead) {
+    const supabaseAuth = await createClient();
+    const {
+      data: { user },
+    } = await supabaseAuth.auth.getUser();
+    if (!user) redirect("/login?redirect=/admin");
+    return (
+      <div className="min-h-screen bg-vena-cream flex items-center justify-center px-4">
+        <div className="bg-white border border-vena-border rounded-2xl p-8 max-w-md text-center">
+          <h1 className="text-xl font-display font-black text-vena-kaki mb-2">Accès réservé</h1>
+          <p className="text-sm text-vena-text-muted">
+            Le compte {user.email} est bien connecté, mais il n&apos;a pas le droit
+            d&apos;ouvrir les demandes VENA. Connecte-toi avec un compte autorisé depuis le hub.
+          </p>
+          <Link href="/" className="mt-6 inline-block text-sm text-vena-kaki underline">
+            Retour au site
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const supabase = await createClient();
   const { data } = await supabase
