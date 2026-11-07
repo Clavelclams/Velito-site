@@ -10,6 +10,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { safeReturnTo } from "@/lib/return-to";
 
 interface SignInInput {
   email: string;
@@ -28,30 +29,8 @@ interface ActionResult {
   error?: string;
 }
 
-// Sécurité : returnTo doit être soit un chemin local ("/...") soit un sous-domaine
-// .velito.fr connu. Sinon on retombe sur "/" pour empêcher open-redirect.
-const ALLOWED_HOSTS = [
-  "hub.velito.fr",
-  "vea.velito.fr",
-  "vena.velito.fr",
-  "velito.fr",
-  "interactive.velito.fr",
-  "arena.velito.fr",
-  "prevention.velito.fr",
-];
-
-function safeReturnTo(raw: string): string {
-  try {
-    if (raw.startsWith("/")) return raw;
-    const u = new URL(raw);
-    if (ALLOWED_HOSTS.includes(u.host) || u.host.endsWith(".localhost") || u.host === "localhost:3000") {
-      return u.toString();
-    }
-  } catch {
-    /* malformé, on retombe */
-  }
-  return "/";
-}
+// [07/11/2026] safeReturnTo et la liste des hôtes autorisés vivent dans
+// lib/return-to.ts (partagés avec la page /login ; correctif anti "//hote").
 
 export async function signInAction(input: SignInInput): Promise<ActionResult> {
   if (!input.email?.includes("@") || !input.password || input.password.length < 6) {

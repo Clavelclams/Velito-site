@@ -1,4 +1,8 @@
 /**
+ * [07/11/2026] La connexion se fait désormais par le hub (« Se connecter avec
+ * Velito », voir page.tsx) : seConnecterAction a été retirée, il ne reste que
+ * la déconnexion. Historique ci-dessous conservé pour le jury.
+ *
  * Server actions de /login — adaptées de apps/hub/src/app/login/actions.ts.
  *
  * Une server action = une fonction qui s'exécute UNIQUEMENT côté serveur,
@@ -25,61 +29,6 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-
-interface ResultatAction {
-  success: boolean;
-  error?: string;
-}
-
-export async function seConnecterAction(
-  email: string,
-  motDePasse: string,
-): Promise<ResultatAction> {
-  // Validation serveur MINIMALE mais obligatoire : ne jamais faire confiance
-  // au client, même si le formulaire valide déjà côté navigateur.
-  if (!email?.includes("@") || !motDePasse || motDePasse.length < 6) {
-    return {
-      success: false,
-      error: "Email valide et mot de passe (6 caractères minimum) requis.",
-    };
-  }
-
-  try {
-    const supabase = await createClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
-      password: motDePasse,
-    });
-
-    if (error) {
-      // Log serveur pour le debug — l'utilisateur, lui, reçoit un message neutre.
-      console.error("[seConnecterAction] Supabase auth :", error.message);
-
-      const code = (error as { code?: string }).code ?? "";
-      const statut = (error as { status?: number }).status;
-      const estRateLimit =
-        code === "over_request_rate_limit" ||
-        statut === 429 ||
-        error.message?.toLowerCase().includes("rate limit");
-
-      if (estRateLimit) {
-        return {
-          success: false,
-          error:
-            "Trop de tentatives en peu de temps. Attends quelques minutes avant de réessayer.",
-        };
-      }
-      return { success: false, error: "Identifiants invalides." };
-    }
-  } catch (e) {
-    console.error("[seConnecterAction] exception :", e);
-    return { success: false, error: "Erreur technique. Réessaye dans un instant." };
-  }
-
-  // redirect() DOIT être hors du try/catch : il fonctionne en lançant une
-  // exception spéciale que Next.js intercepte — un catch la mangerait.
-  redirect("/");
-}
 
 export async function seDeconnecterAction(): Promise<void> {
   const supabase = await createClient();

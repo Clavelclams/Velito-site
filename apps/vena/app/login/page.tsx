@@ -1,211 +1,94 @@
 /**
- * /login VENA — connexion admin (Supabase Auth).
+ * /login VENA — connexion admin par le hub (« Se connecter avec Velito »).
  *
- * Page non liée dans la navigation (accès direct par URL). Après login réussi,
- * redirige vers ?redirect=... ou /admin par défaut. La page /admin vérifie
- * ensuite la permission "vena" (hasPermission).
+ * [07/11/2026] Bug : le bouton restait sur « Connexion… » sans rien faire.
+ * Cause : la connexion se faisait DANS le navigateur avec un client Supabase
+ * construit à partir de NEXT_PUBLIC_SUPABASE_URL / _ANON_KEY. Ces variables
+ * sont marquées « Sensitive » sur Vercel, donc absentes au build : le
+ * JavaScript livré ne contenait ni l'adresse du projet ni la clé, la création
+ * du client plantait au clic et l'état « chargement » ne retombait jamais.
+ * (Même piège que le devis VENA du 23/05, mais côté navigateur cette fois.)
  *
- * "use client" : formulaire interactif. useSearchParams sous <Suspense>.
+ * Correctif : comme compta, on délègue la connexion au hub, qui a le
+ * hCaptcha exigé par Supabase et pose une session partagée sur .velito.fr.
+ * Le hub nous renvoie ensuite sur ?redirect= (chemin local seulement) ou
+ * /admin. La page /admin vérifie toujours la permission « vena ».
+ *
+ * Server Component : plus aucune clé Supabase n'est nécessaire côté navigateur.
  */
-"use client";
-
-import { useState, Suspense, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import Link from "next/link";
-import HCaptcha from "@hcaptcha/react-hcaptcha";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/server";
 
-/**
- * Site Key publique hCaptcha (Velito).
- * Activé Supabase Auth → Bot Protection le 11/06/2026 à 3h20.
- * Token obligatoire pour tout signInWithPassword.
- */
-const HCAPTCHA_SITE_KEY = "b0b81630-4312-4e44-8c0a-7b24a2445748";
-
-function LoginForm() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirectParam = searchParams.get("redirect");
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  // Token hCaptcha — obligatoire depuis activation Supabase 11/06/2026.
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const captchaRef = useRef<HCaptcha>(null);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-
-    // GARDE ANTI-BOUCLE : empêche les double-submits via la touche Entrée
-    // pendant que la requête signInWithPassword est en cours. Le
-    // `disabled={loading}` du bouton ne bloque PAS le submit via Entrée
-    // dans un champ du form. Sans ce guard, plusieurs Entrée rapides
-    // déclenchent N requêtes en parallèle → rate limit Supabase 429.
-    // Même fix que apps/vea/app/login/page.tsx (boucle 10k req/h résolue).
-    if (loading) return;
-
-    // GARDE hCAPTCHA : sans token, Supabase rejette depuis le 11/06/2026.
-    if (!captchaToken) {
-      setError("Coche le hCaptcha avant de te connecter.");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
-    const supabase = createClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-      options: { captchaToken },
-    });
-
-    // Reset captcha apres chaque tentative (le token est single-use).
-    captchaRef.current?.resetCaptcha();
-    setCaptchaToken(null);
-
-    if (signInError) {
-      // GESTION EXPLICITE DU RATE LIMIT 429 :
-      // Supabase renvoie code "over_request_rate_limit" / status 429 quand
-      // on a dépassé la limite. On NE doit PAS retraduire ça en "email ou
-      // mot de passe incorrect" — sinon l'utilisateur retape son mdp pensant
-      // qu'il l'a mal saisi, ce qui relance la boucle.
-      const errCode =
-        (signInError as { code?: string }).code ??
-        (signInError as { name?: string }).name ??
-        "";
-      const errStatus = (signInError as { status?: number }).status;
-      const isRateLimit =
-        errCode === "over_request_rate_limit" ||
-        errStatus === 429 ||
-        signInError.message?.toLowerCase().includes("rate limit");
-      // Detection erreur captcha (depuis activation Supabase Bot Protection 11/06/2026)
-      const isCaptchaError =
-        errCode === "captcha_failed" ||
-        signInError.message?.toLowerCase().includes("captcha");
-
-      if (isRateLimit) {
-        setError(
-          "Trop de tentatives en peu de temps. Attends quelques minutes avant de réessayer."
-        );
-      } else if (isCaptchaError) {
-        setError(
-          "Vérification captcha échouée. Re-coche le hCaptcha et réessaie."
-        );
-      } else {
-        setError("Email ou mot de passe incorrect.");
-      }
-      setLoading(false);
-      return;
-    }
-
-    router.refresh();
-    router.push(redirectParam || "/admin");
+/** Chemin local uniquement (pas de "//hote" ni d'adresse externe). */
+function cheminLocal(brut: string | undefined): string {
+  if (!brut || !brut.startsWith("/") || brut.startsWith("//") || brut.startsWith("/\\")) {
+    return "/admin";
   }
+  return brut;
+}
 
-  const inputClass =
-    "w-full bg-white border border-vena-border rounded-lg px-4 py-3 text-sm text-vena-kaki placeholder-vena-text-dim focus:outline-none focus:border-vena-kaki focus:ring-2 focus:ring-vena-kaki/15 transition-all";
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ redirect?: string }>;
+}) {
+  const { redirect: redirectParam } = await searchParams;
+  const destination = cheminLocal(redirectParam);
+
+  // Déjà connecté : direction l'admin (qui vérifie la permission).
+  let connecte = false;
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    connecte = Boolean(user);
+  } catch {
+    connecte = false;
+  }
+  if (connecte) redirect(destination);
+
+  const h = await headers();
+  const hote = h.get("x-forwarded-host") ?? h.get("host") ?? "velito.fr";
+  const protocole = h.get("x-forwarded-proto") ?? "https";
+  const retour = `${protocole}://${hote}${destination}`;
+  const hub = process.env.NEXT_PUBLIC_HUB_URL ?? "https://hub.velito.fr";
+  const lienConnexion = `${hub.replace(/\/$/, "")}/login?return=${encodeURIComponent(retour)}`;
 
   return (
     <div className="min-h-screen bg-vena-cream flex items-center justify-center px-4 py-12">
-      <div className="bg-white border border-vena-border rounded-2xl p-8 sm:p-10 w-full max-w-md shadow-sm">
-        <h1 className="text-2xl font-display font-black text-vena-kaki mb-1 text-center">
-          Espace <span className="text-vena-kaki">admin</span>
-        </h1>
-        <p className="text-vena-text-muted mb-8 text-sm text-center">
+      <div className="bg-white border border-vena-border rounded-2xl p-8 sm:p-10 w-full max-w-md shadow-sm text-center">
+        <h1 className="text-2xl font-display font-black text-vena-kaki mb-1">Espace admin</h1>
+        <p className="text-vena-text-muted mb-8 text-sm">
           Connecte-toi pour accéder aux demandes de devis VENA.
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-xs font-semibold text-vena-text-muted uppercase tracking-wider mb-1.5"
-            >
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-              className={inputClass}
-              placeholder="ton@email.com"
-            />
-          </div>
+        <a
+          href={lienConnexion}
+          className="flex w-full items-center justify-center gap-3 rounded-full bg-vena-kaki px-6 py-3 text-sm font-bold uppercase tracking-wider text-white transition-opacity hover:opacity-90"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 shrink-0" fill="currentColor">
+            {[
+              [4, 4], [8, 8], [12, 12], [16, 16], [20, 20],
+              [20, 4], [16, 8], [8, 16], [4, 20],
+            ].map(([x, y]) => (
+              <circle key={`${x}-${y}`} cx={x} cy={y} r="1.8" />
+            ))}
+          </svg>
+          Se connecter avec Velito
+        </a>
+        <p className="mt-3 text-xs text-vena-text-muted">
+          Connexion unique Velito, puis retour ici. Si tu es déjà connecté, c&apos;est immédiat.
+        </p>
 
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-xs font-semibold text-vena-text-muted uppercase tracking-wider mb-1.5"
-            >
-              Mot de passe
-            </label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-              className={inputClass}
-              placeholder="••••••••"
-            />
-          </div>
-
-          {/* Widget hCaptcha — obligatoire depuis activation Supabase 11/06/2026 */}
-          <div className="flex justify-center">
-            <HCaptcha
-              sitekey={HCAPTCHA_SITE_KEY}
-              onVerify={(token) => setCaptchaToken(token)}
-              onExpire={() => setCaptchaToken(null)}
-              onError={() => setCaptchaToken(null)}
-              ref={captchaRef}
-            />
-          </div>
-
-          {error && (
-            <div className="border border-red-300 bg-red-50 rounded-lg px-4 py-3 text-sm text-red-700">
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading || !captchaToken}
-            className="btn-vena-primary w-full disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {loading ? "Connexion..." : "Se connecter"}
-          </button>
-        </form>
-
-        <div className="mt-8 pt-6 border-t border-vena-border text-center">
-          <Link
-            href="/"
-            className="text-xs text-vena-text-dim hover:text-vena-kaki transition-colors"
-          >
+        <div className="mt-8 border-t border-vena-border pt-6">
+          <Link href="/" className="text-sm text-vena-text-muted hover:text-vena-kaki">
             ← Retour au site
           </Link>
         </div>
       </div>
     </div>
-  );
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-vena-cream flex items-center justify-center">
-          <p className="text-vena-text-muted text-sm">Chargement...</p>
-        </div>
-      }
-    >
-      <LoginForm />
-    </Suspense>
   );
 }
