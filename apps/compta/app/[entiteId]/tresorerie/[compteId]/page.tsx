@@ -81,9 +81,18 @@ export default async function ControleComptePage({
             {LIBELLES_NATURE[compte.nature]} · contrôle mensuel {annee}
           </p>
         </div>
-        <Link href={`/${entiteId}/tresorerie`} className="text-sm text-compta-text-muted hover:text-compta-accent">
-          ← Trésorerie
-        </Link>
+        <div className="flex flex-col items-end gap-2">
+          <Link href={`/${entiteId}/tresorerie`} className="text-sm text-compta-text-muted hover:text-compta-accent">
+            ← Trésorerie
+          </Link>
+          {/* [07/11/2026] Import d'un relevé PDF Crédit Mutuel dans ce compte. */}
+          <Link
+            href={`/${entiteId}/tresorerie/${compte.id}/releve`}
+            className="rounded-md border border-compta-accent px-3 py-1.5 text-sm text-compta-accent hover:bg-compta-accent hover:text-white"
+          >
+            Importer un relevé PDF
+          </Link>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">

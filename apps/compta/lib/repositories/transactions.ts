@@ -74,6 +74,26 @@ export async function creerTransactionsEnLot(
 }
 
 /**
+ * [07/11/2026] Parmi ces clés source, lesquelles existent déjà pour l'entité ?
+ * Sert à l'aperçu d'un import de relevé : montrer AVANT d'écrire ce qui sera
+ * ignoré comme doublon. Une requête, filtre « in » paramétré.
+ */
+export async function clesSourceExistantes(
+  supabase: SupabaseClient,
+  entiteId: string,
+  cles: string[],
+): Promise<Set<string>> {
+  if (cles.length === 0) return new Set();
+  const { data, error } = await supabase
+    .from("transaction")
+    .select("source_cle")
+    .eq("entite_id", entiteId)
+    .in("source_cle", cles);
+  if (error) throw new Error(`Vérification des doublons impossible : ${error.message}`);
+  return new Set((data ?? []).map((d) => d.source_cle as string));
+}
+
+/**
  * Liste les transactions d'une entité, les plus récentes d'abord.
  * L'ordre (date décroissante, puis création décroissante pour départager
  * deux mêmes dates) correspond exactement à l'index composite
