@@ -7,7 +7,11 @@
  *  1. coller le CSV ou charger un fichier ;
  *  2. régler séparateur / en-tête / format de date et MAPPER les colonnes ;
  *  3. prévisualiser (lignes valides vs en erreur) ;
- *  4. importer → les lignes valides partent en base en statut « à vérifier ».
+ *  4. importer → les lignes valides partent en base en statut « à classer ».
+ *
+ * [07/11/2026] Lot 6 : choix du compte réel du relevé ; le nom du fichier et
+ * le n° de ligne sont transmis pour la provenance. Réimporter le même relevé
+ * ne crée pas de doublon (clé calculée côté serveur).
  *
  * Le parsing utilise le MÊME service pur que le serveur (import-csv.ts) : ce
  * qu'on prévisualise est exactement ce que le serveur revalidera.
@@ -25,9 +29,18 @@ import { formaterCentimes } from "@/lib/services/montants";
 import { eurosVersCentimes } from "@/lib/services/montants";
 import { importerTransactionsAction } from "@/app/[entiteId]/import/actions";
 
-export function FormulaireImport({ entiteId }: { entiteId: string }) {
+export function FormulaireImport({
+  entiteId,
+  comptes = [],
+}: {
+  entiteId: string;
+  comptes?: { id: string; nom: string }[];
+}) {
   const router = useRouter();
   const [texte, setTexte] = useState("");
+  const [nomFichier, setNomFichier] = useState("");
+  // Un seul compte : pré-sélectionné. Plusieurs : l'humain choisit (pas de devinette).
+  const [compteId, setCompteId] = useState(comptes.length === 1 ? comptes[0]!.id : "");
   const [separateur, setSeparateur] = useState(";");
   const [aEntete, setAEntete] = useState(true);
   const [formatDate, setFormatDate] = useState<FormatDate>("JJ/MM/AAAA");
@@ -71,6 +84,7 @@ export function FormulaireImport({ entiteId }: { entiteId: string }) {
   function chargerFichier(e: React.ChangeEvent<HTMLInputElement>) {
     const fichier = e.target.files?.[0];
     if (!fichier) return;
+    setNomFichier(fichier.name);
     const lecteur = new FileReader();
     lecteur.onload = () => {
       const contenu = String(lecteur.result ?? "");
@@ -83,10 +97,20 @@ export function FormulaireImport({ entiteId }: { entiteId: string }) {
   function importer() {
     setMessage(null);
     demarrer(async () => {
-      const saisies = valides.map((l) => l.saisie!);
-      const r = await importerTransactionsAction(entiteId, saisies);
+      const saisies = valides.map((l) => ({ ...l.saisie!, numeroLigne: l.numero }));
+      const r = await importerTransactionsAction(entiteId, saisies, {
+        compteId: compteId || null,
+        nomFichier: nomFichier || "relevé collé",
+      });
       if (r.success) {
-        router.push(`/${entiteId}/transactions`);
+        if (r.dejaPresentes) {
+          // On reste sur la page pour que l'humain voie ce qui a été ignoré.
+          setMessage(
+            `${r.inserees} ligne(s) importée(s), ${r.dejaPresentes} déjà présente(s) ignorée(s).`,
+          );
+          return;
+        }
+        router.push(`/${entiteId}/transactions?statut=a_classer`);
       } else {
         setMessage(r.error ?? "Import impossible.");
       }
@@ -145,6 +169,18 @@ export function FormulaireImport({ entiteId }: { entiteId: string }) {
               >
                 <option value="JJ/MM/AAAA">JJ/MM/AAAA</option>
                 <option value="AAAA-MM-JJ">AAAA-MM-JJ</option>
+              </select>
+            </label>
+
+            <label className="flex flex-col gap-1 sm:col-span-2">
+              <span className="text-sm font-medium">Compte du relevé</span>
+              <select value={compteId} onChange={(e) => setCompteId(e.target.value)} className={styleChamp}>
+                <option value="">Non précisé (à rattacher plus tard)</option>
+                {comptes.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nom}
+                  </option>
+                ))}
               </select>
             </label>
 
@@ -215,7 +251,7 @@ export function FormulaireImport({ entiteId }: { entiteId: string }) {
           {/* ---- 4. Import ---- */}
           <div className="flex items-center justify-end gap-3">
             <span className="text-xs text-compta-text-muted">
-              Les lignes importées arrivent en statut « à vérifier » (à catégoriser).
+              Les lignes importées arrivent « à classer ». Celles déjà importées sont ignorées.
             </span>
             <button
               type="button"

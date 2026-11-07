@@ -14,6 +14,9 @@ import { listerComptes } from "@/lib/repositories/comptes";
 import { createClient } from "@/lib/supabase/server";
 import { FormulaireCategorie } from "@/components/FormulaireCategorie";
 import { ListeCategories } from "@/components/ListeCategories";
+import { BoutonConfirmer } from "@/components/BoutonConfirmer";
+import { categoriesManquantes } from "@/lib/services/tresorerie";
+import { initialiserPlanAssociatifAction } from "./actions";
 
 export default async function CategoriesPage({
   params,
@@ -39,6 +42,22 @@ export default async function CategoriesPage({
           transactions passées.
         </p>
       </div>
+
+      {/* [07/11/2026] Lot 6 : plan associatif en un clic (idempotent). */}
+      {categoriesManquantes(categories).length > 0 && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-compta-border bg-compta-surface p-4 text-sm">
+          <span className="text-compta-text-muted">
+            Plan associatif proposé : {categoriesManquantes(categories).length} catégorie(s) à ajouter
+            (cotisations, subventions, déplacements…). Tu pourras les renommer ou les archiver.
+          </span>
+          <BoutonConfirmer
+            action={initialiserPlanAssociatifAction.bind(null, entiteId)}
+            question="Ajouter les catégories du plan associatif qui manquent ?"
+            libelle="Ajouter le plan"
+            ton="normal"
+          />
+        </div>
+      )}
 
       <FormulaireCategorie entiteId={entiteId} comptes={comptes} />
 

@@ -15,8 +15,16 @@
 /** Sens d'une transaction — miroir du CHECK sur transaction.type et categorie.type. */
 export type TypeFlux = "recette" | "depense";
 
-/** Cycle de vie d'une transaction — miroir du CHECK sur transaction.statut. */
-export type StatutTransaction = "a_verifier" | "validee";
+/**
+ * Cycle de vie d'une transaction — miroir du CHECK sur transaction.statut.
+ * [07/11/2026] sql/06 ajoute « a_classer » (aucune catégorie encore).
+ * Libellés affichés : a_classer = « À classer », a_verifier = « À valider »,
+ * validee = « Validé » (voir LIBELLES_STATUT dans services/tresorerie).
+ */
+export type StatutTransaction = "a_classer" | "a_verifier" | "validee";
+
+/** Nature d'un compte réel — miroir du CHECK sur compte_tresorerie.nature (sql/06). */
+export type NatureCompte = "courant" | "livret" | "caisse" | "autre";
 
 /** Forme juridique d'une entité — miroir du CHECK sur entite.type_juridique. */
 export type TypeJuridique = "association" | "societe";
@@ -64,8 +72,51 @@ export interface Transaction {
   montant_tva_centimes: number;
   /** Colonne générée par Postgres (TTC - TVA) : on la LIT, on ne l'écrit jamais. */
   montant_ht_centimes: number;
+  /** [07/11/2026] sql/06 : compte réel (null = pas encore connu). */
+  compte_tresorerie_id: string | null;
+  /** Identifiant partagé par les deux jambes d'un virement interne. */
+  virement_id: string | null;
+  /** Provenance : fichier source, puis page ou ligne. */
+  source_fichier: string | null;
+  source_ref: string | null;
+  /** Clé stable d'import (anti-doublon au réimport). */
+  source_cle: string | null;
+  commentaire: string | null;
   cree_le: string;
   modifie_le: string;
+}
+
+/** Compte réel d'une entité (table compte_tresorerie — sql/06). */
+export interface CompteTresorerie {
+  id: string;
+  entite_id: string;
+  nom: string;
+  nature: NatureCompte;
+  /** Signé. null = solde initial inconnu (jamais remplacé par 0). */
+  solde_initial_centimes: number | null;
+  date_solde_initial: string | null;
+  active: boolean;
+  cree_le: string;
+}
+
+/** DTO de création d'un compte réel. */
+export interface NouveauCompteTresorerie {
+  entite_id: string;
+  nom: string;
+  nature: NatureCompte;
+  solde_initial_centimes: number | null;
+  date_solde_initial: string | null;
+}
+
+/** Solde lu sur un relevé (table solde_observe — sql/06). Pas une transaction. */
+export interface SoldeObserve {
+  id: string;
+  entite_id: string;
+  compte_id: string;
+  date_releve: string;
+  solde_centimes: number;
+  reference: string | null;
+  cree_le: string;
 }
 
 /** Métadonnées d'une pièce jointe (table justificatif). Le fichier vit dans Storage. */
@@ -92,6 +143,14 @@ export interface NouvelleTransaction {
   libelle: string;
   montant_ttc_centimes: number;
   montant_tva_centimes: number;
+  /** [07/11/2026] sql/06 — tous optionnels : une saisie simple reste valide. */
+  statut?: StatutTransaction;
+  compte_tresorerie_id?: string | null;
+  virement_id?: string | null;
+  source_fichier?: string | null;
+  source_ref?: string | null;
+  source_cle?: string | null;
+  commentaire?: string | null;
 }
 
 /**

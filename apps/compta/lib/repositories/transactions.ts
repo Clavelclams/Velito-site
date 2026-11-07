@@ -19,7 +19,7 @@ export type ChampsTransaction = Omit<NouvelleTransaction, "entite_id">;
  * il ne re-valide pas la logique métier.
  *
  * On n'écrit ni `montant_ht_centimes` (colonne générée par Postgres) ni
- * `statut` (défaut 'validee' pour une saisie manuelle) : la base s'en charge.
+ * [07/11/2026] Le `statut` est fixé par le service (à classer / validée).
  */
 export async function creerTransaction(
   supabase: SupabaseClient,
@@ -39,9 +39,16 @@ export async function creerTransaction(
 }
 
 /**
- * Insère PLUSIEURS transactions d'un coup (import CSV). Elles naissent en
- * statut 'a_verifier' : issues d'un relevé, elles restent à catégoriser et à
- * confirmer avant d'être considérées comme validées. Renvoie le nombre inséré.
+ * Insère PLUSIEURS transactions d'un coup (import CSV).
+ *
+ * [07/11/2026] Lot 6 : une ligne importée n'est jamais « validée » d'office
+ * (règle Nova : une proposition n'est pas un contrôle). Sans catégorie elle
+ * est « à classer », avec catégorie « à valider ».
+ *
+ * Anti-doublon : les lignes portent une `source_cle` stable ; l'upsert
+ * « ignoreDuplicates » sur la contrainte unique (entite_id, source_cle) fait
+ * qu'un fichier réimporté n'ajoute que les lignes nouvelles. Renvoie les
+ * lignes RÉELLEMENT insérées (les doublons ignorés n'y figurent pas).
  */
 export async function creerTransactionsEnLot(
   supabase: SupabaseClient,
@@ -49,11 +56,14 @@ export async function creerTransactionsEnLot(
 ): Promise<Transaction[]> {
   if (nouvelles.length === 0) return [];
 
-  const payload = nouvelles.map((n) => ({ ...n, statut: "a_verifier" as const }));
+  const payload = nouvelles.map((n) => ({
+    ...n,
+    statut: n.categorie_id ? ("a_verifier" as const) : ("a_classer" as const),
+  }));
 
   const { data, error } = await supabase
     .from("transaction")
-    .insert(payload)
+    .upsert(payload, { onConflict: "entite_id,source_cle", ignoreDuplicates: true })
     .select();
 
   if (error) {

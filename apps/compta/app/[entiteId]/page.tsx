@@ -18,6 +18,7 @@ import {
   repartitionParCategorie,
 } from "@/lib/services/tableau-de-bord";
 import { RepartitionCategories } from "@/components/RepartitionCategories";
+import { horsVirements } from "@/lib/services/tresorerie";
 
 /** Libellé "juillet 2026" pour le mois affiché. */
 function libelleMois(annee: number, mois: number): string {
@@ -36,10 +37,15 @@ export default async function TableauDeBordPage({
   const { entiteId } = await params;
   const supabase = await createClient();
 
-  const [transactions, categories] = await Promise.all([
+  const [toutes, categories] = await Promise.all([
     listerTransactions(supabase, entiteId),
     listerCategories(supabase, entiteId, false),
   ]);
+  // [07/11/2026] Lot 6 : les virements internes ne sont ni des recettes ni des
+  // dépenses de la structure ; sans ce filtre, un transfert vers le livret
+  // gonflerait les deux totaux du mois.
+  const transactions = horsVirements(toutes);
+  const aClasser = toutes.filter((t) => t.statut !== "validee" && !t.virement_id).length;
 
   const nomsCategories: Record<string, string> = {};
   for (const c of categories) nomsCategories[c.id] = c.nom;
@@ -77,6 +83,15 @@ export default async function TableauDeBordPage({
 
   return (
     <section className="space-y-8">
+      {aClasser > 0 && (
+        <Link
+          href={`/${entiteId}/transactions?statut=a_traiter`}
+          className="block rounded-lg border border-compta-accent/30 bg-compta-accent/5 px-4 py-3 text-sm text-compta-accent hover:underline"
+        >
+          {aClasser} opération(s) à classer ou à valider
+        </Link>
+      )}
+
       {/* ---- Cartes d'indicateurs ---- */}
       <div className="grid gap-4 sm:grid-cols-3">
         {/* Solde global */}

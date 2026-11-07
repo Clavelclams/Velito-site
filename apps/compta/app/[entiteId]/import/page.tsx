@@ -6,6 +6,8 @@
  */
 import Link from "next/link";
 import { FormulaireImport } from "@/components/FormulaireImport";
+import { createClient } from "@/lib/supabase/server";
+import { listerComptesTresorerie } from "@/lib/repositories/tresorerie";
 
 export default async function ImportPage({
   params,
@@ -13,6 +15,9 @@ export default async function ImportPage({
   params: Promise<{ entiteId: string }>;
 }) {
   const { entiteId } = await params;
+  const supabase = await createClient();
+  // [07/11/2026] Lot 6 : le relevé appartient à un compte réel.
+  const comptes = (await listerComptesTresorerie(supabase, entiteId)).filter((c) => c.active);
 
   return (
     <section className="space-y-6">
@@ -21,7 +26,8 @@ export default async function ImportPage({
           <h2 className="text-lg font-semibold">Importer un relevé bancaire</h2>
           <p className="mt-1 text-sm text-compta-text-muted">
             Charge un CSV, mappe les colonnes, vérifie l&apos;aperçu, importe.
-            Les lignes arrivent en « à vérifier » : tu les catégorises ensuite.
+            Les lignes arrivent « à classer » : tu les catégorises ensuite.
+            Réimporter le même relevé n&apos;ajoute que les lignes nouvelles.
           </p>
         </div>
         <Link
@@ -32,7 +38,10 @@ export default async function ImportPage({
         </Link>
       </div>
 
-      <FormulaireImport entiteId={entiteId} />
+      <FormulaireImport
+        entiteId={entiteId}
+        comptes={comptes.map((c) => ({ id: c.id, nom: c.nom }))}
+      />
     </section>
   );
 }
