@@ -8,6 +8,10 @@
 -- Sources : mabb-site/instruction/52_CLUB_APP_COMPLETE_SPEC_2026-11-07.md,
 -- 53_ESPACE_COACH_STRUCTURES_CARTE_2026-11-09.md, 51_ROADMAP_2026-11-07.md.
 --
+-- [11/11/2026] Correctif : l'étape « Espace coach V1 » avait un poids de 8,
+-- refusé par la contrainte 1 à 5 : le fichier entier avait échoué en prod
+-- (audit SQL du 11/11). Poids ramené à 5, le maximum.
+--
 -- Idempotent, même méthode que les fichiers précédents :
 --   - étape existante (même projet, même titre) : statut mis à jour seulement ;
 --   - étape absente : ajoutée ;
@@ -30,7 +34,7 @@ insert into _e values
 ('venaball-club','Version 1.1','Vraie app iPad : orientation libre, colonne de contenu centrée','fait',2,106,'2026-11-07',null,null),
 ('venaball-club','Version 1.1','Build iOS 1.1, TestFlight iPhone et iPad, captures iPad, soumission Apple','a_faire',3,108,null,null,'Répondre « no » à la connexion Apple : les certificats sont chez Expo.'),
 ('venaball-club','Espace coach','Analyse de l''espace coach (effectif, créneaux, appel, exercices, bibliothèques)','fait',2,120,'2026-11-09',null,'Doc 53 §3. Questions en attente.'),
-('venaball-club','Espace coach','Espace coach V1 : effectif et créneaux depuis l''app, appel enrichi, exercices avec image et plan de séance','a_faire',8,122,null,null,'Environ 10 à 12 jours. Bibliothèque publique et outil de dessin en V2.'),
+('venaball-club','Espace coach','Espace coach V1 : effectif et créneaux depuis l''app, appel enrichi, exercices avec image et plan de séance','a_faire',5,122,null,null,'Environ 10 à 12 jours. Bibliothèque publique et outil de dessin en V2.'),
 ('venaball-club','Structures','Structures transverses (pôle espoir, camp) : type de club et rattachement avec accord joueuse et parent','a_faire',5,130,null,null,'Doc 53 §4. Relance à J+15, coupure automatique à J+30.'),
 -- Venaball (app joueuse)
 ('venaball','Version 1.1','Vraie app iPad : orientation libre, jeux caméra gardent leur verrou','fait',1,100,'2026-11-07',null,null),
