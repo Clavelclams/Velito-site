@@ -69,6 +69,14 @@ export default function Footer() {
               </li>
               <li>
                 <Link
+                  href="/realisations"
+                  className="opacity-80 hover:opacity-100 hover:underline"
+                >
+                  Réalisations
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/contact"
                   className="opacity-80 hover:opacity-100 hover:underline"
                 >
@@ -110,6 +118,19 @@ export default function Footer() {
                   className="opacity-80 hover:opacity-100 hover:underline"
                 >
                   Velito Esport Amiens
+                </a>
+              </li>
+              {/* [11/11/2026] Venaball : plateforme basket (app joueuse + app
+                  staff) développée par VENA. Domaine propre, pas de sous-domaine
+                  velito.fr, donc URL fixe. */}
+              <li>
+                <a
+                  href="https://venaball.fr"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="opacity-80 hover:opacity-100 hover:underline"
+                >
+                  Venaball
                 </a>
               </li>
             </ul>

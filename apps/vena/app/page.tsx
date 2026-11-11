@@ -276,6 +276,15 @@ export default function VenaHome() {
             parallèle, on mutualise quand ça aide. Terrain pour VEA, technique
             pour VENA.
           </p>
+          {/* [11/11/2026] Venaball ajouté à l'écosystème. */}
+          <p className="text-base sm:text-lg text-vena-text leading-relaxed mb-6 max-w-2xl">
+            Et il y a{" "}
+            <span className="bg-vena-peche px-1 font-semibold">Venaball</span>,
+            notre plateforme basket : une app pour les joueuses (entraînement,
+            progression, défis) et une app pour le staff des clubs (effectif,
+            matchs, stats en direct). Conçue avec un club amiénois, ouverte aux
+            autres clubs.
+          </p>
           <div className="flex flex-wrap gap-x-6 gap-y-3">
             <a
               href={VEA_URL}
@@ -284,6 +293,14 @@ export default function VenaHome() {
               className="text-sm font-semibold text-vena-kaki underline decoration-2 underline-offset-4 hover:text-vena-kaki-dark"
             >
               Voir VEA →
+            </a>
+            <a
+              href="https://venaball.fr"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-semibold text-vena-kaki underline decoration-2 underline-offset-4 hover:text-vena-kaki-dark"
+            >
+              Voir Venaball →
             </a>
             <a
               href={HUB_URL}

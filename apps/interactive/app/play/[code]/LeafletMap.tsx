@@ -72,18 +72,33 @@ export default function LeafletMap({
         center: initialCenter,
         zoom: initialZoom,
         zoomControl: true,
-        attributionControl: false,
+        // [11/11/2026] Attribution obligatoire dans les conditions CARTO
+        // (OpenStreetMap + CARTO), petite, en bas à droite.
+        attributionControl: true,
       });
+      map.attributionControl.setPrefix(false);
 
-      // Tuiles CartoDB "Voyager No Labels" — épurées SANS noms de villes/pays
+      // Tuiles CARTO "Voyager No Labels" : épurées SANS noms de villes/pays
       // (l'intérêt du jeu c'est de chercher sans avoir la réponse écrite).
-      // Gratuit, pas d'API key. Fallback OSM si CARTO down.
+      // [11/11/2026] CARTO exige maintenant une clé (gratuite) sur chaque
+      // tuile, sinon chaque tuile affiche « API KEY REQUIRED ». La clé est
+      // publique par nature (elle part dans le navigateur) : variable
+      // NEXT_PUBLIC_, à NE PAS marquer « Sensitive » sur Vercel, sinon elle
+      // est absente du build client.
+      const cartoKey = process.env.NEXT_PUBLIC_CARTO_BASEMAPS_KEY;
+      if (!cartoKey) {
+        console.warn(
+          "[LeafletMap] NEXT_PUBLIC_CARTO_BASEMAPS_KEY absente : les tuiles CARTO afficheront « API KEY REQUIRED »."
+        );
+      }
       L.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png",
+        `https://basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png${
+          cartoKey ? `?key=${encodeURIComponent(cartoKey)}` : ""
+        }`,
         {
           maxZoom: 18,
           minZoom: 2,
-          subdomains: "abcd",
+          attribution: "© OpenStreetMap contributors, © CARTO",
         }
       ).addTo(map);
 
