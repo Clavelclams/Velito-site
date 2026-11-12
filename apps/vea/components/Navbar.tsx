@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import NotificationBell from "./NotificationBell";
+import { getArenaUrl } from "@/lib/hub-url";
 
 interface NavLink {
   label: string;
@@ -158,6 +159,13 @@ export default function Navbar() {
               >
                 Joueurs
               </Link>
+              {/* [12/11/2026] ARENA en ligne : lien direct (même compte). */}
+              <a
+                href={getArenaUrl()}
+                className="text-sm text-vea-text-muted hover:text-vea-accent transition-colors font-medium px-3 py-1.5"
+              >
+                Arena
+              </a>
               <Link
                 href="/profil"
                 className="text-sm text-vea-text-muted hover:text-vea-accent transition-colors font-medium px-3 py-1.5"
@@ -279,6 +287,15 @@ export default function Navbar() {
             >
               Joueurs
             </Link>
+          )}
+          {authLoaded && user && (
+            <a
+              href={getArenaUrl()}
+              onClick={() => setDrawerOpen(false)}
+              className="block py-3 px-3 text-vea-text-muted hover:text-vea-accent hover:bg-vea-surface-soft rounded-lg transition-colors text-sm font-medium"
+            >
+              Arena
+            </a>
           )}
         </div>
 

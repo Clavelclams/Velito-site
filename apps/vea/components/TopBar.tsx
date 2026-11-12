@@ -2,18 +2,24 @@
  * TopBar — Barre écosystème Velito (36px)
  * REFONTE : Fond #080410, accent rouge #E63946 pour le module actif.
  * Sur mobile : affiche seulement "ÉCOSYSTÈME VELITO".
+ *
+ * [12/11/2026] Les modules en ligne (VENA, Interactive, ARENA) deviennent des
+ * liens ; seul ce qui n'existe pas encore (Messages) garde « bientôt ».
+ * Avant, les trois étaient marqués « bientôt » alors qu'ils tournaient.
  */
 
 interface EcosystemModule {
   name: string;
   active: boolean;
+  /** Absent = module pas encore en ligne. */
+  url?: string;
 }
 
 const MODULES: EcosystemModule[] = [
   { name: "ESPORT (VEA)", active: true },
-  { name: "VENA", active: false },
-  { name: "INTERACTIVE", active: false },
-  { name: "ARENA", active: false },
+  { name: "VENA", active: false, url: "https://velito.fr" },
+  { name: "INTERACTIVE", active: false, url: "https://interactive.velito.fr" },
+  { name: "ARENA", active: false, url: "https://arena.velito.fr" },
   { name: "MESSAGES", active: false },
 ];
 
@@ -27,23 +33,29 @@ export default function TopBar() {
 
         {/* Modules — cachés sur mobile */}
         <div className="hidden sm:flex items-center gap-4">
-          {MODULES.map((mod) => (
-            <span
-              key={mod.name}
-              className={`text-[11px] uppercase tracking-wider font-medium ${
-                mod.active
-                  ? "text-vea-red"
-                  : "text-vea-text-muted"
-              }`}
-            >
-              {mod.name}
-              {!mod.active && (
-                <span className="ml-1 text-[9px] text-vea-text-dim">
-                  bientôt
-                </span>
-              )}
-            </span>
-          ))}
+          {MODULES.map((mod) =>
+            mod.url ? (
+              <a
+                key={mod.name}
+                href={mod.url}
+                className="text-[11px] uppercase tracking-wider font-medium text-vea-text-muted hover:text-vea-red transition-colors"
+              >
+                {mod.name}
+              </a>
+            ) : (
+              <span
+                key={mod.name}
+                className={`text-[11px] uppercase tracking-wider font-medium ${
+                  mod.active ? "text-vea-red" : "text-vea-text-muted"
+                }`}
+              >
+                {mod.name}
+                {!mod.active && (
+                  <span className="ml-1 text-[9px] text-vea-text-dim">bientôt</span>
+                )}
+              </span>
+            )
+          )}
         </div>
       </div>
     </div>

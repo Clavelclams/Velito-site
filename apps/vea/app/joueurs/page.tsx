@@ -23,7 +23,7 @@
  */
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getConstructionUrl } from "@/lib/hub-url";
+import { getArenaUrl } from "@/lib/hub-url";
 // Note : on n'utilise PAS next/image ici parce que les avatars peuvent venir
 // d'URLs externes variees (Imgur, Discord, Twitch, etc.) que next/image
 // rejette par defaut si pas whiteliste dans next.config.js. Un <img> standard
@@ -272,33 +272,32 @@ export default async function JoueursPage() {
           </div>
         )}
 
-        {/* TEASER ARENA */}
+        {/* ARENA [12/11/2026] : l'ancien teaser « Arena bientôt » renvoyait sur
+            la page « en construction ». ARENA est en ligne : on envoie vers le
+            classement et l'espace joueur, sans dupliquer ses chiffres ici. */}
         <div className="mt-16 max-w-3xl mx-auto">
-          <div className="card-clean p-6 sm:p-8 opacity-90">
+          <div className="card-clean p-6 sm:p-8">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-base font-bold text-vea-text">
-                Vue gaming plus poussee a venir
+                Tournois, classement et palmarès
               </h3>
               <span className="text-[10px] uppercase tracking-widest bg-vea-accent-soft border border-vea-accent/20 text-vea-accent px-2 py-0.5 rounded">
-                Arena bientot
+                Arena
               </span>
             </div>
-            <p className="text-sm text-vea-text-muted leading-relaxed">
-              Quand l&apos;app{" "}
-              {/* 19/05/2026 : URL dynamique via getConstructionUrl (cf lib/hub-url.ts)
-                  -> localhost:3000 en dev, velito.fr en prod. */}
-              <a
-                href={getConstructionUrl("arena")}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-vea-accent hover:underline font-semibold"
-              >
-                Arena
-              </a>{" "}
-              sera deployee, cette page affichera aussi les stats par jeu, les
-              classements internes, les challenges entre membres et les badges
-              debloques.
+            <p className="text-sm text-vea-text-muted leading-relaxed mb-4">
+              Les tournois VEA se jouent sur ARENA : brackets en direct,
+              classement des joueurs, profil avec tes stats et tes badges. Même
+              compte que sur ce site.
             </p>
+            <div className="flex flex-wrap gap-3">
+              <a href={getArenaUrl("/classement")} className="btn-outline text-sm">
+                Voir le classement
+              </a>
+              <a href={getArenaUrl("/moi")} className="btn-primary text-sm">
+                Mon espace Arena
+              </a>
+            </div>
           </div>
         </div>
       </div>

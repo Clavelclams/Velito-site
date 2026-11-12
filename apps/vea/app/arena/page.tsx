@@ -1,20 +1,14 @@
 /**
- * Page /arena — redirect vers la page construction du hub Velito.
+ * Page /arena : redirige vers ARENA (arena.velito.fr).
  *
- * 19/05/2026 : avant on avait un placeholder local "en construction" dupliquant
- * la page du hub. Maintenant on redirige vers
- * https://velito.fr/construction?slug=arena qui centralise tous les modules
- * pas encore prets (Arena, modules VENA, etc.) avec une UX coherente
- * et un seul endroit a maintenir.
- *
- * Quand arena.velito.fr sera deploye, changer ce redirect pour pointer vers
- * https://arena.velito.fr directement.
+ * 19/05/2026 : redirigeait vers la page « en construction » du hub.
+ * 12/11/2026 : ARENA est en ligne (tournois, classement, espace joueur),
+ * on envoie directement dessus. La route /arena est gardée pour que les
+ * anciens liens et favoris continuent de marcher.
  */
 import { redirect } from "next/navigation";
-import { getConstructionUrl } from "@/lib/hub-url";
+import { getArenaUrl } from "@/lib/hub-url";
 
 export default function ArenaRedirect() {
-  // URL dynamique : localhost en dev, velito.fr en prod
-  // (cf lib/hub-url.ts + var env NEXT_PUBLIC_HUB_URL).
-  redirect(getConstructionUrl("arena"));
+  redirect(getArenaUrl());
 }

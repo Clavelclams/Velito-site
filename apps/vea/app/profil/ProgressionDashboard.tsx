@@ -21,6 +21,7 @@
 "use client";
 
 import { useState } from "react";
+import { getArenaUrl } from "@/lib/hub-url";
 import {
   OLD_VEA_EVENTS,
   EVENTS_2026_2027,
@@ -44,6 +45,18 @@ interface ProgressionDashboardProps {
   /** XP cumulés de la saison actuelle 2026/27 (vea.participants.xp_saison_actuelle).
    *  Source de verite du niveau via computeLevel(). */
   xpCurrent: number;
+  /** [12/11/2026] Vrai résumé ARENA du compte (arena.mon_resume), null si
+   *  le compte n'a pas encore de profil joueur relié. */
+  arena: ResumeArena | null;
+}
+
+export interface ResumeArena {
+  pseudo: string;
+  profil_public: boolean;
+  tournois: number;
+  matchs: number;
+  victoires: number;
+  titres: number;
 }
 
 /**
@@ -61,23 +74,59 @@ function computeNiveauOldEstime(events: number, heures: number): number {
   return Math.floor(score / 100) + 1;
 }
 
-/** Pastille couleur "ARENA" — pour l'instant identique a VEA, indication visuelle differente */
-function NiveauArenaCard({ niveauVea }: { niveauVea: number }) {
+/**
+ * Carte ARENA [12/11/2026] : remplace l'ancienne « Niveau Arena » qui
+ * recopiait le niveau VEA (chiffre qui ne correspondait à rien). Elle montre
+ * maintenant les VRAIS résultats Arena du compte, tous tournois confondus
+ * (pas par saison : ARENA ne découpe pas encore en saisons, on le dit).
+ */
+function ArenaCard({ arena }: { arena: ResumeArena | null }) {
+  const lienBase = getArenaUrl();
   return (
     <div className="card-clean p-6 text-center relative overflow-hidden">
-      {/* Indicateur "Arena" en haut a droite */}
       <span className="absolute top-2 right-2 text-[8px] uppercase tracking-widest bg-vea-accent-soft border border-vea-accent/20 text-vea-accent px-1.5 py-0.5 rounded font-bold">
-        Bientot
+        Arena
       </span>
-      <p className="text-3xl font-black text-vea-accent leading-none mb-2">
-        {niveauVea}
-      </p>
-      <p className="text-xs text-vea-text-dim uppercase tracking-wider font-medium">
-        Niveau Arena
-      </p>
-      <p className="text-[10px] text-vea-text-dim mt-1 italic leading-tight">
-        Identique au niveau VEA. Evoluera plus vite avec l&apos;app Arena.
-      </p>
+      {arena ? (
+        <>
+          <p className="text-3xl font-black text-vea-accent leading-none mb-2">
+            {arena.tournois}
+          </p>
+          <p className="text-xs text-vea-text-dim uppercase tracking-wider font-medium">
+            Tournois Arena
+          </p>
+          <p className="text-[10px] text-vea-text-dim mt-1 leading-tight">
+            {arena.victoires} victoire{arena.victoires > 1 ? "s" : ""} sur {arena.matchs} match
+            {arena.matchs > 1 ? "s" : ""}
+            {arena.titres > 0 ? ` · ${arena.titres} titre${arena.titres > 1 ? "s" : ""}` : ""}
+            <br />
+            Toutes saisons
+          </p>
+          <a
+            href={
+              arena.profil_public
+                ? `${lienBase}/joueurs/${encodeURIComponent(arena.pseudo)}`
+                : `${lienBase}/moi`
+            }
+            className="text-[10px] text-vea-accent mt-1 inline-block underline hover:no-underline"
+          >
+            {arena.profil_public ? "Mon profil Arena" : "Mon espace Arena"}
+          </a>
+        </>
+      ) : (
+        <>
+          <p className="text-3xl font-black text-vea-accent leading-none mb-2">—</p>
+          <p className="text-xs text-vea-text-dim uppercase tracking-wider font-medium">
+            Tournois Arena
+          </p>
+          <a
+            href={`${lienBase}/moi`}
+            className="text-[10px] text-vea-accent mt-1 inline-block underline hover:no-underline"
+          >
+            Relier mon pseudo Arena
+          </a>
+        </>
+      )}
     </div>
   );
 }
@@ -88,6 +137,7 @@ export default function ProgressionDashboard({
   heuresBenevolatCurrent,
   heuresBenevolatOld,
   xpCurrent,
+  arena,
 }: ProgressionDashboardProps) {
   // Saison selectionnee. Defaut 2026/27 (saison en cours).
   const [saison, setSaison] = useState<SaisonKey>("2026/27");
@@ -253,8 +303,8 @@ export default function ProgressionDashboard({
           </button>
         </div>
 
-        {/* Card 4 : Niveau Arena (identique pour l'instant) */}
-        <NiveauArenaCard niveauVea={niveauVea} />
+        {/* Card 4 : vrais résultats Arena (12/11/2026) */}
+        <ArenaCard arena={arena} />
       </div>
 
       {/* Panneau d'explication XP (toggle via "Comment ça marche ?" de la card Niveau VEA)

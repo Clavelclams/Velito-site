@@ -133,7 +133,7 @@ function computeUserBadges(
   badges.push({
     label: "Joueur",
     color: "neutral",
-    description: "Membre de la communaute VEA. Acces a ton profil et a Arena (bientot).",
+    description: "Membre de la communaute VEA. Acces a ton profil et a tes resultats Arena.",
   });
 
   return badges;
@@ -179,6 +179,21 @@ export default async function ProfilPage() {
     )
     .eq("user_id", user.id)
     .maybeSingle();
+
+  // === [12/11/2026] Résumé ARENA du compte connecté ===
+  // Fonction arena.mon_resume() (migration arena 011) : sans paramètre, elle
+  // lit auth.uid() côté base, donc on ne peut obtenir QUE son propre résumé.
+  // Client utilisateur (pas service_role), conforme à lib/supabase/admin.ts.
+  // Si la fonction manque ou plante, la carte affiche simplement « pas
+  // encore de tournoi » : le profil VEA ne doit jamais casser à cause d'Arena.
+  const { data: arenaRows, error: arenaErreur } = await supabase
+    .schema("arena")
+    .rpc("mon_resume");
+  if (arenaErreur) console.error("[profil] arena.mon_resume", arenaErreur.code, arenaErreur.message);
+  const resumeArena =
+    (arenaRows as
+      | { pseudo: string; profil_public: boolean; tournois: number; matchs: number; victoires: number; titres: number }[]
+      | null)?.[0] ?? null;
 
   // === Lecture gamification (badges, dotations) ===
   // Tout le catalogue des badges (pour afficher locked + unlocked)
@@ -397,8 +412,7 @@ export default async function ProfilPage() {
               </div>
               <p className="text-sm text-vea-text-muted leading-relaxed mb-4">
                 Découvre les autres joueurs VEA : leur pseudo, leur jeu préféré
-                et leur niveau. Une section Arena y sera intégrée prochainement
-                pour suivre la progression de toute la communaute.
+                et leur niveau. Les tournois et le classement sont sur Arena.
               </p>
               <Link href="/joueurs" className="btn-outline text-sm">
                 Voir les joueurs
@@ -446,6 +460,7 @@ export default async function ProfilPage() {
           heuresBenevolatCurrent={heuresBenevolatCurrent}
           heuresBenevolatOld={heuresBenevolatOld}
           xpCurrent={xpTotal}
+          arena={resumeArena}
         />
 
         {/* Toggle notifs events (19/05/2026) — chaque user peut activer/desactiver

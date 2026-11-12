@@ -31,6 +31,21 @@ export function getConstructionUrl(slug: string): string {
 }
 
 /**
+ * [12/11/2026] ARENA est en ligne : les liens « Arena » de VEA pointent vers
+ * le vrai site, plus vers la page « en construction » du hub.
+ * Même règle que HUB_URL : en dur en prod, variable lue seulement en dev.
+ */
+const ARENA_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://arena.velito.fr"
+    : process.env.NEXT_PUBLIC_ARENA_URL ?? "https://arena.velito.fr";
+
+/** URL d'ARENA, avec un chemin optionnel (ex. getArenaUrl("/moi")). */
+export function getArenaUrl(chemin = ""): string {
+  return `${ARENA_URL}${chemin}`;
+}
+
+/**
  * URL racine du hub Velito.
  */
 export function getHubUrl(): string {

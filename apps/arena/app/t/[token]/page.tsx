@@ -24,6 +24,7 @@ import { getUtilisateur } from "@/lib/arena/auth";
 import { getServiceClient } from "@/lib/supabase/service";
 import { inscrireEnLigne, seDesinscrire } from "@/lib/arena/actions-joueur";
 import { lienConnexion } from "@/lib/arena/espace-joueur";
+import { siteOrganisation } from "@/lib/arena/organisations";
 import type { Metadata } from "next";
 
 const HUB_LOGIN = process.env.NEXT_PUBLIC_HUB_LOGIN_URL ?? "https://hub.velito.fr/login";
@@ -228,6 +229,18 @@ export default async function PagePubliqueTournoi({
   const complet =
     tournoi.max_joueurs !== null && participations.length >= tournoi.max_joueurs;
 
+  // [12/11/2026] « Organisé par » : nom et slug de l'organisation (infos
+  // publiques). Lecture service_role par l'id du tournoi déjà chargé : le
+  // schéma shared n'est pas forcément lisible par le client anonyme.
+  const { data: orgaData } = await getServiceClient()
+    .schema("shared")
+    .from("organizations")
+    .select("name, slug")
+    .eq("id", tournoi.organisation_id)
+    .maybeSingle();
+  const orga = orgaData as { name: string; slug: string } | null;
+  const siteOrga = siteOrganisation(orga?.slug);
+
   return (
     <>
       <EnteteSite />
@@ -243,6 +256,18 @@ export default async function PagePubliqueTournoi({
           {tournoi.jeu} · {new Date(tournoi.date_debut).toLocaleString("fr-FR")}
           {tournoi.lieu ? ` · ${tournoi.lieu}` : ""}
         </p>
+        {orga && (
+          <p className="mt-1 text-sm text-arena-muted">
+            Organisé par{" "}
+            {siteOrga ? (
+              <a href={siteOrga} className="font-semibold text-arena-violet underline hover:text-arena-violet-fonce">
+                {orga.name}
+              </a>
+            ) : (
+              <b>{orga.name}</b>
+            )}
+          </p>
+        )}
         <p className="mt-2 text-sm">
           <span className="rounded-full bg-arena-surface px-3 py-1 font-semibold text-arena-muted">
             {tournoi.statut === "EN_COURS"

@@ -41,6 +41,14 @@ qu'après le bouton « Autorisation reçue ». Règles dans le module pur
 `lib/arena/espace-joueur.ts` (18 tests), actions joueur dans
 `lib/arena/actions-joueur.ts` (jamais d'id joueur venu du formulaire).
 
+**Pont VEA ↔ ARENA (12/11/2026, migration 011)** : la fonction
+`arena.mon_resume()` (sans paramètre, lit `auth.uid()`, SECURITY DEFINER)
+donne au profil VEA les vrais chiffres Arena du membre connecté (tournois,
+matchs, victoires, titres) ; testée par `node sql/test_mon_resume.mjs`. Les
+liens « Arena » de VEA pointent vers ce site, et la page d'un tournoi affiche
+« Organisé par » avec le lien du site de la structure
+(`lib/arena/organisations.ts`).
+
 **Pas encore fait** : API publique par clé, widgets embarquables,
 notifications, score par sets. L'OIDC du hub reste utile pour une future app
 HORS velito.fr.
@@ -75,7 +83,7 @@ npm run test                 # vitest, modules purs
 npm run check-types          # typecheck strict
 ```
 
-Prérequis base : `sql/001` → `sql/010` exécutés dans l'ordre sur Supabase
+Prérequis base : `sql/001` → `sql/011` exécutés dans l'ordre sur Supabase
 (schéma `arena`, exposé à l'API Data), plus une organisation et un membre
 owner/editor dans `shared.user_permissions`.
 
