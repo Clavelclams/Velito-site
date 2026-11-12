@@ -13,6 +13,7 @@ export const metadata: Metadata = {
   title: "Réalisations",
   description:
     "Les projets construits par VENA (Venaball, Velito Interactive, sites de l'écosystème Velito) et les personnes avec qui on les a faits.",
+  alternates: { canonical: "/realisations" },
 };
 
 export default function RealisationsPage() {

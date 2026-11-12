@@ -135,6 +135,9 @@ export default async function AdminLayout({
           <a href="/admin/imports" className="text-arena-muted hover:text-arena-ink">
             Palmarès externe
           </a>
+          <a href="/admin/rattachements" className="text-arena-muted hover:text-arena-ink">
+            Rattachements
+          </a>
           <a href="/" className="text-arena-muted hover:text-arena-ink">
             Site public →
           </a>

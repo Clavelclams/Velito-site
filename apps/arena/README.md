@@ -30,9 +30,20 @@ passe automatiquement en profil restreint (absent de tout classement public),
 un moins de 15 ans exige l'autorisation parentale. Règle « protéger par
 excès » dans `lib/arena/age.ts`.
 
-**Pas encore fait** : login joueur (OIDC hub prêt côté serveur, client ARENA
-à enregistrer), espace `/moi`, inscription par le joueur lui-même via QR, API
-publique par clé, widgets embarquables, notifications, score par sets.
+**Espace joueur (12/11/2026, migration 010)** : connexion avec le compte
+Velito (même session SSO `.velito.fr` que le staff : pas besoin d'OIDC pour
+un sous-domaine), page `/moi` (tournois en cours, à venir, joués, tournois
+ouverts en ligne), création d'un profil ou demande de rattachement d'un pseudo
+existant (validée par le staff dans `/admin/rattachements`), inscription en
+ligne depuis `/t/[token]` si le staff l'a ouverte pour ce tournoi. Le check-in
+reste fait par le staff ; un moins de 15 ans inscrit en ligne n'est pointable
+qu'après le bouton « Autorisation reçue ». Règles dans le module pur
+`lib/arena/espace-joueur.ts` (18 tests), actions joueur dans
+`lib/arena/actions-joueur.ts` (jamais d'id joueur venu du formulaire).
+
+**Pas encore fait** : API publique par clé, widgets embarquables,
+notifications, score par sets. L'OIDC du hub reste utile pour une future app
+HORS velito.fr.
 
 ## Architecture (à savoir défendre)
 
@@ -64,7 +75,7 @@ npm run test                 # vitest, modules purs
 npm run check-types          # typecheck strict
 ```
 
-Prérequis base : `sql/001` → `sql/009` exécutés dans l'ordre sur Supabase
+Prérequis base : `sql/001` → `sql/010` exécutés dans l'ordre sur Supabase
 (schéma `arena`, exposé à l'API Data), plus une organisation et un membre
 owner/editor dans `shared.user_permissions`.
 
@@ -73,7 +84,8 @@ owner/editor dans `shared.user_permissions`.
 Fichiers numérotés dans `sql/`, exécutés à la main dans l'éditeur SQL
 Supabase, jamais rejoués sauf mention « idempotente » en tête. La 009
 (droits par colonne sur `joueurs`) doit être passée AVANT toute inscription
-avec année de naissance.
+avec année de naissance. La 010 se teste sur un vrai Postgres en local :
+`node sql/test_espace_joueur.mjs` (PGlite, migrations 001 à 010, 29 contrôles).
 
 ## Pièges connus
 

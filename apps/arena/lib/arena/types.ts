@@ -87,6 +87,8 @@ export interface Tournoi {
   discipline?: Discipline;
   /** 1 = individuel, 2 = padel en double, 5 = five… (migration 004). */
   taille_equipe?: number;
+  /** Un joueur connecté peut-il s'inscrire seul ? (migration 010, défaut false). */
+  inscription_en_ligne?: boolean;
 }
 
 /** Les deux verticales d'ARENA. */
@@ -153,6 +155,8 @@ export interface Participation {
   check_in_at: string | null;
   /** Ordre de placement manuel (migration 005). null = ordre d'arrivée. */
   ordre?: number | null;
+  /** Chemin d'inscription : bureau du staff ou en ligne (migration 010). */
+  source?: "staff" | "en_ligne";
   joueur?: Joueur; // jointure
 }
 

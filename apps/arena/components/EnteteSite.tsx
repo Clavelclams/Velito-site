@@ -72,6 +72,15 @@ export default function EnteteSite({ variante = "clair" }: Props) {
           >
             Règlement
           </a>
+          {/* [12/11/2026] Espace joueur. */}
+          <a
+            href="/moi"
+            className={`rounded-lg px-3 py-2 transition-colors ${
+              nuit ? "hover:text-white" : "hover:text-arena-violet"
+            }`}
+          >
+            Mon espace
+          </a>
           <a
             href="/admin"
             className={`ml-1 rounded-lg px-4 py-2 font-semibold transition-colors ${

@@ -91,6 +91,33 @@ export async function getContexteStaff(): Promise<ContexteStaff | null> {
   return { userId: user.id, organisations };
 }
 
+/**
+ * [12/11/2026] Espace joueur : l'utilisateur connecté, staff ou non.
+ * Même session SSO .velito.fr que le staff (cookie posé par le hub) : pas
+ * d'OIDC nécessaire pour un sous-domaine de velito.fr. Ne lève jamais :
+ * null si non connecté ou config absente.
+ */
+export async function getUtilisateur(): Promise<{ id: string; email: string | null } | null> {
+  if (!configSupabasePresente()) return null;
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    return user ? { id: user.id, email: user.email ?? null } : null;
+  } catch (e) {
+    console.error("[arena/auth] getUtilisateur", e);
+    return null;
+  }
+}
+
+/** Comme getUtilisateur mais lève si personne n'est connecté (Server Actions). */
+export async function requireUtilisateur(): Promise<{ id: string; email: string | null }> {
+  const u = await getUtilisateur();
+  if (!u) throw new Error("Connecte-toi avec ton compte Velito pour continuer.");
+  return u;
+}
+
 /** L'utilisateur du contexte est-il staff de CETTE organisation ? */
 export function estStaffDe(ctx: ContexteStaff, organisationId: string): boolean {
   return ctx.organisations.some((o) => o.id === organisationId);

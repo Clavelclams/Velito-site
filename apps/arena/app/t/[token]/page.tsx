@@ -19,7 +19,15 @@ import ClassementsPoules from "@/components/ClassementsPoules";
 import AutoRefresh from "./AutoRefresh";
 import EnteteSite from "@/components/EnteteSite";
 import PiedSite from "@/components/PiedSite";
+import BandeauErreur from "@/components/BandeauErreur";
+import { getUtilisateur } from "@/lib/arena/auth";
+import { getServiceClient } from "@/lib/supabase/service";
+import { inscrireEnLigne, seDesinscrire } from "@/lib/arena/actions-joueur";
+import { lienConnexion } from "@/lib/arena/espace-joueur";
 import type { Metadata } from "next";
+
+const HUB_LOGIN = process.env.NEXT_PUBLIC_HUB_LOGIN_URL ?? "https://hub.velito.fr/login";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://arena.velito.fr";
 
 /**
  * Titre et description de partage : quand un joueur envoie le lien du tournoi
@@ -80,10 +88,10 @@ export default async function PagePubliqueTournoi({
   searchParams,
 }: {
   params: Promise<{ token: string }>;
-  searchParams: Promise<{ moi?: string }>;
+  searchParams: Promise<{ moi?: string; erreur?: string }>;
 }) {
   const { token } = await params;
-  const { moi: pseudoRecherche } = await searchParams;
+  const { moi: pseudoRecherche, erreur } = await searchParams;
   const supabase = await createClient();
 
   const { data: tournoiData } = await supabase
@@ -193,6 +201,33 @@ export default async function PagePubliqueTournoi({
     .map((m) => m.round);
   const nbRounds = roundsW.length > 0 ? Math.max(...roundsW) : 0;
 
+  // ---- [12/11/2026] Inscription en ligne (migration 010) ----
+  // Seulement si le staff l'a ouverte. On ne cherche le compte connecté que
+  // dans ce cas : la page publique reste aussi légère qu'avant pour tous les
+  // autres tournois. Lecture du joueur par service_role, filtrée par l'id du
+  // compte VÉRIFIÉ par Supabase (getUser), jamais par un paramètre d'URL.
+  const inscriptionOuverte = tournoi.statut === "OUVERT" && Boolean(tournoi.inscription_en_ligne);
+  let compte: { id: string } | null = null;
+  let monJoueur: { id: string; pseudo: string } | null = null;
+  if (inscriptionOuverte) {
+    compte = await getUtilisateur();
+    if (compte) {
+      const { data } = await getServiceClient()
+        .schema("arena")
+        .from("joueurs")
+        .select("id, pseudo")
+        .eq("user_id", compte.id)
+        .eq("anonymise", false)
+        .maybeSingle();
+      monJoueur = (data as { id: string; pseudo: string } | null) ?? null;
+    }
+  }
+  const maParticipation = monJoueur
+    ? participations.find((p) => p.joueur_id === monJoueur!.id)
+    : undefined;
+  const complet =
+    tournoi.max_joueurs !== null && participations.length >= tournoi.max_joueurs;
+
   return (
     <>
       <EnteteSite />
@@ -231,6 +266,68 @@ export default async function PagePubliqueTournoi({
           </p>
         )}
       </header>
+
+      <BandeauErreur message={erreur} />
+
+      {/* ---- INSCRIPTION EN LIGNE ---- quatre cas, du plus courant au plus rare. */}
+      {inscriptionOuverte && (
+        <section className="mb-8 rounded-lg border border-arena-green/30 bg-arena-green-pale p-4 text-center">
+          <h2 className="mb-2 text-sm font-bold uppercase tracking-widest text-arena-green">
+            Inscription
+          </h2>
+          {!compte ? (
+            <>
+              <p className="mb-3 text-sm text-arena-muted">
+                Connecte-toi avec ton compte Velito pour réserver ta place.
+              </p>
+              <a
+                href={lienConnexion(HUB_LOGIN, `${SITE_URL}/t/${tournoi.qr_token}`)}
+                className="inline-block min-h-[44px] rounded-lg bg-arena-violet px-5 py-2.5 text-sm font-semibold text-white hover:bg-arena-violet-fonce"
+              >
+                Se connecter
+              </a>
+            </>
+          ) : !monJoueur ? (
+            <>
+              <p className="mb-3 text-sm text-arena-muted">
+                Il te faut d&apos;abord un profil joueur (ou relier ton pseudo).
+              </p>
+              <a
+                href="/moi"
+                className="inline-block min-h-[44px] rounded-lg bg-arena-violet px-5 py-2.5 text-sm font-semibold text-white hover:bg-arena-violet-fonce"
+              >
+                Mon espace joueur
+              </a>
+            </>
+          ) : maParticipation ? (
+            <>
+              <p className="mb-3 text-sm">
+                <b>{monJoueur.pseudo}</b>, ta place est réservée.{" "}
+                {maParticipation.check_in
+                  ? "Tu es pointé présent."
+                  : "Présente-toi au staff le jour J pour être pointé : sans ça, tu ne joues pas."}
+              </p>
+              {!maParticipation.check_in && (
+                <form action={seDesinscrire}>
+                  <input type="hidden" name="token" value={tournoi.qr_token} />
+                  <button className="text-xs text-arena-faint underline hover:text-arena-ink">
+                    Me désinscrire
+                  </button>
+                </form>
+              )}
+            </>
+          ) : complet ? (
+            <p className="text-sm text-arena-muted">Le tournoi est complet.</p>
+          ) : (
+            <form action={inscrireEnLigne}>
+              <input type="hidden" name="token" value={tournoi.qr_token} />
+              <button className="min-h-[44px] rounded-lg bg-arena-green px-5 py-2.5 text-sm font-semibold text-white hover:bg-arena-green/90">
+                M&apos;inscrire en tant que {monJoueur.pseudo}
+              </button>
+            </form>
+          )}
+        </section>
+      )}
 
       {champion && (
         <p className="mb-8 rounded-lg border border-arena-gold/30 bg-arena-gold-pale p-4 text-center text-lg font-bold text-arena-gold">

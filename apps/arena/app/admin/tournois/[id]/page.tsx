@@ -13,7 +13,9 @@ import { estStaffDe, getContexteStaff } from "@/lib/arena/auth";
 import { getServiceClient } from "@/lib/supabase/service";
 import {
   ajouterJoueurStaff,
+  basculerInscriptionEnLigne,
   changerStatutTournoi,
+  confirmerAutorisationParentale,
   creerEquipe,
   demarrerTournoi,
   enregistrerRepartition,
@@ -35,6 +37,7 @@ import type {
 } from "@/lib/arena/types";
 import { grouperMatchsParSection, matchFinal, nomFormat } from "@/lib/arena/affichage";
 import BandeauErreur from "@/components/BandeauErreur";
+import { etatAutorisationParentale } from "@/lib/arena/espace-joueur";
 
 const btn =
   "rounded-lg px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-40";
@@ -223,6 +226,22 @@ export default async function PageTournoi({
                 QR code à imprimer
               </a>
             </p>
+            {/* [12/11/2026] Inscription en ligne (migration 010) : réglable
+                tant que le tournoi n'a pas démarré. */}
+            {(tournoi.statut === "BROUILLON" || tournoi.statut === "OUVERT") && (
+              <form action={basculerInscriptionEnLigne} className="mt-2 flex items-center gap-2 text-sm">
+                <input type="hidden" name="tournoi_id" value={tournoi.id} />
+                <span className="text-arena-muted">
+                  Inscription en ligne :{" "}
+                  <b className={tournoi.inscription_en_ligne ? "text-arena-green" : "text-arena-faint"}>
+                    {tournoi.inscription_en_ligne ? "ouverte" : "fermée"}
+                  </b>
+                </span>
+                <button className="rounded-full border border-arena-border px-3 py-0.5 text-xs font-semibold text-arena-muted hover:text-arena-ink">
+                  {tournoi.inscription_en_ligne ? "Fermer" : "Ouvrir"}
+                </button>
+              </form>
+            )}
           </div>
 
           <div className="flex w-full flex-wrap gap-2 sm:w-auto">
@@ -381,6 +400,32 @@ export default async function PageTournoi({
                       âge ?
                     </span>
                   )}
+                  {p.source === "en_ligne" && (
+                    <span
+                      title="Inscrit en ligne par le joueur lui-même : à pointer présent le jour J"
+                      className="rounded-full bg-arena-violet/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-arena-violet"
+                    >
+                      en ligne
+                    </span>
+                  )}
+                  {(p.joueur as Joueur | undefined) &&
+                    etatAutorisationParentale(
+                      (p.joueur as Joueur).annee_naissance,
+                      (p.joueur as Joueur).consentement_parental_at,
+                      new Date().getFullYear()
+                    ) === "EN_ATTENTE" &&
+                    (tournoi.statut === "BROUILLON" || tournoi.statut === "OUVERT") && (
+                      <form action={confirmerAutorisationParentale} className="inline">
+                        <input type="hidden" name="tournoi_id" value={tournoi.id} />
+                        <input type="hidden" name="joueur_id" value={(p.joueur as Joueur).id} />
+                        <button
+                          title="Moins de 15 ans : à cliquer une fois l'autorisation d'un parent reçue (papier signé ou parent présent). Le check-in est bloqué avant."
+                          className="rounded-full bg-arena-red-pale px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-arena-red hover:underline"
+                        >
+                          Autorisation reçue ?
+                        </button>
+                      </form>
+                    )}
                   {(p.joueur as Joueur | undefined)?.id && (
                     <a
                       href={`/admin/joueurs/${(p.joueur as Joueur).id}`}

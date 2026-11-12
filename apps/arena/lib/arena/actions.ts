@@ -56,6 +56,7 @@ import {
   validerAnneeNaissance,
 } from "./age";
 import { attribuerBadgesTournoi } from "./badges";
+import { etatAutorisationParentale, peutFaireCheckIn } from "./espace-joueur";
 import { messageErreurBase, type ErreurBase } from "./erreurs";
 import { normaliserJeu } from "./jeux";
 import { estStatutTournoi, transitionAutorisee } from "./transitions";
@@ -346,6 +347,8 @@ export async function creerTournoi(formData: FormData) {
         date_debut: new Date(dateDebut).toISOString(),
         lieu,
         max_joueurs: maxJoueurs,
+        // [12/11/2026] Case du formulaire, décochée par défaut (migration 010).
+        inscription_en_ligne: formData.get("inscription_en_ligne") === "on",
       })
       .select("id")
       .single();
@@ -548,6 +551,28 @@ export async function toggleCheckIn(formData: FormData) {
     const versEtat = String(formData.get("vers")) === "true";
 
     await chargerTournoiDeLOrga(tournoiId, ctx);
+
+    // [12/11/2026] Inscription en ligne : un moins de 15 ans peut réserver sa
+    // place seul, mais il n'entre dans le bracket (check-in) qu'une fois
+    // l'autorisation parentale confirmée par le staff. Contrôle ICI, côté
+    // serveur : le bouton grisé de la page n'est qu'un confort.
+    if (versEtat) {
+      const { data: part } = await db
+        .schema("arena").from("participations")
+        .select("joueur:joueurs(annee_naissance, consentement_parental_at)")
+        .eq("id", participationId)
+        .eq("tournoi_id", tournoiId)
+        .single();
+      const j = (part as unknown as {
+        joueur: { annee_naissance: number | null; consentement_parental_at: string | null } | null;
+      } | null)?.joueur;
+      if (j) {
+        const verdict = peutFaireCheckIn(
+          etatAutorisationParentale(j.annee_naissance, j.consentement_parental_at, new Date().getFullYear())
+        );
+        if (!verdict.ok) throw new Error(verdict.raison);
+      }
+    }
 
     await db
       .schema("arena").from("participations")
@@ -1857,4 +1882,122 @@ export async function anonymiserJoueur(formData: FormData) {
     redirectionErreur(`/admin/joueurs/${joueurId}`, e);
   }
   redirect(`/admin/tournois?info=${encodeURIComponent("Joueur anonymisé.")}`);
+}
+
+// ---------- Espace joueur, côté staff (12/11/2026, migration 010) ----------
+
+/** Ouvre ou ferme l'inscription en ligne d'un tournoi. */
+export async function basculerInscriptionEnLigne(formData: FormData) {
+  const tournoiId = String(formData.get("tournoi_id"));
+  try {
+    const ctx = await requireStaff();
+    const tournoi = await chargerTournoiDeLOrga(tournoiId, ctx);
+    const vers = !tournoi.inscription_en_ligne;
+    const { error } = await getServiceClient()
+      .schema("arena").from("tournois")
+      .update({ inscription_en_ligne: vers })
+      .eq("id", tournoiId);
+    if (error) throw erreurBase("Réglage impossible", error);
+    await log(ctx.userId, "INSCRIPTION_EN_LIGNE_REGLEE", tournoiId, null, { active: vers });
+    revalidatePath(`/admin/tournois/${tournoiId}`);
+  } catch (e) {
+    redirectionErreur(`/admin/tournois/${tournoiId}`, e);
+  }
+}
+
+/**
+ * Le staff a reçu l'autorisation parentale d'un moins de 15 ans inscrit en
+ * ligne (papier signé, ou parent présent). On horodate, on trace, et le
+ * check-in devient possible. Même garde-fou que pour l'âge : le staff doit
+ * avoir un lien avec le joueur (une participation dans une de ses orgas).
+ */
+export async function confirmerAutorisationParentale(formData: FormData) {
+  const tournoiId = String(formData.get("tournoi_id"));
+  const joueurId = String(formData.get("joueur_id"));
+  try {
+    const ctx = await requireStaff();
+    const db = getServiceClient();
+    await chargerTournoiDeLOrga(tournoiId, ctx);
+    await verifierLienStaffJoueur(db, ctx, joueurId);
+
+    const { error } = await db
+      .schema("arena").from("joueurs")
+      .update({ consentement_parental_at: new Date().toISOString() })
+      .eq("id", joueurId)
+      .is("consentement_parental_at", null); // jamais réécrire une date existante
+    if (error) throw erreurBase("Enregistrement impossible", error);
+
+    await log(ctx.userId, "CONSENTEMENT", tournoiId, null, { joueur_id: joueurId, type: "PARENTAL" });
+    revalidatePath(`/admin/tournois/${tournoiId}`);
+  } catch (e) {
+    redirectionErreur(`/admin/tournois/${tournoiId}`, e);
+  }
+}
+
+/**
+ * Charge une demande EN_ATTENTE et vérifie que le staff a un lien avec le
+ * joueur demandé. Sans ce lien, le staff d'une autre orga pourrait donner
+ * le palmarès de n'importe qui à n'importe qui.
+ */
+async function chargerDemandeEnAttente(demandeId: string, ctx: ContexteStaff) {
+  const db = getServiceClient();
+  const { data } = await db
+    .schema("arena").from("demandes_rattachement")
+    .select("id, joueur_id, user_id, statut")
+    .eq("id", demandeId)
+    .maybeSingle();
+  if (!data || data.statut !== "EN_ATTENTE") throw new Error("Demande introuvable ou déjà traitée.");
+  await verifierLienStaffJoueur(db, ctx, data.joueur_id as string);
+  return data as { id: string; joueur_id: string; user_id: string };
+}
+
+export async function accepterRattachement(formData: FormData) {
+  try {
+    const ctx = await requireStaff();
+    const db = getServiceClient();
+    const demande = await chargerDemandeEnAttente(String(formData.get("demande_id")), ctx);
+
+    // Relie seulement si le pseudo est encore libre et non effacé (filtre dans
+    // la requête même : pas de course entre la lecture et l'écriture).
+    // L'index unique de la 010 refuse un compte déjà relié à un autre joueur.
+    const { data: relie, error } = await db
+      .schema("arena").from("joueurs")
+      .update({ user_id: demande.user_id })
+      .eq("id", demande.joueur_id)
+      .is("user_id", null)
+      .eq("anonymise", false)
+      .select("id");
+    if (error) {
+      if (error.code === "23505") throw new Error("Ce compte est déjà relié à un autre pseudo.");
+      throw erreurBase("Rattachement impossible", error);
+    }
+    if (!relie || relie.length === 0) throw new Error("Ce pseudo a déjà un propriétaire ou a été effacé.");
+
+    const maintenant = new Date().toISOString();
+    await db
+      .schema("arena").from("demandes_rattachement")
+      .update({ statut: "ACCEPTEE", traitee_par: ctx.userId, traitee_le: maintenant })
+      .eq("id", demande.id);
+
+    await log(ctx.userId, "RATTACHEMENT_ACCEPTE", null, null, { joueur_id: demande.joueur_id });
+    revalidatePath("/admin/rattachements");
+  } catch (e) {
+    redirectionErreur("/admin/rattachements", e);
+  }
+}
+
+export async function refuserRattachement(formData: FormData) {
+  try {
+    const ctx = await requireStaff();
+    const demande = await chargerDemandeEnAttente(String(formData.get("demande_id")), ctx);
+    const { error } = await getServiceClient()
+      .schema("arena").from("demandes_rattachement")
+      .update({ statut: "REFUSEE", traitee_par: ctx.userId, traitee_le: new Date().toISOString() })
+      .eq("id", demande.id);
+    if (error) throw erreurBase("Refus impossible", error);
+    await log(ctx.userId, "RATTACHEMENT_REFUSE", null, null, { joueur_id: demande.joueur_id });
+    revalidatePath("/admin/rattachements");
+  } catch (e) {
+    redirectionErreur("/admin/rattachements", e);
+  }
 }

@@ -225,6 +225,17 @@ export default async function NouveauTournoi({
           </div>
         </div>
 
+        {/* [12/11/2026] Décochée par défaut : un tournoi sur invitation reste
+            fermé sans rien faire. Modifiable ensuite sur la page du tournoi. */}
+        <label className="flex items-start gap-2 text-sm text-arena-muted">
+          <input type="checkbox" name="inscription_en_ligne" className="mt-1" />
+          <span>
+            Inscription en ligne : un joueur connecté peut réserver sa place
+            depuis la page du tournoi (le check-in reste fait par le staff le
+            jour J).
+          </span>
+        </label>
+
         <div>
           <label htmlFor="lieu" className="mb-1 block text-sm text-arena-muted">
             Lieu

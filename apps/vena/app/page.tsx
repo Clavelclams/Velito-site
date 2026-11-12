@@ -18,7 +18,10 @@
  *   5. Écosystème (lien VEA en narratif)
  *   6. CTA final direct
  */
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 // En prod, URLs forcées en dur (insensibles à une var Vercel restée en localhost).
 // Les vars d'env ne sont lues qu'en dev local.
