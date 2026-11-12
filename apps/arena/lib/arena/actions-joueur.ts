@@ -54,13 +54,14 @@ function erreurBase(contexte: string, erreur: ErreurBase | null | undefined): Er
 }
 
 async function log(acteurId: string, action: string, tournoiId: string | null, detail: Record<string, unknown>) {
-  await getServiceClient().schema("arena").from("logs").insert({
+  const { error } = await getServiceClient().schema("arena").from("logs").insert({
     acteur_id: acteurId,
     action,
     tournoi_id: tournoiId,
     match_id: null,
     detail,
   });
+  if (error) console.error(`[arena/actions-joueur] journal ${action} non écrit`, error.code, error.message);
 }
 
 /** Le joueur relié au compte, ou null. */
@@ -133,10 +134,17 @@ export async function creerProfilJoueur(formData: FormData) {
     }
 
     // Consentements tracés tels quels (table append-only), source web.
-    await db.schema("arena").from("consentements").insert([
+    const { error: errConsent } = await db.schema("arena").from("consentements").insert([
       { joueur_id: cree.id, type: "CGU", accorde: true, source: "web" },
       { joueur_id: cree.id, type: "AFFICHAGE_PUBLIC", accorde: champs.profil_public, source: "web" },
     ]);
+    // RGPD : pas de profil sans trace de consentement. On défait la création
+    // (le joueur vient d'être créé, il n'a encore rien joué) pour qu'il
+    // puisse simplement réessayer, au lieu de rester avec un profil bancal.
+    if (errConsent) {
+      await db.schema("arena").from("joueurs").delete().eq("id", cree.id).eq("user_id", user.id);
+      throw erreurBase("Création du profil impossible, réessaie", errConsent);
+    }
     await log(user.id, "PROFIL_CREE_EN_LIGNE", null, { joueur_id: cree.id, est_mineur: champs.est_mineur });
 
     revalidatePath("/moi");

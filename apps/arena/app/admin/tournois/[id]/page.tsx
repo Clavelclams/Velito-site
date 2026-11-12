@@ -226,6 +226,27 @@ export default async function PageTournoi({
                 QR code à imprimer
               </a>
             </p>
+            {/* [12/11/2026] Widget : le code à coller sur le site du club.
+                <details> natif : replié par défaut, zéro JavaScript. Le staff
+                sélectionne le texte et le copie. */}
+            {tournoi.statut !== "BROUILLON" && (
+              <details className="mt-2 text-sm">
+                <summary className="cursor-pointer text-arena-lilac underline">
+                  Intégrer sur un site (widget)
+                </summary>
+                <p className="mt-2 text-xs text-arena-muted">
+                  Colle ce code dans une page de ton site (WordPress : bloc
+                  « HTML personnalisé »). Le tableau s&apos;y met à jour tout seul
+                  pendant le tournoi.
+                </p>
+                <textarea
+                  readOnly
+                  rows={3}
+                  className="mt-1 w-full rounded-lg border border-arena-border bg-arena-surface p-2 font-mono text-xs"
+                  value={`<iframe src="${process.env.NEXT_PUBLIC_SITE_URL ?? "https://arena.velito.fr"}/widget/t/${tournoi.qr_token}" title="${tournoi.titre.replace(/"/g, "&quot;")} sur ARENA" style="width:100%;max-width:600px;height:520px;border:0" loading="lazy"></iframe>`}
+                />
+              </details>
+            )}
             {/* [12/11/2026] Inscription en ligne (migration 010) : réglable
                 tant que le tournoi n'a pas démarré. */}
             {(tournoi.statut === "BROUILLON" || tournoi.statut === "OUVERT") && (

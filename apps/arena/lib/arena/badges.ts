@@ -40,10 +40,14 @@ export async function attribuerBadgesTournoi(
 ): Promise<void> {
   try {
     // 1. Catalogue à jour (idempotent — ignoreDuplicates sur le code unique).
-    await db
+    // [12/11/2026] supabase-js ne LÈVE pas d'exception sur une erreur SQL :
+    // elle est dans { error }. Sans ce contrôle, le try/catch ne voyait rien
+    // et un échec passait inaperçu, même dans les logs.
+    const { error: errCatalogue } = await db
       .schema("arena")
       .from("badges")
       .upsert([...CATALOGUE], { onConflict: "code", ignoreDuplicates: true });
+    if (errCatalogue) throw errCatalogue;
 
     const { data: catalogueData } = await db
       .schema("arena")
@@ -80,13 +84,14 @@ export async function attribuerBadgesTournoi(
     }
 
     if (attributions.length > 0) {
-      await db
+      const { error: errAttrib } = await db
         .schema("arena")
         .from("badges_joueurs")
         .upsert(attributions, {
           onConflict: "joueur_id,badge_id",
           ignoreDuplicates: true,
         });
+      if (errAttrib) throw errAttrib;
     }
   } catch (e) {
     console.error("[arena/badges] attribution échouée (non bloquant) :", e);

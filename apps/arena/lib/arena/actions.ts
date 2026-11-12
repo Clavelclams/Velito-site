@@ -104,13 +104,17 @@ async function log(
   detail?: Record<string, unknown>
 ) {
   const db = getServiceClient();
-  await db.schema("arena").from("logs").insert({
+  const { error } = await db.schema("arena").from("logs").insert({
     acteur_id: acteurId,
     action,
     tournoi_id: tournoiId,
     match_id: matchId,
     detail: detail ?? null,
   });
+  // [12/11/2026] Un journal qui échoue ne bloque pas l'action du jour J
+  // (le score est déjà enregistré), mais il n'échoue plus EN SILENCE : la
+  // trace part dans les logs Vercel pour être corrigée à froid.
+  if (error) console.error(`[arena/actions] journal ${action} non écrit`, error.code, error.message);
 }
 
 /**
@@ -375,10 +379,12 @@ export async function changerStatutTournoi(formData: FormData) {
       throw new Error(`Transition ${tournoi.statut} → ${nouveau} non autorisée.`);
     }
 
-    await db
+    // [12/11/2026] Erreur vérifiée : avant, un échec passait pour un succès.
+    const { error: errStatut } = await db
       .schema("arena").from("tournois")
       .update({ statut: nouveau, updated_at: new Date().toISOString() })
       .eq("id", tournoiId);
+    if (errStatut) throw erreurBase("Changement de statut impossible", errStatut);
 
     if (nouveau === "TERMINE") {
       await log(ctx.userId, "TOURNOI_TERMINE", tournoiId, null);
@@ -511,12 +517,14 @@ export async function ajouterJoueurStaff(formData: FormData) {
     // « lecture par soi-même ») : un majeur inscrit au bureau accepte
     // d'apparaître dans les résultats publics (règlement §4) ; un mineur,
     // non — et c'est enregistré tel quel, pas déduit après coup.
-    await db.schema("arena").from("consentements").insert({
+    const { error: errConsent } = await db.schema("arena").from("consentements").insert({
       joueur_id: joueurId,
       type: "AFFICHAGE_PUBLIC",
       accorde: profilPublicEffectif,
       source: "staff",
     });
+    // RGPD : un consentement non tracé n'est pas un consentement. On arrête.
+    if (errConsent) throw erreurBase("Consentement non enregistré", errConsent);
     if (parentalRequis) {
       await log(ctx.userId, "CONSENTEMENT", tournoiId, null, {
         joueur_id: joueurId,
@@ -574,7 +582,7 @@ export async function toggleCheckIn(formData: FormData) {
       }
     }
 
-    await db
+    const { error: errCheckIn } = await db
       .schema("arena").from("participations")
       .update({
         check_in: versEtat,
@@ -582,6 +590,7 @@ export async function toggleCheckIn(formData: FormData) {
       })
       .eq("id", participationId)
       .eq("tournoi_id", tournoiId);
+    if (errCheckIn) throw erreurBase("Check-in impossible", errCheckIn);
 
     if (versEtat) await log(ctx.userId, "JOUEUR_CHECKIN", tournoiId, null);
     revalidatePath(`/admin/tournois/${tournoiId}`);
@@ -909,7 +918,9 @@ export async function saisirScore(formData: FormData) {
     }
 
     const ancien = { score_j1: m.score_j1, score_j2: m.score_j2 };
-    await db
+    // [12/11/2026] Le cas le plus grave de l'audit « erreurs SQL » : un score
+    // refusé par la base (trigger, contrainte) s'affichait comme enregistré.
+    const { error: errScore } = await db
       .schema("arena").from("matchs")
       .update({
         score_j1: scoreJ1,
@@ -919,6 +930,7 @@ export async function saisirScore(formData: FormData) {
         updated_at: new Date().toISOString(),
       })
       .eq("id", matchId);
+    if (errScore) throw erreurBase("Score non enregistré", errScore);
 
     await log(
       ctx.userId,
@@ -1104,11 +1116,12 @@ export async function signalerLitige(formData: FormData) {
       throw new Error("Litige déjà ouvert sur ce match.");
     }
 
-    await db
+    const { error: errLitige } = await db
       .schema("arena")
       .from("matchs")
       .update({ statut: "LITIGIEUX", updated_at: new Date().toISOString() })
       .eq("id", matchId);
+    if (errLitige) throw erreurBase("Litige non enregistré", errLitige);
 
     await log(ctx.userId, "LITIGE_OUVERT", tournoiId, matchId);
     revalidatePath(`/admin/tournois/${tournoiId}`);
@@ -1146,34 +1159,49 @@ export async function validerScore(formData: FormData) {
     const cols = colonnesCamp(tournoi);
     const camps = campsDuMatch(m, cols.parEquipes);
 
-    const validerMatch = (gagnantId: string) =>
-      db
-        .schema("arena").from("matchs")
-        .update({
-          statut: "VALIDE",
-          [cols.gagnant]: gagnantId,
-          valide_par: ctx.userId,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", matchId);
+    // [12/11/2026] Validation ATOMIQUE (migration 012). Avant, chaque écriture
+    // partait séparément : si le placement du gagnant échouait après le
+    // passage en VALIDE, le tableau restait bloqué (match figé par le
+    // verrou §3, gagnant jamais placé). Maintenant :
+    //   1. on CALCULE ici tout ce qu'il faut écrire (logique pure, testée) ;
+    //   2. une seule fonction SQL l'APPLIQUE en une transaction : tout ou rien.
+    // Elle refuse aussi une seconde validation du même match (double clic,
+    // deux membres du staff), ce qui évitait un ELO compté deux fois.
+    type Placement = { match_id: string; slot: "c1" | "c2"; camp_id: string };
+    const placements: Placement[] = [];
 
-    /** Place un CAMP (joueur ou équipe) dans le slot d'un match cible. */
-    const placer = async (dest: DestinationDouble, campId: string) => {
+    /** Prépare le placement d'un CAMP (joueur ou équipe) dans un match cible. */
+    const placer = (dest: DestinationDouble, campId: string) => {
       const cible = matchs.find(
         (x) =>
           (x.bracket ?? "W") === dest.bracket &&
           x.round === dest.round &&
           x.position === dest.position
       );
+      // Pas de match cible = fin du tableau (finale) : rien à placer. Le
+      // module de bracket l'indique déjà par une destination null ; ce cas
+      // ne devrait donc pas arriver, et s'il arrive on ne place rien plutôt
+      // que d'inventer un match.
       if (!cible) return;
-      await db
-        .schema("arena").from("matchs")
-        .update(
-          dest.slot === "joueur1"
-            ? { [cols.c1]: campId }
-            : { [cols.c2]: campId }
-        )
-        .eq("id", cible.id);
+      placements.push({ match_id: cible.id, slot: dest.slot === "joueur1" ? "c1" : "c2", camp_id: campId });
+    };
+
+    const appliquer = async (gagnantId: string, detail: Record<string, unknown>) => {
+      const { error } = await db.schema("arena").rpc("appliquer_validation", {
+        p_tournoi: tournoiId,
+        p_match: matchId,
+        p_gagnant: gagnantId,
+        p_par_equipes: cols.parEquipes,
+        p_placements: placements,
+        p_acteur: ctx.userId,
+        p_detail: detail,
+      });
+      if (error) {
+        // P0001 = RAISE EXCEPTION de la fonction : message écrit pour le staff,
+        // on le montre tel quel. Tout autre code passe par la traduction.
+        if (error.code === "P0001") throw new Error(error.message);
+        throw erreurBase("Validation impossible", error);
+      }
     };
 
     // const (pas d'expression répétée) → TypeScript sait, dans les branches
@@ -1190,12 +1218,8 @@ export async function validerScore(formData: FormData) {
       const gagnantId =
         (m.score_j1 ?? 0) > (m.score_j2 ?? 0) ? camps.c1 : camps.c2;
       if (!gagnantId) throw new Error("Match de poule incomplet.");
-      await validerMatch(gagnantId);
+      await appliquer(gagnantId, { gagnant_id: gagnantId, poule: m.poule ?? null });
       gagnantValide = gagnantId;
-      await log(ctx.userId, "MATCH_VALIDE", tournoiId, matchId, {
-        gagnant_id: gagnantId,
-        poule: m.poule ?? null,
-      });
     } else if (tournoi.format === "DOUBLE_ELIMINATION") {
       // k = profondeur du tableau principal (rounds du bracket W).
       const k = Math.max(
@@ -1213,14 +1237,13 @@ export async function validerScore(formData: FormData) {
         },
         k
       );
-      await validerMatch(prog.gagnantId);
-      gagnantValide = prog.gagnantId;
-      if (prog.destGagnant) await placer(prog.destGagnant, prog.gagnantId);
-      if (prog.destPerdant) await placer(prog.destPerdant, prog.perdantId);
-      await log(ctx.userId, "MATCH_VALIDE", tournoiId, matchId, {
+      if (prog.destGagnant) placer(prog.destGagnant, prog.gagnantId);
+      if (prog.destPerdant) placer(prog.destPerdant, prog.perdantId);
+      await appliquer(prog.gagnantId, {
         gagnant_id: prog.gagnantId,
         finale: prog.destGagnant === null,
       });
+      gagnantValide = prog.gagnantId;
     } else {
       const nbRounds = Math.max(...matchs.map((x) => x.round));
       const prog = progresserGagnant(
@@ -1234,18 +1257,12 @@ export async function validerScore(formData: FormData) {
         },
         nbRounds
       );
-      await validerMatch(prog.gagnantId);
-      gagnantValide = prog.gagnantId;
-      if (prog.parent) {
-        await placer(
-          { bracket: "W", ...prog.parent },
-          prog.gagnantId
-        );
-      }
-      await log(ctx.userId, "MATCH_VALIDE", tournoiId, matchId, {
+      if (prog.parent) placer({ bracket: "W", ...prog.parent }, prog.gagnantId);
+      await appliquer(prog.gagnantId, {
         gagnant_id: prog.gagnantId,
         finale: prog.parent === null,
       });
+      gagnantValide = prog.gagnantId;
     }
 
     // Mise à jour ELO — APRÈS la validation, et jamais bloquante : si la
@@ -1800,12 +1817,13 @@ export async function completerAnneeNaissance(formData: FormData) {
       .eq("id", joueurId);
     if (error) throw erreurBase("Mise à jour impossible", error);
 
-    await db.schema("arena").from("consentements").insert({
+    const { error: errConsent } = await db.schema("arena").from("consentements").insert({
       joueur_id: joueurId,
       type: "AFFICHAGE_PUBLIC",
       accorde: champs.profil_public,
       source: "staff",
     });
+    if (errConsent) throw erreurBase("Consentement non enregistré", errConsent);
     await log(ctx.userId, "JOUEUR_AGE_COMPLETE", null, null, {
       joueur_id: joueurId,
       est_mineur: champs.est_mineur,
@@ -1872,7 +1890,10 @@ export async function anonymiserJoueur(formData: FormData) {
     // L'ELO est une donnée dérivée d'une personne : on l'efface aussi. Les
     // badges et résultats externes restent portés par l'id, mais la RLS ne
     // les montre plus (profil_public = false, anonymise = true).
-    await db.schema("arena").from("elo_joueurs").delete().eq("joueur_id", joueurId);
+    const { error: errElo } = await db.schema("arena").from("elo_joueurs").delete().eq("joueur_id", joueurId);
+    // Droit à l'effacement : si l'ELO n'est pas effacé, on le dit au lieu
+    // d'annoncer « Joueur anonymisé » (le reste l'est déjà, on peut relancer).
+    if (errElo) throw erreurBase("Anonymisation incomplète (ELO), relance l'action", errElo);
 
     // Le journal ne conserve PAS l'ancien pseudo — ce serait recréer la
     // donnée qu'on vient d'effacer. Seul l'identifiant technique est tracé.
@@ -1974,10 +1995,13 @@ export async function accepterRattachement(formData: FormData) {
     if (!relie || relie.length === 0) throw new Error("Ce pseudo a déjà un propriétaire ou a été effacé.");
 
     const maintenant = new Date().toISOString();
-    await db
+    const { error: errDemande } = await db
       .schema("arena").from("demandes_rattachement")
       .update({ statut: "ACCEPTEE", traitee_par: ctx.userId, traitee_le: maintenant })
       .eq("id", demande.id);
+    // Le compte est déjà relié : la demande restée « en attente » serait
+    // seulement un affichage faux, pas un trou de sécurité. On le signale.
+    if (errDemande) console.error("[arena/actions] demande non clôturée", demande.id, errDemande.code);
 
     await log(ctx.userId, "RATTACHEMENT_ACCEPTE", null, null, { joueur_id: demande.joueur_id });
     revalidatePath("/admin/rattachements");

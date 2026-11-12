@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/create-next-app).
+# HUB Velito (hub.velito.fr)
 
-## Getting Started
+Porte d'entrée de l'écosystème Velito et **compte unique** de toutes les apps
+du monorepo. App Next.js, port dev **3000**.
 
-First, run the development server:
+## Ce que fait le hub
+
+- **Accueil** (`/`) : présentation des modules de l'écosystème (sphère 3D
+  WebGL, avec une liste accessible et une grille statique si l'utilisateur
+  préfère réduire les animations). Les modules et leurs liens sont dans
+  `src/components/galaxy/modules.ts` : un module en ligne pointe vers son
+  site, un module pas prêt vers `/construction?slug=...`.
+- **Compte unique** : inscription, connexion, mot de passe oublié, page
+  `/account` (apps activées, apps à découvrir). Après connexion, le cookie
+  de session est posé sur `.velito.fr` (variable `COOKIE_DOMAIN`) : on est
+  connecté sur VEA, Arena, Interactive, Compta sans se reconnecter.
+- **Retour sûr après connexion** (`src/lib/return-to.ts`) : `?return=` n'accepte
+  qu'un chemin local ou un domaine de la liste blanche (`ALLOWED_HOSTS`).
+  Empêche qu'un lien trafiqué renvoie l'utilisateur vers un site pirate
+  après sa connexion (open redirect).
+- **Fournisseur OpenID Connect** (`/oauth/*`, `/.well-known/*`) : authorize,
+  consent, token, userinfo, découverte et clés publiques (RS256, PKCE S256).
+  Sert aux applications HORS de velito.fr ; les sous-domaines n'en ont pas
+  besoin, le cookie partagé suffit (choix fait pour l'espace joueur Arena le
+  12/11/2026).
+- **Projets** (`/projets`, connexion requise) : suivi de tous les projets
+  (étapes, journal, cahiers des charges). Le pourcentage d'avancement n'est
+  jamais saisi : il se calcule à partir des étapes et de leur poids
+  (`src/lib/projets/avancement.ts`, fonctions pures testées).
+
+## Architecture (à savoir défendre)
+
+- **Un seul projet Supabase** pour toutes les apps. L'identité repose sur
+  `auth.users` et le schéma `shared` (`users`, `organizations`,
+  `user_permissions`, `app_memberships`). Chaque app a son propre schéma
+  (`vea`, `arena`, `interactive`, `public` pour Compta).
+- **Droits partagés** : `shared.user_permissions` (owner, editor, viewer par
+  organisation) est lu par toutes les apps. Être responsable de VEA donne
+  automatiquement les droits d'organisateur sur Arena.
+- **Le middleware ne fait que rafraîchir la session** (`src/middleware.ts`) :
+  chaque page protégée vérifie elle-même la connexion. La sécurité ne dépend
+  pas d'un seul point.
+- **SEO** : `robots.ts` refuse les robots d'entraînement d'IA, autorise
+  moteurs et robots de recherche, ferme les pages de compte, de connexion et
+  OAuth. Même politique sur velito.fr, VEA, Arena, Interactive et venaball.fr.
+
+## Dev local
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install          # à la racine du monorepo
+npm run dev          # http://localhost:3000 (construit aussi l'index de recherche)
+node --experimental-strip-types src/lib/projets/avancement.test.ts
+node sql/test_projets.mjs   # schéma Projets sur un vrai Postgres (PGlite)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Variables : la liste est dans `.env.example` (noms seulement, aucune
+valeur), à copier en `.env.local`. Une variable ajoutée doit aussi figurer dans
+la liste `env` de `turbo.json` à la racine, sinon elle est masquée au build.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## SQL
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load Inter, a custom Google Font.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Fichiers dans `sql/`, exécutés à la main dans l'éditeur SQL Supabase :
+`shared-identity-v1.sql`, `oauth-tables-v1.sql`, `projets-v1.sql`, puis les
+mises à jour datées des projets (`projets-maj-*.sql`, idempotentes).

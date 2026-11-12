@@ -72,14 +72,18 @@ export const modules: VelitoModule[] = [
   {
     slug: "arena",
     name: "ARENA",
-    url: "/construction?slug=arena",
+    // [12/11/2026] En production : plus de page « en construction ».
+    url:
+      process.env.NODE_ENV === "production"
+        ? "https://arena.velito.fr"
+        : process.env.NEXT_PUBLIC_ARENA_URL ?? "https://arena.velito.fr",
     accent: "#c026d3",
-    description: "Plateforme tournois esport",
+    description: "Tournois esport et sport",
     image: "/modules/arena.png",
     tagline:
-      "ARENA — gestion de tournois esport amateur : inscriptions, brackets, classements.",
+      "ARENA : tournois esport et sport amateur, gratuits pour les associations. Brackets en direct, classement, espace joueur.",
     summary:
-      "Explorez ARENA, la plateforme de gestion de tournois esport amateur : inscriptions, brackets, classements et diffusion.",
+      "Explorez ARENA, la plateforme gratuite de tournois esport et sport (padel, five) : inscriptions, brackets en direct, classement et palmarès.",
   },
   {
     slug: "interactive",

@@ -32,10 +32,30 @@ const enTetesSecurite = [
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
 ];
 
+/**
+ * [12/11/2026] Le widget (/widget/...) est la SEULE route intégrable en
+ * iframe : mêmes en-têtes, sauf X-Frame-Options retiré et frame-ancestors
+ * ouvert à tous les sites. Sans risque de clickjacking : la page widget n'a
+ * aucun bouton ni formulaire, il n'y a rien à faire cliquer.
+ * Toutes les autres routes gardent DENY, y compris l'espace orga.
+ */
+const enTetesWidget = [
+  { key: "Content-Security-Policy", value: "frame-ancestors *" },
+  ...enTetesSecurite.filter(
+    (e) => e.key !== "X-Frame-Options" && e.key !== "Content-Security-Policy"
+  ),
+];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   async headers() {
-    return [{ source: "/(.*)", headers: enTetesSecurite }];
+    return [
+      // Tout sauf /widget : règle stricte. Les deux règles ne se recouvrent
+      // pas, sinon Next enverrait les deux en-têtes et le navigateur
+      // appliquerait le plus strict (DENY).
+      { source: "/((?!widget/).*)", headers: enTetesSecurite },
+      { source: "/widget/:path*", headers: enTetesWidget },
+    ];
   },
 };
 

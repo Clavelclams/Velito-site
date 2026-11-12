@@ -49,8 +49,23 @@ liens « Arena » de VEA pointent vers ce site, et la page d'un tournoi affiche
 « Organisé par » avec le lien du site de la structure
 (`lib/arena/organisations.ts`).
 
-**Pas encore fait** : API publique par clé, widgets embarquables,
-notifications, score par sets. L'OIDC du hub reste utile pour une future app
+**Widget (12/11/2026)** : `/widget/t/[token]`, version compacte et en
+lecture seule du tableau d'un tournoi, à intégrer en `<iframe>` sur le site
+d'un club (code fourni sur la page staff du tournoi, « Intégrer sur un
+site »). Seule route autorisée en iframe : en-têtes séparés dans
+`next.config.js` (frame-ancestors ouvert pour `/widget/*`, DENY partout
+ailleurs). Rafraîchi toutes les 15 s pendant le tournoi, noindex.
+
+**Validation atomique (12/11/2026, migration 012)** : `validerScore` calcule
+en TypeScript ce qu'il faut écrire (logique de bracket inchangée), puis
+`arena.appliquer_validation` l'applique en UNE transaction : passage en
+VALIDE (seulement si encore TERMINE, donc pas de double validation), placements
+dans les matchs suivants (jamais dans un match déjà validé), journal. Tout ou
+rien. Tests : `node sql/test_validation_atomique.mjs` (29 contrôles).
+Toutes les écritures des actions vérifient aussi `{ error }` : supabase-js ne
+lève pas d'exception sur une erreur SQL.
+
+**Pas encore fait** : API publique par clé, notifications, score par sets. L'OIDC du hub reste utile pour une future app
 HORS velito.fr.
 
 ## Architecture (à savoir défendre)
@@ -83,7 +98,7 @@ npm run test                 # vitest, modules purs
 npm run check-types          # typecheck strict
 ```
 
-Prérequis base : `sql/001` → `sql/011` exécutés dans l'ordre sur Supabase
+Prérequis base : `sql/001` → `sql/012` exécutés dans l'ordre sur Supabase
 (schéma `arena`, exposé à l'API Data), plus une organisation et un membre
 owner/editor dans `shared.user_permissions`.
 

@@ -30,7 +30,7 @@ import { signOutAction } from "@/app/login/actions";
  *  - vea        → vea.velito.fr (prod live, site complet)
  *  - vena       → velito.fr (racine du domaine, PAS un sous-domaine — la SASU "porte" Velito)
  *  - interactive→ interactive.velito.fr (prod live, landing + dashboard)
- *  - arena      → arena.velito.fr (placeholder "bientôt disponible")
+ *  - arena      → arena.velito.fr (prod live : tournois, classement, espace joueur /moi)
  *  - prevention → prevention.velito.fr (placeholder "coming soon")
  */
 const APPS: { key: string; label: string; description: string; href: string }[] = [
@@ -38,7 +38,7 @@ const APPS: { key: string; label: string; description: string; href: string }[] 
   { key: "vea", label: "VEA", description: "Velito Esport Amiens (association).", href: "https://vea.velito.fr" },
   { key: "vena", label: "VENA", description: "Velito Expertise Numérique Amiens (agence).", href: "https://velito.fr" },
   { key: "interactive", label: "Interactive", description: "Jeux interactifs pour bars & lieux.", href: "https://interactive.velito.fr" },
-  { key: "arena", label: "Arena", description: "Tournois & compétitions esport.", href: "https://arena.velito.fr" },
+  { key: "arena", label: "Arena", description: "Tournois esport et sport, ton espace joueur.", href: "https://arena.velito.fr" },
   { key: "prevention", label: "Prévention", description: "Sensibilisation & ateliers numériques.", href: "https://prevention.velito.fr" },
   { key: "compta", label: "Compta", description: "Pré-comptabilité VEA & VENA (outil interne).", href: "https://compta.velito.fr" },
 ];

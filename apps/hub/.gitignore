@@ -27,6 +27,10 @@ yarn-error.log*
 
 # env files (can opt-in for commiting if needed)
 .env*
+# [12/11/2026] Exception : le modèle SANS valeurs doit être versionné, pour
+# qu'un développeur (ou le jury) sache quelles variables remplir. .env.local
+# et les autres restent ignorés.
+!.env.example
 
 # vercel
 .vercel
