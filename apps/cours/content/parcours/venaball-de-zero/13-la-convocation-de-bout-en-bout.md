@@ -11,6 +11,10 @@ date: 2026-10-04
 
 Jeudi soir. La coach des U15 prépare le match de samedi. Elle coche les joueuses qu'elle veut, appuie sur « Envoyer ». Le téléphone de Léa vibre : « Tu es convoquée ». Léa répond « présente ». Sa maman, elle, peut répondre à sa place depuis l'app Club. Samedi matin, la coach voit qui vient.
 
+```jeu
+{ "type": "devine", "question": "La coach peut convoquer depuis le web ou depuis l'app Club. D'après toi, la règle qui décide qui est convocable est-elle écrite deux fois ?", "indice": "Souviens-toi de la leçon 9 : une règle recopiée finit par diverger.", "reponse": "Non. Les deux contrôleurs appellent la même méthode du même service, ConvocationManager::appliquer(). Une seule règle métier pour les deux portes." }
+```
+
 Ce geste traverse presque tout Venaball : la base, un service, trois contrôleurs, deux apps, un service de notifications. On va suivre le trajet complet, fichier par fichier.
 
 ### Le schéma du trajet
@@ -69,6 +73,10 @@ class Convocation
 - `$reponse = null` : tant que Léa n'a pas répondu, la case est vide.
 
 Image du club : c'est la feuille de convocation punaisée au tableau. Une ligne par joueuse, une case « réponse » à cocher.
+
+```jeu
+{ "type": "choix", "question": "Qui empêche, en dernier recours, de convoquer deux fois Léa au même match ?", "choix": ["La base, avec la contrainte unique sur rencontre_id et joueur_id", "L'app, qui grise la case de Léa", "Personne : deux lignes sont créées"], "bonne": 0, "explication": "UniqueConstraint sur le couple rencontre, joueuse : la base elle-même refuse le doublon." }
+```
 
 ### Étapes 1 et 2 : deux portes d'entrée
 
@@ -170,6 +178,10 @@ if ($aPrevenir !== []) {
 
 Un **push**, c'est une notification qui s'affiche sur le téléphone même quand l'app est fermée. `src/Service/ExpoPushService.php` ne parle pas directement à Apple et Google : il passe par les serveurs d'**Expo** (l'outil qui fabrique les apps), qui font le pont. Il lit les jetons de chaque appareil dans la table `push_token` (`src/Entity/Core/PushToken.php`). Ces jetons arrivent par `POST /api/pirb/push/token` (`PirbApiPushController.php`), que les deux apps appellent à l'ouverture. Règle écrite en tête du service : « un push ne doit jamais faire échouer l'action métier ». Si Expo est en panne, l'erreur est notée, la convocation reste enregistrée.
 
+```jeu
+{ "type": "ordre", "consigne": "Remets dans l'ordre ce que fait ConvocationManager::appliquer().", "etapes": ["Filtrer les identifiants reçus contre l'effectif réel", "Créer les convocations qui manquent et leurs notifications", "Retirer les convocations des joueuses décochées", "Tout écrire en base avec flush()", "Envoyer le push par Expo"], "explication": "Le push vient après le flush : on ne prévient jamais quelqu'un d'une convocation qui n'existe pas encore." }
+```
+
 ### Étapes 6 à 8 : Léa répond
 
 Au tap sur la notification, `Pirb store/src/services/push.ts` lit `data.type === 'convocation'` et ouvre l'écran `/convocations`. Cet écran (`Pirb store/app/convocations.tsx`) appelle `GET /api/pirb/convocations`, puis, quand Léa touche « présente », `POST /api/pirb/convocations/{id}/repondre`. Après chaque réponse, il recharge depuis le serveur : « le serveur est la seule source de vérité ».
@@ -196,6 +208,10 @@ if (!$this->peutRepondre($convocation)) {
 
 L'app reçoit aussi un champ `peutRepondre` calculé par le serveur, et se contente de griser ses boutons (`CarteConvocation.tsx`).
 
+```jeu
+{ "type": "trous", "consigne": "La réponse de Léa doit faire partie de la liste blanche. Complète le garde-fou.", "code": "if (!in_array($reponse, Convocation::___, true)) {", "choix": ["REPONSE_PRESENT", "REPONSES", "joueurs"], "bonne": 1, "explication": "REPONSES contient les trois réponses autorisées : present, absent, incertain. Tout le reste est refusé avec un code 400." }
+```
+
 ### Étapes 9 et 10 : le parent répond
 
 Une U11 n'a souvent pas de téléphone. Dans l'app Club, la vue parent (`VueParent.tsx`) appelle `GET /api/club/parent` puis `POST /api/club/parent/convocations/{id}/repondre`. `ApiClubParentController.php` vérifie que la convocation concerne un de **ses** enfants, par un lien `ParentJoueur` validé par le club, et répond 404 sinon. Puis les mêmes règles : liste blanche et match pas encore passé.
@@ -213,6 +229,10 @@ D'après `instruction/00_ECOSYSTEME.md`, l'app Club n'a jamais été compilée (
 ### Ce que tu dis au jury
 
 « Quand la coach convoque, que ce soit sur le web ou dans l'app Club, les deux contrôleurs appellent le même service, `ConvocationManager`, donc une seule règle métier. Ce service filtre la liste reçue contre l'effectif réel de l'équipe, ne re-notifie jamais une joueuse déjà convoquée, journalise une réponse effacée, enregistre en une transaction puis envoie le push par Expo, sans jamais faire échouer la convocation si le push rate. La joueuse répond par l'API, qui vérifie que la convocation est la sienne, que la réponse est dans la liste blanche et que le match n'est pas passé. Je sais que la partie réponse est encore recopiée dans trois contrôleurs, et que le push n'a pas encore été validé sur un vrai téléphone. »
+
+```jeu
+{ "type": "cartes", "titre": "Questions de jury : la convocation", "cartes": [{"recto": "Que fait array_intersect dans appliquer() ?", "verso": "Il ne garde que les numéros présents à la fois dans la demande et dans le vrai effectif. Une joueuse d'un autre club ajoutée à la main disparaît."}, {"recto": "Quels sont les trois garde-fous quand Léa répond ?", "verso": "C'est bien sa convocation (sinon 403), la réponse est dans la liste blanche (sinon 400), le match n'est pas passé (sinon 409)."}, {"recto": "Le web et l'API contrôlent-ils le droit de convoquer pareil ?", "verso": "Non. L'API est plus stricte : elle vérifie le club et que le compte encadre cette équipe, sauf pour un dirigeant."}, {"recto": "Que se passe-t-il si Expo est en panne ?", "verso": "L'erreur est notée et la convocation reste enregistrée. Un push ne doit jamais faire échouer l'action métier."}, {"recto": "Quelles sont les deux limites honnêtes ?", "verso": "La partie réponse est recopiée dans trois contrôleurs, et le push n'a jamais été vérifié sur un vrai téléphone."}] }
+```
 
 ## À retenir
 

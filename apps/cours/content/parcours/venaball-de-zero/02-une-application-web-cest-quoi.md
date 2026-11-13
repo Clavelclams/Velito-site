@@ -11,6 +11,10 @@ date: 2026-10-04
 
 Dans la leçon 1, tu as vu qui utilise Venaball. Maintenant on regarde ce qu'il y a derrière l'écran. Pas de panique : il n'y a que quatre ou cinq pièces, toujours les mêmes, dans toutes les applications web du monde.
 
+```jeu
+{ "type": "devine", "question": "La coach tape manager.mabb.fr et voit ses équipes. D'après toi, ces équipes sont-elles rangées dans son ordinateur ?", "indice": "Son navigateur ne sait rien de Venaball : il sait seulement demander et afficher.", "reponse": "Non. Le navigateur demande la page à un serveur, allumé en permanence chez OVH. C'est le serveur qui va chercher les équipes dans la base de données et qui renvoie la page." }
+```
+
 ### Partir de l'écran de la coach
 
 La coach des U15 ouvre Chrome sur son ordinateur, tape `manager.mabb.fr`, se connecte, et voit la liste de ses équipes. Pour elle, c'est "un site". Pour toi, il se passe une conversation entre plusieurs machines. On va nommer chaque acteur.
@@ -37,6 +41,10 @@ Imagine le club-house du gymnase un soir de match.
 
 Le spectateur n'entre jamais dans la réserve. Il demande, on lui sert. C'est exactement pour ça qu'un navigateur ne touche jamais la base de données directement : il passe toujours par le serveur.
 
+```jeu
+{ "type": "paires", "consigne": "Relie chaque pièce à son rôle dans le club-house.", "paires": [["Navigateur", "Le spectateur au comptoir"], ["Requête HTTP", "La commande passée"], ["Serveur", "Le bénévole derrière le comptoir"], ["Base de données", "La réserve avec le pain et le jambon"], ["Réponse HTML", "Le sandwich emballé"]] }
+```
+
 ### Site vitrine statique contre application
 
 Il existe deux grandes familles de sites.
@@ -44,6 +52,10 @@ Il existe deux grandes familles de sites.
 Un **site statique**, c'est une pile de pages HTML déjà écrites, posées sur un serveur, qui renvoie toujours la même chose à tout le monde. C'est le cas de `venaball.fr` : d'après le doc maître (§5), c'est cinq fichiers HTML déployés par simple copie. Comme une affiche punaisée sur le panneau du gymnase : tout le monde lit la même.
 
 Une **application web**, c'est un site qui fabrique la page au moment où tu la demandes, selon qui tu es et ce qu'il y a dans la base. Quand la coach des U15 ouvre `/equipes`, elle ne voit pas la même chose que le coach d'un autre club. C'est le cas de `manager.mabb.fr`. Même la vitrine `mabb.fr` est fabriquée par le même code, parce qu'elle a un petit outil d'administration pour écrire les actualités.
+
+```jeu
+{ "type": "vraifaux", "affirmation": "venaball.fr fabrique chaque page au moment où tu la demandes, selon qui tu es.", "vrai": false, "explication": "venaball.fr est un site statique : cinq fichiers HTML, les mêmes pour tout le monde. C'est manager.mabb.fr qui fabrique la page à la demande." }
+```
 
 ### PHP, Symfony, framework, Doctrine : les mots du projet
 
@@ -96,9 +108,17 @@ Compare avec le site web : le contrôleur `src/Controller/Manager/EquipeControll
 
 Comment l'API sait qui parle ? L'app envoie un **jeton** (en anglais "Bearer token") : une longue chaîne secrète obtenue au moment de la connexion, comme un bracelet d'accès au gymnase. Le serveur la vérifie dans `src/Security/ApiTokenHandler.php`. On détaillera en leçon 12.
 
+```jeu
+{ "type": "trous", "consigne": "Ce guichet de l'API sert à lire la liste des équipes, pas à modifier. Complète la méthode.", "code": "#[Route('/api/club/equipes', name: 'api_club_equipes', methods: ['___'])]", "choix": ["POST", "JSON", "GET", "HTML"], "bonne": 2, "explication": "GET veut dire lire. JSON et HTML sont des formats de réponse, pas des méthodes HTTP." }
+```
+
 ### Ce que tu dis au jury
 
 "Venaball est une application web classique : un navigateur envoie une requête HTTP, le serveur PHP fabrique la réponse en allant chercher les données dans une base MySQL, et renvoie du HTML. J'ai choisi le framework Symfony pour ne pas réinventer le routage, la sécurité et les formulaires, avec Doctrine pour parler à la base. Les applications mobiles ne touchent jamais la base : elles passent par une API qui renvoie du JSON, pour que le mot de passe de la base reste sur le serveur et que les droits soient vérifiés au même endroit pour le web et le mobile. La vitrine produit venaball.fr, elle, est un site statique, parce qu'elle n'a besoin d'aucune donnée."
+
+```jeu
+{ "type": "cartes", "titre": "Questions de jury : une application web", "cartes": [{"recto": "Pourquoi le navigateur ne touche-t-il jamais la base ?", "verso": "Il passe toujours par le serveur, comme le spectateur qui n'entre jamais dans la réserve."}, {"recto": "Site statique ou application web : quelle différence ?", "verso": "Le site statique renvoie la même page à tous (venaball.fr). L'application fabrique la page pour chaque personne (manager.mabb.fr)."}, {"recto": "PHP, Symfony, Doctrine : qui fait quoi ?", "verso": "PHP est le langage, Symfony le framework (la boîte à outils avec ses règles), Doctrine le pont vers la base."}, {"recto": "Pourquoi les apps mobiles passent-elles par une API ?", "verso": "Sécurité : le mot de passe de la base reste sur le serveur. Règles : les droits sont vérifiés côté serveur. Une seule vérité pour le web et le mobile."}] }
+```
 
 ## À retenir
 

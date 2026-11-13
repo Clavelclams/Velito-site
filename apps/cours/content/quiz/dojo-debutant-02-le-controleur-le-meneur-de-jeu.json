@@ -1,0 +1,49 @@
+{
+  "fiche": "dojo-debutant-02-le-controleur-le-meneur-de-jeu",
+  "questions": [
+    {
+      "question": "Quel est le rôle d'un contrôleur ?",
+      "choix": [
+        "Stocker les séances sur le disque du serveur",
+        "Dessiner la page HTML",
+        "Recevoir la demande, vérifier, faire travailler les autres, répondre",
+        "Relier une adresse à un bout de code"
+      ],
+      "bonne": 2,
+      "explication": "Stocker, c'est la base. Dessiner, c'est le template. Relier une adresse, c'est la route. Le contrôleur, lui, distribue le jeu."
+    },
+    {
+      "question": "Dans SeanceController::show, à quoi sert la ligne denyAccessUnlessGranted(ClubVoter::CLUB_MEMBER, $seance) ?",
+      "choix": [
+        "À bloquer la suite si la personne n'est pas membre du club de cette séance",
+        "À charger la séance depuis la base",
+        "À afficher un message de bienvenue",
+        "À vérifier que la séance n'est pas annulée"
+      ],
+      "bonne": 0,
+      "explication": "C'est le contrôle à l'entrée. La séance, elle, a déjà été trouvée par Symfony avant d'entrer dans la méthode."
+    },
+    {
+      "question": "Dans show, qui va chercher les retours des joueuses dans la base ?",
+      "choix": [
+        "Le template show.html.twig",
+        "Le contrôleur, avec une requête SQL écrite dedans",
+        "La route",
+        "Le repository, appelé par le contrôleur"
+      ],
+      "bonne": 3,
+      "explication": "Le contrôleur appelle $feedbackRepo->synthesePourSeance($seance). Il demande, il ne fouille pas lui-même."
+    },
+    {
+      "question": "Que fait return $this->render('manager/seance/show.html.twig', [...]) ?",
+      "choix": [
+        "Il enregistre la séance en base",
+        "Il donne les données au template et renvoie la page fabriquée",
+        "Il redirige vers la liste des séances",
+        "Il vérifie les droits une seconde fois"
+      ],
+      "bonne": 1,
+      "explication": "render passe la séance et les retours au template, qui fabrique la page. return renvoie cette réponse vers l'écran."
+    }
+  ]
+}

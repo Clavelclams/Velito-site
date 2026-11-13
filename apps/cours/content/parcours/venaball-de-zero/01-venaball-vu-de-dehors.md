@@ -11,6 +11,10 @@ date: 2026-10-04
 
 Avant d'ouvrir le moindre fichier de code, on va faire ce que ferait un nouveau bénévole qui arrive au club : regarder qui fait quoi. Aucune ligne de code dans cette leçon. Si tu ne sais pas expliquer à ta grand-mère à quoi sert Venaball, le jury ne t'écoutera pas sur le reste.
 
+```jeu
+{ "type": "devine", "question": "Avant Venaball, où vivaient d'après toi les informations d'un club de basket : licences, présences, convocations ?", "indice": "Pense à ce que tu trouves sur le bureau d'une secrétaire de club et dans le téléphone d'un coach.", "reponse": "Dans des classeurs, des fichiers Excel, des groupes WhatsApp et la mémoire de la secrétaire. Le but de Venaball : mettre tout ça au même endroit." }
+```
+
 ### Le point de départ : un club de basket
 
 Venaball est né dans un vrai club : l'Amiens Métropole Basket Ball, qu'on appelle **MABB**. Un club de basket, c'est une petite entreprise faite surtout de bénévoles. Il y a des équipes par âge (U11, U13, U15...), des entraînements chaque semaine, des matchs le week-end, des licences à gérer, de l'argent qui entre et qui sort.
@@ -32,6 +36,10 @@ Dans le code, chaque personne a un ou plusieurs **rôles** dans un club. Un rôl
 - **La joueuse.** Elle voit ses convocations, ses stats de saison et de match, sa carte de tirs, ses badges, et peut s'entraîner au tir et au dribble avec le "Playground" (des jeux qui utilisent la caméra du téléphone).
 
 Retiens une idée importante : **une même personne peut avoir plusieurs rôles**. Un papa peut être parent ET bénévole à la table de marque ET coach des U11. Le code le permet parce que les rôles sont des lignes séparées, une par rôle et par club.
+
+```jeu
+{ "type": "paires", "consigne": "Relie chaque rôle à ce qu'il fait dans Venaball.", "paires": [["Dirigeant", "Valide les demandes d'entrée dans le club"], ["Secrétaire", "Tient les dossiers de licence"], ["Trésorier", "Suit les cotisations et les notes de frais"], ["Coach", "Fait l'appel et convoque pour le match"], ["Joueuse", "Voit ses stats et sa carte de tirs"]] }
+```
 
 ### Les espaces : où chacun se connecte
 
@@ -66,6 +74,10 @@ Voici la carte, à recopier sur une feuille :
                                                               (joueuse)  (staff, parent)
 ```
 
+```jeu
+{ "type": "choix", "question": "La secrétaire du MABB veut ouvrir l'outil du staff. Quelle adresse tape-t-elle ?", "choix": ["mabb.fr", "pirb.mabb.fr", "manager.mabb.fr", "venaball.fr"], "bonne": 2, "explication": "manager.mabb.fr est le Manager, l'outil du staff. mabb.fr est la vitrine publique et pirb.mabb.fr l'espace joueuse." }
+```
+
 ### Les noms : pourquoi il y en a autant
 
 C'est le point qui embrouille tout le monde, toi compris, alors on le pose une fois pour toutes.
@@ -76,6 +88,10 @@ C'est le point qui embrouille tout le monde, toi compris, alors on le pose une f
 - **Venaball** : le nom du produit pour la joueuse, et le nom général du projet.
 
 Le fichier `src/Service/MarqueResolver.php` le dit noir sur blanc dans son commentaire : "une application, deux identités". Selon l'adresse tapée dans le navigateur, le même code affiche "MABB Manager" ou "Venaball Club", avec un logo et des couleurs différents. Et si l'adresse n'est pas reconnue, il retombe volontairement sur MABB Manager.
+
+```jeu
+{ "type": "vraifaux", "affirmation": "MABB Manager et Venaball Club sont deux logiciels différents, chacun avec son propre code.", "vrai": false, "explication": "C'est le même outil. Selon l'adresse tapée, MarqueResolver.php affiche un nom, un logo et des couleurs différents : une application, deux identités." }
+```
 
 ### Un seul code, deux instances
 
@@ -97,6 +113,10 @@ Un bon développeur connaît les limites de son produit. Le doc maître liste de
 ### Ce que tu dis au jury
 
 "Venaball est né d'un besoin réel : le club de basket MABB gérait tout avec des classeurs, Excel et WhatsApp. J'ai construit un seul code Symfony qui sert plusieurs espaces : une vitrine publique, un outil pour le staff, un espace joueuse sur le web, et une API pour deux applications mobiles. Ce même code tourne en deux instances, une pour le MABB et une multi-club sous la marque Venaball, chacune avec sa base. Les droits reposent sur onze rôles par club, et une personne peut en cumuler plusieurs, par exemple parent et bénévole. Les deux apps mobiles ne sont pas encore publiées, c'est mon prochain jalon."
+
+```jeu
+{ "type": "cartes", "titre": "Questions de jury : Venaball vu de dehors", "cartes": [{"recto": "D'où vient Venaball ?", "verso": "D'un vrai club, le MABB, qui gérait tout avec des classeurs, Excel et WhatsApp."}, {"recto": "Combien de rôles existent, et où sont-ils écrits ?", "verso": "Onze, dans src/Entity/Core/UserClubRole.php. Une même personne peut en cumuler plusieurs, par exemple parent et bénévole."}, {"recto": "Pourquoi le mot pirb est-il encore dans le code ?", "verso": "C'est le nom historique de l'espace joueuse. Le produit s'appelle Venaball, mais les adresses et les dossiers ont gardé pirb."}, {"recto": "C'est quoi une instance ?", "verso": "Une copie du même programme installée sur un serveur, avec sa propre base de données. Il y en a deux : MABB et Venaball."}, {"recto": "Les deux apps mobiles sont-elles sur les stores ?", "verso": "Pas encore. Il faut le savoir et le dire honnêtement : c'est le prochain jalon."}] }
+```
 
 ## À retenir
 

@@ -1,0 +1,49 @@
+{
+  "fiche": "dojo-debutant-08-le-service-une-regle-un-seul-endroit",
+  "questions": [
+    {
+      "question": "Un service, dans Symfony, c'est quoi ?",
+      "choix": [
+        "Une page du site réservée au staff",
+        "Une classe spécialisée dans un travail, que les contrôleurs appellent",
+        "Le bout de code qui répond à une adresse",
+        "Une table de la base de données"
+      ],
+      "bonne": 1,
+      "explication": "Le service fait un travail précis et ne répond à aucune adresse. Répondre à une adresse, c'est le rôle du contrôleur."
+    },
+    {
+      "question": "Dans AnnulationSeanceService, que renvoie aUnAppel($seance) ?",
+      "choix": [
+        "Le nombre de joueuses présentes",
+        "Le motif de l'annulation",
+        "La liste des présences",
+        "true si au moins une présence vient de l'appel du coach, sinon false"
+      ],
+      "bonne": 3,
+      "explication": "La méthode parcourt les présences et répond oui dès qu'une ligne est une saisie du coach. Elle ne compte rien et ne modifie rien."
+    },
+    {
+      "question": "Le site refuse d'annuler une séance pointée, mais l'app l'accepte. Quelle erreur de conception a probablement été commise ?",
+      "choix": [
+        "La règle a été écrite dans chaque contrôleur, et une des deux copies a changé",
+        "Le service a été appelé deux fois",
+        "L'app n'est pas connectée à internet",
+        "La base de données est différente pour le site et l'app"
+      ],
+      "bonne": 0,
+      "explication": "Deux copies d'une règle finissent par diverger. Dans mabb-site, les deux contrôleurs appellent le même aUnAppel, donc ce cas ne peut pas arriver."
+    },
+    {
+      "question": "Sur une séance déjà pointée, le site affiche un bandeau et l'API renvoie un code 409. Pourquoi cette différence ?",
+      "choix": [
+        "Parce que la règle n'est pas la même des deux côtés",
+        "Parce que l'API a un bug",
+        "Parce que le service décide, et chaque contrôleur présente la réponse à sa façon",
+        "Parce que le service sait qui l'appelle"
+      ],
+      "bonne": 2,
+      "explication": "La décision est unique (le service). La présentation dépend de la porte d'entrée : un bandeau pour un humain, un code et un message pour une app."
+    }
+  ]
+}

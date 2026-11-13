@@ -11,6 +11,10 @@ date: 2026-10-04
 
 Le 15 juillet 2026, la secrétaire enregistre la cotisation de Léa, U15. Le même jour, la coach ouvre la page Équipes. Question simple : on est en quelle saison ? Avant le 30 septembre 2026, Venaball pouvait donner **deux réponses différentes** selon l'écran. La cotisation partait en 2025-2026, la page Équipes affichait 2026-2027. Cette leçon raconte pourquoi, et comment les **services** ont réglé le problème.
 
+```jeu
+{ "type": "devine", "question": "Le 15 juillet 2026, on est en quelle saison d'après toi : 2025-2026 ou 2026-2027 ?", "indice": "Les matchs reprennent en septembre, mais les licences et les mutations FFBB démarrent plus tôt.", "reponse": "2026-2027 : la saison bascule au 1er juillet, début administratif de la saison FFBB. Avant le 30 septembre 2026, Venaball donnait deux réponses selon l'écran, parce que la règle était recopiée." }
+```
+
 ### Un service : un spécialiste qu'on appelle
 
 Un **service**, c'est une classe PHP qui fait un seul métier, et que tout le reste du code peut appeler. Elle ne reçoit pas de requête, n'affiche pas de page. Elle sait faire une chose, bien.
@@ -36,6 +40,10 @@ Dans `src/Gamification/XpCalculator.php`, une autre copie, aussi en septembre. M
 Même chose pour les catégories. `EquipeController.php` avait sa propre grille d'âge, avec un « U17 » que la grille fédérale ne connaît pas. Le commentaire ajouté le 30/09 le dit : « deux réponses différentes pour la même joueuse selon l'écran ».
 
 C'est le danger d'une règle recopiée : le jour où elle change, on corrige trois copies sur quatre. La quatrième ment en silence.
+
+```jeu
+{ "type": "vraifaux", "affirmation": "Recopier une règle dans plusieurs fichiers est plus sûr : si une copie est fausse, les autres tiennent.", "vrai": false, "explication": "C'est l'inverse. Le jour où la règle change, on corrige trois copies sur quatre, et la quatrième ment en silence." }
+```
 
 ### `SaisonService` : la règle à un seul endroit
 
@@ -101,6 +109,10 @@ public function getSaisonActive(): string
 
 C'est cette méthode que l'`EquipeController` appelle dans son `getSaisonCourante()` (leçon 8), et que les templates appellent via la fonction Twig `saison_active()` (déclarée dans `src/Twig/SaisonExtension.php`).
 
+```jeu
+{ "type": "trous", "consigne": "La saison bascule en juillet. Complète la constante de SaisonService.", "code": "private const MOIS_BASCULE = ___;", "choix": ["1", "9", "7"], "bonne": 2, "explication": "7 = juillet. Le 9 (septembre), c'était l'ancienne règle recopiée dans CotisationJoueur et XpCalculator." }
+```
+
 ### `CategorieCalculator` : U13, U15, calculé depuis l'âge
 
 Deuxième spécialiste, l'officiel des catégories :
@@ -137,6 +149,10 @@ public function categoriePourAge(int $age, bool $avecU21 = false): string
 - Au-delà de 18 : Senior (ou U21 si le club engage une équipe U21).
 
 Le commentaire dit « La grille, en un seul endroit. » C'est exactement la leçon de cette page.
+
+```jeu
+{ "type": "choix", "question": "Léa est née en 2013. Quelle est sa catégorie pour la saison 2026-2027 ?", "choix": ["U15", "U13", "U18"], "bonne": 0, "explication": "On prend l'année de fin de saison : 2027 - 2013 = 14. 14 dépasse 13 mais pas 15, donc U15. On ne regarde pas l'anniversaire." }
+```
 
 ### L'injection de dépendances : l'intendant du club
 
@@ -184,6 +200,10 @@ Deux limites honnêtes. D'abord, aucun test ne vise directement `pourDate()`, la
 ### Ce que tu dis au jury
 
 « La logique métier vit dans des services, pas dans les contrôleurs. Par exemple, `SaisonService` contient la seule règle de saison du projet, bascule au 1er juillet, et `CategorieCalculator` la seule grille de catégories FFBB. Avant le 30 septembre, la règle de saison était recopiée en trois endroits avec des mois différents, ce qui envoyait une même saisie sur deux saisons ; je l'ai centralisée. Les contrôleurs reçoivent ces services par injection de dépendances, avec l'autowiring de Symfony, ce qui les rend aussi testables séparément. »
+
+```jeu
+{ "type": "cartes", "titre": "Questions de jury : les services", "cartes": [{"recto": "C'est quoi un service ?", "verso": "Une classe PHP qui fait un seul métier et que tout le reste du code peut appeler. Elle ne reçoit pas de requête et n'affiche pas de page."}, {"recto": "C'est quoi l'injection de dépendances ?", "verso": "Une classe déclare ses besoins dans son constructeur, et le conteneur de services de Symfony les lui fournit. Elle ne fait jamais new SaisonService()."}, {"recto": "À quoi sert autowire: true ?", "verso": "Le conteneur regarde les types demandés dans les constructeurs et les fournit tout seul. Créer un service, c'est écrire une classe dans src/Service/."}, {"recto": "Que fait getSaisonActive() ?", "verso": "Elle respecte la saison choisie en session si elle est valide. Sinon, elle retombe sur la saison calculée par la date."}, {"recto": "Quelles limites honnêtes sur SaisonService ?", "verso": "Aucun test ne vise directement pourDate(), et le commentaire d'en-tête dit encore septembre alors que la constante dit juillet."}] }
+```
 
 ## À retenir
 

@@ -176,6 +176,38 @@ date: <date du jour>
   `{ "titre", "description", "icone", "ordre", "domaine" }` avec `domaine`
   parmi `bases`, `backend`, `frontend`, `metier`, `jeux`, `autres`.
 
+### C bis. Mini-jeux dans le texte (leçons et fiches) — ajouté le 2026-11-13
+
+Une leçon ne doit jamais être un mur de texte. Règle : **pas plus de deux
+ou trois courts paragraphes sans faire agir le lecteur**. On insère dans le
+Markdown un bloc de code de langage `jeu` qui contient **un objet JSON sur
+une seule ligne ou plusieurs, valide** (guillemets doubles, pas de virgule
+finale). Le site l'affiche comme un mini-jeu (`app/components/JeuLecon.tsx`,
+`ContenuMarkdown.tsx`). Un JSON faux s'affiche en rouge sur la page.
+
+| `type` | Champs | À quoi ça sert |
+|---|---|---|
+| `devine` | `question`, `reponse`, `indice?` | Faire réfléchir AVANT d'expliquer. Idéal en ouverture. |
+| `choix` | `question`, `choix[]` (2 à 4), `bonne` (index dès 0), `explication?` | Une question éclair au milieu du cours. |
+| `vraifaux` | `affirmation`, `vrai` (true/false), `explication?` | Casser une idée reçue. |
+| `ordre` | `consigne`, `etapes[]` (dans le BON ordre, le site mélange), `explication?` | Un déroulé : requête, déploiement, enquête. 3 à 6 étapes, toutes différentes. |
+| `trous` | `consigne`, `code` (avec UN seul `___`), `choix[]`, `bonne`, `explication?` | Compléter une ligne de vrai code. `\n` pour les sauts de ligne. |
+| `paires` | `consigne`, `paires` : `[["mot","définition"], …]` (3 à 5) | Vocabulaire. Définitions courtes et toutes différentes. |
+| `cartes` | `titre?`, `cartes` : `[{"recto","verso"}, …]` | Révision finale, questions de jury. |
+
+Exemple :
+
+````markdown
+```jeu
+{ "type": "vraifaux", "affirmation": "Un 404 veut dire que le serveur est en panne.", "vrai": false, "explication": "Le serveur répond : il n'a rien trouvé à cette adresse." }
+```
+````
+
+Le texte des jeux est du texte brut (pas de Markdown, pas de backticks).
+Une leçon « dojo » : 250 à 450 mots de prose, 4 à 6 jeux de types variés,
+une image du quotidien ou du basket par notion, un seul extrait de code
+court par idée. Modèle : `content/parcours/dojo-debutant/01-une-page-une-adresse.md`.
+
 ### D. Un quiz — `content/quiz/<id>.json` (un par fiche et un par leçon)
 
 - `<id>` = le slug de la fiche, ou `<parcours>-<fichier de la leçon sans .md>`.

@@ -1,0 +1,49 @@
+{
+  "fiche": "dojo-debutant-11-variables-denvironnement-les-reglages-caches",
+  "questions": [
+    {
+      "question": "Une variable d'environnement, c'est quoi ?",
+      "choix": [
+        "Une variable PHP déclarée en haut d'un contrôleur",
+        "Un réglage nommé, rangé sur le serveur, en dehors du code",
+        "Une colonne spéciale de la base de données",
+        "Un fichier de traduction"
+      ],
+      "bonne": 1,
+      "explication": "Elle vit sur le serveur, pas dans le code. C'est ce qui permet au même code de tourner sur deux serveurs avec des réglages différents."
+    },
+    {
+      "question": "Le 13/11, « Envoyer les convocations » répondait 500 sur Venaball et marchait sur MABB. Quelle était la cause ?",
+      "choix": [
+        "Le code n'était pas le même sur les deux serveurs",
+        "Le serveur de Venaball était éteint",
+        "Le dirigeant n'avait pas les droits",
+        "La variable EMAIL_EXPEDITEUR n'existait pas sur le serveur de Venaball"
+      ],
+      "bonne": 3,
+      "explication": "Même code, réglages différents. Le log indiquait EnvNotFoundException : la variable demandée était introuvable sur cette instance."
+    },
+    {
+      "question": "Dans config/services.yaml, que fait %env(default:app.email_expediteur_defaut:EMAIL_EXPEDITEUR)% ?",
+      "choix": [
+        "Il prend EMAIL_EXPEDITEUR, et si elle n'existe pas, le paramètre app.email_expediteur_defaut",
+        "Il écrase EMAIL_EXPEDITEUR par la valeur par défaut",
+        "Il crée la variable sur le serveur",
+        "Il prend toujours le paramètre par défaut"
+      ],
+      "bonne": 0,
+      "explication": "default: fournit une valeur de repli. La variable reste prioritaire quand elle existe ; rien n'est créé ni écrasé sur le serveur."
+    },
+    {
+      "question": "Que fait-on du fichier .env.local ?",
+      "choix": [
+        "On le commite pour que les deux serveurs aient les mêmes réglages",
+        "On le colle dans le chat d'un assistant pour qu'il aide à déboguer",
+        "On le laisse sur le serveur : jamais commité, jamais lu par un assistant",
+        "On le recopie dans config/services.yaml"
+      ],
+      "bonne": 2,
+      "explication": "Il contient des secrets. Il est dans .gitignore, et chaque serveur garde le sien. Pour déboguer, on donne le nom de la variable, jamais sa valeur."
+    }
+  ]
+}

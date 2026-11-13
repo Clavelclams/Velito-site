@@ -11,6 +11,10 @@ date: 2026-10-04
 
 Fin de saison. Le dirigeant ouvre la page « Équipes » de `club.venaball.fr`. Sur la ligne « U13 F 2025-2026 », il clique sur le bouton rouge **Archiver**. Une petite fenêtre demande « Archiver cette équipe ? ». Il confirme. La page se recharge, un bandeau vert dit « Équipe "U13 F" archivée. », et l'équipe a disparu de la liste.
 
+```jeu
+{ "type": "devine", "question": "Entre le clic sur Archiver et le bandeau vert, que doit vérifier le serveur avant de toucher à l'équipe, d'après toi ?", "indice": "Deux vérifications : qui clique, et d'où vient vraiment le formulaire.", "reponse": "D'abord le droit : seul un dirigeant de ce club peut archiver. Ensuite le jeton CSRF : le formulaire vient bien de Venaball. On vérifie d'abord, on agit ensuite." }
+```
+
 Entre le clic et le bandeau vert, un seul morceau de code a décidé de tout : un **contrôleur**. Dans la leçon 3, tu as vu le voyage d'un clic. Ici, on s'arrête sur la gare d'arrivée.
 
 ### Le contrôleur : l'arbitre de la requête
@@ -91,6 +95,10 @@ Un **message flash**, c'est un message rangé dans la session de l'utilisateur, 
 **`return $this->redirectToRoute('manager_equipe_index');`**
 La réponse n'est pas une page, c'est une **redirection** : « va maintenant à la liste des équipes ». Le navigateur recharge la liste, qui affiche le flash. Avantage : si le dirigeant appuie sur F5, il recharge la liste, pas l'archivage.
 
+```jeu
+{ "type": "ordre", "consigne": "Remets les étapes de archive() dans l'ordre du code.", "etapes": ["Vérifier le droit CLUB_ADMIN sur l'équipe", "Vérifier le jeton CSRF", "Marquer l'équipe inactive avec setIsActive(false)", "Écrire en base avec flush()", "Préparer le message flash", "Rediriger vers la liste des équipes"], "explication": "Les deux vérifications passent avant toute modification. La redirection vient en dernier : la liste rechargée affiche le flash." }
+```
+
 ### Une action qui affiche une page : `new()`
 
 Créer une équipe montre l'autre type de réponse. Extrait de la même classe :
@@ -125,6 +133,10 @@ return $this->render('manager/equipe/new.html.twig', [
 - `persist` puis `flush` : nouvelle équipe, donc on demande d'abord à Doctrine de la suivre.
 - `render(...)` : si on arrive en GET, ou si le formulaire a des erreurs, on fabrique la page HTML avec ce template et ces variables.
 
+```jeu
+{ "type": "trous", "consigne": "Le serveur tamponne la nouvelle équipe avec le club actif, avant le formulaire. Complète.", "code": "$equipe = new Equipe();\n$equipe->___($club);", "choix": ["persist", "getClub", "setClub", "render"], "bonne": 2, "explication": "setClub($club) avant le formulaire : le club n'est jamais un champ que l'utilisateur peut choisir." }
+```
+
 ### Et pour l'app mobile : `JsonResponse`
 
 L'app staff ne veut pas de HTML, elle veut des données. Extrait de `src/Controller/Api/Club/ApiClubMissionController.php` (un bénévole confirme sa mission du week-end) :
@@ -143,6 +155,10 @@ public function confirmer(int $aid, Request $request): JsonResponse
 ```
 
 Même squelette : route, vérification (`maMission()` contrôle que la mission est la sienne, dans son club, sinon 404), modification, `flush`. Seule la sortie change : du **JSON**, un format texte de données que l'app lit. `requirements: ['aid' => '\d+']` impose que le paramètre soit un nombre. Pas de jeton CSRF ici : l'API s'authentifie par un jeton envoyé dans un en-tête, pas par un cookie (leçon 12).
+
+```jeu
+{ "type": "choix", "question": "Pourquoi l'action confirmer() de l'API ne vérifie-t-elle pas de jeton CSRF ?", "choix": ["Parce que l'API est réservée aux dirigeants", "Parce que l'API s'authentifie par un jeton dans un en-tête, pas par un cookie", "Parce qu'une requête POST n'en a jamais besoin"], "bonne": 1, "explication": "Les POST du manager, eux, vérifient tous un jeton CSRF. L'API n'utilise pas de cookie : elle reçoit son jeton dans un en-tête." }
+```
 
 ### Le problème des contrôleurs obèses
 
@@ -163,6 +179,10 @@ Le remède : un contrôleur mince qui vérifie, appelle un **service** (leçon 9
 ### Ce que tu dis au jury
 
 « Un contrôleur reçoit la requête, vérifie les droits en premier avec `denyAccessUnlessGranted` et le `ClubVoter`, puis agit et renvoie une réponse : une page avec `render`, une redirection avec `redirectToRoute`, ou du JSON pour les apps. Sur les formulaires POST du manager, je vérifie un jeton CSRF, et le club est toujours imposé par le serveur, jamais choisi par l'utilisateur. L'archivage est une suppression douce pour garder l'historique. Je sais que certains contrôleurs sont trop gros, comme `RencontreController` avec 1 466 lignes, et que la prochaine étape est d'en sortir la logique dans des services. »
+
+```jeu
+{ "type": "cartes", "titre": "Questions de jury : un contrôleur", "cartes": [{"recto": "Quelles sont les trois sorties possibles d'un contrôleur ?", "verso": "render() pour une page HTML, redirectToRoute() pour une redirection, JsonResponse pour l'API."}, {"recto": "Pourquoi archiver une équipe au lieu de la supprimer ?", "verso": "C'est un soft delete : l'historique des joueuses, des matchs et des bilans y est rattaché. On la marque inactive."}, {"recto": "C'est quoi un message flash ?", "verso": "Un message rangé dans la session, affiché une seule fois sur la page suivante, puis effacé."}, {"recto": "Pourquoi un contrôleur obèse est-il un problème ?", "verso": "Dur à lire, dur à tester, facile à casser, et ses règles finissent recopiées ailleurs. RencontreController fait 1 466 lignes."}] }
+```
 
 ## À retenir
 

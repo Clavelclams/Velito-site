@@ -11,6 +11,10 @@ date: 2026-10-04
 
 Quand tu ouvres `mabb-site` dans VS Code, tu vois une trentaine de dossiers et de fichiers à la racine. C'est intimidant. Mais c'est comme le local du club : une fois qu'on sait que les ballons sont dans la cage, les maillots dans l'armoire et les licences dans le classeur de la secrétaire, on ne se perd plus. Cette leçon est la carte du local. Tous les chiffres viennent d'un comptage fait le 04/10/2026 sur ton dossier.
 
+```jeu
+{ "type": "devine", "question": "Tu ouvres mabb-site : une trentaine de dossiers et de fichiers. D'après toi, dans quel dossier se trouve ton code PHP à toi ?", "indice": "Trois lettres, le début du mot source.", "reponse": "Dans src/ : 361 fichiers PHP. Le reste règle (config/), met en page (templates/), garde l'historique de la base (migrations/) ou vient des autres (vendor/)." }
+```
+
 Un mot d'abord : un **fichier**, c'est un document (comme une feuille), un **dossier**, c'est un tiroir qui contient des feuilles ou d'autres tiroirs. Symfony impose où ranger chaque sorte de fichier : c'est le "règlement de rangement" du framework.
 
 ### Vue d'ensemble
@@ -65,6 +69,10 @@ mabb-site/
 - **`Feed/` (1) : `FeedItem.php`**, la forme d'un élément du fil "Pour toi" du tableau de bord.
 - **`Kernel.php`** : le noyau vu en leçon 3.
 
+```jeu
+{ "type": "paires", "consigne": "Relie chaque tiroir de src/ à son image.", "paires": [["Entity/", "Les fiches du classeur"], ["Repository/", "Les bénévoles qui cherchent dans le classeur"], ["Controller/", "Les coachs qui donnent les consignes"], ["Service/", "Les spécialistes qu'on appelle au besoin"], ["EventListener/", "Les arbitres qui surveillent"]] }
+```
+
 ### Les autres tiroirs de la racine
 
 - **`templates/` (199 fichiers Twig) : les modèles de pages.** Rangés comme les contrôleurs : `manager/`, `pirb/`, `vitrine/`, `admin/`, `emails/`. Exemple : `manager/equipe/index.html.twig`. C'est la mise en page de la feuille de match : la forme, pas les données.
@@ -81,9 +89,17 @@ mabb-site/
 - **`instruction/` : la documentation du projet** (43 éléments dont les sous-dossiers `archive/`, `CDC/`, `bg/`). Le plus important : `00_ECOSYSTEME.md`, le document maître. Aussi `08_ADR.md` (les décisions d'architecture) et `arborescence.md`.
 - **Plus petits :** `shemas/dictionnaire_db.md` (le dictionnaire de la base), `puml/` (un diagramme), `scripts/` (un script SQL ponctuel), `translations/` (vide), `.github/workflows/` (une automatisation GitHub pour lire les PDF de tirs FFBB), `compose.yaml` (configuration Docker générée par Symfony, usage non vérifié), `phpunit.dist.xml` (réglages des tests).
 
+```jeu
+{ "type": "choix", "question": "Quel dossier est le seul visible depuis Internet ?", "choix": ["vendor/", "templates/", "src/", "public/"], "bonne": 3, "explication": "public/ contient index.php, .htaccess, playground/ et uploads/. Tout le reste est invisible depuis Internet, c'est voulu." }
+```
+
 ### `deploy.ps1` : à manier avec méfiance
 
 `deploy.ps1` est un script PowerShell qui fait tout d'un coup : il lance `git add -A`, commit, pousse, puis se connecte au serveur MABB et lance `git pull`, l'installation des bibliothèques et les migrations. Problème : le doc maître (§2.6) dit l'inverse aujourd'hui. Sur le serveur, on fait `git fetch` puis `git reset --hard origin/main`, **jamais** `git pull`, et on ne fait jamais `git add` en aveugle sur ce dépôt. Ce script date de juin et n'a pas suivi. Ne l'utilise pas tel quel ; c'est une bonne question à te poser avant le jury : le garder corrigé, ou le supprimer.
+
+```jeu
+{ "type": "vraifaux", "affirmation": "Sur le serveur, la procédure actuelle est de lancer git pull, comme le fait deploy.ps1.", "vrai": false, "explication": "Le doc maître dit git fetch puis git reset --hard origin/main, jamais git pull. deploy.ps1 date de juin et n'a pas suivi." }
+```
 
 ### Les fichiers parasites à la racine
 
@@ -101,6 +117,10 @@ Ce rangement est un vrai sujet de jury : un dépôt propre montre que tu maîtri
 ### Ce que tu dis au jury
 
 "Mon dépôt suit l'organisation standard de Symfony, ce qui permet à n'importe quel développeur Symfony de s'y retrouver. Le code métier est dans `src/`, rangé par responsabilité : les entités décrivent les données, les repositories les cherchent, les contrôleurs reçoivent les requêtes, les services portent la logique réutilisable, et `Security/` porte les règles d'accès. À l'intérieur, je range encore par espace ou par domaine, par exemple `Entity/Core`, `Sport`, `Pirb` et `Vitrine`. Seul `public/` est exposé sur Internet. Je sais aussi ce qui n'est pas propre : quelques fichiers de travail à la racine et un ancien script `deploy.ps1` qui ne suit plus ma procédure de déploiement."
+
+```jeu
+{ "type": "cartes", "titre": "Questions de jury : la carte du dossier", "cartes": [{"recto": "Comment sont rangées les entités ?", "verso": "Par domaine : Core (plateforme), Sport (basket), Pirb (joueuse), Vitrine (site public)."}, {"recto": "Quelle différence entre src/ et vendor/ ?", "verso": "src/ est ton code. vendor/ contient les bibliothèques téléchargées, le code des autres : on n'y touche jamais."}, {"recto": "À quoi sert config/ ?", "verso": "C'est le règlement : routes, sécurité, connexion à la base, services. Pas de code métier, des réglages."}, {"recto": "Que dis-tu au jury sur la propreté de la racine ?", "verso": "Qu'il reste des fichiers de travail à la racine et un ancien deploy.ps1 qui ne suit plus la procédure de déploiement."}] }
+```
 
 ## À retenir
 

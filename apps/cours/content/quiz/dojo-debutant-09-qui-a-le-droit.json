@@ -1,0 +1,49 @@
+{
+  "fiche": "dojo-debutant-09-qui-a-le-droit",
+  "questions": [
+    {
+      "question": "Quelle est la différence entre authentification et autorisation ?",
+      "choix": [
+        "C'est la même chose, dite avec deux mots",
+        "L'authentification vérifie tes droits, l'autorisation ton mot de passe",
+        "L'authentification concerne le site, l'autorisation concerne l'app",
+        "L'authentification dit qui tu es, l'autorisation dit ce que tu as le droit de faire"
+      ],
+      "bonne": 3,
+      "explication": "Être connecté prouve ton identité. Ça ne donne aucun droit en soi : chaque action est vérifiée à part."
+    },
+    {
+      "question": "Dans denyAccessUnlessGranted(ClubVoter::CLUB_STAFF, $seance), à quoi sert $seance ?",
+      "choix": [
+        "À indiquer l'objet concerné : le Voter en tire le club et y cherche ton rôle",
+        "À enregistrer la séance en base",
+        "À afficher le nom de la séance dans le message d'erreur",
+        "À rien, seul le niveau compte"
+      ],
+      "bonne": 0,
+      "explication": "Le droit se vérifie dans le club de l'objet. Sans l'objet, le Voter ne saurait pas dans quel club regarder ton rôle."
+    },
+    {
+      "question": "Dans FermetureController, les routes demandent CLUB_ADMIN. Qui passe ?",
+      "choix": [
+        "Tout membre du club",
+        "Les coachs et le staff",
+        "Le dirigeant du club concerné",
+        "Tout dirigeant, quel que soit son club"
+      ],
+      "bonne": 2,
+      "explication": "CLUB_ADMIN correspond au rôle dirigeant, et seulement dans le club de l'objet. Dirigeant d'un autre club : refusé."
+    },
+    {
+      "question": "Dans ApiClubSeanceController::seanceAutorisee, pourquoi une séance d'un autre club répond-elle 404 et pas 403 ?",
+      "choix": [
+        "Parce que 403 n'existe pas dans une API",
+        "Pour ne pas révéler que cette séance existe",
+        "Parce que le serveur n'a pas trouvé le club",
+        "Parce que 404 est plus rapide à calculer"
+      ],
+      "bonne": 1,
+      "explication": "Un 403 dirait « elle existe, mais pas pour toi ». Avec un 404 uniforme, impossible de distinguer une séance inexistante d'une séance d'un autre club."
+    }
+  ]
+}

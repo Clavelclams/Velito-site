@@ -11,6 +11,10 @@ date: 2026-10-04
 
 Tu arrives au bout du parcours. Tu as vu Venaball de dehors, puis chaque pièce, puis ses défauts. Cette dernière leçon transforme tout ça en une prestation : ce que tu montres au jury, ce que tu dis, et comment tu réponds quand une question te met en difficulté.
 
+```jeu
+{ "type": "devine", "question": "D'après toi, que note le jury : Venaball, ou toi ?", "indice": "Un recruteur de club ne regarde pas seulement les trophées de l'équipe.", "reponse": "Toi. Un projet modeste parfaitement compris bat un projet énorme récité. Le jury veut savoir ce que tu faisais sur le terrain." }
+```
+
 ### Le jury CDA, c'est quoi
 
 Le titre professionnel **CDA** (Concepteur Développeur d'Applications, niveau 6) est délivré après une épreuve devant un **jury** de professionnels du métier. En général, l'épreuve s'appuie sur un **dossier de projet** (un document écrit où tu racontes ton projet réel : besoin, conception, réalisation, tests, déploiement), une **présentation orale** de ce projet, un **entretien technique** où le jury creuse tes choix, un questionnaire professionnel et un entretien final sur ton parcours. Les durées exactes, l'ordre et les documents à rendre : **à vérifier auprès de l'AFPA**, dans le référentiel et le règlement de ta session. Ne te fie pas à ce que dit un forum.
@@ -39,9 +43,17 @@ Le titre se découpe en trois **CCP** (certificats de compétences professionnel
 - Déploiement : `deploy.ps1`, la procédure de `00_ECOSYSTEME.md` §2.6, les crons de `bin/cron-*.php`, la sauvegarde `bin/sauvegarde-bdd.sh` (leçon 15).
 - Trous : **pas de plan de tests** écrit, **pas de cahier de recette**, **pas de CI**, **pas de document de déploiement à jour** (le script et la doc maître divergent, `11_CHECKLIST_RELEASE.md` est périmé), **pas de restauration de sauvegarde prouvée**.
 
+```jeu
+{ "type": "paires", "consigne": "Relie chaque bloc du titre à tes preuves dans Venaball.", "paires": [["CCP1", "Templates Twig, services, ClubVoter, CSRF"], ["CCP2", "ADR, couches, entités, migrations"], ["CCP3", "Tests, déploiement, crons, sauvegarde"]] }
+```
+
 ### Ton plan d'ici avril
 
 Dans l'ordre, sans t'éparpiller : fermer les failles critiques (leçon 17), restaurer une sauvegarde une fois, écrire un MCD et un MLD sur une dizaine de tables centrales, générer et nettoyer un diagramme de classes avec `make:puml`, poser une CI qui lance `php bin/phpunit`, écrire un plan de tests et une recette, réécrire une procédure de déploiement unique. Chaque morceau est un chapitre de ton dossier.
+
+```jeu
+{ "type": "ordre", "consigne": "Remets ton plan d'ici avril dans l'ordre.", "etapes": ["Fermer les failles critiques", "Restaurer une sauvegarde une fois", "Écrire un MCD et un MLD", "Générer un diagramme de classes avec make:puml", "Poser une CI qui lance php bin/phpunit", "Écrire un plan de tests et une recette"], "explication": "D'abord ce qui protège les données, ensuite les documents de conception, puis les tests. Chaque morceau est un chapitre de ton dossier." }
+```
 
 ### Ton pitch de deux minutes
 
@@ -80,6 +92,10 @@ J'ai documenté mes choix dans onze ADR et j'ai fait réaliser des audits régul
 
 Remarque la forme des réponses 10, 11, 13, 15, 16, 17 : **constat, limite connue, correction précise**. C'est la formule qui tient. Ne dis jamais « ça marche » si tu ne l'as pas vérifié.
 
+```jeu
+{ "type": "choix", "question": "Le jury demande : as-tu une intégration continue ? Quelle réponse tient le mieux ?", "choix": ["Oui, tout est automatisé", "Non, mais ce n'est pas grave quand on est seul", "Non, c'est une limite connue : je poserais un workflow GitHub qui lance les tests à chaque push"], "bonne": 2, "explication": "La formule qui tient : constat, limite connue, correction précise. Ne dis jamais que ça marche si tu ne l'as pas vérifié." }
+```
+
 ### La question piège : « C'est toi qui as écrit ce code ? »
 
 Elle viendra, sous une forme ou une autre. Ne mens pas, et ne t'écrase pas non plus. Le jury cherche à savoir si tu comprends et si tu assumes. Une réponse possible :
@@ -93,6 +109,10 @@ Deux pièges à éviter. Ne prétends pas avoir tout tapé seul : si le jury te 
 ### Ce que tu dis au jury
 
 « Venaball est un projet réel, utilisé par un club, que j'ai conçu et fait évoluer vers une plateforme multi-club. Je peux vous montrer où se trouve chaque compétence du titre dans mon code, et aussi ce qui manque encore. J'ai utilisé une IA comme outil, mais les choix, la vérification et la mise en production sont les miens, et je peux expliquer chaque partie. Mes limites sont documentées et classées par priorité, avec pour chacune la correction que je mettrais en place. »
+
+```jeu
+{ "type": "cartes", "titre": "Questions de jury : l'entraînement final", "cartes": [{"recto": "Pourquoi Symfony ?", "verso": "Framework PHP structuré, sécurité intégrée (firewalls, voters, CSRF), Doctrine pour la base, et l'hébergement OVH mutualisé fait tourner PHP."}, {"recto": "Pourquoi un monolithe et pas des microservices ?", "verso": "Je suis seul : un seul déploiement est plus simple à maîtriser. C'est l'ADR-0001."}, {"recto": "Comment un club ne voit-il pas les données d'un autre ?", "verso": "Chaque entité métier porte un club. TenantResolver détermine le club courant, ClubVoter refuse si l'utilisateur n'a pas de rôle dans ce club."}, {"recto": "C'est toi qui as écrit ce code ?", "verso": "J'ai utilisé une IA comme outil. Mais le besoin, les décisions d'architecture, la relecture, le déploiement et les audits sont les miens, et je peux expliquer chaque partie."}, {"recto": "Que ferais-tu autrement si tu recommençais ?", "verso": "Les tests et la CI dès le premier jour, et un dépôt privé dès le premier commit."}] }
+```
 
 ## À retenir
 

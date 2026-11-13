@@ -11,6 +11,10 @@ date: 2026-10-04
 
 Jusqu'ici, tu as vu comment Venaball fonctionne sur ton PC. Mais une coach à Amiens n'ouvre pas ton PC : elle ouvre `club.venaball.fr`. Cette leçon raconte le trajet du code entre ton ordinateur et le serveur, puis ce qui tourne tout seul la nuit, et enfin ce qui protège les données du club si tout brûle.
 
+```jeu
+{ "type": "devine", "question": "Tu viens de modifier un fichier sur ton PC. D'après toi, par où passe ce code avant d'arriver sur club.venaball.fr ?", "indice": "Deux étapes : un coffre en ligne, puis une télécommande du serveur.", "reponse": "Tu le pousses sur GitHub avec git push. Puis, connecté au serveur OVH en SSH, tu fais récupérer les nouveaux commits par le serveur." }
+```
+
 ### Git : l'historique du classeur
 
 **Git** est un logiciel qui garde l'historique de tous tes fichiers. Imagine le classeur des feuilles de match du club : à chaque match, on ajoute une feuille datée, on ne jette jamais l'ancienne. Git fait pareil avec ton code.
@@ -28,6 +32,10 @@ Pourquoi le dépôt doit être **privé** ? Parce que Git garde TOUT, y compris 
 Il y a deux serveurs : **le serveur MABB** (l'instance historique, hébergement qui ferme le 22/10/2026) et **le serveur Venaball** (l'instance multi-club).
 
 **SSH** est la télécommande du serveur : un programme qui ouvre, depuis ton PC, une fenêtre de commandes qui s'exécutent *sur* le serveur. Tout ce que tu tapes dans cette fenêtre se passe chez OVH, pas chez toi.
+
+```jeu
+{ "type": "paires", "consigne": "Relie chaque mot à son image.", "paires": [["Git", "L'historique de tous tes fichiers"], ["Commit", "Une photo datée avec une phrase d'explication"], ["GitHub", "Le coffre du club, en ligne"], ["OVH", "L'hébergeur qui loue la machine"], ["SSH", "La télécommande du serveur"]] }
+```
 
 ### `deploy.ps1` lu ligne à ligne
 
@@ -64,6 +72,10 @@ Sois franc avec toi-même, le jury le sera.
 3. **Pas de retour arrière.** Si le déploiement casse le site, il n'y a pas de commande prévue pour revenir à la version d'avant.
 
 Un quatrième point, plus subtil : le commentaire en haut du script annonce « git pull + cache:clear + asset-map:compile », alors que le script fait aussi Composer et les migrations. Et `00_ECOSYSTEME.md` (§2.6) décrit une autre séquence officielle : `git fetch origin` puis `git reset --hard origin/main` (« jamais `git pull` »), migrations, `rm -rf var/cache/prod`, `cache:clear`. Autrement dit, la procédure réelle a évolué et le script est en retard sur elle. Au jury, dis-le : « j'ai deux procédures, je dois n'en garder qu'une ».
+
+```jeu
+{ "type": "choix", "question": "Quel est le risque de vider le cache avant de lancer les migrations ?", "choix": ["Le nouveau code tourne quelques secondes sur une base pas encore modifiée", "Les migrations sont jouées deux fois", "Le fichier .env.local est effacé"], "bonne": 0, "explication": "Si le code attend une colonne qui n'existe pas encore, le site renvoie une erreur 500. C'est le premier défaut de deploy.ps1." }
+```
 
 ### Les variables d'environnement : les secrets restent sur le serveur
 
@@ -127,6 +139,10 @@ find "$OUT" -name 'bdd_*.sql.gz' -mtime +14 -delete
 
 Le script est bien écrit. Le problème est ailleurs. Le doc `instruction/33_SAUVEGARDE_BDD.md` dit lui-même : « Un backup jamais restauré est une prière, pas une sauvegarde. » Retiens la version courte : **une sauvegarde jamais restaurée n'est pas une sauvegarde.** Or le doc maître (§9, point 2) indique encore à faire : « Backup de la base MABB, exécuté et restauré une fois, avec `public/uploads` et `var/decharges` ». Trois trous donc : pas de preuve que le cron est posé, pas de restauration testée, et les fichiers déposés (photos, PDF) ne sont pas dans le dump. Petit piège en plus : le doc 33 indique un chemin en `~/www`, alors que les fichiers cron disent « jamais ~/www ». Vérifie le vrai dossier avant de poser le cron.
 
+```jeu
+{ "type": "vraifaux", "affirmation": "Le script de sauvegarde existe, donc les données du club sont protégées.", "vrai": false, "explication": "Une sauvegarde jamais restaurée n'est pas une sauvegarde. Il manque la preuve que le cron est posé, une restauration testée, et les fichiers déposés ne sont pas dans le dump." }
+```
+
 ### Ce que serait une CI
 
 La **CI** (intégration continue) est un robot qui, à chaque `git push`, lance automatiquement les tests et refuse le déploiement si un test casse. C'est l'arbitre qui contrôle la feuille de match avant qu'elle parte à la fédération. Sur mabb-site, le seul fichier de `.github/workflows/` est `parse-positions-ffbb.yml`, une tâche planifiée qui lit des PDF de tirs. Aucun robot ne lance PHPUnit. Ce n'a jamais été fait sur ce projet.
@@ -134,6 +150,10 @@ La **CI** (intégration continue) est un robot qui, à chaque `git push`, lance 
 ### Ce que tu dis au jury
 
 « Mon code est versionné avec Git sur un dépôt GitHub privé, et je déploie sur un hébergement mutualisé OVH par SSH : récupération du code, Composer, migrations, cache. Les secrets sont dans `.env.local` sur le serveur, exclus de Git par le `.gitignore`. Les tâches récurrentes passent par des crons OVH qui appellent des commandes Symfony via de petits scripts dans `bin/`. Mon script de déploiement a des défauts connus : il vide le cache avant les migrations, ne sauvegarde pas avant et n'a pas de retour arrière, et je sais comment les corriger. Ma sauvegarde quotidienne existe, mais tant que je n'ai pas fait une restauration réelle, je la considère comme non prouvée. »
+
+```jeu
+{ "type": "cartes", "titre": "Questions de jury : mettre en ligne", "cartes": [{"recto": "Pourquoi le dépôt doit-il être privé ?", "verso": "Git garde tout, même ce qui a été supprimé. Un secret ou des données commités une fois restent dans l'historique."}, {"recto": "Où vivent les secrets ?", "verso": "Dans .env.local sur le serveur, ignoré par Git grâce au .gitignore."}, {"recto": "C'est quoi un cron ?", "verso": "Une tâche planifiée : le serveur lance un programme tout seul, à heure fixe. Ici, par les fichiers bin/cron-*.php."}, {"recto": "Quels sont les trois défauts de deploy.ps1 ?", "verso": "Le cache est vidé avant les migrations, aucune sauvegarde avant migration, pas de retour arrière."}, {"recto": "As-tu une CI ?", "verso": "Non. Aucun robot ne lance PHPUnit à chaque push : le seul workflow GitHub lit des PDF de tirs."}] }
+```
 
 ## À retenir
 

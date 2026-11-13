@@ -1,0 +1,49 @@
+{
+  "fiche": "dojo-debutant-14-les-crons-le-serveur-se-reveille-seul",
+  "questions": [
+    {
+      "question": "Un cron, c'est quoi ?",
+      "choix": [
+        "Une page réservée aux administrateurs",
+        "Un réglage du serveur qui lance un programme à heure fixe",
+        "Un fichier de log",
+        "Une sauvegarde de la base"
+      ],
+      "bonne": 1,
+      "explication": "Le cron est le réveil. Il peut lancer une sauvegarde, mais il n'est pas la sauvegarde elle-même."
+    },
+    {
+      "question": "Que veut dire « 21 3 * * * » ?",
+      "choix": [
+        "Le 21 mars de chaque année",
+        "Toutes les 21 minutes pendant 3 heures",
+        "À 21 h 03 tous les jours",
+        "Tous les jours à 3 h 21"
+      ],
+      "bonne": 3,
+      "explication": "La première case est la minute, la deuxième l'heure. Le piège : lire dans l'ordre « heure puis minute »."
+    },
+    {
+      "question": "Dans ResumeAbsencesCommand.php, pourquoi la séance est-elle marquée dans le cache AVANT l'envoi du résumé ?",
+      "choix": [
+        "Pour qu'un échec d'envoi ne provoque jamais un second résumé",
+        "Pour que l'envoi soit plus rapide",
+        "Parce que le cache est vidé après l'envoi",
+        "Pour prévenir les joueuses en premier"
+      ],
+      "bonne": 0,
+      "explication": "On préfère risquer un résumé perdu plutôt que deux résumés identiques. Marquer après l'envoi laisserait la porte ouverte au doublon."
+    },
+    {
+      "question": "Tu veux vérifier ce que la commande enverrait, sans déranger aucun coach. Que lances-tu ?",
+      "choix": [
+        "php bin/console app:seances:resume-absences",
+        "php bin/cron-resume-absences.php",
+        "php bin/console app:seances:resume-absences --dry-run",
+        "php bin/console cache:clear"
+      ],
+      "bonne": 2,
+      "explication": "--dry-run liste les résumés sans rien envoyer ni marquer. Les deux premières lignes envoient pour de vrai."
+    }
+  ]
+}

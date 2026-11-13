@@ -11,6 +11,10 @@ date: 2026-10-04
 
 Samedi, 15 h, gymnase en béton, 4G qui coupe. À la table de marque, quelqu'un du club tient l'app Venaball Club. Léa marque un panier à 2 points. Premier tap sur la carte « Léa », deuxième tap sur « 2 pts réussi ». C'est tout. Dimanche soir, la coach valide le match en deux taps. Lundi, Léa ouvre l'app Venaball et voit sa moyenne de points monter.
 
+```jeu
+{ "type": "devine", "question": "La 4G coupe : l'app envoie le panier à 2 points de Léa, le serveur l'enregistre, mais la réponse se perd et l'app renvoie. D'après toi, Léa a combien de points ?", "indice": "Tout dépend de ce que fait le serveur quand il reçoit deux fois la même action.", "reponse": "2, et pas 4. Chaque action porte un identifiant unique : le serveur reconnaît le renvoi et ne crée rien. Cette protection s'appelle l'idempotence." }
+```
+
 Entre ces deux moments, l'information traverse neuf fichiers. On les suit dans l'ordre.
 
 ### Le schéma du trajet
@@ -88,6 +92,10 @@ Quand l'envoi échoue, `synchroniser()` applique des règles écrites en tête d
 
 Le CLAUDE.md de l'app Club le rappelle : cette file « ne se touche pas sans spec ».
 
+```jeu
+{ "type": "choix", "question": "En plein match, le jeton expire et le serveur répond 401. Que fait la file d'attente ?", "choix": ["Elle jette les actions en attente", "Elle se met en pause et attend la reconnexion, sans rien jeter", "Elle range l'action dans la liste rejetes"], "bonne": 1, "explication": "Sur 401, pause sans perte. La liste rejetes sert aux autres refus (4xx), et sans réseau la file réessaie toute seule." }
+```
+
 ### Étapes 3 et 4 : l'idempotence, ou comment ne pas compter deux fois
 
 Voici le piège. La bénévole tape « 2 pts ». L'app envoie. Le serveur enregistre le panier. Mais la réponse se perd dans la 4G. L'app croit que l'envoi a raté, et **renvoie**. Sans protection, le serveur enregistre un deuxième panier. Léa a 4 points au lieu de 2.
@@ -118,6 +126,10 @@ if ($clientUid !== null) {
 La même migration, `migrations/Version20260909180000.php`, ajoute un **index unique** sur `action_match.client_uid` : même si deux envois arrivaient exactement en même temps, la base refuserait le second. Le score adverse suit la même idée : l'app envoie le score **total** (« 34 ») et pas « +2 », car renvoyer « 34 » deux fois donne toujours 34.
 
 Avant d'arriver là, `action()` a fait ses vérifications : la rencontre est dans ton club et tu encadres l'équipe (`rencontreAutorisee()`), la joueuse appartient au club du match, le type d'action est dans la liste `ActionMatch::TYPES`.
+
+```jeu
+{ "type": "trous", "consigne": "Le serveur cherche si une action avec cet uid existe déjà. Complète le critère.", "code": "$existante = $this->actionMatchRepository->findOneBy(['___' => $clientUid]);", "choix": ["id", "joueur", "clientUid"], "bonne": 2, "explication": "On cherche par clientUid, la clé anti-doublon fabriquée par l'app. Si l'action existe, le serveur la renvoie avec deja à true, sans rien créer." }
+```
 
 ### Étape 5 : une ligne par action, une session par saisisseur
 
@@ -193,6 +205,10 @@ public function statsSaison(
 
 Plus loin, la méthode filtre aussi par saison (du 1er juillet au 1er juillet suivant), puis `compute()` fait les totaux et les moyennes. `PirbApiController::statsSaison()` envoie le résultat en JSON sur `GET /api/pirb/stats/saison`, et l'onglet Stats de l'app (`Pirb store/app/(tabs)/stats.tsx`) affiche « Points / match », « Rebonds / match », les pourcentages. Les matchs non officiels ne disparaissent pas : ils sont renvoyés à part, dans `horsCompetition`.
 
+```jeu
+{ "type": "ordre", "consigne": "Remets le trajet d'un panier dans l'ordre.", "etapes": ["Deux taps dans l'app Club", "L'action entre dans la boîte d'envoi avec son uid", "Le serveur enregistre une ligne ActionMatch", "La session passe COMPLETE", "La coach promeut la session en OFFICIELLE", "L'app Venaball affiche la moyenne de Léa"], "explication": "Sans la promotion par la coach, rien ne remonte : seule la session officielle alimente les stats des joueuses." }
+```
+
 ### Ce qui reste fragile
 
 - **La promotion est manuelle.** Si personne ne promeut, rien ne remonte chez les joueuses. L'en-tête de `ApiClubStatsLiveController.php` raconte qu'au 04/08/2026, en production, aucune session n'avait jamais été promue.
@@ -203,6 +219,10 @@ Plus loin, la méthode filtre aussi par saison (du 1er juillet au 1er juillet su
 ### Ce que tu dis au jury
 
 « Au bord du terrain, chaque action part dans une boîte d'envoi persistée sur le téléphone, avec un identifiant unique, et l'écran ne bloque jamais. Côté serveur, cet identifiant est stocké avec un index unique : si le réseau coupe et que l'app renvoie, on ne compte pas deux fois le panier. Chaque saisisseur a sa session, et un coach promeut la bonne en officielle, dans une transaction qui garantit une seule officielle par match, puis le service calcule une feuille de match par joueuse. Les moyennes de saison ne prennent que les matchs officiels. La limite que j'assume : la promotion est un geste manuel, et sans elle rien ne remonte aux joueuses. »
+
+```jeu
+{ "type": "cartes", "titre": "Questions de jury : les Stats Live", "cartes": [{"recto": "C'est quoi l'idempotence ?", "verso": "Faire l'opération deux fois donne le même résultat que la faire une fois. Ici : un clientUid par action, et un index unique en base."}, {"recto": "Pourquoi une session par saisisseur ?", "verso": "Deux bénévoles qui saisissent le même match ne se mélangent pas. Seule la session officielle alimente les stats."}, {"recto": "Que garantit la transaction de promouvoirOfficielle() ?", "verso": "Tout passe ou rien. L'ancienne officielle est archivée : jamais deux sessions officielles pour un même match."}, {"recto": "Quels matchs comptent dans la moyenne de saison ?", "verso": "Les matchs officiels seulement, par défaut. Les autres sont renvoyés à part, dans horsCompetition."}, {"recto": "Quelle est la faiblesse principale du circuit ?", "verso": "La promotion est manuelle : si personne ne promeut, rien ne remonte chez les joueuses."}] }
+```
 
 ## À retenir
 

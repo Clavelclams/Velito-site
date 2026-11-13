@@ -1,0 +1,49 @@
+{
+  "fiche": "dojo-debutant-04-la-base-un-grand-classeur",
+  "questions": [
+    {
+      "question": "Dans l'image du classeur, à quoi correspond une table ?",
+      "choix": [
+        "Au classeur entier",
+        "À un intercalaire",
+        "À une fiche",
+        "À une case d'une fiche"
+      ],
+      "bonne": 1,
+      "explication": "Base = classeur, table = intercalaire, ligne = fiche, colonne = case."
+    },
+    {
+      "question": "Dans la table presence, que représente UNE ligne ?",
+      "choix": [
+        "Toutes les présences d'une séance",
+        "Toutes les séances d'une joueuse",
+        "Une séance annulée",
+        "Une joueuse, une séance (ou une rencontre), présente ou non"
+      ],
+      "bonne": 3,
+      "explication": "Une fiche par joueuse et par séance. Pour avoir tout l'appel d'une séance, on lit plusieurs lignes."
+    },
+    {
+      "question": "Que demande cette requête d'exemple : SELECT joueur_id, present FROM presence WHERE seance_id = 42 ?",
+      "choix": [
+        "Deux cases de chaque fiche de présence de la séance 42",
+        "De créer la séance 42",
+        "Toutes les présences de la joueuse 42",
+        "De supprimer les absentes de la séance 42"
+      ],
+      "bonne": 0,
+      "explication": "SELECT lit, il ne crée ni ne supprime rien. Le filtre porte sur seance_id, pas sur joueur_id."
+    },
+    {
+      "question": "Dans Presence.php, à quoi sert la contrainte unique_seance sur joueur_id et seance_id ?",
+      "choix": [
+        "À interdire qu'une joueuse soit absente deux fois de suite",
+        "À limiter une séance à une seule joueuse",
+        "À empêcher deux fiches pour la même joueuse à la même séance",
+        "À trier les fiches par joueuse"
+      ],
+      "bonne": 2,
+      "explication": "C'est la paire joueuse + séance qui doit être unique. Une séance garde autant de fiches que de joueuses."
+    }
+  ]
+}

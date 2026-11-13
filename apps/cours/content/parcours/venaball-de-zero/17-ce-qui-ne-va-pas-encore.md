@@ -11,6 +11,10 @@ date: 2026-10-04
 
 Cette leçon est la plus inconfortable du parcours, et peut-être la plus utile pour ton jury. Un projet réel a des défauts. Le jury le sait. Ce qu'il veut voir, c'est si toi, tu les connais. Un candidat qui dit « tout marche » inquiète. Un candidat qui dit « voici mes cinq risques, classés, et comment je les traite » rassure.
 
+```jeu
+{ "type": "devine", "question": "D'après toi, quel est le risque numéro un de Venaball aujourd'hui ?", "indice": "Pense à ce qui se passerait si la base était abîmée demain matin.", "reponse": "La sauvegarde n'est pas prouvée : le script existe, mais rien ne prouve que le cron tourne et aucune restauration n'a été testée. Une sauvegarde jamais restaurée n'est pas une sauvegarde." }
+```
+
 ### La dette technique, c'est un prêt
 
 La **dette technique** est l'ensemble des raccourcis pris pour aller vite, qu'il faudra « rembourser » plus tard en temps de correction. C'est comme un prêt : aujourd'hui tu as le gymnase plus tôt, mais tu paies des intérêts. Plus tu attends, plus ça coûte, parce que du nouveau code se construit par-dessus les raccourcis.
@@ -47,6 +51,10 @@ Risque : quiconque a cloné le dépôt pendant qu'il était public a pu garder u
 Correction : considérer tout secret de l'époque comme compromis, donc le changer (on parle de **rotation**) ; nettoyer l'historique avec un outil dédié ; garder le dépôt privé.
 Au jury : « J'ai appris que Git n'oublie rien. Le dépôt est privé, et un secret passé par un dépôt public se change, il ne se cache pas. »
 
+```jeu
+{ "type": "choix", "question": "La commande de purge RGPD existe déjà. Que manque-t-il ?", "choix": ["La règle de conservation des données", "Un cron qui l'appelle automatiquement", "La commande app:sorties:purger-rgpd elle-même"], "bonne": 1, "explication": "Aucun fichier bin/cron-*.php ne l'appelle. La règle est codée, il manque le réveil automatique." }
+```
+
 ### Niveau 2 : la porte d'entrée
 
 **5. Pas de limitation des tentatives de connexion.**
@@ -74,6 +82,10 @@ Ce que c'est : les fichiers déposés vivent surtout dans `public/uploads/`, le 
 Risque : une rustine dépend d'Apache ; une erreur de configuration ou un changement d'hébergeur, et des PDF redeviennent accessibles par leur adresse.
 Correction : déplacer les documents hors de `public/` (comme `var/decharges` déjà) et les servir par un contrôleur qui vérifie les droits.
 
+```jeu
+{ "type": "paires", "consigne": "Relie chaque défaut à sa correction.", "paires": [["Pas de limitation de connexion", "Installer symfony/rate-limiter"], ["Pas de UserChecker", "Une classe qui refuse un compte inactif"], ["HTML affiché brut", "Nettoyer avec symfony/html-sanitizer"], ["Uploads dans public/", "Les servir par un contrôleur qui vérifie les droits"]] }
+```
+
 ### Niveau 3 : la maintenance
 
 **10. Des contrôleurs obèses.** `src/Controller/Manager/RencontreController.php` fait 1 466 lignes, `StatsLiveController.php` 1 074. Un **contrôleur** devrait seulement recevoir la demande et appeler des services (leçons 8 et 9). Risque : chaque modification peut casser autre chose. Correction : extraire la logique dans des services, petit à petit, avec un test à chaque extraction.
@@ -83,6 +95,10 @@ Correction : déplacer les documents hors de `public/` (comme `var/decharges` d�
 **12. Un déploiement fragile.** `deploy.ps1` vide le cache avant les migrations, sans sauvegarde ni retour arrière (leçon 15).
 
 **13. Des docs périmées.** `instruction/11_CHECKLIST_RELEASE.md` date du 2026-02-12 et parle de `ClubScopeVoter` et de clés JWT dans `config/jwt/`, alors que le voter s'appelle `ClubVoter` et que l'ADR-0010 de `08_ADR.md` a choisi des jetons opaques. `tests/README.md` aussi est en retard. Risque : le jury lit un document faux. Correction : les mettre à jour ou les marquer « archive ».
+
+```jeu
+{ "type": "vraifaux", "affirmation": "Une doc périmée n'est pas un vrai risque, puisque le code fonctionne.", "vrai": false, "explication": "Le jury peut lire un document faux : 11_CHECKLIST_RELEASE.md parle encore de ClubScopeVoter et de clés JWT. Il faut la mettre à jour ou la marquer archive." }
+```
 
 ### Ce qui est solide
 
@@ -97,6 +113,10 @@ Pour équilibrer, et c'est vrai :
 ### Ce que tu dis au jury
 
 « Mon projet a de la dette technique, et je la tiens à jour dans des audits datés. Les priorités sont claires : prouver la sauvegarde par une restauration, fermer trois failles d'accès connues, planifier la purge RGPD et activer la limitation des tentatives de connexion. Ensuite viennent la CI, l'allègement des gros contrôleurs et la mise à jour des documents périmés. Ces défauts ne m'empêchent pas de dormir parce que je sais exactement où ils sont, et c'est ce que je veux montrer : un développeur qui voit les risques avant qu'ils ne deviennent des incidents. »
+
+```jeu
+{ "type": "cartes", "titre": "Questions de jury : ce qui ne va pas encore", "cartes": [{"recto": "C'est quoi la dette technique ?", "verso": "Les raccourcis pris pour aller vite, à rembourser plus tard en temps de correction. Comme un prêt : plus tu attends, plus ça coûte."}, {"recto": "Comment présenter un défaut au jury ?", "verso": "En quatre temps : ce que c'est, le risque, la correction, la priorité."}, {"recto": "Que fais-tu d'un secret passé par un dépôt public ?", "verso": "Je le considère comme compromis et je le change : c'est la rotation. Un secret exposé se change, il ne se cache pas."}, {"recto": "Quelles sont tes priorités ?", "verso": "Prouver la sauvegarde par une restauration, fermer trois failles d'accès connues, planifier la purge RGPD, activer la limitation des tentatives de connexion."}, {"recto": "Qu'est-ce qui est solide dans Venaball ?", "verso": "L'isolation multi-club et ses 31 tests unitaires, les tests anti-IDOR, 11 ADR, des audits datés, et un produit réel utilisé par un club."}] }
+```
 
 ## À retenir
 

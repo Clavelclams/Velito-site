@@ -16,6 +16,10 @@ Venaball a deux applications pour téléphone :
 
 Aucune des deux n'a de base de données à elle. Tout ce qu'elles affichent vient du serveur `mabb-site`. Elles passent par une porte spéciale : l'**API**.
 
+```jeu
+{ "type": "devine", "question": "D'après toi, que renvoie le serveur à une app mobile : une page HTML toute faite, ou autre chose ?", "indice": "L'app a déjà ses propres écrans. Il ne lui manque que le contenu.", "reponse": "Des données brutes, au format JSON. C'est l'app qui les met en forme. Le site web, lui, reçoit des pages HTML déjà mises en page." }
+```
+
 ### C'est quoi une API ?
 
 Une **API** (Application Programming Interface), c'est un guichet prévu pour des programmes, pas pour des humains. Le site web renvoie des pages HTML jolies à lire. L'API renvoie des données brutes, que l'app met en forme elle-même.
@@ -34,6 +38,10 @@ Chaque réponse porte aussi un **code HTTP**, un nombre qui résume le résultat
 - **401** : « je ne sais pas qui tu es » (pas de jeton, ou jeton mort).
 - **403** : « je sais qui tu es, mais tu n'as pas le droit ».
 - **404** : « introuvable ».
+
+```jeu
+{ "type": "paires", "consigne": "Relie chaque code HTTP à ce qu'il veut dire.", "paires": [["200", "Tout va bien"], ["401", "Je ne sais pas qui tu es"], ["403", "Je sais qui tu es, mais tu n'as pas le droit"], ["404", "Introuvable"]] }
+```
 
 ### Les deux familles de routes
 
@@ -140,6 +148,10 @@ public function getUserBadgeFrom(string $accessToken): UserBadge
 - Si rien ne correspond : exception, et Symfony répond 401. Le message ne dit pas si le jeton est inconnu ou expiré, pour ne rien apprendre à un attaquant.
 - Sinon, `UserBadge(email)` : « c'est cette personne ». Le reste du code utilise `$this->getUser()` comme sur le web.
 
+```jeu
+{ "type": "trous", "consigne": "Pour l'API, le serveur ne garde aucune session : chaque requête apporte son badge. Complète le firewall.", "code": "api:\n    pattern: ^/api\n    stateless: ___", "choix": ["true", "false", "lazy"], "bonne": 0, "explication": "stateless: true veut dire sans état. Pas de session : le jeton voyage dans l'en-tête Authorization à chaque appel." }
+```
+
 ### 4. Côté téléphone : le coffre-fort et l'en-tête
 
 Dans l'app joueuse, `Pirb store/src/services/auth/session.ts` range le jeton après la connexion :
@@ -202,6 +214,10 @@ if ($demande > 0) {
 
 La même règle revient partout dans `/api/club/*` : une rencontre d'un autre club, ou d'une équipe que tu n'encadres pas, renvoie 404 (par exemple `rencontreAutorisee()` dans `ApiClubConvocationController.php`).
 
+```jeu
+{ "type": "choix", "question": "L'app envoie un X-Club-Id d'un club auquel le compte n'appartient pas. Que répond le serveur ?", "choix": ["403, accès interdit", "200, avec une liste vide", "404, club introuvable"], "bonne": 2, "explication": "Répondre interdit confirmerait que le club existe. Répondre introuvable ne dit rien." }
+```
+
 ### 6. Le serveur décide, l'app affiche
 
 Le premier appel de l'app Club après connexion est `GET /api/club/moi` (`ApiClubMoiController.php`). Le serveur y calcule les **vues** auxquelles le compte a droit : `coach`, `direction`, `benevole`, `parent`, `joueuse`. Le commentaire du fichier le dit : « c'est le serveur qui sait qui a le droit de quoi. L'app ne fait qu'afficher ce qu'on lui dit, elle ne déduit jamais un droit toute seule. » Si quelqu'un trafiquait l'app pour afficher un écran caché, le serveur refuserait quand même chaque requête.
@@ -219,6 +235,10 @@ Le document maître (`instruction/00_ECOSYSTEME.md`, ligne 49) liste des points 
 ### Ce que tu dis au jury
 
 « Mes deux apps mobiles n'ont pas de base de données : elles consomment une API JSON sur le même serveur Symfony que le site. À la connexion, le serveur délivre un jeton opaque de 64 caractères, montré une seule fois et stocké haché en SHA-256, que l'app range dans le coffre-fort chiffré du téléphone et renvoie dans l'en-tête `Authorization: Bearer`. L'app Club ajoute `X-Club-Id`, mais le serveur revérifie toujours et répond 404 plutôt que 403 sur un club ou une ressource qui n'est pas la tienne. C'est le serveur qui calcule les droits et les vues, l'app ne fait qu'afficher. Je sais aussi que l'API Club n'a pas encore de tests automatiques. »
+
+```jeu
+{ "type": "cartes", "titre": "Questions de jury : l'API et les apps", "cartes": [{"recto": "Comment le jeton est-il stocké côté serveur ?", "verso": "Haché : la base ne garde que son empreinte SHA-256. Le jeton en clair part vers l'app une seule fois. Il est valable 30 jours."}, {"recto": "Où l'app range-t-elle le jeton ?", "verso": "Dans SecureStore, le coffre-fort chiffré du téléphone. Pas dans AsyncStorage, un stockage ordinaire et lisible."}, {"recto": "Pourquoi dit-on que le jeton est opaque ?", "verso": "Il ne contient aucune information, c'est juste un numéro. Pour couper l'accès d'un téléphone volé, on supprime une ligne en base."}, {"recto": "Qui décide des droits : l'app ou le serveur ?", "verso": "Le serveur. GET /api/club/moi calcule les vues autorisées, l'app ne fait qu'afficher ce qu'on lui dit."}, {"recto": "Qu'est-ce qui reste fragile côté API ?", "verso": "Les 14 contrôleurs /api/club/* n'ont aucun test automatique, et une route communautaire de l'app joueuse n'applique pas encore les réglages de confidentialité."}] }
+```
 
 ## À retenir
 

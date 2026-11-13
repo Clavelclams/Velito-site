@@ -11,6 +11,10 @@ date: 2026-10-04
 
 Quand la coach ouvre la page « Équipes » sur `club.venaball.fr`, elle voit la liste de ses équipes : U13 F, U15 F, Seniors. Quand elle clique sur une équipe, elle voit les joueuses. Le lendemain, elle revient, et tout est encore là. Pourquoi ? Parce que ces informations ne vivent pas dans la page. Elles vivent dans une **base de données**, c'est-à-dire un endroit où le serveur range les informations pour les retrouver plus tard, même après avoir éteint la machine.
 
+```jeu
+{ "type": "devine", "question": "Deux joueuses du club s'appellent Léa Martin. D'après toi, comment la base fait-elle pour ne jamais les confondre ?", "indice": "Pense au numéro que la secrétaire écrit sur chaque dossier.", "reponse": "Chaque ligne reçoit un numéro unique qui ne change jamais : la clé primaire. Chez Venaball elle s'appelle toujours id, et MySQL la remplit tout seul." }
+```
+
 Dans cette leçon, on ouvre ce classeur et on regarde comment il est rangé.
 
 ### Le classeur du club
@@ -51,6 +55,10 @@ Sur la fiche de Léa, la secrétaire n'écrit pas toute la description de son é
 Ce renvoi s'appelle une **clé étrangère** : une colonne qui contient l'`id` d'une ligne d'une autre table. Par convention, elle porte le nom de la table visée suivi de `_id`. Dans la table `joueur`, la colonne `equipe_id` contient l'`id` d'une équipe, et la colonne `club_id` contient l'`id` d'un club.
 
 L'avantage : si le nom de l'équipe change, on le corrige à un seul endroit, et toutes les fiches qui pointent vers elle sont à jour.
+
+```jeu
+{ "type": "paires", "consigne": "Relie chaque mot de la base à son image dans l'armoire de la secrétaire.", "paires": [["Table", "Un classeur"], ["Ligne", "Une fiche dans le classeur"], ["Colonne", "Une case imprimée sur chaque fiche"], ["Clé primaire", "Le numéro de dossier unique"], ["Clé étrangère", "Un renvoi vers un autre classeur"]] }
+```
 
 ### Les relations : 1-N et N-N
 
@@ -116,6 +124,10 @@ private ?Club $club = null;
 
 Le revers, l'ADR le dit honnêtement : « Necessite vigilance absolue : chaque requete metier doit etre filtree par club_id. » Un oubli de filtre, et un club pourrait voir les fiches d'un autre. On verra en leçon 11 qui vérifie ce tampon. Toutes les tables ne portent pas `club_id` directement : `presence` et `joueur_equipe`, par exemple, retrouvent leur club en passant par la joueuse, la séance ou l'équipe.
 
+```jeu
+{ "type": "trous", "consigne": "Une équipe sans club est interdite : la colonne club_id ne peut pas être vide. Complète.", "code": "#[ORM\\ManyToOne(targetEntity: Club::class)]\n#[ORM\\JoinColumn(nullable: ___, onDelete: 'CASCADE')]\nprivate ?Club $club = null;", "choix": ["true", "false", "null"], "bonne": 1, "explication": "nullable: false rend la colonne obligatoire. Avec true, une équipe pourrait exister sans tampon de club." }
+```
+
 ### Pourquoi `joueur_equipe` existe
 
 Au départ, chaque joueuse avait UNE équipe : la colonne `joueur.equipe_id`. Simple. Puis la réalité du basket est arrivée. Le commentaire en tête de `JoueurEquipe.php` raconte le problème : une U15 qui joue aussi en U18 (un **surclassement**) ne pouvait pas être reliée aux matchs U18. Ses stats de ces matchs ne comptaient pas dans son bilan.
@@ -129,6 +141,10 @@ Une contrainte d'unicité (`uniq_joueur_equipe_saison` sur `joueur_id`, `equipe_
 
 Et l'ancienne colonne `joueur.equipe_id` ? Elle est toujours là pour ne pas casser l'ancien code. Mais la règle du projet, écrite dans `mabb-site/CLAUDE.md`, est claire : pour connaître l'effectif d'une équipe, on lit les affectations `JoueurEquipe` de type principale, pas ce champ historique. Le commentaire de `JoueurEquipe.php` parle d'une synchronisation entre les deux « via service ou listener » : je ne l'ai pas vérifiée, donc considère-la comme non vérifiée.
 
+```jeu
+{ "type": "vraifaux", "affirmation": "Pour connaître l'effectif d'une équipe, on lit la colonne joueur.equipe_id.", "vrai": false, "explication": "Cette colonne est historique, gardée pour ne pas casser l'ancien code. La règle : lire les affectations JoueurEquipe de type principale." }
+```
+
 ### Un mot honnête sur `dictionnaire_db.md`
 
 Le fichier `mabb-site/shemas/dictionnaire_db.md` porte un nom rassurant, mais attention. Il a été écrit **avant** le code, pendant la conception : il dit lui-même « Le projet ne contient aucun code source » et prévoit un « Backend (Node.js + MySQL) ». Ses noms de tables (`utilisateurs`, `equipes_joueurs`, `matchs`) ne sont pas ceux de la vraie base (`user`, `joueur_equipe`, `rencontre`). De même, l'ADR-0006 décrit des tables `Role` et `ClubUserRole` qui n'existent pas dans le code : la réalité, c'est `user_club_role` avec le rôle écrit en texte.
@@ -138,6 +154,10 @@ Devant le jury, ta source de vérité sur la base, ce sont les entités de `src/
 ### Ce que tu dis au jury
 
 « La base de Venaball est une base MySQL unique pour tous les clubs. Chaque table métier porte un `club_id`, c'est la décision ADR-0003, et toute lecture doit être filtrée par club. J'ai séparé la joueuse du compte utilisateur, parce qu'une licenciée n'a pas toujours de compte et qu'un parent peut suivre plusieurs enfants. Pour les surclassements, j'ai remplacé la relation simple joueuse vers équipe par une table pivot enrichie, `joueur_equipe`, qui porte le type d'affectation et la saison. Mon dictionnaire de données date de la conception, la référence actuelle ce sont les entités et les migrations. »
+
+```jeu
+{ "type": "cartes", "titre": "Questions de jury : la base de données", "cartes": [{"recto": "Pourquoi joueur et user sont-ils deux tables séparées ?", "verso": "Beaucoup de jeunes licenciées ne créent jamais de compte, et un parent peut être lié à plusieurs joueuses. Le lien vers user est facultatif."}, {"recto": "Que dit l'ADR-0003 ?", "verso": "Une base unique, chaque table métier porte un club_id. Le revers : chaque requête métier doit être filtrée par club."}, {"recto": "Pourquoi la table joueur_equipe existe-t-elle ?", "verso": "Pour les surclassements : une U15 qui joue aussi en U18. C'est une table pivot enrichie, avec le type, la saison et actif."}, {"recto": "Une présence peut-elle viser une séance et une rencontre à la fois ?", "verso": "Non : une séance OU une rencontre, jamais les deux. La règle isExactlyOneTargetSet() le vérifie."}, {"recto": "dictionnaire_db.md décrit-il la vraie base ?", "verso": "Non, il date de la conception. La source de vérité, ce sont les entités de src/Entity/ et les migrations."}] }
+```
 
 ## À retenir
 

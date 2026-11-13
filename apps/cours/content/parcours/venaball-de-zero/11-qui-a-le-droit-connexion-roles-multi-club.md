@@ -11,6 +11,10 @@ date: 2026-10-04
 
 Imagine l'entrée du gymnase un samedi matin. Deux questions se posent, toujours dans le même ordre.
 
+```jeu
+{ "type": "devine", "question": "D'après toi, quelles sont ces deux questions qui se posent à l'entrée du gymnase ?", "indice": "L'une porte sur ton identité, l'autre sur les portes que tu peux ouvrir.", "reponse": "Qui es-tu ? Puis : as-tu le droit d'aller là ? En informatique, on dit authentification, puis autorisation." }
+```
+
 1. **Qui es-tu ?** Tu montres ton badge. Le gardien vérifie que c'est bien toi.
 2. **As-tu le droit d'aller là ?** Ton badge te laisse entrer dans le hall. Mais le bureau du club, la réserve de ballons et le vestiaire des arbitres, c'est une autre affaire. Pour ça, on regarde la liste des rôles affichée au bureau.
 
@@ -46,6 +50,10 @@ providers:
 - `property: email` : on reconnaît un compte à son e-mail.
 
 Dans `src/Entity/Core/User.php`, la colonne s'appelle simplement `password` (ligne 38). Elle contient l'empreinte, pas le mot de passe. Quand un compte est créé, le code appelle `hashPassword()` avant d'enregistrer (par exemple `src/Controller/Manager/ManagerCreerClubController.php`, ligne 155). Si quelqu'un volait la base, il aurait des empreintes, pas des mots de passe.
+
+```jeu
+{ "type": "choix", "question": "Quelqu'un vole la base de données. Que trouve-t-il dans la colonne password ?", "choix": ["Les mots de passe en clair", "Des empreintes, sans moyen de retrouver les mots de passe", "Rien, la colonne est toujours vide"], "bonne": 1, "explication": "Le code appelle hashPassword() avant d'enregistrer. Un hash est une moulinette à sens unique : on ne reconstruit pas le mot de passe avec." }
+```
 
 ### 2. Les firewalls : un portique par porte d'entrée
 
@@ -109,6 +117,10 @@ class UserClubRole
 
 Image du club : `UserClubRole`, c'est la liste des rôles affichée au bureau de **chaque** club. Ton nom peut apparaître sur plusieurs listes, avec un rôle différent sur chacune.
 
+```jeu
+{ "type": "vraifaux", "affirmation": "Dès son inscription, un nouveau membre a les droits de son rôle dans le club.", "vrai": false, "explication": "Son statut vaut pending par défaut : aucun droit tant qu'un dirigeant n'a pas validé la demande." }
+```
+
 ### 4. Le ClubVoter : le responsable qui vérifie la liste
 
 Un **Voter**, dans Symfony, c'est une classe qui répond oui ou non à la question « cette personne a-t-elle le droit de faire ça sur cet objet ? ». Celui de Venaball est `src/Security/Voter/ClubVoter.php`. Il connaît des **attributs**, c'est-à-dire des noms de droits : `CLUB_MEMBER` (être membre), `CLUB_COACH`, `CLUB_ADMIN` (être dirigeant), `CLUB_STAFF` (dirigeant, coach ou staff), `CLUB_JOUEUR`, et d'autres.
@@ -150,6 +162,10 @@ $this->denyAccessUnlessGranted(ClubVoter::CLUB_STAFF, $rencontre);
 Traduction : « si cette personne n'est pas dirigeant, coach ou staff **du club de cette rencontre**, arrête tout et renvoie une erreur 403 (accès interdit) ».
 
 Une exception existe : le `ROLE_SUPER_ADMIN` passe partout (le Voter le court-circuite ligne 105). C'est le compte de support de la plateforme.
+
+```jeu
+{ "type": "trous", "consigne": "Seuls un dirigeant, un coach ou un staff du club de la rencontre doivent passer. Complète.", "code": "$this->denyAccessUnlessGranted(ClubVoter::___, $rencontre);", "choix": ["CLUB_MEMBER", "CLUB_JOUEUR", "ROLE_USER", "CLUB_STAFF"], "bonne": 3, "explication": "CLUB_STAFF = dirigeant, coach ou staff. CLUB_MEMBER laisserait passer tout membre du club, parents compris." }
+```
 
 ### 5. Le TenantResolver : sur quel club je travaille en ce moment ?
 
@@ -208,6 +224,10 @@ Sois honnête au jury. Dans `security.yaml`, la limitation des tentatives de con
 ### Ce que tu dis au jury
 
 « Je sépare l'authentification, qui prouve qui tu es par e-mail et mot de passe haché, de l'autorisation, qui décide ce que tu peux faire. Les rôles métier ne sont pas sur le compte mais dans `UserClubRole`, une ligne par club et par rôle, ce qui permet d'être coach dans un club et parent dans un autre. Chaque route vérifie le droit avec `ClubVoter` sur l'objet demandé, donc sur son club, et une inscription non validée ne donne aucun droit. Plusieurs clubs partagent une base, chaque ligne porte son `club_id`, et des tests fonctionnels prouvent qu'une joueuse ne peut pas ouvrir la séance d'une autre équipe. Je sais aussi ce qui manque : la limitation des tentatives sur les connexions web n'est pas encore activée. »
+
+```jeu
+{ "type": "cartes", "titre": "Questions de jury : qui a le droit ?", "cartes": [{"recto": "Authentification ou autorisation : quelle différence ?", "verso": "Authentification : prouver qui tu es (e-mail et mot de passe). Autorisation : vérifier ce que tu as le droit de faire (ClubVoter)."}, {"recto": "Pourquoi deux niveaux de rôles ?", "verso": "Une même personne peut être coach dans un club et parent dans un autre. Les rôles métier sont donc dans UserClubRole, une ligne par club et par rôle."}, {"recto": "Que fait le TenantResolver ?", "verso": "Il dit quel club est actif. Il le lit en session, revérifie que tu en fais partie, et le choisit tout seul si tu n'as qu'un club."}, {"recto": "C'est quoi une faille IDOR ?", "verso": "Changer un numéro dans l'adresse pour voir la fiche de quelqu'un d'autre. Des tests fonctionnels vérifient que le serveur répond 403."}, {"recto": "Qu'est-ce qui manque encore sur les connexions web ?", "verso": "La limitation des tentatives : login_throttling est en commentaire dans security.yaml."}] }
+```
 
 ## À retenir
 

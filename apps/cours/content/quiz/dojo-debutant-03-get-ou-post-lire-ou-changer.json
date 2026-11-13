@@ -1,0 +1,49 @@
+{
+  "fiche": "dojo-debutant-03-get-ou-post-lire-ou-changer",
+  "questions": [
+    {
+      "question": "Quelle est la différence entre GET et POST ?",
+      "choix": [
+        "GET est rapide, POST est lent",
+        "GET est pour les joueuses, POST pour le staff",
+        "GET marche sur ordinateur, POST sur téléphone",
+        "GET demande à voir, POST envoie des données à enregistrer"
+      ],
+      "bonne": 3,
+      "explication": "La méthode annonce l'intention : regarder ou modifier. Elle n'a rien à voir avec la vitesse, l'appareil ou le rôle de la personne."
+    },
+    {
+      "question": "Dans PresenceController::pointageSeance, la route accepte GET et POST. Comment le code sait-il s'il doit enregistrer ?",
+      "choix": [
+        "Il regarde l'heure de la séance",
+        "Il teste $request->isMethod('POST')",
+        "Il enregistre à chaque fois, par sécurité",
+        "Il y a deux méthodes PHP différentes"
+      ],
+      "bonne": 1,
+      "explication": "Une seule méthode PHP, un seul test. En GET elle affiche la grille, en POST elle enregistre puis redirige."
+    },
+    {
+      "question": "À quoi sert le champ caché _token dans pointage.html.twig ?",
+      "choix": [
+        "À prouver que le formulaire a bien été fabriqué par notre site",
+        "À retenir le mot de passe de la coach",
+        "À compter le nombre de présentes",
+        "À rendre la page plus rapide"
+      ],
+      "bonne": 0,
+      "explication": "C'est le jeton CSRF, le tampon sur la feuille de match. Il ne contient ni mot de passe ni donnée de l'appel."
+    },
+    {
+      "question": "Le jeton reçu avec l'appel n'est pas valide. Que fait le contrôleur ?",
+      "choix": [
+        "Il enregistre quand même et prévient après",
+        "Il déconnecte la coach",
+        "Il affiche « Jeton de sécurité invalide » et n'enregistre rien",
+        "Il supprime la séance"
+      ],
+      "bonne": 2,
+      "explication": "La vérification isCsrfTokenValid est placée avant toute écriture : en cas d'échec, le code repart vers la fiche de la séance sans rien toucher."
+    }
+  ]
+}

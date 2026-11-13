@@ -11,6 +11,10 @@ date: 2026-10-04
 
 Dans la leçon 5, tu as vu le classeur : des tables, des lignes, des colonnes. Mais dans le code PHP de Venaball, tu ne vois presque jamais de tables. Tu vois des fichiers comme `Equipe.php` ou `Joueur.php`. Ces fichiers s'appellent des **entités**. Cette leçon t'apprend à en lire une, ligne par ligne.
 
+```jeu
+{ "type": "devine", "question": "PHP manipule des objets, MySQL ne connaît que des lignes dans des tables. D'après toi, que faut-il entre les deux ?", "indice": "Pense à la secrétaire qui recopie la fiche papier dans le logiciel fédéral.", "reponse": "Un traducteur : Doctrine, un ORM. Il transforme un objet PHP en ligne SQL quand on enregistre, et l'inverse quand on lit. L'entité est la notice qu'il suit." }
+```
+
 On prend `src/Entity/Sport/Equipe.php` (171 lignes) comme fil rouge. `Joueur.php` fait 619 lignes : trop long pour débuter, on n'en prendra que des morceaux.
 
 ### Le problème : PHP parle objets, MySQL parle tableaux
@@ -87,6 +91,10 @@ Ligne par ligne :
 
 Doctrine transforme aussi les noms : la propriété `createdAt` devient la colonne `created_at` (stratégie de nommage `underscore_number_aware`, réglée dans `config/packages/doctrine.yaml`).
 
+```jeu
+{ "type": "trous", "consigne": "En base, la colonne niveau peut rester vide. Complète l'option.", "code": "#[ORM\\Column(length: 80, ___: true)]\nprivate ?string $niveau = null;", "choix": ["nullable", "NotBlank", "private", "length"], "bonne": 0, "explication": "nullable: true autorise une colonne vide. NotBlank fait l'inverse : c'est une contrainte de validation qui refuse le vide." }
+```
+
 ### La relation `#[ORM\ManyToOne]`
 
 ```php
@@ -122,6 +130,10 @@ private Collection $affectations;
 - `mappedBy: 'equipe'` : « la vraie colonne est de l'autre côté, dans la propriété `equipe` de `JoueurEquipe` ». Ce côté-ci ne crée aucune colonne dans la table `equipe`.
 - `Collection` : une liste d'objets que Doctrine remplit quand on la lit.
 - `cascade: ['remove']` : si on supprime l'équipe avec Doctrine, ses affectations sont supprimées aussi.
+
+```jeu
+{ "type": "choix", "question": "Dans Joueur.php, la relation vers l'équipe porte onDelete: 'SET NULL'. Que devient la joueuse si son équipe est supprimée ?", "choix": ["Elle est supprimée aussi", "La suppression de l'équipe est refusée", "Sa case équipe est juste vidée"], "bonne": 2, "explication": "On ne jette pas une licenciée parce que son équipe a disparu. C'est CASCADE qui supprimerait en chaîne, comme entre un club et ses équipes." }
+```
 
 ### Le constructeur et le réflexe automatique
 
@@ -167,6 +179,10 @@ $this->em->flush();
 
 `em` est l'**EntityManager**, le chef du traducteur. `persist` dit « surveille ce nouvel objet ». `flush` dit « maintenant, écris tout en base ». C'est à ce moment-là que Doctrine fabrique l'ordre SQL `INSERT INTO equipe ...` à ta place. Tu ne l'as jamais écrit, mais il existe.
 
+```jeu
+{ "type": "vraifaux", "affirmation": "Dès que tu appelles persist(), Doctrine écrit la nouvelle équipe en base.", "vrai": false, "explication": "persist dit seulement : surveille ce nouvel objet. C'est flush qui écrit, en fabriquant l'ordre INSERT INTO equipe à ta place." }
+```
+
 ### `ClubAwareInterface` : le contrat du tampon club
 
 Une **interface**, c'est un contrat : une liste de méthodes qu'une classe promet d'avoir. Le fichier `src/Entity/Core/ClubAwareInterface.php` ne contient qu'une promesse :
@@ -185,6 +201,10 @@ Un point honnête : le commentaire de l'interface cite `Presence` comme exemple 
 ### Ce que tu dis au jury
 
 « Une entité est une classe PHP que Doctrine sait traduire en table. Les attributs `#[ORM\Column]` décrivent les colonnes, `#[ORM\ManyToOne]` crée une clé étrangère, et les contraintes `Assert` valident les saisies avant l'enregistrement. Les propriétés sont privées et passent par des getters et setters, qui peuvent nettoyer ou refuser une valeur. Mes entités métier implémentent `ClubAwareInterface`, ce qui permet à un seul voter de vérifier le club de n'importe quel objet. »
+
+```jeu
+{ "type": "cartes", "titre": "Questions de jury : une entité", "cartes": [{"recto": "C'est quoi une entité ?", "verso": "Une classe PHP décrite par des attributs #[ORM\\...]. Doctrine, l'ORM, la traduit en table et en lignes SQL."}, {"recto": "ManyToOne ou OneToMany : lequel crée la colonne ?", "verso": "ManyToOne crée la clé étrangère (club_id). OneToMany avec mappedBy est le miroir, sans colonne."}, {"recto": "Pourquoi des propriétés privées avec getters et setters ?", "verso": "Un setter peut contrôler ce qu'on lui donne : setType() refuse un type inconnu, setEmailParent1() met l'adresse en minuscules."}, {"recto": "À quoi sert ClubAwareInterface ?", "verso": "Elle impose getClub(). Le ClubVoter peut vérifier le club de n'importe quelle entité qui signe ce contrat, sans connaître son type."}] }
+```
 
 ## À retenir
 

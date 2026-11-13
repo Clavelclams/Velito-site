@@ -1,0 +1,49 @@
+{
+  "fiche": "dojo-debutant-15-mettre-a-jour-une-app-store-ou-eas",
+  "questions": [
+    {
+      "question": "Qu'est-ce qu'une mise à jour EAS peut changer ?",
+      "choix": [
+        "Tout, y compris les permissions du téléphone",
+        "Seulement l'icône de l'app",
+        "Seulement la base de données du serveur",
+        "Le JavaScript de l'app : écrans, textes, logique"
+      ],
+      "bonne": 3,
+      "explication": "EAS Update envoie le JavaScript. Une permission ou l'icône font partie du natif : il faut une nouvelle version par le store."
+    },
+    {
+      "question": "Dans Pirb store/app.json, runtimeVersion a la policy « appVersion » et version vaut 1.1.0. Qui reçoit une mise à jour EAS publiée maintenant ?",
+      "choix": [
+        "Les apps installées en 1.1.0 uniquement",
+        "Toutes les apps, quelle que soit leur version",
+        "Les apps en 1.0.0 uniquement",
+        "Seulement les téléphones Android"
+      ],
+      "bonne": 0,
+      "explication": "L'étiquette de la mise à jour est le numéro de version. Une joueuse restée en 1.0.0 ne la voit pas : c'est ce qui s'est passé le 12/11."
+    },
+    {
+      "question": "Tu viens de lancer eas update. Tu ouvres l'app : rien n'a changé. Que fais-tu ?",
+      "choix": [
+        "Tu relances eas update",
+        "Tu désinstalles l'app",
+        "Tu fermes l'app et tu la rouvres",
+        "Tu soumets une nouvelle version au store"
+      ],
+      "bonne": 2,
+      "explication": "Le premier lancement télécharge, le suivant applique. Relancer la commande ne ferait qu'empiler une deuxième mise à jour identique."
+    },
+    {
+      "question": "Pourquoi déployer le serveur AVANT de mettre à jour l'app ?",
+      "choix": [
+        "Parce qu'Apple l'exige",
+        "Parce que l'app appellerait une adresse d'API qui n'existe pas encore",
+        "Parce que le serveur est plus lent à démarrer",
+        "Parce que eas update a besoin du mot de passe du serveur"
+      ],
+      "bonne": 1,
+      "explication": "Un nouvel écran appelle une nouvelle route. Si le serveur ne la connaît pas encore, l'app reçoit un 404."
+    }
+  ]
+}

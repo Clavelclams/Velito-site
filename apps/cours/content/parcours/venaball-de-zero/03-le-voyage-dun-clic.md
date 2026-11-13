@@ -11,6 +11,10 @@ date: 2026-10-04
 
 La coach des U15 est connectée au Manager. Dans le menu de gauche, elle clique sur **Équipes**. Une demi-seconde plus tard, un tableau s'affiche : nom, catégorie, saison, niveau, statut. Dans cette leçon, on suit ce clic pas à pas, comme on suivrait un ballon de la remise en jeu jusqu'au panier. Chaque étape correspond à un vrai fichier de `mabb-site`.
 
+```jeu
+{ "type": "devine", "question": "Entre le clic sur Équipes et le tableau affiché, il se passe une demi-seconde. D'après toi, combien d'acteurs se passent le ballon ?", "indice": "Compte large : trouver la machine, lui ouvrir la porte, choisir le code, vérifier les droits, chercher les données, dessiner la page.", "reponse": "Une dizaine : le DNS, Apache, public/index.php, le noyau Symfony, le routage, le pare-feu, le contrôleur, le Repository, la base, puis Twig. Chacun a un rôle unique." }
+```
+
 ### Étape 0 : le lien dans le menu
 
 Le menu du Manager est écrit dans `templates/manager/base.html.twig`. On y trouve, ligne 1026 :
@@ -55,6 +59,10 @@ RewriteRule ^ %{ENV:BASE}/index.php [L]
 Il n'y a pas de fichier `equipes` dans `public/`. Donc Apache passe la requête à `public/index.php`. C'est le principe du **contrôleur frontal** : une seule porte d'entrée pour toutes les pages. Une image ou un fichier CSS, eux, existent sur le disque et sont servis directement, sans PHP.
 
 Le fait que le dossier racine du site soit bien `public/` sur le serveur OVH est un réglage de l'hébergement : non vérifié dans le dépôt.
+
+```jeu
+{ "type": "choix", "question": "Il n'y a pas de fichier equipes dans public/. Que fait Apache de la requête ?", "choix": ["Il répond tout de suite 404", "Il l'envoie à public/index.php", "Il interroge lui-même la base de données"], "bonne": 1, "explication": "C'est la règle de public/.htaccess : si le fichier demandé n'existe pas sur le disque, tout part vers index.php, le contrôleur frontal." }
+```
 
 ### Étape 3 : `public/index.php` réveille Symfony
 
@@ -114,6 +122,10 @@ public function index(Request $request): Response
 Adresse `/equipes`, nom interne `manager_equipe_index` (celui utilisé par `path()` à l'étape 0), méthode GET seulement.
 
 Au passage, la sécurité intervient avant le contrôleur. `config/packages/security.yaml` déclare un **pare-feu** (firewall) `manager` limité aux hosts `manager.` et `club.`, et sa liste `access_control` finit par la règle `{ path: ^/, host: '^(manager|club)\.', roles: ROLE_USER }` : tout le Manager exige d'être connecté. Si la coach n'était pas connectée, elle serait renvoyée vers la page de connexion. Détails en leçon 11.
+
+```jeu
+{ "type": "trous", "consigne": "Le menu appelle path('manager_equipe_index'). Complète l'attribut de la route.", "code": "#[Route('/equipes', name: '___', methods: ['GET'])]", "choix": ["manager_equipe_index", "EquipeController", "/equipes", "index"], "bonne": 0, "explication": "name est le nom interne de la route. C'est lui que path() utilise pour calculer l'adresse /equipes." }
+```
 
 ### Étape 5 : le contrôleur fait son travail
 
@@ -197,9 +209,17 @@ clic -> DNS -> OVH/Apache (.htaccess) -> public/index.php -> Kernel
      -> Twig (manager/equipe/index.html.twig) -> HTML -> navigateur
 ```
 
+```jeu
+{ "type": "ordre", "consigne": "Remets le voyage du clic dans l'ordre.", "etapes": ["Le DNS trouve la machine", "Apache passe la requête à public/index.php", "Le routage choisit le contrôleur", "Le contrôleur vérifie le club actif et les droits", "Le Repository interroge la base", "Twig fabrique le HTML"], "explication": "Chaque étape a un rôle unique : c'est ce qui permet de savoir où chercher quand quelque chose casse." }
+```
+
 ### Ce que tu dis au jury
 
 "Quand une coach clique sur Équipes, le DNS mène la requête au serveur OVH, Apache la confie à l'unique point d'entrée `public/index.php`, qui démarre le noyau Symfony. Le routage choisit le contrôleur selon le domaine, grâce à `config/routes/manager.yaml`, puis selon l'adresse, grâce à l'attribut `#[Route]`. Le contrôleur récupère le club actif, vérifie les droits avec mon `ClubVoter`, et demande au Repository les équipes filtrées par club et par saison. Twig transforme ces objets en HTML, et la réponse repart vers le navigateur. Chaque étape a un rôle unique, ce qui me permet de savoir où chercher quand quelque chose casse."
+
+```jeu
+{ "type": "cartes", "titre": "Questions de jury : le voyage d'un clic", "cartes": [{"recto": "C'est quoi le contrôleur frontal ?", "verso": "Une seule porte d'entrée pour toutes les pages : public/index.php, grâce à la règle de public/.htaccess."}, {"recto": "Le routage se fait en deux temps. Lesquels ?", "verso": "D'abord le domaine, dans config/routes/manager.yaml. Puis l'adresse, avec l'attribut #[Route] dans le contrôleur."}, {"recto": "Pourquoi toujours filtrer par club dans les critères ?", "verso": "C'est ce qui empêche un club de voir les équipes d'un autre."}, {"recto": "Que fait le Repository ?", "verso": "Il va chercher dans la base. Doctrine traduit les critères de findBy en SQL et rend des objets Equipe."}] }
+```
 
 ## À retenir
 

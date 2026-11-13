@@ -1,0 +1,49 @@
+{
+  "fiche": "dojo-debutant-06-la-migration-changer-le-classeur-sans-le-casser",
+  "questions": [
+    {
+      "question": "Une migration, c'est quoi ?",
+      "choix": [
+        "Une copie de sauvegarde de la base",
+        "Un fichier qui décrit comment modifier la structure de la base",
+        "Le déplacement du site vers un autre hébergeur",
+        "Une entité qui a changé de nom"
+      ],
+      "bonne": 1,
+      "explication": "C'est la notice de travaux, rejouable sur chaque serveur. La sauvegarde est une autre chose, qu'on fait juste avant."
+    },
+    {
+      "question": "Dans Version20261113100000.php, que fait down() ?",
+      "choix": [
+        "Il retire les colonnes ajoutées à seance puis supprime la table fermeture",
+        "Il ajoute la colonne motif_annulation",
+        "Il vide le cache de production",
+        "Il annule toutes les séances"
+      ],
+      "bonne": 0,
+      "explication": "down() défait up(), dans l'ordre inverse. Ajouter la colonne, c'est le travail de up()."
+    },
+    {
+      "question": "Tu lances migrate et le serveur répond « Already at the latest version ». Que fais-tu ?",
+      "choix": [
+        "Tu relances jusqu'à ce que ça passe",
+        "Tu restaures la sauvegarde",
+        "Tu supprimes le fichier de migration",
+        "Rien : toutes les migrations sont déjà passées sur cette base"
+      ],
+      "bonne": 3,
+      "explication": "Ce n'est pas une erreur. Doctrine garde la liste des migrations déjà jouées et n'en a trouvé aucune nouvelle."
+    },
+    {
+      "question": "Quel est le bon ordre sur le serveur ?",
+      "choix": [
+        "git, migrate, cache, puis sauvegarde",
+        "migrate, sauvegarde, git, cache",
+        "Sauvegarde, git, migrate, cache",
+        "Cache, git, sauvegarde, migrate"
+      ],
+      "bonne": 2,
+      "explication": "La sauvegarde d'abord, tant que la base est intacte. Le code avant migrate, parce que le fichier de migration arrive avec git."
+    }
+  ]
+}

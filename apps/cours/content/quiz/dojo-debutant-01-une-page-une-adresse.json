@@ -1,0 +1,49 @@
+{
+  "fiche": "dojo-debutant-01-une-page-une-adresse",
+  "questions": [
+    {
+      "question": "Une route, c'est quoi ?",
+      "choix": [
+        "Le lien entre une adresse et le bout de code qui y répond",
+        "Le câble entre le serveur et la base de données",
+        "Le nom d'un fichier dans le dossier public/",
+        "Une page HTML déjà prête"
+      ],
+      "bonne": 0,
+      "explication": "La route dit « pour cette adresse, lance ce code ». Elle ne contient pas la page : elle indique seulement qui doit la fabriquer."
+    },
+    {
+      "question": "La coach reçoit un 404 en touchant Retour après l'appel. Qu'est-ce que ça dit du serveur ?",
+      "choix": [
+        "Il est éteint",
+        "Il a planté sur une erreur de code",
+        "Il fonctionne, mais n'a rien trouvé à l'adresse demandée",
+        "Il refuse parce qu'elle n'a pas les droits"
+      ],
+      "bonne": 2,
+      "explication": "404 = adresse sans résultat. Un plantage du code donnerait une erreur 500, un problème de droits une 403."
+    },
+    {
+      "question": "Dans mabb-site, pourquoi ManagerContenuSeanceController gagnait-il sur SeanceController pour /seances/{id} ?",
+      "choix": [
+        "Parce qu'il a été écrit en dernier",
+        "Parce que son nom de route est plus long",
+        "Parce qu'il est dans un dossier prioritaire",
+        "Parce que Symfony charge les fichiers par ordre alphabétique et garde la première route trouvée"
+      ],
+      "bonne": 3,
+      "explication": "M passe avant S. La date d'écriture ne compte pas : le contrôleur de la bibliothèque a été créé après, et il gagnait quand même."
+    },
+    {
+      "question": "Dans #[Route('/seances/{id}')], que représente {id} ?",
+      "choix": [
+        "Le mot « id » à taper tel quel dans l'adresse",
+        "Un emplacement qui reçoit le numéro de la séance",
+        "Le nom de la table en base",
+        "Un commentaire ignoré par Symfony"
+      ],
+      "bonne": 1,
+      "explication": "Les accolades marquent un emplacement variable. /seances/42 remplit {id} avec 42."
+    }
+  ]
+}

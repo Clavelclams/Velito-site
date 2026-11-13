@@ -1,0 +1,49 @@
+{
+  "fiche": "dojo-debutant-05-lentite-la-fiche-en-php",
+  "questions": [
+    {
+      "question": "Une entité, c'est quoi ?",
+      "choix": [
+        "Une requête SQL enregistrée",
+        "Une page du site",
+        "Une classe PHP qui représente une ligne d'une table",
+        "Le fichier qui modifie la structure de la base"
+      ],
+      "bonne": 2,
+      "explication": "L'entité est la fiche côté PHP. Le fichier qui modifie la structure de la base, c'est la migration (leçon 6)."
+    },
+    {
+      "question": "Dans Seance.php, que veut dire nullable: true sur motifAnnulation ?",
+      "choix": [
+        "La case peut rester vide",
+        "La case est obligatoire",
+        "La case vaut toujours zéro",
+        "La case est cachée aux joueuses"
+      ],
+      "bonne": 0,
+      "explication": "nullable autorise null, donc l'absence de valeur. C'est justement ce vide qui veut dire « séance normale »."
+    },
+    {
+      "question": "Dans Seance.php, comment isAnnulee() sait-elle que la séance est annulée ?",
+      "choix": [
+        "Elle lit une colonne « annulee » qui vaut oui ou non",
+        "Elle compare la date de la séance à aujourd'hui",
+        "Elle compte les présences",
+        "Elle regarde si motifAnnulation est différent de null"
+      ],
+      "bonne": 3,
+      "explication": "Il n'existe pas de colonne « annulee ». Le motif rempli suffit : return $this->motifAnnulation !== null."
+    },
+    {
+      "question": "Pourquoi une seule colonne (le motif) plutôt qu'un oui/non plus un texte ?",
+      "choix": [
+        "Parce que MySQL n'accepte pas les oui/non",
+        "Parce que deux colonnes pourraient se contredire",
+        "Parce qu'une colonne de moins rend le site plus rapide",
+        "Parce que Doctrine limite le nombre de colonnes"
+      ],
+      "bonne": 1,
+      "explication": "Avec deux colonnes, on peut avoir « annulée : non » et un motif écrit. Avec une seule, cet état impossible ne peut pas exister."
+    }
+  ]
+}

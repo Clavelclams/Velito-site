@@ -1,0 +1,49 @@
+{
+  "fiche": "dojo-debutant-07-relier-deux-tables",
+  "questions": [
+    {
+      "question": "Une clé étrangère, c'est quoi ?",
+      "choix": [
+        "Le numéro unique de chaque fiche d'une table",
+        "Un mot de passe pour ouvrir une autre table",
+        "Un numéro qui pointe vers une fiche d'une autre table",
+        "Une copie de la fiche de l'autre table"
+      ],
+      "bonne": 2,
+      "explication": "La clé étrangère renvoie vers une autre fiche sans la recopier. Le numéro unique d'une fiche, c'est la clé primaire."
+    },
+    {
+      "question": "Dans Seance.php, la relation vers Equipe est notée ManyToOne. Que faut-il comprendre ?",
+      "choix": [
+        "Plusieurs séances peuvent appartenir à une seule équipe",
+        "Une séance peut appartenir à plusieurs équipes",
+        "Une équipe ne peut avoir qu'une séance",
+        "Les séances sont recopiées dans la table equipe"
+      ],
+      "bonne": 0,
+      "explication": "Many (les séances) vers One (l'équipe). Chaque fiche de séance porte le numéro d'une seule équipe."
+    },
+    {
+      "question": "Dans mabb-site, où est stockée la liste des joueuses de la CEC ?",
+      "choix": [
+        "Dans la table equipe_composition",
+        "Dans une colonne de la fiche du groupe",
+        "Dans une table recopiée à chaque séance",
+        "Nulle part : elle se calcule à partir des équipes reliées au groupe"
+      ],
+      "bonne": 3,
+      "explication": "equipe_composition ne contient que des couples (groupe_id, equipe_id). Aucune joueuse n'y figure : l'effectif est l'union des affectations des équipes composantes."
+    },
+    {
+      "question": "Pourquoi une table de liaison pour les groupes, plutôt qu'une simple colonne ?",
+      "choix": [
+        "Parce que c'est plus rapide à lire",
+        "Parce qu'un groupe relie plusieurs équipes : une seule case ne suffit pas",
+        "Parce que Doctrine interdit les colonnes de numéros",
+        "Parce que la table equipe était pleine"
+      ],
+      "bonne": 1,
+      "explication": "Une colonne ne contient qu'un numéro. Dès qu'il faut plusieurs liens, on écrit une ligne par couple dans une table à part."
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "fiche": "dojo-debutant-16-boss-final-le-jury",
+  "questions": [
+    {
+      "question": "Le jury demande : « Pourquoi ce choix ? ». Quelle réponse suit la routine en quatre phrases ?",
+      "choix": [
+        "« C'est la bonne pratique, tout le monde fait comme ça. »",
+        "« J'ai fait ceci, pour telle raison, ça évite tel bug, et voici la limite que je connais. »",
+        "« Je ne sais plus, c'est un outil qui l'a écrit. »",
+        "« Mon code n'a aucun défaut sur ce point. »"
+      ],
+      "bonne": 1,
+      "explication": "Fait, raison, risque évité, limite. « Bonne pratique » sans raison concrète appelle aussitôt un deuxième « pourquoi »."
+    },
+    {
+      "question": "Dans ApiClubCoachController.php, une coach filtre sur une équipe qui n'est pas la sienne. Que répond l'API ?",
+      "choix": [
+        "404, pour ne pas confirmer que l'équipe existe",
+        "403, pour dire clairement qu'elle n'a pas le droit",
+        "500, parce que c'est une erreur",
+        "200 avec une liste vide"
+      ],
+      "bonne": 0,
+      "explication": "Le code renvoie « Équipe introuvable », 404. Un 403 confirmerait l'existence d'une équipe qui ne la regarde pas."
+    },
+    {
+      "question": "Quelle phrase sur down() est juste ?",
+      "choix": [
+        "down() sauvegarde les données avant la migration",
+        "down() est joué automatiquement après up()",
+        "down() est inutile si up() a réussi",
+        "down() défait ce que up() a fait, et peut donc supprimer des données"
+      ],
+      "bonne": 3,
+      "explication": "C'est une marche arrière, pas une sauvegarde. Supprimer une colonne efface ce qu'elle contenait : d'où la sauvegarde avant."
+    },
+    {
+      "question": "Dans quel ordre déploies-tu un lot qui contient une migration ?",
+      "choix": [
+        "Migration, sauvegarde, code, cache, test",
+        "Code, cache, migration, test, sauvegarde",
+        "Sauvegarde, code, migration, cache, test",
+        "Test, code, migration, sauvegarde, cache"
+      ],
+      "bonne": 2,
+      "explication": "La sauvegarde se fait avant tout changement, et le test en dernier, une fois le cache vidé."
+    },
+    {
+      "question": "Une nouveauté demande une nouvelle route d'API et un nouvel écran dans l'app. Que livres-tu en premier ?",
+      "choix": [
+        "Le serveur, puis l'app",
+        "Les deux exactement en même temps",
+        "L'app, pour que les joueuses voient l'écran tout de suite",
+        "Peu importe l'ordre"
+      ],
+      "bonne": 0,
+      "explication": "Une app en avance appelle une route qui n'existe pas encore et reçoit un 404. Le serveur d'abord, toujours."
+    }
+  ]
+}

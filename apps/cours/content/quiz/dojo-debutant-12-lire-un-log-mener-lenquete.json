@@ -1,0 +1,49 @@
+{
+  "fiche": "dojo-debutant-12-lire-un-log-mener-lenquete",
+  "questions": [
+    {
+      "question": "Le bouton « Envoyer les convocations » répond 500. Quel est le premier geste ?",
+      "choix": [
+        "Relire le code du bouton et tenter une modification",
+        "Vider le cache et réessayer plusieurs fois",
+        "Ouvrir le log du jour et lire la ligne d'erreur",
+        "Redémarrer le serveur"
+      ],
+      "bonne": 2,
+      "explication": "Le 500 ne dit rien, le log dit tout. Le 13/11, la cause n'était pas dans le bouton mais dans une variable d'environnement absente."
+    },
+    {
+      "question": "Sur le serveur, var/log/prod.log n'existe pas. Pourquoi ?",
+      "choix": [
+        "Parce que config/packages/monolog.yaml utilise rotating_file : un fichier daté par jour",
+        "Parce que les logs sont désactivés en production",
+        "Parce que le fichier est caché par le .gitignore",
+        "Parce que les logs sont rangés dans la base de données"
+      ],
+      "bonne": 0,
+      "explication": "rotating_file ajoute la date au nom : prod-2026-11-13.log. Le .gitignore n'empêche pas un fichier d'exister sur le serveur."
+    },
+    {
+      "question": "Une joueuse ouvre une séance d'une équipe qui n'est pas la sienne et le serveur refuse. Quel code est fait pour dire « pas le droit » ?",
+      "choix": [
+        "500",
+        "200",
+        "404",
+        "403"
+      ],
+      "bonne": 3,
+      "explication": "403 = la porte existe mais tu n'as pas la clé. 500 serait un plantage du code, 404 une adresse sans rien derrière."
+    },
+    {
+      "question": "Dans le log, quelle ligne chercher en premier après un 500 ?",
+      "choix": [
+        "La toute première ligne du fichier",
+        "La ligne de niveau CRITICAL, « Uncaught PHP Exception ... »",
+        "Une ligne de niveau INFO",
+        "La ligne la plus longue"
+      ],
+      "bonne": 1,
+      "explication": "CRITICAL marque l'erreur qui a fait planter la requête. Les lignes INFO autour donnent seulement le contexte."
+    }
+  ]
+}

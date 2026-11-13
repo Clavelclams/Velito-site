@@ -11,6 +11,10 @@ date: 2026-10-04
 
 La coach ouvre la page « Équipes ». En haut, un menu avec le logo du club et le sélecteur de saison. En dessous, le titre « Équipes », une ligne « 4 équipe(s), saison 2026-2027 » avec un petit badge vert « EN COURS », puis un tableau : nom, catégorie, saison, niveau, statut, et des boutons Voir, Modifier, Archiver.
 
+```jeu
+{ "type": "devine", "question": "D'après toi, cette page Équipes existe-t-elle quelque part sous forme de fichier HTML tout fait ?", "indice": "Demain, la coach aura peut-être cinq équipes au lieu de quatre.", "reponse": "Non. Elle est fabriquée à chaque visite par Twig, à partir d'un modèle (le template) et des données envoyées par le contrôleur." }
+```
+
 Cette page n'existe nulle part sous forme de fichier tout fait. Elle est **fabriquée** à chaque visite, par un moteur appelé **Twig**, à partir d'un modèle et des données envoyées par le contrôleur (leçon 8). Cette leçon lit ce modèle.
 
 ### Template : le gabarit de la feuille de match
@@ -40,6 +44,10 @@ Twig n'a que trois signes à connaître :
 - `{{ ... }}` : **affiche** quelque chose. `{{ equipe.nom }}` écrit le nom de l'équipe.
 - `{% ... %}` : **fait** quelque chose, sans rien afficher : une boucle, une condition, un héritage.
 - `{# ... #}` : un **commentaire**, invisible dans la page finale.
+
+```jeu
+{ "type": "paires", "consigne": "Relie chaque signe Twig à ce qu'il fait.", "paires": [["{{ ... }}", "Affiche quelque chose"], ["{% ... %}", "Fait quelque chose sans rien afficher"], ["{# ... #}", "Commentaire invisible dans la page finale"]] }
+```
 
 ### `extends` et `block` : le gabarit commun
 
@@ -126,6 +134,10 @@ Image : le gabarit, c'est le gymnase avec ses tribunes et son tableau d'affichag
 - `not equipe.isActive ? 'inactive' : ''` : une condition courte. Si l'équipe est archivée, on ajoute la classe CSS `inactive` (qui la grise), sinon rien.
 - Juste avant, le template teste `{% if equipes is empty %}` pour afficher un message « Aucune équipe pour l'instant » au lieu d'un tableau vide.
 
+```jeu
+{ "type": "trous", "consigne": "Il faut une ligne de tableau par équipe. Complète la boucle.", "code": "{% ___ equipe in equipes %}", "choix": ["for", "if", "block", "extends"], "bonne": 0, "explication": "for répète le bloc jusqu'à endfor, une fois par équipe. if ne ferait qu'un test, sans répéter." }
+```
+
 ### `path()` : jamais d'adresse en dur
 
 ```twig
@@ -144,6 +156,10 @@ Image : le gabarit, c'est le gymnase avec ses tribunes et son tableau d'affichag
 
 - `is_granted('CLUB_ADMIN', equipe)` : la même question au `ClubVoter` que dans le contrôleur. Le bouton Archiver n'apparaît que pour un dirigeant. Attention : cacher un bouton n'est **pas** une protection. La vraie barrière est le `denyAccessUnlessGranted` du contrôleur. Le template ne fait que du confort.
 - `csrf_token(...)` génère le jeton CSRF vérifié côté contrôleur. `~` colle deux textes en Twig (comme le `.` en PHP).
+
+```jeu
+{ "type": "vraifaux", "affirmation": "Cacher le bouton Archiver avec is_granted suffit à protéger l'archivage.", "vrai": false, "explication": "Cacher un bouton n'est pas une protection, seulement du confort. La vraie barrière est le denyAccessUnlessGranted du contrôleur." }
+```
 
 ### L'échappement automatique : la protection silencieuse
 
@@ -166,6 +182,10 @@ Le problème : je n'ai trouvé dans `src/` aucun nettoyage de ce HTML avant affi
 ### Ce que tu dis au jury
 
 « Les pages du manager sont des templates Twig qui héritent d'un gabarit commun, `manager/base.html.twig`, et remplissent ses blocs `title` et `body`. Le contrôleur passe les données avec `render`, et le template les affiche avec `{{ }}`, les boucles et les conditions avec `{% %}`. Les liens internes passent par `path()`, parce que le même code tourne sur deux domaines. Twig échappe automatiquement tout ce qu'il affiche, ce qui protège contre l'injection de script ; je sais que certains `|raw` du projet désactivent cette protection sans nettoyage préalable, et c'est un correctif que j'ai identifié. »
+
+```jeu
+{ "type": "cartes", "titre": "Questions de jury : Twig", "cartes": [{"recto": "À quoi servent extends et block ?", "verso": "Chaque page hérite du gabarit commun manager/base.html.twig et remplit ses emplacements title et body, au lieu de recopier le menu partout."}, {"recto": "Pourquoi path() plutôt qu'une adresse en dur ?", "verso": "Si l'adresse change, tous les path() suivent. Et le même code tourne sur deux domaines."}, {"recto": "Que fait l'échappement automatique ?", "verso": "Tout ce qui passe par {{ }} voit ses caractères spéciaux rendus inoffensifs. Un nom d'équipe piégé s'affiche comme du texte au lieu d'être exécuté."}, {"recto": "Quel est le risque du filtre raw ?", "verso": "Il désactive l'échappement. Il ne doit afficher que du contenu nettoyé, ce qui n'est pas encore le cas partout dans Venaball."}] }
+```
 
 ## À retenir
 

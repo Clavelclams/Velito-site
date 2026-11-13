@@ -1,0 +1,49 @@
+{
+  "fiche": "dojo-debutant-10-lapi-le-serveur-parle-aux-apps",
+  "questions": [
+    {
+      "question": "Que renvoie une API, contrairement à une page du site ?",
+      "choix": [
+        "Une page HTML plus légère",
+        "Une image de l'écran à afficher",
+        "Des données en JSON, que l'app met en forme elle-même",
+        "Le code source de l'app"
+      ],
+      "bonne": 2,
+      "explication": "L'API envoie les données brutes. L'affichage (couleurs, texte barré, cartes) est décidé par l'app."
+    },
+    {
+      "question": "Dans ApiClubSeanceController::seances, que contient le champ annulee pour une séance annulée ?",
+      "choix": [
+        "Le motif de l'annulation",
+        "true",
+        "La date de l'annulation",
+        "Le numéro de la fermeture"
+      ],
+      "bonne": 0,
+      "explication": "Le champ porte le motif (un texte) quand la séance est annulée, et null sinon. Un seul champ donne deux informations : annulée ou pas, et pourquoi."
+    },
+    {
+      "question": "Pourquoi ajoute-t-on des champs à une API sans jamais en retirer ?",
+      "choix": [
+        "Parce que le JSON ne permet pas de supprimer un champ",
+        "Parce que Symfony garde les anciens champs en mémoire",
+        "Parce que retirer un champ ralentit le serveur",
+        "Parce que les anciennes versions de l'app, encore installées, lisent toujours ces champs"
+      ],
+      "bonne": 3,
+      "explication": "Une app déjà installée ne se met pas à jour toute seule au moment où tu déploies. Un champ en plus, elle l'ignore ; un champ en moins, elle casse."
+    },
+    {
+      "question": "Dans api.ts, le type est écrit annulee?: string | null. Que dit le point d'interrogation ?",
+      "choix": [
+        "Que le champ est secret",
+        "Que le champ peut être absent de la réponse, par exemple sur un serveur pas à jour",
+        "Que le champ est une question posée à l'utilisateur",
+        "Que le champ contient forcément du texte"
+      ],
+      "bonne": 1,
+      "explication": "Le ? rend le champ facultatif. L'app prévoit le cas où le serveur ne l'envoie pas encore, et le traite comme null."
+    }
+  ]
+}

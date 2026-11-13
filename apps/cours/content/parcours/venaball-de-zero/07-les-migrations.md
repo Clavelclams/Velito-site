@@ -11,6 +11,10 @@ date: 2026-10-04
 
 Le 30 septembre 2026, il fallait ajouter une case sur la fiche de chaque équipe : la « clé FFBB », qui permet d'importer tous les matchs du club en un clic. Dans la leçon 6, tu as vu la propriété `$cleFfbb` dans `Equipe.php`. Mais ajouter une propriété dans le PHP ne crée pas la colonne dans MySQL. Il faut aussi modifier la base, et la modifier **pareil** sur ton PC, sur le serveur MABB et sur le serveur Venaball. C'est le rôle des **migrations**.
 
+```jeu
+{ "type": "devine", "question": "Ton PC, le serveur MABB et le serveur Venaball doivent recevoir la même nouvelle colonne. D'après toi, comment éviter que les trois bases finissent différentes ?", "indice": "Pense à une note de service numérotée, la même pour tout le monde.", "reponse": "Avec une migration : un petit fichier PHP qui contient l'ordre SQL à exécuter, appliqué dans le même ordre partout. Jamais d'édition manuelle de la base." }
+```
+
 ### Pourquoi on ne touche pas la base à la main
 
 Imagine trois secrétaires dans trois gymnases, chacune avec son armoire. Un jour, on décide d'ajouter une case « clé FFBB » sur toutes les fiches Équipes. Si chacune modifie ses fiches de mémoire, l'une écrira « clé FFBB », l'autre « code fédé », la troisième oubliera. Trois mois plus tard, plus personne ne sait quelle armoire ressemble à quoi.
@@ -63,6 +67,10 @@ Ligne par ligne :
 
 Compare avec la leçon 6 : la propriété `$cleFfbb` de `Equipe.php` porte `#[ORM\Column(length: 160, nullable: true)]`. 160 et `nullable` d'un côté, `VARCHAR(160) DEFAULT NULL` de l'autre. L'entité et la migration doivent dire la même chose. Si elles divergent, Doctrine croit qu'une colonne existe alors qu'elle n'existe pas, et la page plante.
 
+```jeu
+{ "type": "trous", "consigne": "Les équipes déjà en base doivent recevoir une case vide, sans rien casser. Complète le up().", "code": "$this->addSql('ALTER TABLE equipe ADD cle_ffbb VARCHAR(160) ___');", "choix": ["NOT NULL", "DEFAULT NULL", "DROP cle_ffbb"], "bonne": 1, "explication": "DEFAULT NULL : la colonne est vide par défaut. DROP cle_ffbb, c'est ce que fait down() pour revenir en arrière." }
+```
+
 ### La commande qui applique, et la feuille de pointage
 
 Sur chaque serveur, après avoir récupéré le code, on lance :
@@ -79,6 +87,10 @@ php bin/console doctrine:migrations:migrate --no-interaction --env=prod
 Comment Doctrine sait-il lesquelles sont « déjà faites » ? Il tient une feuille de pointage **dans la base elle-même** : une table de versions. Le fichier `config/packages/doctrine_migrations.yaml` du projet ne change pas son nom, donc c'est le nom par défaut de Doctrine, `doctrine_migration_versions`. Chaque migration jouée y laisse une ligne avec son nom et sa date. Au prochain `migrate`, Doctrine compare la liste des fichiers avec la feuille, et ne joue que la différence. C'est pour ça qu'on peut lancer la commande à chaque déploiement sans risque : si rien n'est nouveau, rien ne se passe. La commande `doctrine:migrations:status` affiche cet état.
 
 Cette ligne est dans la séquence de déploiement de `instruction/00_ECOSYSTEME.md` et de `mabb-site/CLAUDE.md`. Tu la reverras en leçon 15.
+
+```jeu
+{ "type": "choix", "question": "Comment Doctrine sait-il quelles migrations ont déjà été jouées ?", "choix": ["Il regarde la date de modification des fichiers", "Il relit les entités et compare avec la base", "Il tient une table de versions dans la base elle-même"], "bonne": 2, "explication": "La table doctrine_migration_versions garde une ligne par migration jouée. Doctrine compare avec les fichiers et ne joue que la différence." }
+```
 
 ### Les règles du projet
 
@@ -133,9 +145,17 @@ En lisant les migrations, on voit un détail de plus : `Version20260610140000.ph
 
 La leçon est entrée dans `CLAUDE.md` et dans le journal de `00_ECOSYSTEME.md` : avant d'ajouter un champ, une méthode ou une route, chercher le nom sans tenir compte des majuscules (`grep -ri`) dans `src/`, `templates/` et `migrations/`. Dix secondes de recherche auraient évité la panne.
 
+```jeu
+{ "type": "ordre", "consigne": "Remets l'incident du 3 octobre dans l'ordre.", "etapes": ["Un champ codeEMarque existe depuis juin", "À 00h55, un commit ajoute codeEmarque et ses méthodes", "PHP refuse de charger la classe Rencontre", "Erreur 500 sur tout le site", "À 01h02, un commit retire le doublon"], "explication": "Pour PHP, getCodeEmarque et getCodeEMarque sont la même méthode déclarée deux fois. D'où le réflexe : grep -ri avant d'ajouter un nom." }
+```
+
 ### Ce que tu dis au jury
 
 « Je ne modifie jamais la base à la main : chaque changement de structure passe par une migration Doctrine, versionnée dans Git, avec une méthode `up` et une méthode `down`. Les migrations sont écrites à la main, petites, compatibles MySQL et MariaDB, et celles qui insèrent des données se protègent en ciblant le club par son slug. Doctrine tient une table de versions, donc la même commande peut être lancée à chaque déploiement sur les deux serveurs. Le 3 octobre, j'ai créé par erreur un doublon d'un champ existant à la casse près, ce qui a provoqué une erreur 500 pendant quelques minutes ; depuis, je cherche systématiquement un nom avant de l'ajouter. »
+
+```jeu
+{ "type": "cartes", "titre": "Questions de jury : les migrations", "cartes": [{"recto": "Que font up() et down() ?", "verso": "up() avance (ajoute la colonne), down() recule (l'inverse exact). Les deux sont toujours écrits."}, {"recto": "Pourquoi ne pas faire confiance à doctrine:migrations:diff ?", "verso": "La base de dev locale a dérivé de la prod. Les migrations sont donc écrites à la main, petites, une par changement logique."}, {"recto": "Pourquoi cibler un club par son slug dans une migration de données ?", "verso": "L'id 2 sera un autre club sur une autre instance. Avec slug = 'mabb', l'instance Venaball trouve zéro ligne : zéro insertion, zéro erreur."}, {"recto": "Où tes migrations sont-elles testées ?", "verso": "En production seulement, faute de base locale fiable. C'est pour compenser qu'elles sont petites et réversibles."}] }
+```
 
 ## À retenir
 

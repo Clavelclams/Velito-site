@@ -1,0 +1,49 @@
+{
+  "fiche": "dojo-debutant-13-simuler-avant-dexecuter",
+  "questions": [
+    {
+      "question": "Tu lances « php bin/console app:planning:mabb-2026-11 » sans aucune option. Que se passe-t-il ?",
+      "choix": [
+        "Les créneaux sont remplacés tout de suite",
+        "La commande refuse de démarrer",
+        "La commande affiche son plan et n'écrit rien",
+        "La base est sauvegardée automatiquement"
+      ],
+      "bonne": 2,
+      "explication": "Le mode par défaut est la simulation. Il faut ajouter --execute pour écrire. La sauvegarde, elle, reste à faire à la main."
+    },
+    {
+      "question": "Dans PlanningMabb202611Command.php, une erreur survient au milieu des modifications. Que fait rollBack ?",
+      "choix": [
+        "Il annule toutes les modifications de la transaction",
+        "Il relance la commande depuis le début",
+        "Il garde ce qui a déjà été fait et s'arrête",
+        "Il restaure la sauvegarde de la nuit"
+      ],
+      "bonne": 0,
+      "explication": "Transaction = tout ou rien. rollBack déchire le brouillon : la base reste comme avant la commande, sans toucher à la sauvegarde."
+    },
+    {
+      "question": "Que veut dire « idempotent » ?",
+      "choix": [
+        "La commande ne peut être lancée qu'une seule fois",
+        "La commande est très rapide",
+        "La commande demande une confirmation",
+        "Relancer la commande ne change rien de plus"
+      ],
+      "bonne": 3,
+      "explication": "On peut la relancer sans crainte : elle garde ce qui est déjà en place et ne crée rien en double."
+    },
+    {
+      "question": "Pourquoi U15 B est-elle devenue « ambiguë » après la création du groupe « U15 B et U18 B » ?",
+      "choix": [
+        "Parce que l'équipe U15 B avait été supprimée",
+        "Parce que le nom du groupe contient « u15 » et « b » : deux résultats pour la même recherche",
+        "Parce que la transaction avait été annulée",
+        "Parce que la commande n'est pas idempotente"
+      ],
+      "bonne": 1,
+      "explication": "La recherche se fait par nom, mot par mot. Avec deux candidats, la commande ne devine pas. Le correctif exclut les noms de groupes."
+    }
+  ]
+}

@@ -11,6 +11,10 @@ date: 2026-10-04
 
 Quand tu dis au jury « une joueuse ne peut pas voir les données d'une autre équipe », il va te demander : « Comment le sais-tu ? ». Tu peux répondre « j'ai essayé une fois dans mon navigateur ». Ou tu peux répondre « un test automatique le vérifie, voici le fichier ». La deuxième réponse vaut beaucoup plus. Cette leçon t'explique ce que tes tests prouvent vraiment, et ce qu'ils ne prouvent pas.
 
+```jeu
+{ "type": "devine", "question": "D'après toi, quelle partie de Venaball est la mieux couverte par des tests ?", "indice": "C'est ce qui empêche un club de voir les données d'un autre.", "reponse": "La sécurité multi-club : ClubVoterTest (17 tests) et TenantResolverTest (14 tests) sont les deux plus gros fichiers de test." }
+```
+
 ### Un test automatique, c'est l'arbitre
 
 Un **test automatique** est un petit programme qui appelle ton code avec une situation précise et vérifie que le résultat est celui attendu. S'il ne l'est pas, le test devient rouge.
@@ -23,6 +27,10 @@ Pense à l'arbitre d'un match. La règle des 24 secondes ne dépend pas de la bo
 - Un **test fonctionnel** vérifie un vrai parcours : une requête HTTP part, traverse la sécurité, le contrôleur, la base, et revient avec une réponse. C'est comme jouer une action complète à cinq contre cinq.
 
 Dans mabb-site, le dossier `tests/` contient les deux, rangés dans `tests/Unit/` et `tests/Functional/`. J'ai compté les méthodes `public function test...` : 18 fichiers unitaires pour 140 tests, et 5 fichiers fonctionnels pour 13 tests, soit 153 au total. Les plus gros sont `tests/Unit/Security/Voter/ClubVoterTest.php` (17 tests) et `tests/Unit/Security/Tenant/TenantResolverTest.php` (14 tests) : la sécurité multi-club est la partie la mieux couverte.
+
+```jeu
+{ "type": "paires", "consigne": "Relie chaque élément à ce qui lui correspond.", "paires": [["Test unitaire", "Une seule pièce isolée, sans base ni serveur"], ["Test fonctionnel", "Un vrai parcours avec une requête HTTP"], ["tests/Unit/", "140 tests dans 18 fichiers"], ["tests/Functional/", "13 tests dans 5 fichiers"]] }
+```
 
 ### Un vrai test unitaire, ligne par ligne
 
@@ -55,6 +63,10 @@ final class CategorieCalculatorTest extends TestCase
 - `self::assertSame(14, ...)` : l'assertion, le coup de sifflet. « Je veux exactement 14. » Si le calculateur renvoie 13 ou "14" en texte, le test échoue.
 
 Le même fichier utilise un **DataProvider** : une liste de cas (`'U15 (âge 14)'`, `'U18 (âge 18, borne haute)'`...) qui fait tourner le même test plusieurs fois avec des données différentes. Remarque les mots « borne haute » : un bon test vise les limites, là où les bugs se cachent. Et un test documente aussi un choix métier : `testSansDateDeNaissanceOnNeBloqueJamais` dit noir sur blanc « l'incertitude ne bloque pas, le coach tranche ».
+
+```jeu
+{ "type": "trous", "consigne": "La joueuse est née en 2013, saison 2026-2027. Quelle valeur exacte le test exige-t-il ?", "code": "self::assertSame(___, $this->calculator->ageReference($j, '2026-2027'));", "choix": ["13", "14", "2027"], "bonne": 1, "explication": "Fin de saison 2027, moins 2013 : 14. assertSame veut exactement 14 : avec 13, le test devient rouge." }
+```
 
 ### Un test anti-IDOR, expliqué
 
@@ -89,6 +101,10 @@ public function testJoueuseNeVoitPasLaSeanceDuneAutreEquipe(): void
 
 Deux détails à savoir expliquer. D'abord, le test appelle l'hôte `pirb.localhost`, parce que les firewalls sont choisis selon le nom de domaine (leçon 11). Ensuite, `setUp()` ouvre une **transaction** (un lot d'écritures qu'on peut annuler) et `tearDown()` l'annule : la base de test reste propre après chaque test. Le même fichier contient aussi le test inverse, `testJoueuseVoitSaProreSeance` : elle doit pouvoir voir SA séance. Tester seulement le refus ne suffit pas, un site qui refuse tout passerait le test.
 
+```jeu
+{ "type": "choix", "question": "Pourquoi le fichier teste-t-il aussi que la joueuse voit bien sa propre séance ?", "choix": ["Pour vérifier son mot de passe", "Pour remplir la base de test", "Parce qu'un site qui refuse tout passerait le test du refus"], "bonne": 2, "explication": "Tester seulement le 403 ne suffit pas. Il faut aussi prouver que l'accès légitime fonctionne." }
+```
+
 ### Lancer les tests
 
 Dans le dossier mabb-site :
@@ -116,6 +132,10 @@ Le bloc CCP3 du titre CDA porte sur la préparation du déploiement d'une applic
 ### Ce que tu dis au jury
 
 « J'ai 153 tests PHPUnit : 140 unitaires, surtout sur la sécurité multi-club (le voter et le résolveur de club), et 13 fonctionnels qui envoient de vraies requêtes HTTP pour prouver qu'une joueuse ne peut pas ouvrir la séance ou les stats d'une autre équipe. Chaque test fonctionnel tourne dans une transaction annulée, donc la base de test reste propre. Je sais aussi ce qui n'est pas couvert : l'API Club, les imports, la trésorerie et la purge RGPD, et aucun test n'a été ajouté depuis juillet. Ma priorité est une CI qui lance ces tests à chaque push, puis des tests sur l'API Club. »
+
+```jeu
+{ "type": "cartes", "titre": "Questions de jury : les tests", "cartes": [{"recto": "Quels tests as-tu ?", "verso": "153 méthodes PHPUnit : 140 unitaires, surtout sur la sécurité multi-club, et 13 fonctionnelles, lancées avec php bin/phpunit."}, {"recto": "Comment la base de test reste-t-elle propre ?", "verso": "setUp() ouvre une transaction et tearDown() l'annule après chaque test."}, {"recto": "Qu'est-ce qui n'est pas testé ?", "verso": "L'API Club, les imports, la trésorerie, la purge RGPD, le passage de saison. Le dernier commit sur tests/ date du 07/07/2026."}, {"recto": "Les tests sont-ils lancés automatiquement ?", "verso": "Non, il n'y a pas de CI. Un test que personne ne lance protège peu."}, {"recto": "Qu'attend le jury au CCP3 ?", "verso": "Un plan de tests et une recette. Il manque le document qui organise les tests, les scénarios de recette et une CI."}] }
+```
 
 ## À retenir
 

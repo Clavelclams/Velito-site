@@ -1,0 +1,7 @@
+{
+  "titre": "Le dojo du débutant",
+  "description": "Seize leçons courtes où tu joues plus que tu ne lis : deviner, trier, associer, compléter du code. Chaque notion part d'un vrai moment de Venaball (le 404 de l'appel, la migration des séances annulées, le cron des absences) et monte d'un cran à chaque leçon, de « c'est quoi une adresse » jusqu'aux questions du jury.",
+  "icone": "🥋",
+  "ordre": -1,
+  "domaine": "bases"
+}
