@@ -143,6 +143,12 @@ export default function VenaHome() {
             <Link href="/contact" className="btn-vena-primary">
               Parle-nous de ton projet
             </Link>
+            <Link
+              href="/offres"
+              className="text-sm font-semibold text-vena-text underline decoration-vena-kaki underline-offset-4 hover:text-vena-kaki"
+            >
+              Voir les offres et les prix
+            </Link>
             <a
               href="#services"
               className="text-sm font-semibold text-vena-text underline decoration-vena-kaki underline-offset-4 hover:text-vena-kaki"

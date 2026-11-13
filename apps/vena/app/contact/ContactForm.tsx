@@ -63,6 +63,10 @@ export default function ContactForm() {
 
   useEffect(() => {
     afficheARef.current = Date.now();
+    // [13/11/2026] Arrivée depuis /offres (?service=...) : service présélectionné,
+    // seulement si c'est une valeur de la liste.
+    const depuisOffre = new URLSearchParams(window.location.search).get("service");
+    if (depuisOffre && SERVICES.some((s) => s.value === depuisOffre)) setServiceDemande(depuisOffre);
     return () => {
       if (successTimerRef.current) clearTimeout(successTimerRef.current);
     };

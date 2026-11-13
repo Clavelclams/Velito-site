@@ -10,6 +10,7 @@ const SITE_URL = "https://velito.fr";
 export default function sitemap(): MetadataRoute.Sitemap {
   const pages: { chemin: string; priorite: number }[] = [
     { chemin: "", priorite: 1 },
+    { chemin: "/offres", priorite: 0.9 },
     { chemin: "/realisations", priorite: 0.9 },
     { chemin: "/contact", priorite: 0.8 },
     { chemin: "/lien", priorite: 0.4 },
