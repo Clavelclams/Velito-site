@@ -10,7 +10,9 @@
  *  3. refus sur une partie déjà lancée, et sur un pseudo déjà pris ;
  *  4. migration rejouable ;
  *  5. Loup-Garou : anon ne lit plus les rôles ni les cibles des votes, ne peut
- *     plus voter au nom d'un autre ; les loups voient leurs coéquipiers.
+ *     plus voter au nom d'un autre ; les loups voient leurs coéquipiers ;
+ *  6. lg-v3 : l'animateur lit tout par lg_hote_*, un autre compte connecté
+ *     est refusé, et après la partie B il ne lit plus les secrets.
  */
 import { PGlite } from "@electric-sql/pglite";
 import { readFileSync } from "node:fs";
@@ -28,7 +30,7 @@ const q = (s, p) => db.query(s, p);
 await db.exec(`
   create role anon; create role authenticated;
   create schema auth; create table auth.users (id uuid primary key);
-  create function auth.uid() returns uuid language sql stable as $$ select null::uuid $$;
+  create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('app.uid', true), '')::uuid $$;
   create schema interactive; grant usage on schema interactive to anon, authenticated;
   create table interactive.sessions (id uuid primary key default gen_random_uuid(), host_user_id uuid, status text not null default 'lobby');
   create table interactive.session_players (
@@ -106,6 +108,10 @@ await db.exec(`
   create policy v_ins on interactive.lg_votes for insert with check (true);
   create policy v_upd on interactive.lg_votes for update using (true);
   grant select on interactive.lg_player_roles to anon, authenticated;
+  -- Comme en prod : l'animateur écrit les rôles, seulement dans SA partie.
+  grant insert, update, delete on interactive.lg_player_roles to authenticated;
+  create policy r_upd_hote on interactive.lg_player_roles for update using (
+    auth.uid() in (select host_user_id from interactive.sessions where id = session_id));
   grant select, insert, update on interactive.lg_votes to anon, authenticated;
 `);
 const partie = (await q(`insert into interactive.sessions (status) values ('playing') returning id`)).rows[0].id;
@@ -148,5 +154,38 @@ await db.exec(`set role authenticated;`);
 await ok("l'animateur (authenticated) lit toujours les rôles (étape suivante : le restreindre)", () => q(`select role from interactive.lg_player_roles`));
 await db.exec(`reset role;`);
 
+
+console.log("\n== Lecture par l'animateur (lg-v3) ==");
+const HOTE = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+const AUTRE = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+await q(`update interactive.sessions set host_user_id = $1 where id = $2`, [HOTE, partie]);
+await ok("v3a s'exécute (deux fois)", async () => {
+  await db.exec(readFileSync(join(DIR, "interactive-lg-v3a-lecture-hote.sql"), "utf8"));
+  await db.exec(readFileSync(join(DIR, "interactive-lg-v3a-lecture-hote.sql"), "utf8"));
+});
+await ok("v3b s'exécute (deux fois)", async () => {
+  await db.exec(readFileSync(join(DIR, "interactive-lg-v3b-fermer-connectes.sql"), "utf8"));
+  await db.exec(readFileSync(join(DIR, "interactive-lg-v3b-fermer-connectes.sql"), "utf8"));
+});
+await db.exec(`set role authenticated; select set_config('app.uid','${HOTE}', false);`);
+await ok("l'animateur lit tous les rôles par lg_hote_roles", async () => {
+  const r = await q(`select player_id, role from interactive.lg_hote_roles($1)`, [partie]);
+  if (r.rows.length !== 3 || !r.rows.some((x) => x.role === "wolf")) throw new Error(JSON.stringify(r.rows));
+});
+await ok("l'animateur filtre les votes d'un tour (comme .eq dans le code)", async () => {
+  const r = await q(`select target_id from interactive.lg_hote_votes($1) where vote_round = 'd1'`, [partie]);
+  if (r.rows.length !== 1) throw new Error(String(r.rows.length));
+});
+await ok("l'animateur met toujours à jour un joueur (mort)", () =>
+  q(`update interactive.lg_player_roles set alive = false, death_reason = 'test' where player_id = $1`, [villageois.id]));
+await db.exec(`select set_config('app.uid','${AUTRE}', false);`);
+await refus("un autre compte connecté appelle lg_hote_roles", `select * from interactive.lg_hote_roles($1)`, [partie]);
+await refus("un autre compte connecté lit role directement", `select role from interactive.lg_player_roles`);
+await refus("un autre compte connecté lit la cible des votes", `select target_id from interactive.lg_votes`);
+await ok("un compte connecté lit toujours vivant et maire", () => q(`select player_id, alive, is_mayor from interactive.lg_player_roles`));
+await db.exec(`reset role;`);
+await db.exec(`set role anon;`);
+await refus("anon appelle lg_hote_roles", `select * from interactive.lg_hote_roles($1)`, [partie]);
+await db.exec(`reset role;`);
 console.log(`\n${pass} réussis, ${fail} échoués\n`);
 process.exit(fail ? 1 : 0);

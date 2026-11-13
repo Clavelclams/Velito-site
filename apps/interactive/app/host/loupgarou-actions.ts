@@ -1,5 +1,11 @@
 "use server";
 
+// [13/11/2026] Les rôles et les votes ne sont plus lisibles directement (même
+// par un compte connecté) : l'animateur les lit par lg_hote_roles et
+// lg_hote_votes, deux fonctions qui vérifient qu'il est bien l'hôte de la
+// partie (migration interactive-lg-v3a-lecture-hote.sql). Les filtres
+// (.eq("vote_round", ...)) s'appliquent derrière l'appel comme avant.
+
 import { createClient } from "@/lib/supabase/server";
 import { distributeRoles, shuffle, type LGState } from "@/lib/games/loup-garou";
 
@@ -90,7 +96,7 @@ export async function nextLGPhaseAction(sessionId: string): Promise<ActionResult
 
   const { data: rolesData } = await supabase
     .schema("interactive" as never)
-    .from("lg_player_roles")
+    .rpc("lg_hote_roles" as never, { p_session_id: sessionId } as never)
     .select("player_id, role, alive, lover_of, witch_life_potion_used, witch_death_potion_used, hunter_shot_taken")
     .eq("session_id", sessionId);
   const roles = (rolesData ?? []) as Array<{
@@ -108,7 +114,7 @@ export async function nextLGPhaseAction(sessionId: string): Promise<ActionResult
       // Lit le vote de Cupidon pour récupérer les amoureux
       const { data: cupidVote } = await supabase
         .schema("interactive" as never)
-        .from("lg_votes")
+        .rpc("lg_hote_votes" as never, { p_session_id: sessionId } as never)
         .select("target_id, target2_id")
         .eq("session_id", sessionId)
         .eq("vote_round", "cupid_link")
@@ -166,7 +172,7 @@ export async function nextLGPhaseAction(sessionId: string): Promise<ActionResult
       // Le Loup Blanc tue un loup s'il a voté
       const { data: vote } = await supabase
         .schema("interactive" as never)
-        .from("lg_votes")
+        .rpc("lg_hote_votes" as never, { p_session_id: sessionId } as never)
         .select("target_id")
         .eq("session_id", sessionId)
         .eq("vote_round", `night_${state.cycleNumber}_white_wolf`)
@@ -187,7 +193,7 @@ export async function nextLGPhaseAction(sessionId: string): Promise<ActionResult
       if (witch) {
         // Save potion
         const { data: saveVote } = await supabase
-          .schema("interactive" as never).from("lg_votes")
+          .schema("interactive" as never).rpc("lg_hote_votes" as never, { p_session_id: sessionId } as never)
           .select("target_id")
           .eq("session_id", sessionId)
           .eq("vote_round", `night_${state.cycleNumber}_witch_save`)
@@ -203,7 +209,7 @@ export async function nextLGPhaseAction(sessionId: string): Promise<ActionResult
         }
         // Kill potion
         const { data: killVote } = await supabase
-          .schema("interactive" as never).from("lg_votes")
+          .schema("interactive" as never).rpc("lg_hote_votes" as never, { p_session_id: sessionId } as never)
           .select("target_id")
           .eq("session_id", sessionId)
           .eq("vote_round", `night_${state.cycleNumber}_witch_kill`)
@@ -270,7 +276,7 @@ export async function nextLGPhaseAction(sessionId: string): Promise<ActionResult
     case "hunter_shot": {
       // Le Chasseur a voté → tue sa cible
       const { data: shotVote } = await supabase
-        .schema("interactive" as never).from("lg_votes")
+        .schema("interactive" as never).rpc("lg_hote_votes" as never, { p_session_id: sessionId } as never)
         .select("target_id")
         .eq("session_id", sessionId)
         .eq("vote_round", `hunter_${state.cycleNumber}_${state.hunterToShootId}`)
@@ -378,7 +384,7 @@ export async function endLGGameAction(sessionId: string): Promise<ActionResult> 
 async function countWinner(supabase: any, sessionId: string, voteRound: string): Promise<string | undefined> {
   const { data } = await supabase
     .schema("interactive")
-    .from("lg_votes")
+    .rpc("lg_hote_votes" as never, { p_session_id: sessionId } as never)
     .select("target_id")
     .eq("session_id", sessionId)
     .eq("vote_round", voteRound);
@@ -401,7 +407,7 @@ async function countWinner(supabase: any, sessionId: string, voteRound: string):
 async function countWinnerWithMayor(supabase: any, sessionId: string, voteRound: string, mayorId?: string): Promise<string | undefined> {
   const { data } = await supabase
     .schema("interactive")
-    .from("lg_votes")
+    .rpc("lg_hote_votes" as never, { p_session_id: sessionId } as never)
     .select("voter_id, target_id")
     .eq("session_id", sessionId)
     .eq("vote_round", voteRound);
@@ -441,7 +447,7 @@ async function getNewlyDead(supabase: any, sessionId: string, _allDead: string[]
 async function checkWinner(supabase: any, sessionId: string): Promise<"wolves" | "village" | "white_wolf" | "lovers" | undefined> {
   const { data } = await supabase
     .schema("interactive")
-    .from("lg_player_roles")
+    .rpc("lg_hote_roles" as never, { p_session_id: sessionId } as never)
     .select("player_id, role, alive, lover_of")
     .eq("session_id", sessionId);
   const rows = (data ?? []) as Array<{ player_id: string; role: string; alive: boolean; lover_of: string | null }>;

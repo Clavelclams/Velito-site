@@ -74,8 +74,9 @@ export default function HostLoupGarouGame({
       const [{ data: pData }, { data: rData }] = await Promise.all([
         supabase.schema("interactive" as never).from("session_players")
           .select("id, pseudo, avatar_config").eq("session_id", sessionId),
-        supabase.schema("interactive" as never).from("lg_player_roles")
-          .select("player_id, role, alive, is_mayor, death_reason").eq("session_id", sessionId),
+        // [13/11/2026] Rôles lus par une fonction réservée à l'hôte (lg-v3a).
+        supabase.schema("interactive" as never).rpc("lg_hote_roles" as never, { p_session_id: sessionId } as never)
+          .select("player_id, role, alive, is_mayor, death_reason"),
       ]);
       setPlayers(((pData ?? []) as Array<{ id: string; pseudo: string; avatar_config: unknown }>)
         .map((r) => ({ id: r.id, pseudo: r.pseudo, avatar_config: parseAvatarConfig(r.avatar_config) })));
