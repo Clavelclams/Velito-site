@@ -89,6 +89,9 @@ export async function submitContactAction(
     afficheA: input.affiche_a,
     recuA: Date.now(),
     champs: [input.prenom, input.nom, input.structure, input.fonction, input.budget_envisage, input.message],
+    email: input.email,
+    budget: input.budget_envisage,
+    message: input.message,
   });
   if (verdict.robot) {
     console.warn("[submitContactAction] envoi ignoré (robot) :", verdict.raison);
