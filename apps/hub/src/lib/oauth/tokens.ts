@@ -176,11 +176,26 @@ export async function rotateRefreshToken(
     return null;
   }
 
-  // 3. Marquer l'ancien comme révoqué
-  await supabase
+  // 3. Marquer l'ancien comme révoqué, de façon ATOMIQUE. [13/11/2026]
+  // Même course que pour le code d'autorisation : deux rafraîchissements
+  // simultanés avec le même jeton en obtenaient chacun un nouveau. L'écriture
+  // ne réussit que si le jeton n'est pas déjà révoqué ; la requête perdante
+  // est traitée comme un rejeu : toute la famille est révoquée (règle de
+  // l'étape 2), ce qui protège si le jeton a été volé.
+  const { data: revoque } = await supabase
     .from("oauth_refresh_tokens")
     .update({ revoked_at: new Date().toISOString() })
-    .eq("token", oldToken);
+    .eq("token", oldToken)
+    .is("revoked_at", null)
+    .select("token");
+  if (!revoque || revoque.length === 0) {
+    await supabase
+      .from("oauth_refresh_tokens")
+      .update({ revoked_at: new Date().toISOString() })
+      .eq("family_id", row.family_id)
+      .is("revoked_at", null);
+    return null;
+  }
 
   // 4. Récupérer les claims user pour le nouveau token
   const supabaseAuth = getServiceClient();

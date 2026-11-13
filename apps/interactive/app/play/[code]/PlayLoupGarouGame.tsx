@@ -60,7 +60,7 @@ export default function PlayLoupGarouGame({
   // Player token — useState (PAS useMemo) pour que le re-render soit déclenché
   // quand on le récupère depuis la DB. Le useMemo précédent ne s'invalidait jamais
   // → playerToken restait null → loadMyRole skipait → joueur bloqué sur "Chargement".
-  const [playerToken, setPlayerToken] = useState<string | null>(() => {
+  const [playerToken] = useState<string | null>(() => {
     if (typeof window === "undefined") return null;
     try {
       const raw = localStorage.getItem(PLAYER_TOKEN_KEY);
@@ -72,36 +72,11 @@ export default function PlayLoupGarouGame({
     return null;
   });
 
-  // Fetch token depuis la BDD si pas en localStorage (premier join, autre device, etc.)
-  // RLS : SELECT public sur player_token autorisé.
-  useEffect(() => {
-    if (playerToken) return;
-    const supabase = createClient();
-    let cancelled = false;
-    (async () => {
-      const { data } = await supabase
-        .schema("interactive" as never)
-        .from("session_players")
-        .select("player_token")
-        .eq("id", playerId)
-        .single();
-      if (cancelled || !data) return;
-      const token = (data as { player_token: string }).player_token;
-      if (!token) return;
-      // 1. Persiste en localStorage pour les prochains mounts
-      try {
-        const raw = localStorage.getItem(PLAYER_TOKEN_KEY);
-        const map = raw ? (JSON.parse(raw) as Record<string, string>) : {};
-        map[playerId] = token;
-        localStorage.setItem(PLAYER_TOKEN_KEY, JSON.stringify(map));
-      } catch {}
-      // 2. Set le state React → déclenche le re-render + loadMyRole peut tourner
-      setPlayerToken(token);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [playerId, playerToken]);
+  // [13/11/2026] Le jeton n'est plus lisible dans la base (faille corrigée,
+  // migration interactive-player-token-v2-prive.sql) : il est donné une seule
+  // fois quand le joueur rejoint (PlayJoinForm) et gardé dans ce navigateur.
+  // Sans lui (autre téléphone, navigation privée vidée), on ne peut pas
+  // prouver qui on est : le joueur doit rejoindre une nouvelle partie.
 
   // Fetch role + state
   const loadMyRole = useCallback(async () => {
@@ -125,22 +100,27 @@ export default function PlayLoupGarouGame({
       const [sessionRes, playersRes, rolesRes] = await Promise.all([
         supabase.schema("interactive" as never).from("sessions").select("current_state").eq("id", sessionId).single(),
         supabase.schema("interactive" as never).from("session_players").select("id, pseudo").eq("session_id", sessionId),
-        supabase.schema("interactive" as never).from("lg_player_roles").select("player_id, role, alive").eq("session_id", sessionId),
+        // [13/11/2026] Colonnes PUBLIQUES seulement : le rôle des autres n'est
+        // plus lisible (migration interactive-lg-v2-secrets.sql).
+        supabase.schema("interactive" as never).from("lg_player_roles").select("player_id, alive").eq("session_id", sessionId),
       ]);
       if (sessionRes.data) {
         setState((sessionRes.data as { current_state: LGState }).current_state);
       }
       const players = (playersRes.data ?? []) as Array<{ id: string; pseudo: string }>;
-      const roles = (rolesRes.data ?? []) as Array<{ player_id: string; role: string; alive: boolean }>;
+      const roles = (rolesRes.data ?? []) as Array<{ player_id: string; alive: boolean }>;
       setAllPlayers(players.map((p) => ({
         id: p.id,
         pseudo: p.pseudo,
         alive: roles.find((r) => r.player_id === p.id)?.alive ?? true,
       })));
-      // Si je suis loup, voir mes congénères
-      const myRoleData = roles.find((r) => r.player_id === playerId);
-      if (myRoleData?.role === "wolf" || myRoleData?.role === "white_wolf") {
-        setWolfTeammates(roles.filter((r) => r.role === "wolf").map((r) => r.player_id));
+      // Si je suis loup, voir mes congénères. La base ne les donne qu'à un
+      // loup qui prouve son identité avec son jeton (liste vide sinon).
+      if (playerToken) {
+        const { data: loups } = await supabase
+          .schema("interactive" as never)
+          .rpc("lg_mes_loups" as never, { p_player_id: playerId, p_player_token: playerToken } as never);
+        setWolfTeammates(((loups ?? []) as unknown as { player_id: string }[]).map((l) => l.player_id));
       }
       loadMyRole();
     }
@@ -174,7 +154,7 @@ export default function PlayLoupGarouGame({
     }, 3000);
     setTimeout(() => clearInterval(retryInterval), 30000); // arrête après 30s
     return () => { supabase.removeChannel(channel); };
-  }, [sessionId, playerId, loadMyRole]);
+  }, [sessionId, playerId, playerToken, loadMyRole]);
 
   // Cas où le state n'est pas encore chargé (premier render)
   if (!state) {
@@ -189,6 +169,21 @@ export default function PlayLoupGarouGame({
         <h1 className="neon-title mt-4 text-2xl">En attente</h1>
         <p className="mt-2 text-sm text-white/60">
           L&apos;animateur va lancer la partie. Ton rôle te sera révélé dans un instant.
+        </p>
+      </div>
+    );
+  }
+
+  // [13/11/2026] Pas de jeton dans ce navigateur : impossible de prouver qui
+  // on est, donc de recevoir son rôle (voir le commentaire plus haut).
+  if (!myRole && !playerToken) {
+    return (
+      <div className="w-full max-w-sm text-center">
+        <p className="text-9xl">🔒</p>
+        <h1 className="neon-title mt-4 text-2xl">Rôle introuvable</h1>
+        <p className="mt-3 text-sm text-white/60">
+          Ton rôle secret est lié au téléphone avec lequel tu as rejoint la
+          partie. Reprends ce téléphone, ou rejoins la prochaine partie.
         </p>
       </div>
     );
@@ -294,14 +289,20 @@ function PhaseActionPanel({
   const alivePlayers = allPlayers.filter((p) => p.alive && p.id !== playerId);
 
   async function submitVote(voteRound: string, targetId: string, target2Id?: string) {
-    // UPSERT
-    await supabase.schema("interactive" as never).from("lg_votes").upsert({
-      session_id: sessionId,
-      vote_round: voteRound,
-      voter_id: playerId,
-      target_id: targetId,
-      target2_id: target2Id,
-    } as never, { onConflict: "vote_round,voter_id" });
+    // [13/11/2026] Vote par la fonction lg_voter : le jeton prouve que c'est
+    // bien moi qui vote (avant, on pouvait voter au nom de n'importe qui).
+    const { error } = await supabase.schema("interactive" as never).rpc("lg_voter" as never, {
+      p_player_id: playerId,
+      p_player_token: playerToken,
+      p_session_id: sessionId,
+      p_vote_round: voteRound,
+      p_target_id: targetId,
+      p_target2_id: target2Id ?? null,
+    } as never);
+    if (error) {
+      console.error("[PlayLoupGarouGame] vote refusé :", error.message);
+      return; // le bouton reste actif : le joueur peut réessayer
+    }
     setVoteSubmitted(true);
   }
 

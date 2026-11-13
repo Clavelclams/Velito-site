@@ -107,11 +107,26 @@ export async function POST(request: NextRequest) {
       return jsonError(400, "invalid_grant", "PKCE verification failed.");
     }
 
-    // 5. Marquer le code comme consumé (single-use)
-    await supabase
+    // 5. Marquer le code comme consommé, de façon ATOMIQUE. [13/11/2026]
+    // Avant : lecture (étape 2) puis écriture séparée. Deux requêtes envoyées
+    // en même temps avec le même code passaient toutes les deux la vérif
+    // « non consommé » et obtenaient chacune des jetons (course). Maintenant
+    // l'écriture elle-même ne touche la ligne QUE si consumed_at est encore
+    // vide : Postgres garantit qu'une seule requête gagne. La perdante ne
+    // reçoit aucune ligne et repart avec « Code déjà utilisé ».
+    const { data: consomme, error: errConsomme } = await supabase
       .from("oauth_authorization_codes")
       .update({ consumed_at: new Date().toISOString() })
-      .eq("code", code);
+      .eq("code", code)
+      .is("consumed_at", null)
+      .select("code");
+    if (errConsomme) {
+      console.error("[oauth/token] consommation du code :", errConsomme.code);
+      return jsonError(500, "server_error", "Erreur lors de la validation du code.");
+    }
+    if (!consomme || consomme.length === 0) {
+      return jsonError(400, "invalid_grant", "Code déjà utilisé.");
+    }
 
     // 6. Récupérer les claims user via service_role
     const { data: userData } = await supabase.auth.admin.getUserById(

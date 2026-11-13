@@ -41,6 +41,8 @@ import PlayDrawGame from "./PlayDrawGame";
 const AVATAR_STORAGE_KEY = "velito-interactive-avatar";
 const PSEUDO_STORAGE_KEY = "velito-interactive-pseudo";
 const PLAYER_STORAGE_KEY = "velito-interactive-player";
+// [13/11/2026] Même clé que PlayLoupGarouGame : jetons privés, rangés par joueur.
+const PLAYER_TOKEN_KEY = "velito-interactive-player-token";
 
 interface PlayJoinFormProps {
   sessionId: string;
@@ -222,21 +224,26 @@ export default function PlayJoinForm({ sessionId, code, gameType, sessionStatus 
     setSubmitting(true);
     try {
       const supabase = createClient();
+      // [13/11/2026] Inscription par la fonction rejoindre_session (migration
+      // interactive-player-token-v2-prive.sql) : elle crée le joueur ET rend
+      // son jeton privé, une seule fois. Avant, le jeton se relisait dans la
+      // table, lisible par tous : n'importe qui pouvait prendre le jeton d'un
+      // autre joueur (rôle secret au Loup-Garou).
       const { data, error: insertError } = await supabase
         .schema("interactive" as never)
-        .from("session_players")
-        .insert({
-          session_id: sessionId,
-          pseudo: pseudo.trim(),
-          avatar_config: avatar,
-        } as never)
-        .select("id")
-        .single();
+        .rpc("rejoindre_session" as never, {
+          p_session_id: sessionId,
+          p_pseudo: pseudo.trim(),
+          p_avatar: avatar,
+        } as never);
 
       if (insertError) {
         // Cas typique : pseudo déjà pris dans cette session (UNIQUE constraint)
         if (insertError.message?.includes("duplicate") || insertError.code === "23505") {
           setError("Ce pseudo est déjà pris dans cette partie. Choisis-en un autre.");
+        } else if (insertError.code === "P0001") {
+          // Message écrit pour le joueur dans la fonction SQL (partie lancée, pseudo invalide).
+          setError(insertError.message);
         } else {
           setError("Impossible de rejoindre la session. Réessaye.");
         }
@@ -244,8 +251,22 @@ export default function PlayJoinForm({ sessionId, code, gameType, sessionStatus 
         return;
       }
 
-      const row = data as { id: string };
+      const row = (data as unknown as { id: string; player_token: string }[] | null)?.[0];
+      if (!row) {
+        setError("Impossible de rejoindre la session. Réessaye.");
+        return;
+      }
       setPlayerId(row.id);
+      // Le jeton n'est donné qu'ici : on le garde dans ce navigateur, rangé par
+      // joueur (même clé que celle lue par les jeux à données privées).
+      try {
+        const raw = localStorage.getItem(PLAYER_TOKEN_KEY);
+        const map = raw ? (JSON.parse(raw) as Record<string, string>) : {};
+        map[row.id] = row.player_token;
+        localStorage.setItem(PLAYER_TOKEN_KEY, JSON.stringify(map));
+      } catch {
+        /* navigation privée stricte : le Loup-Garou demandera de rejoindre à nouveau */
+      }
 
       // Mémorise qu'on est joueur dans cette session (lié au sessionId)
       try {

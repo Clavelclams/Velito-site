@@ -5,8 +5,10 @@
  * achetables. Un gérant qui arrive doit comprendre en 10 secondes ce qu'il
  * peut acheter, à partir de combien, et quoi faire ensuite.
  *
- * Règle de prix : seuls les prix déjà fixés par Clavel sont publics (site
- * 900 €, maintenance 99 €/mois). Tout le reste est « sur devis ». Les tarifs
+ * Règle de prix (décision de Clavel, 13/11/2026) : seul le prix de la
+ * maintenance est public (49 €/mois, un petit montant qui rassure). Le site
+ * web est « sur devis » : un prix affiché d'entrée fait fuir avant même
+ * d'échanger. Tout le reste est « sur devis ». Les tarifs
  * internes (collectivités, options sur mesure) ne vont JAMAIS sur une page
  * publique.
  *
@@ -19,7 +21,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Offres",
   description:
-    "Sites web à partir de 900 €, maintenance à 99 €/mois, soirées et animations numériques, tournois clés en main, captation vidéo et location de matériel à Amiens.",
+    "Sites web sur devis, maintenance à 49 €/mois, soirées et animations numériques, tournois clés en main, captation vidéo et location de matériel à Amiens.",
   alternates: { canonical: "/offres" },
 };
 
@@ -38,7 +40,7 @@ const OFFRES: Offre[] = [
     num: "01",
     titre: "Site web",
     pour: "Associations, clubs, commerces, structures jeunesse.",
-    prix: "à partir de 900 €",
+    prix: "sur devis",
     inclus: [
       "Site rapide, lisible sur téléphone, à ton image",
       "Formulaire de contact protégé contre le spam",
@@ -52,7 +54,7 @@ const OFFRES: Offre[] = [
     num: "02",
     titre: "Maintenance",
     pour: "Pour ne plus jamais avoir un site cassé ou à l'abandon.",
-    prix: "99 € / mois",
+    prix: "49 € / mois",
     inclus: [
       "Hébergement et mises à jour",
       "Petites modifications de contenu",

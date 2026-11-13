@@ -315,7 +315,7 @@ export default async function Dashboard() {
       const { count } = await supabase
         .schema("interactive" as never)
         .from("session_players")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .in("session_id", sessionIds);
       joueursCount = count ?? 0;
     }
