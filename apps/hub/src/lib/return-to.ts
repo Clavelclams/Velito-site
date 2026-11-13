@@ -25,6 +25,8 @@ export const ALLOWED_HOSTS = [
   // [07/11/2026] « Se connecter avec Velito » depuis compta et cours.
   "compta.velito.fr",
   "cours.velito.fr",
+  // [13/11/2026] Espace bénévoles des boîtes à livres.
+  "livres.velito.fr",
 ];
 
 export function safeReturnTo(raw: string | null | undefined): string {

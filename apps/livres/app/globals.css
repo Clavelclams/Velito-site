@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-livre-papier text-livre-encre antialiased;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Focus clavier toujours visible (WCAG 2.4.7) : le cahier des charges vise
+   la navigation clavier complète. */
+:focus-visible {
+  outline: 3px solid theme("colors.livre.vert");
+  outline-offset: 2px;
+}

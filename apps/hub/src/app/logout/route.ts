@@ -44,6 +44,7 @@ const ALLOWED_RETURN_ORIGINS = new Set([
   "https://interactive.velito.fr",
   "https://arena.velito.fr",
   "https://prevention.velito.fr",
+  "https://livres.velito.fr",
   "http://localhost:3000",
   "http://localhost:3001",
   "http://localhost:3002",
