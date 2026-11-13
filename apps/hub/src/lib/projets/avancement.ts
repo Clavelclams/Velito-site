@@ -89,6 +89,48 @@ export function slugifier(nom: string): string {
     .replace(/-+$/g, "");
 }
 
+/**
+ * [13/11/2026] Vue d'ensemble de TOUS les projets, pour le bandeau de /projets.
+ *
+ * - L'avancement global ne compte que les projets réellement ouverts
+ *   (« en cours ») : une idée sans étape faite ferait baisser le chiffre
+ *   sans rien dire de l'avancement réel, un projet livré le gonflerait.
+ * - `poidsRestant` = la somme des poids des étapes pas encore faites : c'est
+ *   la vraie quantité de travail devant soi, plus parlante qu'un nombre
+ *   d'étapes (une étape de poids 5 vaut cinq petites).
+ * - `enCours` sert d'alerte : plus il y a de projets ouverts en même temps,
+ *   moins chacun avance. Le seuil d'alerte est un choix de pilotage, pas une
+ *   règle technique : 3 projets actifs pour une personne seule.
+ */
+export const SEUIL_PROJETS_ACTIFS = 3;
+
+export interface Synthese {
+  enCours: number;
+  idees: number;
+  livres: number;
+  pourcentageGlobal: number;
+  poidsRestant: number;
+  etapesRestantes: number;
+}
+
+export function synthese(
+  projets: { id: string; statut: string }[],
+  etapes: (Pick<EtapeCalcul, "statut" | "poids"> & { projet_id: string })[],
+): Synthese {
+  const ouverts = new Set(projets.filter((p) => p.statut === "en_cours").map((p) => p.id));
+  const etapesOuvertes = etapes.filter((e) => ouverts.has(e.projet_id));
+  const av = avancement(etapesOuvertes);
+  const restantes = etapesOuvertes.filter((e) => e.statut === "a_faire" || e.statut === "en_cours");
+  return {
+    enCours: ouverts.size,
+    idees: projets.filter((p) => p.statut === "idee").length,
+    livres: projets.filter((p) => p.statut === "livre").length,
+    pourcentageGlobal: av.pourcentage,
+    poidsRestant: restantes.reduce((s, e) => s + Math.min(5, Math.max(1, Math.trunc(e.poids || 1))), 0),
+    etapesRestantes: restantes.length,
+  };
+}
+
 export const LIBELLES_STATUT_PROJET: Record<string, string> = {
   idee: "Idée",
   en_cours: "En cours",

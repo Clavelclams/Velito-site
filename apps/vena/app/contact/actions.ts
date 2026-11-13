@@ -12,6 +12,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { detecterRobot } from "@/lib/anti-spam";
 
 export interface ContactInput {
   prenom: string;
@@ -26,7 +27,16 @@ export interface ContactInput {
   message: string;
   source_decouverte: string;
   rgpd_consent: boolean;
+  /** [13/11/2026] Anti-spam : champ piège (vide pour un humain). */
+  site_web?: string;
+  /** [13/11/2026] Anti-spam : instant d'affichage du formulaire (ms). */
+  affiche_a?: number | null;
 }
+
+// Les seules valeurs que le menu propose : une autre valeur = envoi forgé.
+const SERVICES_AUTORISES = new Set([
+  "developpement_web", "production_video", "photo", "location_materiel", "formation", "conseil", "autre",
+]);
 
 interface ActionResult {
   success: boolean;
@@ -66,6 +76,23 @@ export async function submitContactAction(
       success: false,
       error: "Message requis (au moins 10 caractères).",
     };
+  }
+  if (!SERVICES_AUTORISES.has(input.service_demande)) {
+    return { success: false, error: "Service inconnu." };
+  }
+
+  // [13/11/2026] Robot détecté : on répond « succès » SANS rien enregistrer
+  // ni envoyer. Lui dire « refusé » l'aiderait à contourner le filtre ; et
+  // surtout aucun accusé de réception ne part vers une adresse de robot.
+  const verdict = detecterRobot({
+    potDeMiel: input.site_web,
+    afficheA: input.affiche_a,
+    recuA: Date.now(),
+    champs: [input.prenom, input.nom, input.structure, input.fonction, input.budget_envisage, input.message],
+  });
+  if (verdict.robot) {
+    console.warn("[submitContactAction] envoi ignoré (robot) :", verdict.raison);
+    return { success: true };
   }
 
   // BLINDAGE GLOBAL : toute exception (init Supabase si env manquante, réseau,

@@ -56,8 +56,13 @@ export default function ContactForm() {
   const [success, setSuccess] = useState(false);
   const [isPending, startTransition] = useTransition();
   const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // [13/11/2026] Anti-spam (lib/anti-spam.ts) : instant d'affichage du
+  // formulaire (pris au montage, pas au rendu serveur) et champ piège.
+  const afficheARef = useRef<number | null>(null);
+  const [siteWeb, setSiteWeb] = useState("");
 
   useEffect(() => {
+    afficheARef.current = Date.now();
     return () => {
       if (successTimerRef.current) clearTimeout(successTimerRef.current);
     };
@@ -117,6 +122,8 @@ export default function ContactForm() {
         message,
         source_decouverte: source,
         rgpd_consent: rgpd,
+        site_web: siteWeb,
+        affiche_a: afficheARef.current,
       });
 
       if (!result.success) {
@@ -125,6 +132,8 @@ export default function ContactForm() {
       }
       setSuccess(true);
       reset();
+      // Nouveau formulaire vide : le délai minimum repart de maintenant.
+      afficheARef.current = Date.now();
       successTimerRef.current = setTimeout(() => setSuccess(false), 10000);
     });
   }
@@ -137,6 +146,22 @@ export default function ContactForm() {
 
   return (
     <form onSubmit={handleSubmit} className="card-vena p-6 sm:p-8 space-y-5" noValidate>
+      {/* [13/11/2026] Champ PIÈGE : sorti de l'écran (pas display:none, que
+          certains robots savent ignorer), hors tabulation, caché aux lecteurs
+          d'écran. Un humain ne le voit ni ne le remplit ; un robot qui remplit
+          tout se dénonce. */}
+      <div aria-hidden="true" style={{ position: "absolute", left: "-10000px", top: "auto", width: 1, height: 1, overflow: "hidden" }}>
+        <label htmlFor="site_web">Ne pas remplir</label>
+        <input
+          type="text"
+          id="site_web"
+          name="site_web"
+          tabIndex={-1}
+          autoComplete="off"
+          value={siteWeb}
+          onChange={(e) => setSiteWeb(e.target.value)}
+        />
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label htmlFor="prenom" className={labelClass}>

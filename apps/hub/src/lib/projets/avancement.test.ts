@@ -2,7 +2,7 @@
  * Tests du calcul d'avancement des projets (fonctions pures).
  * Lancer depuis apps/hub :  node --experimental-strip-types src/lib/projets/avancement.test.ts
  */
-import { avancement, parLot, prochaineEtape, slugifier } from "./avancement.ts";
+import { avancement, parLot, prochaineEtape, slugifier, synthese } from "./avancement.ts";
 
 let pass = 0;
 let fail = 0;
@@ -34,6 +34,27 @@ ok("prochaine étape : null si tout est fait", prochaineEtape([e("fait")]) === n
 
 ok("slug sans accents", slugifier("Venaball Club (app staff)") === "venaball-club-app-staff");
 ok("slug : Compta Nova éè", slugifier("  Compta Nova éè ") === "compta-nova-ee");
+
+// [13/11/2026] Synthèse de l'écosystème
+const projets = [
+  { id: "a", statut: "en_cours" },
+  { id: "b", statut: "en_cours" },
+  { id: "c", statut: "idee" },
+  { id: "d", statut: "livre" },
+];
+const etapesS = [
+  { projet_id: "a", statut: "fait" as const, poids: 3 },
+  { projet_id: "a", statut: "a_faire" as const, poids: 1 },
+  { projet_id: "b", statut: "en_cours" as const, poids: 5 },
+  { projet_id: "b", statut: "abandonne" as const, poids: 5 },
+  { projet_id: "c", statut: "a_faire" as const, poids: 5 }, // idée : hors calcul
+  { projet_id: "d", statut: "fait" as const, poids: 5 }, // livré : hors calcul
+];
+const s = synthese(projets, etapesS);
+ok("synthèse : compte les statuts", s.enCours === 2 && s.idees === 1 && s.livres === 1);
+ok("synthèse : % global sur les projets en cours seulement (3/9 → 33 %)", s.pourcentageGlobal === 33);
+ok("synthèse : poids restant = à faire + en cours (1 + 5)", s.poidsRestant === 6 && s.etapesRestantes === 2);
+ok("synthèse : aucun projet → 0 %", synthese([], []).pourcentageGlobal === 0);
 
 console.log(`\n${pass} PASS / ${fail} FAIL`);
 if (fail > 0) process.exit(1);

@@ -12,6 +12,8 @@ import { createClient } from "@/lib/supabase/server";
 import {
   avancement,
   prochaineEtape,
+  synthese,
+  SEUIL_PROJETS_ACTIFS,
   LIBELLES_STATUT_PROJET,
   type StatutEtape,
 } from "@/lib/projets/avancement";
@@ -64,6 +66,9 @@ export default async function ProjetsPage() {
     if (!derniereEntree.has(j.projet_id)) derniereEntree.set(j.projet_id, j);
   }
 
+  // [13/11/2026] Vue d'ensemble (calcul pur, testé dans avancement.test.ts).
+  const vue = synthese(liste, toutesEtapes);
+
   return (
     <main className="min-h-screen bg-[#04040e] text-white pt-[110px] pb-20 px-4 md:px-[10%]">
       <div className="max-w-5xl mx-auto">
@@ -83,6 +88,38 @@ export default async function ProjetsPage() {
             </Link>
           )}
         </div>
+
+        {/* [13/11/2026] Bandeau écosystème : un seul chiffre global, le
+            travail restant, et une alerte quand trop de projets sont ouverts
+            en même temps (seuil de pilotage dans avancement.ts). */}
+        {liste.length > 0 && (
+          <section className="mb-8 rounded-2xl border border-white/10 bg-white/[0.03] p-5" aria-label="Vue d'ensemble">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+              <div>
+                <p className="font-[Orbitron] text-3xl font-black">{vue.pourcentageGlobal} %</p>
+                <p className="text-xs text-white/50">avancement des projets en cours</p>
+              </div>
+              <div>
+                <p className="font-[Orbitron] text-3xl font-black">{vue.enCours}</p>
+                <p className="text-xs text-white/50">projets ouverts en même temps</p>
+              </div>
+              <div>
+                <p className="font-[Orbitron] text-3xl font-black">{vue.etapesRestantes}</p>
+                <p className="text-xs text-white/50">étapes restantes (poids {vue.poidsRestant})</p>
+              </div>
+              <div>
+                <p className="font-[Orbitron] text-3xl font-black">{vue.livres}</p>
+                <p className="text-xs text-white/50">projet{vue.livres > 1 ? "s" : ""} livré{vue.livres > 1 ? "s" : ""}</p>
+              </div>
+            </div>
+            {vue.enCours > SEUIL_PROJETS_ACTIFS && (
+              <p className="mt-4 rounded-xl border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-sm text-amber-200">
+                {vue.enCours} projets ouverts pour une seule personne : chacun avance lentement.
+                Passe en « En pause » ceux qui ne servent ni le jury d&apos;avril ni un premier revenu.
+              </p>
+            )}
+          </section>
+        )}
 
         {liste.length === 0 ? (
           <p className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-sm text-white/60">
