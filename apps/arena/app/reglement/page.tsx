@@ -62,6 +62,13 @@ export default function PageReglement() {
             staff qui tranche, en dernier recours l&apos;organisateur principal.
             Toutes les saisies et modifications sont historisées.
           </p>
+          <p className="mt-2">
+            Au padel et au ping-pong, le détail des sets peut être noté. Sauf
+            règle annoncée par l&apos;organisation : padel en 2 sets gagnants
+            (6 jeux, jeu décisif à 6-6, 3e set possible en super jeu décisif à
+            10 points) ; ping-pong en sets de 11 points avec 2 points
+            d&apos;écart.
+          </p>
         </section>
 
         <section>

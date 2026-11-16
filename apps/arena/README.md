@@ -65,8 +65,31 @@ rien. Tests : `node sql/test_validation_atomique.mjs` (29 contrôles).
 Toutes les écritures des actions vérifient aussi `{ error }` : supabase-js ne
 lève pas d'exception sur une erreur SQL.
 
-**Pas encore fait** : API publique par clé, notifications, score par sets. L'OIDC du hub reste utile pour une future app
-HORS velito.fr.
+**Score par sets (14/11/2026, migration 013)** : au padel et au ping-pong,
+le staff peut saisir le détail (« 6-4 3-6 7-5 ») dans le champ à côté du
+score. Le serveur vérifie les règles (module pur `lib/arena/sets.ts`, 18
+tests : 6-4, 7-5, 7-6, super jeu décisif au 3e set au padel ; 11 avec 2
+d'écart au ping-pong) et calcule lui-même le score en sets gagnés : le
+bracket, le classement et la validation ne changent pas. Le détail s'affiche
+sur la page publique, le widget, les exports CSV (colonne en fin) et JSON.
+La 013 ajoute aussi les sets et l'équipe gagnante au verrou du règlement §3
+(un match validé ne bouge plus).
+
+**API publique par clé (14/11/2026, migration 014)** : `/api/v1/tournois`,
+`/api/v1/tournois/{token}` (format arena-export-v2), `/api/v1/classement`.
+Clé créée par le staff dans `/admin/api`, montrée une seule fois, stockée
+en empreinte SHA-256 ; 120 requêtes par minute et par clé, compteur
+atomique dans `arena.api_consommer`. La clé ne donne aucun droit en plus :
+lecture avec le client ANONYME sans cookie (`lib/supabase/anon.ts`), donc la
+RLS publique s'applique. Documentation publique : `/developpeurs`. Tests :
+`lib/arena/api-cles.test.ts` (10) et `node sql/test_sets_api.mjs` (38
+contrôles PGlite pour 013 et 014).
+
+**Pages légales (14/11/2026)** : `/mentions-legales` et `/confidentialite`
+(« Tes données »), écrites d'après ce que le code enregistre réellement.
+
+**Pas encore fait** : notifications (attend le domaine d'envoi Resend).
+L'OIDC du hub reste utile pour une future app HORS velito.fr.
 
 ## Architecture (à savoir défendre)
 
@@ -98,7 +121,7 @@ npm run test                 # vitest, modules purs
 npm run check-types          # typecheck strict
 ```
 
-Prérequis base : `sql/001` → `sql/012` exécutés dans l'ordre sur Supabase
+Prérequis base : `sql/001` → `sql/014` exécutés dans l'ordre sur Supabase
 (schéma `arena`, exposé à l'API Data), plus une organisation et un membre
 owner/editor dans `shared.user_permissions`.
 

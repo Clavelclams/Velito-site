@@ -26,6 +26,7 @@ import { chargerTournoiPublic } from "@/lib/arena/chargement-public";
 import { grouperMatchsParSection, matchFinal } from "@/lib/arena/affichage";
 import AutoRefresh from "../../../t/[token]/AutoRefresh";
 import type { MatchRow } from "@/lib/arena/types";
+import { formaterSets, lireSets } from "@/lib/arena/sets";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Tournoi", robots: { index: false, follow: false } };
@@ -94,6 +95,9 @@ export default async function WidgetTournoi({ params }: { params: Promise<{ toke
                       </span>
                       <span className="font-mono text-xs text-arena-muted">
                         {joue ? `${m.score_j1 ?? "·"} - ${m.score_j2 ?? "·"}` : "vs"}
+                        {joue && lireSets(m.sets) && (
+                          <span className="block text-[10px]">{formaterSets(lireSets(m.sets))}</span>
+                        )}
                       </span>
                       <span className={`truncate text-right ${c.gagnant && c.gagnant === c.c2 ? "font-bold text-arena-green" : ""}`}>
                         {c.c2 ? nom(c.c2) : "À venir"}

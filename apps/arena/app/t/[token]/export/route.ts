@@ -19,6 +19,7 @@ import { createClient } from "@/lib/supabase/server";
 import { chargerTournoiPublic, slugFichier } from "@/lib/arena/chargement-public";
 import { entetesCsv, genererCsv } from "@/lib/arena/csv";
 import { libelleTour } from "@/lib/arena/mon-match";
+import { formaterSets, lireSets } from "@/lib/arena/sets";
 
 export async function GET(
   _req: Request,
@@ -32,7 +33,7 @@ export async function GET(
   const { tournoi, matchs, nom, nbRounds } = donnees;
 
   const lignes: string[][] = [
-    ["Tour", "Camp 1", "Score 1", "Score 2", "Camp 2", "Vainqueur", "Terrain", "Statut"],
+    ["Tour", "Camp 1", "Score 1", "Score 2", "Camp 2", "Vainqueur", "Terrain", "Statut", "Sets"],
     ...matchs
       // Les byes sont un artefact du bracket, pas un résultat : les exporter
       // produirait des lignes « X contre personne » qui polluent le fichier.
@@ -46,6 +47,9 @@ export async function GET(
         nom(m.equipe_gagnante_id ?? m.gagnant_id),
         m.terrain ?? "",
         m.statut,
+        // Colonne ajoutée EN FIN le 14/11/2026 : un tableur déjà branché sur
+        // les colonnes existantes ne se décale pas.
+        formaterSets(lireSets(m.sets)),
       ]),
   ];
 

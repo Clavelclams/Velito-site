@@ -15,8 +15,8 @@
  * false) sont exclus de l'affichage — exigence RGPD, filtrée ICI et par la RLS.
  */
 import { createClient } from "@/lib/supabase/server";
-import { calculerClassement } from "@/lib/arena/classement";
-import type { Discipline, Joueur, MatchRow, Tournoi } from "@/lib/arena/types";
+import { chargerClassement, type LignePubliee } from "@/lib/arena/chargement-classement";
+import type { Discipline } from "@/lib/arena/types";
 import EnteteSite from "@/components/EnteteSite";
 import PiedSite from "@/components/PiedSite";
 
@@ -43,65 +43,12 @@ export default async function PageClassement({
   // tapée à la main ne doit pas casser une page publique.
   const filtre = FILTRES.find((f) => f.cle === v) ?? FILTRES[0]!;
 
-  let lignes: ReturnType<typeof calculerClassement> = [];
-  const pseudos = new Map<string, { pseudo: string; public: boolean }>();
-
+  // [14/11/2026] Chargement déplacé dans lib/arena/chargement-classement.ts,
+  // partagé avec l'API /api/v1/classement. Changement assumé : un joueur
+  // invisible (anonymisé) n'apparaît plus en « ? » avec un lien cassé.
+  let lignes: LignePubliee[] = [];
   try {
-    const supabase = await createClient();
-
-    let requete = supabase
-      .schema("arena")
-      .from("tournois")
-      .select("id, discipline")
-      .eq("statut", "TERMINE");
-    if (filtre.discipline) {
-      requete = requete.eq("discipline", filtre.discipline);
-    }
-    const { data: tournois } = await requete;
-
-    if (tournois && tournois.length > 0) {
-      const ids = tournois.map((t) => (t as Pick<Tournoi, "id">).id);
-      const [{ data: matchsData }, { data: joueursData }, { data: equipesData }] =
-        await Promise.all([
-          supabase.schema("arena").from("matchs").select("*").in("tournoi_id", ids),
-          supabase
-            .schema("arena")
-            .from("joueurs")
-            .select("id, pseudo, profil_public"),
-          // Compositions d'équipes : au padel, les points du tournoi vont à
-          // chaque membre de la paire vainqueur, pas à un identifiant d'équipe
-          // qui n'aurait aucun sens dans un classement de JOUEURS.
-          supabase
-            .schema("arena")
-            .from("equipes")
-            .select("id, membres:equipes_membres(joueur_id)")
-            .in("tournoi_id", ids),
-        ]);
-
-      const membresParEquipe = new Map(
-        ((equipesData ?? []) as { id: string; membres: { joueur_id: string }[] }[]).map(
-          (e) => [e.id, (e.membres ?? []).map((mb) => mb.joueur_id)]
-        )
-      );
-
-      for (const j of (joueursData ?? []) as Pick<
-        Joueur,
-        "id" | "pseudo" | "profil_public"
-      >[]) {
-        pseudos.set(j.id, { pseudo: j.pseudo, public: j.profil_public });
-      }
-
-      const parTournoi = new Map<string, MatchRow[]>();
-      for (const m of (matchsData ?? []) as MatchRow[]) {
-        const liste = parTournoi.get(m.tournoi_id) ?? [];
-        liste.push(m);
-        parTournoi.set(m.tournoi_id, liste);
-      }
-      lignes = calculerClassement([...parTournoi.values()], membresParEquipe).filter(
-        // Mode restreint mineurs : jamais dans un classement public.
-        (l) => pseudos.get(l.joueurId)?.public !== false
-      );
-    }
+    lignes = await chargerClassement(await createClient(), filtre.discipline);
   } catch {
     // Env absente → liste vide, la page reste servable.
   }
@@ -156,7 +103,7 @@ export default async function PageClassement({
           {lignes.map((l, i) => (
             <li key={l.joueurId}>
               <a
-                href={`/joueurs/${encodeURIComponent(pseudos.get(l.joueurId)?.pseudo ?? "")}`}
+                href={`/joueurs/${encodeURIComponent(l.pseudo)}`}
                 className="flex items-center justify-between rounded-lg border border-arena-border bg-arena-surface shadow-carte px-4 py-3 transition-colors hover:border-arena-violet/50"
               >
                 <span className="flex items-center gap-3">
@@ -172,7 +119,7 @@ export default async function PageClassement({
                     #{i + 1}
                   </span>
                   <span className="font-bold">
-                    {pseudos.get(l.joueurId)?.pseudo ?? "?"}
+                    {l.pseudo}
                   </span>
                   {l.titres > 0 && (
                     <span className="text-xs text-arena-gold">

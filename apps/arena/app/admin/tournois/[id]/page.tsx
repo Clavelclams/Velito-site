@@ -38,6 +38,7 @@ import type {
 import { grouperMatchsParSection, matchFinal, nomFormat } from "@/lib/arena/affichage";
 import BandeauErreur from "@/components/BandeauErreur";
 import { etatAutorisationParentale } from "@/lib/arena/espace-joueur";
+import { formaterSets, lireSets, sportASets } from "@/lib/arena/sets";
 
 const btn =
   "rounded-lg px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-40";
@@ -66,6 +67,8 @@ export default async function PageTournoi({
     .maybeSingle();
   if (!tournoiData) notFound();
   const tournoi = tournoiData as Tournoi;
+  // [14/11/2026] Padel, ping-pong : saisie du détail des sets (migration 013).
+  const sportSets = sportASets(tournoi.jeu);
   // Contrôle d'appartenance : le tournoi doit être à l'une de SES orgas.
   if (!estStaffDe(ctx, tournoi.organisation_id)) notFound();
 
@@ -654,6 +657,11 @@ export default async function PageTournoi({
                             <span className="mx-2 text-arena-faint">
                               {m.score_j1 ?? ""} vs {m.score_j2 ?? ""}
                             </span>
+                            {lireSets(m.sets) && (
+                              <span className="mr-2 text-xs text-arena-faint">
+                                ({formaterSets(lireSets(m.sets))})
+                              </span>
+                            )}
                             <span
                               className={
                                 camps(m).gagnant &&
@@ -720,11 +728,26 @@ export default async function PageTournoi({
                                     name="match_id"
                                     value={m.id}
                                   />
+                                  {/* Sports à sets : le détail suffit, le score
+                                      se calcule. Les cases restent pour un
+                                      format maison (un seul set de 9 jeux…). */}
+                                  {sportSets && (
+                                    <input
+                                      name="sets"
+                                      type="text"
+                                      maxLength={40}
+                                      defaultValue={formaterSets(lireSets(m.sets))}
+                                      placeholder={sportSets === "PADEL" ? "6-4 3-6 7-5" : "11-9 8-11 11-6"}
+                                      aria-label="Détail des sets"
+                                      title="Détail des sets, séparés par un espace. Rempli, il remplace les deux cases de score."
+                                      className={`${inputCls} w-32`}
+                                    />
+                                  )}
                                   <input
                                     name="score_j1"
                                     type="number"
                                     min={0}
-                                    required
+                                    required={!sportSets}
                                     defaultValue={m.score_j1 ?? undefined}
                                     className={`${inputCls} w-16`}
                                     aria-label="Score joueur 1"
@@ -733,7 +756,7 @@ export default async function PageTournoi({
                                     name="score_j2"
                                     type="number"
                                     min={0}
-                                    required
+                                    required={!sportSets}
                                     defaultValue={m.score_j2 ?? undefined}
                                     className={`${inputCls} w-16`}
                                     aria-label="Score joueur 2"

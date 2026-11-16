@@ -26,6 +26,14 @@ const COLONNES = [
       { href: "https://velito.fr", texte: "Écosystème Velito" },
     ],
   },
+  {
+    titre: "Ouvert",
+    liens: [
+      { href: "/developpeurs", texte: "API pour les développeurs" },
+      { href: "/confidentialite", texte: "Tes données" },
+      { href: "/mentions-legales", texte: "Mentions légales" },
+    ],
+  },
 ];
 
 export default function PiedSite() {
@@ -42,7 +50,7 @@ export default function PiedSite() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-8 sm:gap-14">
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 sm:gap-14">
             {COLONNES.map((colonne) => (
               <div key={colonne.titre}>
                 <p className="text-xs font-bold uppercase tracking-widest text-white/50">

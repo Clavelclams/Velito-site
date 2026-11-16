@@ -192,4 +192,9 @@ export interface MatchRow {
    * null = non assigné, cas normal quand il n'y a qu'un seul terrain.
    */
   terrain?: string | null;
+  /**
+   * Détail des sets, padel et ping-pong (migration 013) : [[6,4],[3,6],[7,5]].
+   * Toujours lu par lireSets() (lib/arena/sets.ts), jamais supposé bien formé.
+   */
+  sets?: unknown;
 }

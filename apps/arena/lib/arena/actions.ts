@@ -59,6 +59,7 @@ import { attribuerBadgesTournoi } from "./badges";
 import { etatAutorisationParentale, peutFaireCheckIn } from "./espace-joueur";
 import { messageErreurBase, type ErreurBase } from "./erreurs";
 import { normaliserJeu } from "./jeux";
+import { analyserSets, parserSets, sportASets, type ScoreSet } from "./sets";
 import { estStatutTournoi, transitionAutorisee } from "./transitions";
 import type { MatchRow, Tournoi } from "./types";
 
@@ -878,10 +879,29 @@ export async function saisirScore(formData: FormData) {
     const ctx = await requireStaff();
     const db = getServiceClient();
     const matchId = String(formData.get("match_id"));
-    const scoreJ1 = Number(formData.get("score_j1"));
-    const scoreJ2 = Number(formData.get("score_j2"));
+    let scoreJ1 = Number(formData.get("score_j1"));
+    let scoreJ2 = Number(formData.get("score_j2"));
 
-    await chargerTournoiDeLOrga(tournoiId, ctx);
+    const tournoi = await chargerTournoiDeLOrga(tournoiId, ctx);
+
+    // [14/11/2026] Score par sets (padel, ping-pong). Si le staff a rempli
+    // le détail, c'est LUI qui fait foi : le score devient le nombre de sets
+    // gagnés, calculé et vérifié par lib/arena/sets.ts. Les cases de score
+    // sont alors ignorées (pas de contradiction possible entre les deux).
+    // Champ vide = pas de détail : on efface un ancien détail éventuel, pour
+    // qu'un score corrigé à la main ne s'affiche pas avec des sets périmés.
+    let sets: ScoreSet[] | null = null;
+    const sport = sportASets(tournoi.jeu);
+    const texteSets = String(formData.get("sets") ?? "").trim();
+    if (sport && texteSets) {
+      const lu = parserSets(texteSets);
+      if (!lu.ok) throw new Error(lu.erreur);
+      const analyse = analyserSets(sport, lu.sets);
+      if (!analyse.ok) throw new Error(analyse.erreur);
+      sets = lu.sets;
+      scoreJ1 = analyse.scoreJ1;
+      scoreJ2 = analyse.scoreJ2;
+    }
 
     if (
       !Number.isInteger(scoreJ1) ||
@@ -917,7 +937,7 @@ export async function saisirScore(formData: FormData) {
       );
     }
 
-    const ancien = { score_j1: m.score_j1, score_j2: m.score_j2 };
+    const ancien = { score_j1: m.score_j1, score_j2: m.score_j2, sets: m.sets ?? null };
     // [12/11/2026] Le cas le plus grave de l'audit « erreurs SQL » : un score
     // refusé par la base (trigger, contrainte) s'affichait comme enregistré.
     const { error: errScore } = await db
@@ -925,6 +945,9 @@ export async function saisirScore(formData: FormData) {
       .update({
         score_j1: scoreJ1,
         score_j2: scoreJ2,
+        // Uniquement pour les sports à sets : un tournoi esport n'écrit
+        // jamais la colonne (elle n'existe qu'à partir de la migration 013).
+        ...(sport ? { sets } : {}),
         statut: "TERMINE",
         saisi_par: ctx.userId,
         updated_at: new Date().toISOString(),
@@ -937,7 +960,7 @@ export async function saisirScore(formData: FormData) {
       m.score_j1 === null ? "SCORE_SAISI" : "SCORE_MODIFIE",
       tournoiId,
       matchId,
-      { ancien, nouveau: { score_j1: scoreJ1, score_j2: scoreJ2 } }
+      { ancien, nouveau: { score_j1: scoreJ1, score_j2: scoreJ2, sets } }
     );
 
     revalidatePath(`/admin/tournois/${tournoiId}`);

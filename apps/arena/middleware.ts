@@ -52,8 +52,11 @@ export async function middleware(request: NextRequest) {
   return response;
 }
 
+// [14/11/2026] /api/v1 exclu : l'API publique s'authentifie par clé, jamais
+// par cookie. Lui faire rafraîchir une session coûterait un appel à Supabase
+// Auth par requête, pour rien.
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2?|ttf|otf|eot|css|js|map)$).*)",
+    "/((?!api/v1|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2?|ttf|otf|eot|css|js|map)$).*)",
   ],
 };

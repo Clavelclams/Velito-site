@@ -21,7 +21,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { chargerTournoiPublic, slugFichier } from "@/lib/arena/chargement-public";
-import { libelleTour } from "@/lib/arena/mon-match";
+import { construireExportV2 } from "@/lib/arena/export-json";
 
 export async function GET(
   _request: Request,
@@ -34,57 +34,10 @@ export async function GET(
   if (!donnees) {
     return NextResponse.json({ erreur: "Tournoi introuvable" }, { status: 404 });
   }
-  const { tournoi, participants, matchs, equipes, nom, nbRounds } = donnees;
-  const parEquipes = (tournoi.taille_equipe ?? 1) > 1;
-
-  const exportData = {
-    format: "arena-export-v2",
-    exporte_le: new Date().toISOString(),
-    tournoi: {
-      titre: tournoi.titre,
-      jeu: tournoi.jeu,
-      discipline: tournoi.discipline ?? "ESPORT",
-      format: tournoi.format,
-      taille_equipe: tournoi.taille_equipe ?? 1,
-      statut: tournoi.statut,
-      date_debut: tournoi.date_debut,
-      lieu: tournoi.lieu,
-    },
-    participants: participants.map((p) => ({
-      pseudo: p.pseudo,
-      check_in: p.check_in,
-    })),
-    // Vide en esport individuel : le champ existe quand même, pour qu'un
-    // consommateur n'ait pas deux formats à gérer.
-    equipes: equipes.map((e) => ({ nom: e.nom, membres: e.membres })),
-    matchs: matchs
-      // Les byes sont un artefact du bracket, pas un résultat.
-      .filter((m) => !m.is_bye)
-      .map((m) => {
-        const c1 = parEquipes ? m.equipe1_id : m.joueur1_id;
-        const c2 = parEquipes ? m.equipe2_id : m.joueur2_id;
-        const g = parEquipes ? m.equipe_gagnante_id : m.gagnant_id;
-        return {
-          tour: libelleTour(m, nbRounds),
-          round: m.round,
-          position: m.position,
-          bracket: m.bracket ?? "W",
-          poule: m.poule ?? null,
-          camp1: c1 ? nom(c1) : null,
-          camp2: c2 ? nom(c2) : null,
-          score_camp1: m.score_j1,
-          score_camp2: m.score_j2,
-          gagnant: g ? nom(g) : null,
-          terrain: m.terrain ?? null,
-          statut: m.statut,
-          // Champs v1 conservés (esport individuel uniquement).
-          joueur1: m.joueur1_id ? nom(m.joueur1_id) : null,
-          joueur2: m.joueur2_id ? nom(m.joueur2_id) : null,
-          score_j1: m.score_j1,
-          score_j2: m.score_j2,
-        };
-      }),
-  };
+  const { tournoi } = donnees;
+  // [14/11/2026] Construction déplacée dans lib/arena/export-json.ts,
+  // partagée avec l'API /api/v1/tournois/[token].
+  const exportData = construireExportV2(donnees);
 
   return new NextResponse(JSON.stringify(exportData, null, 2), {
     headers: {

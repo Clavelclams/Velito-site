@@ -25,6 +25,7 @@ import { getServiceClient } from "@/lib/supabase/service";
 import { inscrireEnLigne, seDesinscrire } from "@/lib/arena/actions-joueur";
 import { lienConnexion } from "@/lib/arena/espace-joueur";
 import { siteOrganisation } from "@/lib/arena/organisations";
+import { formaterSets, lireSets } from "@/lib/arena/sets";
 import type { Metadata } from "next";
 
 const HUB_LOGIN = process.env.NEXT_PUBLIC_HUB_LOGIN_URL ?? "https://hub.velito.fr/login";
@@ -505,6 +506,12 @@ export default async function PagePubliqueTournoi({
                             ? `${m.score_j1 ?? "·"} - ${m.score_j2 ?? "·"}`
                             : "vs"}
                         </span>
+                        {/* Détail des sets (padel, ping-pong, migration 013). */}
+                        {lireSets(m.sets) && (m.statut === "VALIDE" || m.statut === "TERMINE") && (
+                          <span className="block whitespace-nowrap text-xs text-arena-faint">
+                            {formaterSets(lireSets(m.sets))}
+                          </span>
+                        )}
                         {/* Terrain : n'apparaît que s'il est assigné, et
                             seulement tant que le match n'est pas joué — une
                             fois le résultat acquis, savoir où il s'est déroulé
