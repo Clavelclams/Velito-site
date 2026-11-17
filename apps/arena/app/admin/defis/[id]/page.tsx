@@ -104,7 +104,7 @@ export default async function PageSaisieDefi({
                 min
               </label>
               <div className="grid grid-cols-2 gap-2">
-                <button name="phase" value="ESSAI" className={`${bouton} border-2 border-arena-violet text-arena-violet`}>Lancer l&apos;essai</button>
+                <button name="phase" value="ESSAI" className={`${bouton} border-2 border-arena-violet text-arena-violet`}>Lancer la découverte</button>
                 <button name="phase" value="COMPTEE" className={`${bouton} bg-arena-violet text-white`}>Manche comptée</button>
               </div>
             </form>

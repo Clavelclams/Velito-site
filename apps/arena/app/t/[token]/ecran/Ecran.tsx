@@ -81,7 +81,7 @@ export default function Ecran({ token, initial }: { token: string; initial: Etat
   const r = etat.rotation;
 
   return (
-    <div className="flex h-[100dvh] w-full cursor-none flex-col overflow-hidden bg-[#140E2A] text-white select-none">
+    <div className="flex h-[100dvh] w-full cursor-none flex-col overflow-hidden bg-[#14243F] text-white select-none">
       <header className="flex items-center justify-between px-[3vw] pt-[2vh] text-[length:min(1.6vw,2.56vh)] font-semibold text-white/60">
         <span>{etat.titre}</span>
         <span>
@@ -95,13 +95,15 @@ export default function Ecran({ token, initial }: { token: string; initial: Etat
         {vue.type === "MANCHE" && r && (
           <div className="flex w-full flex-col items-center">
             <p className="text-[length:min(3vw,4.8vh)] font-black uppercase tracking-widest text-white/80">
-              {vue.phase === "ESSAI" ? "Manche d'essai · sans score" : `Manche comptée · G${r.numero}`}
+              {vue.phase === "ESSAI" ? "Manche de découverte · sans score" : `Manche comptée · G${r.numero}`}
             </p>
             <p className="font-titre text-[26vh] font-black leading-none tabular-nums">{formaterChrono(vue.resteMs)}</p>
             {vue.phase === "COMPTEE" ? (
               <Duel rouge={r.rouge} bleu={r.bleu} unite={etat.unite} taille="moyen" />
             ) : (
-              <p className="mt-[2vh] text-[length:min(3vw,4.8vh)] font-bold text-white/80">{COMMENT_ON_JOUE.regleOr}</p>
+              <p className="mt-[2vh] text-center text-[length:min(3vw,4.8vh)] font-bold text-white/85">
+                <span className="text-[#F5A04A]">{COMMENT_ON_JOUE.regleOr}</span> {COMMENT_ON_JOUE.regleOrDetail}
+              </p>
             )}
           </div>
         )}
@@ -158,13 +160,16 @@ function PanneauAlterne({ panneau, etat }: { panneau: Panneau; etat: EtatEcran }
         <ol className="grid grid-cols-3 gap-[3vw]">
           {COMMENT_ON_JOUE.etapes.map((e, i) => (
             <li key={e.mot} className="rounded-[2vw] bg-white/10 px-[1.5vw] py-[4vh]">
-              <p className="text-[length:min(4vw,6.4vh)] font-black text-amber-300">{i + 1}</p>
+              <p className="mx-auto mb-[1.5vh] flex h-[min(6vw,10vh)] w-[min(6vw,10vh)] items-center justify-center rounded-full bg-[#F08A24] text-[length:min(3.4vw,5.4vh)] font-black">{i + 1}</p>
               <p className="text-[length:min(4.2vw,6.72vh)] font-black leading-tight">{e.mot}</p>
               <p className="mt-[1vh] text-[length:min(2vw,3.2vh)] text-white/80">{e.detail}</p>
             </li>
           ))}
         </ol>
-        <p className="mt-[5vh] text-[length:min(3.6vw,5.76vh)] font-black text-amber-300">{COMMENT_ON_JOUE.regleOr}</p>
+        <div className="mt-[4vh] rounded-[2vw] bg-[#F08A24] px-[2vw] py-[2.5vh]">
+          <p className="text-[length:min(4.4vw,7vh)] font-black leading-none">{COMMENT_ON_JOUE.regleOr}</p>
+          <p className="mt-[1vh] text-[length:min(2.4vw,3.84vh)] font-bold">{COMMENT_ON_JOUE.regleOrDetail}</p>
+        </div>
         <p className="mt-[2vh] text-[length:min(2vw,3.2vh)] text-white/75">{COMMENT_ON_JOUE.chef}</p>
       </div>
     );
@@ -179,12 +184,16 @@ function PanneauAlterne({ panneau, etat }: { panneau: Panneau; etat: EtatEcran }
           <p className="mb-[4vh] text-[length:min(2.2vw,3.52vh)] text-white/70">{MANETTE.sousTitre}</p>
           <ul className="space-y-[2.5vh]">
             {MANETTE.commandes.map((c) => (
-              <li key={c.action} className="text-[length:min(3vw,4.8vh)] leading-tight">
-                <span className="font-black">{c.action}</span>
-                <span className="block text-[length:min(2.2vw,3.52vh)] text-amber-300">{c.position}</span>
+              <li key={c.action} className="flex items-center gap-[1.5vw] leading-tight">
+                <span className="h-[min(3.4vw,5.4vh)] w-[min(3.4vw,5.4vh)] shrink-0 rounded-full" style={{ backgroundColor: c.couleur, border: "0.25vw solid #fff" }} />
+                <span>
+                  <span className="block text-[length:min(3vw,4.8vh)] font-black uppercase">{c.action}</span>
+                  <span className="block text-[length:min(1.9vw,3vh)] text-white/80">{c.detail}</span>
+                </span>
               </li>
             ))}
           </ul>
+          <p className="mt-[3vh] text-[length:min(1.7vw,2.7vh)] text-white/60">{MANETTE.inutile}</p>
         </div>
       </div>
     );
@@ -196,7 +205,7 @@ function PanneauAlterne({ panneau, etat }: { panneau: Panneau; etat: EtatEcran }
       <div className="mb-[3vh] flex items-end justify-between">
         <h1 className="text-[length:min(5vw,8vh)] font-black leading-none">Le classement du jour</h1>
         {etat.record && (
-          <p className="text-right text-[length:min(2.4vw,3.84vh)] font-bold text-amber-300">
+          <p className="text-right text-[length:min(2.4vw,3.84vh)] font-bold text-[#F5A04A]">
             Record : {etat.record.score} {etat.unite}
             <span className="block text-[length:min(1.8vw,2.88vh)] text-white/80">{etat.record.equipes.join(", ")}</span>
           </p>
@@ -227,30 +236,24 @@ function PanneauAlterne({ panneau, etat }: { panneau: Panneau; etat: EtatEcran }
   );
 }
 
-/** Joy-Con tenu à plat : stick à gauche, quatre boutons en losange à droite.
- *  Les boutons utilisés sont en couleur, avec leur rôle (defi-config.ts). */
+/** Joy-Con tenu à plat, comme sur le kit imprimé : stick à gauche, quatre
+ *  boutons en losange à droite, aux couleurs de defi-config.ts (gris = inutile). */
 function JoyCon() {
-  const role = (position: string) => MANETTE.commandes.find((c) => c.bouton === position)?.action ?? null;
+  const couleurDe = (position: string) => MANETTE.commandes.find((c) => c.position === position)?.couleur ?? "#7A7A7A";
   const boutons = [
-    { pos: "Haut", cx: 300, cy: 70 },
-    { pos: "Bas", cx: 300, cy: 190 },
-    { pos: "Gauche", cx: 240, cy: 130 },
-    { pos: "Droite", cx: 360, cy: 130 },
+    { pos: "Haut", cx: 330, cy: 78 },
+    { pos: "Bas", cx: 330, cy: 182 },
+    { pos: "Gauche", cx: 278, cy: 130 },
+    { pos: "Droite", cx: 382, cy: 130 },
   ];
   return (
     <svg viewBox="0 0 440 260" className="w-full" role="img" aria-label="Joy-Con tenu à l'horizontale">
-      <rect x="10" y="10" width="420" height="240" rx="110" fill="#E8465A" />
-      <circle cx="120" cy="130" r="52" fill="#1C1C22" />
-      <circle cx="120" cy="130" r="30" fill="#33333D" />
-      <text x="120" y="226" textAnchor="middle" fontSize="22" fontWeight="800" fill="#fff">Se déplacer</text>
-      {boutons.map((b) => {
-        const r = role(b.pos);
-        return (
-          <g key={b.pos}>
-            <circle cx={b.cx} cy={b.cy} r="30" fill={r ? "#FFD23F" : "#1C1C22"} stroke="#fff" strokeWidth={r ? 4 : 0} />
-          </g>
-        );
-      })}
+      <rect x="10" y="10" width="420" height="240" rx="120" fill="#3A3D45" stroke="#1E1F24" strokeWidth="6" />
+      <circle cx="120" cy="130" r="58" fill="#1F3B63" />
+      <circle cx="120" cy="130" r="36" fill="#6B7684" />
+      {boutons.map((b) => (
+        <circle key={b.pos} cx={b.cx} cy={b.cy} r="25" fill={couleurDe(b.pos)} stroke="#fff" strokeWidth="3" />
+      ))}
     </svg>
   );
 }

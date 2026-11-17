@@ -96,12 +96,12 @@ export function ChronoStaff({ chronoFin, phase, serveurMs }: { chronoFin: string
   }, []);
   const reste = chronoFin ? Date.parse(chronoFin) - maintenant : 0;
   if (!chronoFin || reste <= 0) {
-    return <p className="text-center text-sm text-arena-faint">{phase ? `Manche ${phase === "ESSAI" ? "d'essai" : "comptée"} terminée` : "Pas de manche lancée"}</p>;
+    return <p className="text-center text-sm text-arena-faint">{phase ? `Manche ${phase === "ESSAI" ? "de découverte" : "comptée"} terminée` : "Pas de manche lancée"}</p>;
   }
   return (
     <p className="text-center">
       <span className="block text-xs font-bold uppercase tracking-widest text-arena-violet">
-        {phase === "ESSAI" ? "Manche d'essai" : "Manche comptée"}
+        {phase === "ESSAI" ? "Manche de découverte" : "Manche comptée"}
       </span>
       <span className="font-titre text-6xl font-black tabular-nums">{formaterChrono(reste)}</span>
     </p>
