@@ -91,20 +91,22 @@ export default function Ecran({ token, initial }: { token: string; initial: Etat
         </span>
       </header>
 
-      <main className="flex flex-1 items-center justify-center px-[3vw] pb-[3vh]">
-        {vue.type === "MANCHE" && r && (
+      <main className="flex min-h-0 flex-1 items-center justify-center px-[3vw] pb-[3vh]">
+        {/* [17/11/2026] Manche de découverte : le chrono passe en haut et les
+            consignes restent à l'écran (étapes + manette), c'est le moment où
+            les joueurs en ont besoin. Manche comptée : le chrono et le score
+            en grand, avec un rappel des boutons en une ligne. */}
+        {vue.type === "MANCHE" && r && vue.phase === "ESSAI" && (
+          <MancheDecouverte resteMs={vue.resteMs} />
+        )}
+        {vue.type === "MANCHE" && r && vue.phase === "COMPTEE" && (
           <div className="flex w-full flex-col items-center">
             <p className="text-[length:min(3vw,4.8vh)] font-black uppercase tracking-widest text-white/80">
-              {vue.phase === "ESSAI" ? "Manche de découverte · sans score" : `Manche comptée · G${r.numero}`}
+              Manche comptée · G{r.numero}
             </p>
-            <p className="font-titre text-[26vh] font-black leading-none tabular-nums">{formaterChrono(vue.resteMs)}</p>
-            {vue.phase === "COMPTEE" ? (
-              <Duel rouge={r.rouge} bleu={r.bleu} unite={etat.unite} taille="moyen" />
-            ) : (
-              <p className="mt-[2vh] text-center text-[length:min(3vw,4.8vh)] font-bold text-white/85">
-                <span className="text-[#F5A04A]">{COMMENT_ON_JOUE.regleOr}</span> {COMMENT_ON_JOUE.regleOrDetail}
-              </p>
-            )}
+            <p className="font-titre text-[22vh] font-black leading-none tabular-nums">{formaterChrono(vue.resteMs)}</p>
+            <Duel rouge={r.rouge} bleu={r.bleu} unite={etat.unite} taille="moyen" />
+            <RappelBoutons />
           </div>
         )}
 
@@ -113,6 +115,61 @@ export default function Ecran({ token, initial }: { token: string; initial: Etat
         {vue.type === "ALTERNANCE" && <PanneauAlterne panneau={vue.panneau} etat={etat} />}
       </main>
     </div>
+  );
+}
+
+function MancheDecouverte({ resteMs }: { resteMs: number }) {
+  return (
+    <div className="flex h-full w-full flex-col">
+      <div className="flex items-center justify-between">
+        <p className="text-[length:min(2.6vw,4.2vh)] font-black uppercase tracking-widest text-white/80">
+          Manche de découverte · sans score
+        </p>
+        <p className="font-titre text-[length:min(9vw,15vh)] font-black leading-none tabular-nums">{formaterChrono(resteMs)}</p>
+      </div>
+      <div className="mt-[2vh] grid flex-1 grid-cols-2 gap-[3vw]">
+        <ol className="flex flex-col justify-center gap-[2vh]">
+          {COMMENT_ON_JOUE.etapes.map((e, i) => (
+            <li key={e.mot} className="flex items-center gap-[1.5vw] rounded-[1.5vw] bg-white/10 px-[1.5vw] py-[1.6vh]">
+              <span className="flex h-[min(4.4vw,7vh)] w-[min(4.4vw,7vh)] shrink-0 items-center justify-center rounded-full bg-[#F08A24] text-[length:min(2.6vw,4.2vh)] font-black">{i + 1}</span>
+              <span>
+                <span className="block text-[length:min(3vw,4.8vh)] font-black leading-none">{e.mot}</span>
+                <span className="block text-[length:min(1.8vw,2.9vh)] text-white/80">{e.detail}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
+        <div className="flex flex-col justify-center">
+          <div className="mx-auto w-[85%]"><JoyCon /></div>
+          <ul className="mt-[1.5vh] space-y-[1vh]">
+            {MANETTE.commandes.map((c) => (
+              <li key={c.action} className="flex items-center gap-[1vw]">
+                <span className="h-[min(2.4vw,3.8vh)] w-[min(2.4vw,3.8vh)] shrink-0 rounded-full" style={{ backgroundColor: c.couleur, border: "0.2vw solid #fff" }} />
+                <span className="text-[length:min(2.2vw,3.5vh)] font-black uppercase leading-none">{c.action}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+      <div className="mt-[2vh] rounded-[1.5vw] bg-[#F08A24] py-[1.4vh] text-center">
+        <span className="text-[length:min(3vw,4.8vh)] font-black">{COMMENT_ON_JOUE.regleOr}</span>{" "}
+        <span className="text-[length:min(2vw,3.2vh)] font-bold">{COMMENT_ON_JOUE.regleOrDetail}</span>
+      </div>
+    </div>
+  );
+}
+
+/** Rappel des boutons en une ligne, sous le score de la manche comptée. */
+function RappelBoutons() {
+  return (
+    <ul className="mt-[2vh] flex flex-wrap justify-center gap-x-[2.5vw] gap-y-[1vh]">
+      {MANETTE.commandes.map((c) => (
+        <li key={c.action} className="flex items-center gap-[0.6vw] text-[length:min(1.9vw,3vh)] font-bold text-white/85">
+          <span className="h-[min(1.9vw,3vh)] w-[min(1.9vw,3vh)] rounded-full" style={{ backgroundColor: c.couleur, border: "0.15vw solid #fff" }} />
+          {c.action}
+        </li>
+      ))}
+    </ul>
   );
 }
 
