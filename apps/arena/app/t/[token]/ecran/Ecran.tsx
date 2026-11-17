@@ -104,7 +104,7 @@ export default function Ecran({ token, initial }: { token: string; initial: Etat
             <p className="text-[length:min(3vw,4.8vh)] font-black uppercase tracking-widest text-white/80">
               Manche comptée · G{r.numero}
             </p>
-            <p className="font-titre text-[22vh] font-black leading-none tabular-nums">{formaterChrono(vue.resteMs)}</p>
+            <p className="font-titre text-[18vh] font-black leading-none tabular-nums">{formaterChrono(vue.resteMs)}</p>
             <Duel rouge={r.rouge} bleu={r.bleu} unite={etat.unite} taille="moyen" />
             <RappelBoutons />
           </div>
@@ -145,7 +145,9 @@ function MancheDecouverte({ resteMs }: { resteMs: number }) {
             {MANETTE.commandes.map((c) => (
               <li key={c.action} className="flex items-center gap-[1vw]">
                 <span className="h-[min(2.4vw,3.8vh)] w-[min(2.4vw,3.8vh)] shrink-0 rounded-full" style={{ backgroundColor: c.couleur, border: "0.2vw solid #fff" }} />
-                <span className="text-[length:min(2.2vw,3.5vh)] font-black uppercase leading-none">{c.action}</span>
+                <span className="text-[length:min(2.2vw,3.5vh)] font-black uppercase leading-none">
+                  {c.action}<span className="font-semibold normal-case text-white/60"> · {c.ou}</span>
+                </span>
               </li>
             ))}
           </ul>
@@ -159,22 +161,30 @@ function MancheDecouverte({ resteMs }: { resteMs: number }) {
   );
 }
 
-/** Rappel des boutons en une ligne, sous le score de la manche comptée. */
+/** Rappel sous le score de la manche comptée : le DESSIN de la manette
+ *  (les vrais boutons ne sont pas colorés, c'est leur POSITION qui compte)
+ *  et, à côté, chaque action avec sa couleur et sa position. */
 function RappelBoutons() {
   return (
-    <ul className="mt-[2vh] flex flex-wrap justify-center gap-x-[2.5vw] gap-y-[1vh]">
-      {MANETTE.commandes.map((c) => (
-        <li key={c.action} className="flex items-center gap-[0.6vw] text-[length:min(1.9vw,3vh)] font-bold text-white/85">
-          <span className="h-[min(1.9vw,3vh)] w-[min(1.9vw,3vh)] rounded-full" style={{ backgroundColor: c.couleur, border: "0.15vw solid #fff" }} />
-          {c.action}
-        </li>
-      ))}
-    </ul>
+    <div className="mt-[2vh] flex items-center justify-center gap-[2.5vw]">
+      <div className="w-[min(17vw,27vh)] shrink-0"><JoyCon /></div>
+      <ul className="grid grid-cols-2 gap-x-[2.5vw] gap-y-[1vh]">
+        {MANETTE.commandes.map((c) => (
+          <li key={c.action} className="flex items-center gap-[0.8vw] text-[length:min(2vw,3.2vh)] font-bold text-white/90">
+            <span className="h-[min(2.2vw,3.5vh)] w-[min(2.2vw,3.5vh)] shrink-0 rounded-full" style={{ backgroundColor: c.couleur, border: "0.15vw solid #fff" }} />
+            <span>
+              <span className="uppercase">{c.action}</span>
+              <span className="text-white/60"> · {c.ou}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
 function Duel({ rouge, bleu, unite, taille }: { rouge: number; bleu: number; unite: string; taille: "moyen" | "grand" }) {
-  const chiffre = taille === "grand" ? "text-[24vh]" : "text-[16vh]";
+  const chiffre = taille === "grand" ? "text-[24vh]" : "text-[13vh]";
   return (
     <div className="mt-[1vh] grid w-full grid-cols-2 gap-[3vw]">
       {[

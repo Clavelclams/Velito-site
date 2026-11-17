@@ -12,10 +12,10 @@ export const MANETTE = {
   titre: "Ta manette",
   sousTitre: "Joy-Con tenu à l'horizontale, à deux mains",
   commandes: [
-    { action: "Se déplacer", detail: "Le stick · on le pousse dans la direction voulue", position: "Stick", couleur: "#1F3B63" },
-    { action: "Prendre / poser", detail: "Bouton vert (à droite) · un ingrédient, une assiette", position: "Droite", couleur: "#3FA04B" },
-    { action: "Couper", detail: "Bouton orange (en haut) · reste appuyé devant la planche", position: "Haut", couleur: "#F08A24" },
-    { action: "Foncer", detail: "Bouton bleu (en bas) · un petit sprint", position: "Bas", couleur: "#2D5B8C" },
+    { action: "Se déplacer", detail: "Le stick · on le pousse dans la direction voulue", ou: "le stick", position: "Stick", couleur: "#1F3B63" },
+    { action: "Prendre / poser", detail: "Bouton vert (à droite) · un ingrédient, une assiette", ou: "à droite", position: "Droite", couleur: "#3FA04B" },
+    { action: "Couper", detail: "Bouton orange (en haut) · reste appuyé devant la planche", ou: "en haut", position: "Haut", couleur: "#F08A24" },
+    { action: "Foncer", detail: "Bouton bleu (en bas) · un petit sprint", ou: "en bas", position: "Bas", couleur: "#2D5B8C" },
   ],
   inutile: "Le bouton gris ne sert pas pour l'atelier. Si tu bloques, demande à l'animateur !",
 };
