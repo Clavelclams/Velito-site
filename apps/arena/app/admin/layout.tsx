@@ -138,6 +138,9 @@ export default async function AdminLayout({
           <a href="/admin/rattachements" className="text-arena-muted hover:text-arena-ink">
             Rattachements
           </a>
+          <a href="/admin/defis" className="text-arena-muted hover:text-arena-ink">
+            Défis
+          </a>
           <a href="/admin/api" className="text-arena-muted hover:text-arena-ink">
             API
           </a>

@@ -26,7 +26,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/admin", "/moi", "/widget/", "/api/", "/t/*/export", "/jeux/*/stats"],
+        disallow: ["/admin", "/moi", "/widget/", "/api/", "/t/*/export", "/t/*/ecran", "/jeux/*/stats"],
       },
     ],
     sitemap: `${BASE}/sitemap.xml`,
