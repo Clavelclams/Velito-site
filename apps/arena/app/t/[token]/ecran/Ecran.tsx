@@ -9,7 +9,8 @@
  * - Veille : on demande au navigateur de garder l'écran allumé (Wake Lock),
  *   redemandé quand l'onglet redevient visible. Si le navigateur refuse, rien
  *   ne casse : il faut alors couper la veille du PC (checklist).
- * - Tailles en vw/vh : lisible à 4 mètres quel que soit l'écran.
+ * - Tailles en min(vw, vh) : lisible à 4 mètres, et rien ne déborde si la
+ *   fenêtre est plus large que haute (PC portable, navigateur pas en plein écran).
  */
 import { useEffect, useRef, useState } from "react";
 import { formaterChrono, vueEcran, type Panneau } from "@/lib/arena/defi";
@@ -81,7 +82,7 @@ export default function Ecran({ token, initial }: { token: string; initial: Etat
 
   return (
     <div className="flex h-[100dvh] w-full cursor-none flex-col overflow-hidden bg-[#140E2A] text-white select-none">
-      <header className="flex items-center justify-between px-[3vw] pt-[2vh] text-[1.6vw] font-semibold text-white/60">
+      <header className="flex items-center justify-between px-[3vw] pt-[2vh] text-[length:min(1.6vw,2.56vh)] font-semibold text-white/60">
         <span>{etat.titre}</span>
         <span>
           {r ? `G${r.numero}${r.heure ? ` · ${r.heure.replace(":", "h")}` : ""}` : ""}
@@ -93,14 +94,14 @@ export default function Ecran({ token, initial }: { token: string; initial: Etat
       <main className="flex flex-1 items-center justify-center px-[3vw] pb-[3vh]">
         {vue.type === "MANCHE" && r && (
           <div className="flex w-full flex-col items-center">
-            <p className="text-[3vw] font-black uppercase tracking-widest text-white/80">
+            <p className="text-[length:min(3vw,4.8vh)] font-black uppercase tracking-widest text-white/80">
               {vue.phase === "ESSAI" ? "Manche d'essai · sans score" : `Manche comptée · G${r.numero}`}
             </p>
             <p className="font-titre text-[26vh] font-black leading-none tabular-nums">{formaterChrono(vue.resteMs)}</p>
             {vue.phase === "COMPTEE" ? (
               <Duel rouge={r.rouge} bleu={r.bleu} unite={etat.unite} taille="moyen" />
             ) : (
-              <p className="mt-[2vh] text-[3vw] font-bold text-white/80">{COMMENT_ON_JOUE.regleOr}</p>
+              <p className="mt-[2vh] text-[length:min(3vw,4.8vh)] font-bold text-white/80">{COMMENT_ON_JOUE.regleOr}</p>
             )}
           </div>
         )}
@@ -122,11 +123,11 @@ function Duel({ rouge, bleu, unite, taille }: { rouge: number; bleu: number; uni
         { nom: "Bleu", score: bleu, couleur: BLEU, console: "Console 2" },
       ].map((c) => (
         <div key={c.nom} className="rounded-[2vw] py-[2vh] text-center" style={{ backgroundColor: `${c.couleur}26`, border: `0.4vw solid ${c.couleur}` }}>
-          <p className="text-[3vw] font-black uppercase" style={{ color: c.couleur }}>
-            {c.nom} <span className="text-[1.6vw] font-semibold text-white/60">{c.console}</span>
+          <p className="text-[length:min(3vw,4.8vh)] font-black uppercase" style={{ color: c.couleur }}>
+            {c.nom} <span className="text-[length:min(1.6vw,2.56vh)] font-semibold text-white/60">{c.console}</span>
           </p>
           <p className={`font-titre ${chiffre} font-black leading-none tabular-nums`}>{c.score}</p>
-          <p className="text-[1.8vw] text-white/70">{unite}</p>
+          <p className="text-[length:min(1.8vw,2.88vh)] text-white/70">{unite}</p>
         </div>
       ))}
     </div>
@@ -139,10 +140,10 @@ function Resultat({ numero, rouge, bleu, unite }: { numero: number; rouge: numbe
   const couleur = rouge === bleu ? "#FFFFFF" : rouge > bleu ? ROUGE : BLEU;
   return (
     <div className="flex w-full flex-col items-center">
-      <p className="text-[2.6vw] font-bold uppercase tracking-widest text-white/70">Résultat G{numero}</p>
-      <p className="mb-[2vh] text-[6vw] font-black leading-tight" style={{ color: couleur }}>{titre}</p>
+      <p className="text-[length:min(2.6vw,4.16vh)] font-bold uppercase tracking-widest text-white/70">Résultat G{numero}</p>
+      <p className="mb-[2vh] text-[length:min(6vw,9.6vh)] font-black leading-tight" style={{ color: couleur }}>{titre}</p>
       <Duel rouge={rouge} bleu={bleu} unite={unite} taille="grand" />
-      <p className="mt-[3vh] text-center text-[3vw] font-bold text-white/90">
+      <p className="mt-[3vh] text-center text-[length:min(3vw,4.8vh)] font-bold text-white/90">
         Qu&apos;est-ce qui a marché dans votre organisation ?
       </p>
     </div>
@@ -153,18 +154,18 @@ function PanneauAlterne({ panneau, etat }: { panneau: Panneau; etat: EtatEcran }
   if (panneau === "COMMENT") {
     return (
       <div className="w-full text-center">
-        <h1 className="mb-[4vh] text-[5vw] font-black">{COMMENT_ON_JOUE.titre}</h1>
+        <h1 className="mb-[4vh] text-[length:min(5vw,8vh)] font-black">{COMMENT_ON_JOUE.titre}</h1>
         <ol className="grid grid-cols-3 gap-[3vw]">
           {COMMENT_ON_JOUE.etapes.map((e, i) => (
             <li key={e.mot} className="rounded-[2vw] bg-white/10 px-[1.5vw] py-[4vh]">
-              <p className="text-[4vw] font-black text-amber-300">{i + 1}</p>
-              <p className="text-[4.2vw] font-black leading-tight">{e.mot}</p>
-              <p className="mt-[1vh] text-[2vw] text-white/80">{e.detail}</p>
+              <p className="text-[length:min(4vw,6.4vh)] font-black text-amber-300">{i + 1}</p>
+              <p className="text-[length:min(4.2vw,6.72vh)] font-black leading-tight">{e.mot}</p>
+              <p className="mt-[1vh] text-[length:min(2vw,3.2vh)] text-white/80">{e.detail}</p>
             </li>
           ))}
         </ol>
-        <p className="mt-[5vh] text-[3.6vw] font-black text-amber-300">{COMMENT_ON_JOUE.regleOr}</p>
-        <p className="mt-[2vh] text-[2vw] text-white/75">{COMMENT_ON_JOUE.chef}</p>
+        <p className="mt-[5vh] text-[length:min(3.6vw,5.76vh)] font-black text-amber-300">{COMMENT_ON_JOUE.regleOr}</p>
+        <p className="mt-[2vh] text-[length:min(2vw,3.2vh)] text-white/75">{COMMENT_ON_JOUE.chef}</p>
       </div>
     );
   }
@@ -174,13 +175,13 @@ function PanneauAlterne({ panneau, etat }: { panneau: Panneau; etat: EtatEcran }
       <div className="grid w-full grid-cols-[1.1fr_1fr] items-center gap-[4vw]">
         <JoyCon />
         <div>
-          <h1 className="text-[5vw] font-black leading-none">{MANETTE.titre}</h1>
-          <p className="mb-[4vh] text-[2.2vw] text-white/70">{MANETTE.sousTitre}</p>
+          <h1 className="text-[length:min(5vw,8vh)] font-black leading-none">{MANETTE.titre}</h1>
+          <p className="mb-[4vh] text-[length:min(2.2vw,3.52vh)] text-white/70">{MANETTE.sousTitre}</p>
           <ul className="space-y-[2.5vh]">
             {MANETTE.commandes.map((c) => (
-              <li key={c.action} className="text-[3vw] leading-tight">
+              <li key={c.action} className="text-[length:min(3vw,4.8vh)] leading-tight">
                 <span className="font-black">{c.action}</span>
-                <span className="block text-[2.2vw] text-amber-300">{c.position}</span>
+                <span className="block text-[length:min(2.2vw,3.52vh)] text-amber-300">{c.position}</span>
               </li>
             ))}
           </ul>
@@ -193,16 +194,16 @@ function PanneauAlterne({ panneau, etat }: { panneau: Panneau; etat: EtatEcran }
   return (
     <div className="w-full">
       <div className="mb-[3vh] flex items-end justify-between">
-        <h1 className="text-[5vw] font-black leading-none">Le classement du jour</h1>
+        <h1 className="text-[length:min(5vw,8vh)] font-black leading-none">Le classement du jour</h1>
         {etat.record && (
-          <p className="text-right text-[2.4vw] font-bold text-amber-300">
+          <p className="text-right text-[length:min(2.4vw,3.84vh)] font-bold text-amber-300">
             Record : {etat.record.score} {etat.unite}
-            <span className="block text-[1.8vw] text-white/80">{etat.record.equipes.join(", ")}</span>
+            <span className="block text-[length:min(1.8vw,2.88vh)] text-white/80">{etat.record.equipes.join(", ")}</span>
           </p>
         )}
       </div>
       {etat.classement.length === 0 ? (
-        <p className="py-[10vh] text-center text-[3.5vw] font-bold text-white/70">
+        <p className="py-[10vh] text-center text-[length:min(3.5vw,5.6vh)] font-bold text-white/70">
           Le premier groupe va ouvrir le classement !
         </p>
       ) : (
@@ -210,7 +211,7 @@ function PanneauAlterne({ panneau, etat }: { panneau: Panneau; etat: EtatEcran }
           {etat.classement.map((l) => (
             <li
               key={l.nom}
-              className="flex items-center justify-between rounded-[1vw] px-[1.5vw] py-[1vh] text-[2.8vw] font-black"
+              className="flex items-center justify-between rounded-[1vw] px-[1.5vw] py-[1vh] text-[length:min(2.8vw,4.48vh)] font-black"
               style={{ backgroundColor: `${l.couleur === "ROUGE" ? ROUGE : BLEU}33`, borderLeft: `0.6vw solid ${l.couleur === "ROUGE" ? ROUGE : BLEU}` }}
             >
               <span>
