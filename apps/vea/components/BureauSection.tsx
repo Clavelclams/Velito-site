@@ -6,7 +6,7 @@
  *   - 4 principaux (President, VP, Tresorier, Secretaire) toujours visibles
  *   - 3 adjoints (VP, Tresorier, Secretaire) reveles au toggle
  *   - 3 administrateurs CA reveles au toggle
- *   - 1 membre jeune engagee (Maya, voix consultative)
+ *   - 1 membre jeune engagee (voix consultative)
  * Total : 11 personnes elues.
  */
 "use client";
@@ -40,14 +40,16 @@ const CA: Member[] = [
   { name: "Noha PARMENTIER", role: "Administrateur CA" },
 ];
 
+// [17/11/2026] La membre jeune engagée est MINEURE : jamais son nom sur le
+// site public. Carte sans nom (l'avatar affiche « MJ »).
 const MEMBRE_JEUNE: Member = {
-  name: "Maya GOMBERT",
-  role: "Membre jeune engagee",
+  name: "Membre jeune engagée",
+  role: "Élue à l'AGE du 30/04/2026",
   note: "Voix consultative (statuts V9, Art. 2 bis)",
 };
 
 function MemberCard({ member, size = "normal" }: { member: Member; size?: "normal" | "small" }) {
-  const initials = member.name.split(" ").map((w) => w[0]).slice(0, 2).join("");
+  const initials = member.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
   // DA 22/05 (v2) : plus de boite/bordure. Grille "people" sobre — l'avatar
   // circulaire structure, halo + leger zoom au survol. Plus humain qu'une card.
   const avatarSize = size === "small" ? "w-14 h-14" : "w-20 h-20";

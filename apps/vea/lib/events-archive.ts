@@ -205,9 +205,9 @@ export const EVENTS_ARCHIVE: EventArchive[] = [
   },
   {
     id: "archive-2022-stage-maya-pc",
-    titre: "Atelier reconditionnement PC — Stage Maya (3eme)",
+    titre: "Atelier reconditionnement PC — Stage de 3eme",
     description:
-      "Premier atelier reconditionnement PC dans le cadre du stage 3eme de Maya Gombert (membre jeune VEA, decembre 2022). Recuperation, remise en etat, formation. PC offerts a la MABB pour le marquage des matchs.",
+      "Premier atelier reconditionnement PC dans le cadre du stage de 3eme d'une jeune membre de VEA (decembre 2022). Recuperation, remise en etat, formation. PC offerts a la MABB pour le marquage des matchs.",
     date: "2022-12-15",
     lieu: "Amiens",
     type: "ATELIER",

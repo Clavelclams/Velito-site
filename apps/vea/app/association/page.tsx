@@ -193,7 +193,7 @@ export default function AssociationPage() {
         </div>
       </section>
 
-      {/* BUREAU + CA + Maya */}
+      {/* BUREAU + CA + membre jeune engagée */}
       <BureauSection />
 
       {/* EQUIPE OPERATIONNELLE — split : equipe a gauche, photo a droite */}

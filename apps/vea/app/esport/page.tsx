@@ -189,7 +189,7 @@ const SOCIAL_PROJECTS: SocialProject[] = [
     title: "Ateliers reconditionnement PC",
     description:
       "Programme d'ateliers : recuperation de vieux ordinateurs, remise en etat, formation avec les stagiaires. Chacun repart avec son PC refait par ses soins. Les PC en bonus sont offerts a la MABB pour le marquage des matchs.",
-    highlight: "5 stagiaires accompagnes (Maya 2022, Berstelien, Cyprien, Leny, Oumayma 2024)",
+    highlight: "5 stagiaires accompagnes (une stagiaire de 3eme en 2022, Berstelien, Cyprien, Leny, Oumayma en 2024)",
   },
   {
     emoji: "🤝",
