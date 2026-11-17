@@ -30,6 +30,7 @@ import EnteteSite from "@/components/EnteteSite";
 import PiedSite from "@/components/PiedSite";
 import BandeauErreur from "@/components/BandeauErreur";
 import type { StatutTournoi } from "@/lib/arena/types";
+import { construireSuggestion, type MembreVea, type Suggestion } from "@/lib/arena/suggestion-vea";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Mon espace", robots: { index: false } };
@@ -129,7 +130,7 @@ async function Contenu({ userId }: { userId: string }) {
         </div>
       );
     }
-    return <SansProfil />;
+    return <SansProfil suggestion={await suggestionDepuisVea(userId)} />;
   }
 
   const j = joueur as {
@@ -247,9 +248,53 @@ function Liste({
   );
 }
 
-function SansProfil() {
+/**
+ * [17/11/2026] Pré-remplissage depuis le profil VEA du même compte Velito
+ * (lib/arena/suggestion-vea.ts). Lecture serveur, filtrée par l'id du compte
+ * connecté. Toute erreur (schéma vea absent, base lente) = pas de
+ * suggestion, jamais une page cassée : c'est un confort, pas un prérequis.
+ */
+async function suggestionDepuisVea(userId: string): Promise<Suggestion | null> {
+  try {
+    const db = getServiceClient();
+    // limit(1) et pas maybeSingle : VEA a déjà connu des doublons de fiche.
+    const { data } = await db
+      .schema("vea")
+      .from("participants")
+      .select("pseudo, annee_naissance, date_naissance")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: true })
+      .limit(1);
+    const membre = (data?.[0] ?? null) as MembreVea | null;
+    if (!membre) return null;
+
+    let etat: "absent" | "sans_compte" | "pris" = "absent";
+    const pseudo = membre.pseudo?.trim();
+    if (pseudo) {
+      const { data: existant } = await db
+        .schema("arena")
+        .from("joueurs")
+        .select("user_id, anonymise")
+        .eq("pseudo", pseudo)
+        .maybeSingle();
+      if (existant) etat = existant.user_id === null && !existant.anonymise ? "sans_compte" : "pris";
+    }
+    const s = construireSuggestion(membre, etat, new Date().getFullYear());
+    return s.pseudo || s.annee || s.rattacher ? s : null;
+  } catch {
+    return null;
+  }
+}
+
+function SansProfil({ suggestion }: { suggestion: Suggestion | null }) {
   return (
     <div className="space-y-6">
+      {suggestion && (
+        <p className="rounded-lg border border-arena-violet/30 bg-arena-violet-pale px-4 py-3 text-sm text-arena-ink">
+          Tu es membre de VEA : on a repris ce que ton profil VEA indique déjà.
+          Vérifie, corrige si besoin, puis valide.
+        </p>
+      )}
       <div className={carte}>
         <h2 className="mb-1 text-lg font-black">Tu as déjà joué à un tournoi ARENA ?</h2>
         <p className="mb-4 text-sm text-arena-muted">
@@ -257,7 +302,7 @@ function SansProfil() {
           compte. Le staff valide, et tu récupères tout ton palmarès.
         </p>
         <form action={demanderRattachement} className="flex flex-wrap gap-2">
-          <input name="pseudo" required minLength={2} maxLength={32} placeholder="Ton pseudo ARENA" aria-label="Ton pseudo ARENA" className={`${champ} flex-1`} />
+          <input name="pseudo" required minLength={2} maxLength={32} placeholder="Ton pseudo ARENA" aria-label="Ton pseudo ARENA" defaultValue={suggestion?.rattacher ?? undefined} className={`${champ} flex-1`} />
           <button className={bouton}>C&apos;est mon pseudo</button>
         </form>
       </div>
@@ -266,13 +311,14 @@ function SansProfil() {
         <h2 className="mb-1 text-lg font-black">Première fois ?</h2>
         <p className="mb-4 text-sm text-arena-muted">Crée ton profil joueur.</p>
         <form action={creerProfilJoueur} className="space-y-3">
-          <input name="pseudo" required minLength={2} maxLength={32} placeholder="Pseudo" aria-label="Pseudo" className={champ} />
+          <input name="pseudo" required minLength={2} maxLength={32} placeholder="Pseudo" aria-label="Pseudo" defaultValue={suggestion?.pseudo ?? undefined} className={champ} />
           <input
             name="annee_naissance"
             required
             inputMode="numeric"
             pattern="[0-9]{4}"
             placeholder="Année de naissance (ex. 2008)"
+            defaultValue={suggestion?.annee ?? undefined}
             aria-label="Année de naissance"
             title="Elle sert uniquement à protéger les mineurs, elle n'est jamais affichée"
             className={champ}

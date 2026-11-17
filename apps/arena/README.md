@@ -88,6 +88,14 @@ contrôles PGlite pour 013 et 014).
 **Pages légales (14/11/2026)** : `/mentions-legales` et `/confidentialite`
 (« Tes données »), écrites d'après ce que le code enregistre réellement.
 
+**Profil Arena depuis VEA (17/11/2026)** : le bouton « Créer mon profil
+Arena » du profil VEA mène à `/moi`, qui pré-remplit pseudo et année de
+naissance à partir de la fiche VEA du même compte (lecture serveur, rien
+dans l'URL ; module `lib/arena/suggestion-vea.ts`, 9 tests). Si le pseudo
+VEA a déjà joué sans compte, on propose « C'est mon pseudo » au lieu d'un
+doublon. Choix assumé : pas d'import en masse des membres VEA (préinscrits,
+âges inconnus, mineurs, profils publics sans accord).
+
 **Pas encore fait** : notifications (attend le domaine d'envoi Resend).
 L'OIDC du hub reste utile pour une future app HORS velito.fr.
 

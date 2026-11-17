@@ -119,12 +119,18 @@ function ArenaCard({ arena }: { arena: ResumeArena | null }) {
           <p className="text-xs text-vea-text-dim uppercase tracking-wider font-medium">
             Tournois Arena
           </p>
+          {/* [17/11/2026] Un clic : Arena reprend le pseudo et l'année du
+              profil VEA (même compte Velito) et pré-remplit le formulaire.
+              Le membre vérifie et valide lui-même : rien n'est créé sans lui. */}
           <a
             href={`${lienBase}/moi`}
-            className="text-[10px] text-vea-accent mt-1 inline-block underline hover:no-underline"
+            className="mt-2 inline-block rounded-md bg-vea-accent px-3 py-1.5 text-[11px] font-bold text-white hover:opacity-90"
           >
-            Relier mon pseudo Arena
+            Créer mon profil Arena
           </a>
+          <p className="text-[10px] text-vea-text-dim mt-1 leading-tight">
+            Ton pseudo VEA est repris, tu valides.
+          </p>
         </>
       )}
     </div>
