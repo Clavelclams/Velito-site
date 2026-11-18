@@ -2,7 +2,7 @@
 titre: "VENA — Velito Expertise Numérique Amiens"
 avancement: 60
 statut: "en prod"
-maj: 2026-10-10
+maj: 2026-11-18
 ---
 
 ## C'est quoi
@@ -27,13 +27,15 @@ Les tables de signalement vivent dans le schéma **`shared`**, pas dans un sché
 - **2026-10-10 : Maquette « Table de marque » UNSS livrée en site statique** (`Documents/maquette/emarque-unss/`) : PWA en JavaScript vanilla, hors ligne, sans build, pour montrer à l'UNSS une feuille de match numérique avant d'investir dans un serveur. Fiche projet à part : `table-de-marque`.
 - **2026-10-10 : Page « Étouvie a 70 ans » pour le centre social d'Étouvie** (`Documents/maquette/etouvie70/index.html`) : une seule page HTML + Tailwind CDN, contenus repris du compte-rendu de réunion. Accessibilité travaillée dès la maquette (texte `alt` sur les photos, `role="img"` et `aria-label` sur les emplacements photo vides, `aria-labelledby` sur chaque section, menu d'ancres), images réduites avec Pillow, crédit « Photo de la compagnie » sous les visuels, `noindex` tant que les contenus ne sont pas validés. Le droit à l'image des enfants a été signalé au client avant toute photo du quartier.
 - **2026-10-10 : Les maquettes clients hébergées en multisite OVH sur velito.fr** (`tabledemarque.velito.fr`, `etouvie70.velito.fr`) : un sous-domaine par maquette, envoi par `scp`, https obligatoire (le service worker de la table de marque ne s'enregistre pas sans).
+- **2026-11-13 — Anti-spam du formulaire de devis sans CAPTCHA** (`lib/anti-spam.ts`, 22 tests) : pot de miel, délai minimum de 3 s, détection de charabia, score d'hameçonnage à 2 indices, réponse silencieuse au robot. Voir la fiche « Arrêter les robots sans CAPTCHA ».
+- **2026-11-13 — Page `/offres` : maintenance à 49 € par mois, site web sur devis** sans prix affiché, pour ne pas faire fuir un client avant la discussion.
 
 ## État d'avancement honnête
 
 Le site est en ligne, le formulaire de contact fonctionne, le module de signalement est opérationnel et branché sur les autres apps.
 
 Limites :
-- **Aucun test.**
+- **Un seul module testé** : l'anti-spam (22 tests). Le reste de l'app n'a aucun test.
 - Les PDF sont acceptés en pièce jointe sans analyse de contenu : le fichier n'est jamais exécuté côté serveur, mais le risque est déporté sur le poste de l'admin qui l'ouvre.
 - Le contenu éditorial du site est mince par rapport à ce que l'activité commerciale demanderait.
 - Les deux maquettes du 10/10 (table de marque, Étouvie) sont hors du monorepo, sans git ni tests : si le dossier `Documents/maquette/` est perdu, seule la copie sur le serveur OVH reste. Toutes deux chargent Tailwind par le CDN de développement.

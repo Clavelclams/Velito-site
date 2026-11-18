@@ -1,0 +1,49 @@
+{
+  "fiche": "vena-anti-spam-sans-captcha",
+  "questions": [
+    {
+      "question": "Comment fonctionne le « pot de miel » du formulaire de devis ?",
+      "choix": [
+        "Un champ visible que l'humain doit laisser vide",
+        "Une question piège sur le prix",
+        "Un champ caché pour un humain : un robot remplit tous les champs, donc s'il est rempli, c'est un robot",
+        "Un cookie déposé à l'ouverture de la page"
+      ],
+      "bonne": 2,
+      "explication": "L'humain ne voit pas le champ et ne le remplit jamais ; le robot qui lit le HTML le remplit. C'est gratuit pour le vrai client, contrairement à un CAPTCHA."
+    },
+    {
+      "question": "Pourquoi faut-il au moins 2 indices d'hameçonnage pour bloquer, et pas 1 ?",
+      "choix": [
+        "Parce qu'un seul indice (par exemple un lien vers son propre site) peut venir d'un vrai client ; additionner des indices limite les faux positifs",
+        "Pour accélérer le traitement",
+        "Parce que le premier indice est toujours faux",
+        "Parce que la loi l'impose"
+      ],
+      "bonne": 0,
+      "explication": "Chaque indice seul est ambigu. C'est leur combinaison (adresse jetable + budget en dollars, par exemple) qui devient très improbable pour un humain sincère."
+    },
+    {
+      "question": "Pourquoi le serveur répond-il « merci, c'est envoyé » à un robot détecté ?",
+      "choix": [
+        "Par politesse",
+        "Parce qu'on ne peut pas renvoyer d'erreur dans une Server Action",
+        "Pour que le message soit envoyé quand même",
+        "Pour ne pas lui apprendre quelle règle l'a bloqué : un robot qui croit avoir réussi ne cherche pas à contourner"
+      ],
+      "bonne": 3,
+      "explication": "Un message d'erreur précis est un oracle : il dit à l'attaquant ce qu'il doit changer. Le silence le prive de cette information. Le prix : un vrai client bloqué ne le saura pas, d'où des règles réglées pour les humains."
+    },
+    {
+      "question": "Le champ caché et l'heure d'affichage viennent du navigateur. Un robot peut-il les falsifier ?",
+      "choix": [
+        "Non, c'est impossible",
+        "Oui, comme tout ce qui vient du client ; ces signaux arrêtent les robots génériques, pas un attaquant qui étudie précisément la page",
+        "Non, car ils sont chiffrés",
+        "Oui, mais seulement avec la clé service_role"
+      ],
+      "bonne": 1,
+      "explication": "Tout ce que le client envoie peut être falsifié : la règle « ne jamais faire confiance au client » s'applique ici aussi. Ces signaux sont efficaces contre la masse de robots automatiques, ce qui est le vrai besoin, mais ce n'est pas une protection absolue."
+    }
+  ]
+}

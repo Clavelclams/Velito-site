@@ -1,0 +1,49 @@
+{
+  "fiche": "arena-cle-api-empreinte-et-quota",
+  "questions": [
+    {
+      "question": "Les données de l'API ARENA sont déjà publiques. À quoi sert donc la clé ?",
+      "choix": [
+        "À cacher les tournois aux personnes sans clé",
+        "À donner accès aux tournois en brouillon",
+        "À identifier qui consomme, limiter le débit (120 par minute) et pouvoir couper un abus sans couper tout le monde",
+        "À chiffrer les réponses"
+      ],
+      "bonne": 2,
+      "explication": "La clé ne donne aucun droit en plus : les routes lisent avec le client anonyme, la RLS publique s'applique. C'est un outil de gestion (qui, combien, révocation), pas de confidentialité."
+    },
+    {
+      "question": "Qu'est-ce qui est stocké en base pour chaque clé ?",
+      "choix": [
+        "La clé en clair, pour pouvoir la réafficher",
+        "La clé chiffrée avec une clé secrète du serveur",
+        "Rien : la clé est vérifiée par un service externe",
+        "Son empreinte SHA-256 et un préfixe lisible de 12 caractères"
+      ],
+      "bonne": 3,
+      "explication": "Comme pour un mot de passe : on garde l'empreinte, on recalcule à chaque requête. Le chiffrement serait réversible avec la clé du serveur : une fuite des deux donnerait toutes les clés. Le préfixe sert seulement au staff pour reconnaître ses clés."
+    },
+    {
+      "question": "Pourquoi la clé est-elle envoyée dans l'en-tête Authorization et pas dans l'URL (?cle=...) ?",
+      "choix": [
+        "Parce qu'une URL finit dans les journaux des serveurs, l'historique du navigateur et l'en-tête Referer",
+        "Parce que les URL sont limitées à 50 caractères",
+        "Parce que Next.js ne lit pas les paramètres d'URL dans les routes API",
+        "Pour que le cache du navigateur fonctionne"
+      ],
+      "bonne": 0,
+      "explication": "Un secret dans une URL fuit par mille chemins qu'on ne contrôle pas. L'en-tête n'est pas journalisé par défaut et ne part pas vers les autres sites."
+    },
+    {
+      "question": "Pourquoi le compteur utilise-t-il INSERT ... ON CONFLICT DO UPDATE SET nb = nb + 1 au lieu de lire le compteur puis l'écrire ?",
+      "choix": [
+        "Parce que c'est plus court à écrire",
+        "Parce que lire puis écrire laisse deux requêtes simultanées lire la même valeur et passer toutes les deux sous la limite ; une instruction unique est sérialisée par Postgres",
+        "Parce que supabase-js n'a pas de méthode update",
+        "Parce que le compteur doit être remis à zéro chaque minute"
+      ],
+      "bonne": 1,
+      "explication": "C'est la même famille de bug que la double validation de score : le « lire, calculer, écrire » crée une fenêtre de course. Une instruction atomique la supprime."
+    }
+  ]
+}

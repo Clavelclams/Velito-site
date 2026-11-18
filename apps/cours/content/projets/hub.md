@@ -2,7 +2,7 @@
 titre: "Hub Velito"
 avancement: 80
 statut: "en prod"
-maj: 2026-09-04
+maj: 2026-11-18
 ---
 
 ## C'est quoi
@@ -28,6 +28,7 @@ Les endpoints OAuth suivent les RFC : `/oauth/authorize` (RFC 6749 §4.1.1), `/o
 - **Vérification tolérante à la rotation** : on signe avec la clé active la plus récente, mais on accepte toute clé non révoquée — changer de clé n'invalide pas les tokens en circulation.
 - **Déconnexion centralisée sur le hub** : un `signOut()` depuis un sous-domaine ne poserait qu'un cookie vide local et laisserait la session active partout ailleurs. Bug classique de SSO cross-sous-domaine, évité par un POST vers `hub.velito.fr/logout`.
 - **Listes blanches d'origines exactes** partout où une destination vient d'un paramètre, et interdiction de rediriger avant d'avoir validé la `redirect_uri` — sinon le mécanisme de report d'erreur OAuth serait lui-même l'open redirect.
+- **2026-11-13 — Code d'autorisation et refresh consommés de façon atomique** (`src/app/oauth/token/route.ts`, `src/lib/oauth/tokens.ts`) : la vérification « pas encore utilisé » et l'écriture étaient séparées, deux requêtes simultanées obtenaient chacune des jetons. La condition est maintenant dans l'`UPDATE` (`.is("consumed_at", null)`). Voir la fiche « Un code qui ne sert qu'une fois ».
 
 ## État d'avancement honnête
 

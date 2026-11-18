@@ -1,0 +1,49 @@
+{
+  "fiche": "arena-defi-anonymat-par-construction",
+  "questions": [
+    {
+      "question": "Comment le défi au score garantit-il qu'aucun nom de participant ne sera jamais stocké ?",
+      "choix": [
+        "Un if dans la Server Action refuse les noms",
+        "Un trigger efface les noms à l'insertion",
+        "Les tables n'ont aucune colonne pour une personne : une équipe = une couleur, un numéro de rotation, un score",
+        "Les noms sont chiffrés"
+      ],
+      "bonne": 2,
+      "explication": "Une règle dans le code peut être oubliée ou contournée. Une colonne qui n'existe pas ne peut pas être remplie. C'est la minimisation au niveau du schéma. Chiffrer un nom, c'est encore le stocker."
+    },
+    {
+      "question": "Pourquoi le défi n'apparaît-il pas dans le classement général d'ARENA, alors que je n'ai écrit aucune exclusion ?",
+      "choix": [
+        "Parce que le défi a ses propres tables, sans lien avec arena.tournois, que lisent le classement, l'ELO, l'API et le sitemap",
+        "Parce que le classement filtre les tournois dont le nom contient « Défi »",
+        "Parce que le défi est en statut BROUILLON",
+        "Parce que le classement n'affiche que l'esport"
+      ],
+      "bonne": 0,
+      "explication": "L'isolation est structurelle : ce qui n'est pas dans arena.tournois n'existe pas pour le classement. Pas de condition à maintenir, donc pas de condition à oublier."
+    },
+    {
+      "question": "Pourquoi l'écran relit l'état toutes les 3 secondes au lieu d'utiliser Supabase Realtime ?",
+      "choix": [
+        "Realtime est payant",
+        "Realtime ne fonctionne pas avec Next.js",
+        "Pour économiser la batterie du téléphone",
+        "Realtime aurait demandé d'ouvrir des droits de lecture au client anonyme, et un fetch répété se remet seul d'une coupure de Wi-Fi alors qu'une websocket peut rester bloquée sans le dire"
+      ],
+      "bonne": 3,
+      "explication": "Choix de fiabilité et de sécurité adapté au contexte (gymnase, tables fermées). Le coût, 3 secondes de retard, est invisible sur une manche de 4 minutes. Realtime n'est pas mauvais : il ne convenait pas ici."
+    },
+    {
+      "question": "Le staff appuie trois fois très vite sur « + ». Qu'est-ce qui garantit qu'on obtient bien +3 ?",
+      "choix": [
+        "Le composant client additionne et envoie le total final",
+        "La fonction SQL fait UPDATE score = score + p_delta en une seule instruction : chaque appui s'applique sur la valeur à jour",
+        "Un délai de 500 ms entre chaque appui",
+        "Le serveur relit le score avant chaque écriture"
+      ],
+      "bonne": 1,
+      "explication": "« Relire puis écrire » est exactement ce qui perd des points quand deux requêtes se croisent. L'incrément atomique en base règle le problème. Le composant affiche tout de suite le chiffre (optimiste), mais c'est la base qui fait foi."
+    }
+  ]
+}

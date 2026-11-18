@@ -2,7 +2,7 @@
 titre: "Velito Interactive"
 avancement: 70
 statut: "en cours"
-maj: 2026-09-04
+maj: 2026-11-18
 ---
 
 ## C'est quoi
@@ -25,6 +25,8 @@ La synchronisation temps réel utilise **les deux mécanismes** de Supabase Real
 - **Incrément de score atomique en base** (`interactive.add_player_score`) : le motif lire-calculer-écrire faisait perdre des points quand deux joueurs marquaient dans la même fraction de seconde. Un seul `UPDATE score = score + p` supprime la race condition, et `security definer` en fait la seule porte d'écriture du score.
 - **Broadcast pour le canvas, base pour le score** : écrire plusieurs images de canvas par seconde en base serait des milliers d'écritures pour une donnée périmée à la seconde suivante. Le critère : est-ce que quelqu'un en aura besoin dans dix secondes ?
 - **Un module par jeu dans `lib/games/`** plutôt qu'un moteur générique : les règles diffèrent trop pour qu'une abstraction commune reste lisible. Le prix est de la répétition assumée entre jeux.
+- **2026-11-12 — Le jeton joueur et les secrets du Loup-Garou cachés par colonne** (`sql/interactive-player-token-v2-prive.sql`, `sql/interactive-lg-v2-secrets.sql`) : la table des joueurs était lisible en entier avec la clé publique, jetons compris, donc n'importe qui pouvait jouer à la place d'un autre et lire les rôles. Correction par droits par colonne (`GRANT SELECT (colonnes publiques)`), jeton rendu une seule fois par `rejoindre_session`, votes et loups par fonctions qui vérifient le jeton. 37 tests PGlite. Voir la fiche « Cacher une colonne, pas une table ».
+- **2026-11-13 — L'animateur lit rôles et votes par des fonctions réservées à l'hôte** (`lg_hote_roles`, `lg_hote_votes`, `host_user_id = auth.uid()`), puis les mêmes restrictions de colonnes pour les comptes connectés.
 
 ## État d'avancement honnête
 

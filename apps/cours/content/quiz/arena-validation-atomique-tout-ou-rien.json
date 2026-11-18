@@ -1,0 +1,49 @@
+{
+  "fiche": "arena-validation-atomique-tout-ou-rien",
+  "questions": [
+    {
+      "question": "Avant la migration 012, valider un match faisait plusieurs écritures séparées depuis Node avec supabase-js. Quel était le problème le plus grave ?",
+      "choix": [
+        "C'était lent, car chaque écriture faisait un aller-retour réseau",
+        "supabase-js refuse d'écrire plus de deux lignes par requête",
+        "Si le placement du gagnant échouait après le passage en VALIDE, le match était verrouillé et le tableau restait bloqué sans moyen de réparer",
+        "Le journal était écrit avant le score"
+      ],
+      "bonne": 2,
+      "explication": "Sans transaction, une erreur au milieu laisse la base dans un état intermédiaire. Ici c'était pire : le trigger du règlement §3 interdit de modifier un match VALIDE, donc l'état intermédiaire était irréparable depuis l'interface. La lenteur est réelle mais secondaire : le vrai danger d'écritures séparées, c'est l'incohérence."
+    },
+    {
+      "question": "Comment la fonction empêche-t-elle deux membres du staff de valider le même match en même temps ?",
+      "choix": [
+        "La condition est dans l'écriture elle-même : UPDATE ... WHERE id = p_match AND statut = 'TERMINE'. Postgres verrouille la ligne, la seconde requête ne trouve plus de ligne qui correspond",
+        "Elle lit le statut, puis écrit si le statut est TERMINE",
+        "Elle utilise un verrou côté Node.js (mutex)",
+        "Elle désactive le bouton Valider après le premier clic"
+      ],
+      "bonne": 0,
+      "explication": "« Lire puis écrire » laisse une fenêtre où deux requêtes lisent TERMINE en même temps. Mettre la condition dans l'UPDATE supprime cette fenêtre : c'est Postgres qui arbitre. Désactiver le bouton est un confort d'interface, pas une sécurité : deux téléphones différents ont chacun leur bouton."
+    },
+    {
+      "question": "Dans cette solution, qui décide OÙ placer le gagnant, et qui écrit ?",
+      "choix": [
+        "Postgres calcule et écrit tout",
+        "TypeScript calcule et écrit tout, Postgres ne fait que stocker",
+        "Le client (navigateur) calcule, le serveur écrit",
+        "TypeScript calcule les placements (modules purs testés), la fonction Postgres les applique en une transaction"
+      ],
+      "bonne": 3,
+      "explication": "C'est le partage clé : la logique du bracket reste en TypeScript, où elle est testée par Vitest, et Postgres garantit l'atomicité. Faire calculer le navigateur serait une faille : on ne fait jamais confiance au client pour une règle métier."
+    },
+    {
+      "question": "Le jury demande : « Votre fonction est SECURITY DEFINER ou appelable par tous ? Qui peut l'exécuter ? »",
+      "choix": [
+        "Tout utilisateur connecté, puisque la RLS protège",
+        "Seulement service_role, c'est-à-dire le serveur, et il ne l'appelle qu'après requireStaff() et le contrôle d'appartenance du tournoi",
+        "Le rôle anon, pour que la page publique puisse valider",
+        "Personne, elle est appelée par un trigger"
+      ],
+      "bonne": 1,
+      "explication": "EXECUTE n'est accordé qu'à service_role. Les droits sont vérifiés avant l'appel, dans la Server Action. Si n'importe quel utilisateur connecté pouvait l'appeler depuis son navigateur, il pourrait valider les matchs de n'importe quel tournoi."
+    }
+  ]
+}

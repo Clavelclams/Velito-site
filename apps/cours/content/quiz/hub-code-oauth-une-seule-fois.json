@@ -1,0 +1,49 @@
+{
+  "fiche": "hub-code-oauth-une-seule-fois",
+  "questions": [
+    {
+      "question": "Pourquoi « lire la ligne, vérifier consumed_at vide, puis écrire consumed_at » ne garantit pas qu'un code serve une seule fois ?",
+      "choix": [
+        "Parce que la lecture peut renvoyer une valeur en cache",
+        "Parce que consumed_at est une date, pas un booléen",
+        "Parce que deux requêtes simultanées peuvent toutes les deux lire « pas consommé » avant que l'une n'écrive",
+        "Parce que Supabase n'autorise pas l'écriture après une lecture"
+      ],
+      "bonne": 2,
+      "explication": "C'est la course classique : entre la lecture et l'écriture, une autre requête peut passer. Tant que la vérification et l'écriture sont deux opérations séparées, la fenêtre existe."
+    },
+    {
+      "question": "Que fait exactement .update({...}).eq('code', code).is('consumed_at', null).select('code') ?",
+      "choix": [
+        "Il écrit consumed_at sur toutes les lignes du code",
+        "Il lit d'abord puis écrit",
+        "Il supprime le code",
+        "Il écrit consumed_at seulement si la ligne n'est pas encore consommée, et renvoie la ligne modifiée : une liste vide veut dire qu'une autre requête a gagné"
+      ],
+      "bonne": 3,
+      "explication": "La condition est dans l'UPDATE : Postgres verrouille la ligne et une seule requête peut la faire passer de vide à rempli. Le .select() sert à savoir si on a gagné."
+    },
+    {
+      "question": "Deux rafraîchissements arrivent avec le même refresh token. Que fait le hub de la requête perdante ?",
+      "choix": [
+        "Il la traite comme un rejeu et révoque toute la famille de jetons",
+        "Il lui renvoie les mêmes jetons que la gagnante",
+        "Il l'ignore silencieusement",
+        "Il la met en file d'attente"
+      ],
+      "bonne": 0,
+      "explication": "Un jeton à usage unique présenté deux fois signifie probablement qu'il a été copié. Révoquer la famille coupe le voleur, au prix de reconnecter l'utilisateur légitime : on choisit la sécurité."
+    },
+    {
+      "question": "Le jury dit : « Deux requêtes simultanées, ça n'arrive jamais. » Quelle est la meilleure réponse ?",
+      "choix": [
+        "Il a raison, la correction est une précaution inutile",
+        "Pas par hasard, mais un attaquant qui intercepte un code le rejoue exprès dans cette fenêtre ; on protège contre quelqu'un qui cherche, pas contre le hasard",
+        "Ça arrive souvent parce que les navigateurs doublent les requêtes",
+        "Ça arrive seulement en local"
+      ],
+      "bonne": 1,
+      "explication": "Une faille de timing est exploitable volontairement. Et la correction ne coûte qu'une condition dans une requête existante : aucune raison de s'en passer."
+    }
+  ]
+}

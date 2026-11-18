@@ -1,0 +1,49 @@
+{
+  "fiche": "arena-purge-production-tout-ou-rien",
+  "questions": [
+    {
+      "question": "Pourquoi le script désigne-t-il les tournois par leur qr_token plutôt que par leur titre ?",
+      "choix": [
+        "Parce que le titre peut contenir des accents",
+        "Parce que la colonne titre n'est pas indexée",
+        "Parce qu'un titre peut être réutilisé (« test ») alors qu'un token est unique et ne change pas",
+        "Parce que le titre est une donnée personnelle"
+      ],
+      "bonne": 2,
+      "explication": "Supprimer par titre, c'est risquer d'emporter un vrai tournoi qui porterait le même nom. Un identifiant stable et unique désigne exactement les lignes voulues."
+    },
+    {
+      "question": "Supprimer un tournoi échouait à cause du trigger append-only de arena.logs. Pourquoi, alors qu'on ne touche pas aux logs ?",
+      "choix": [
+        "Parce que la suppression écrit automatiquement une ligne de log",
+        "Parce que le trigger bloque toutes les suppressions de la base",
+        "Parce que les logs sont dans un autre schéma",
+        "Parce que la clé étrangère logs.tournoi_id est ON DELETE SET NULL : supprimer le tournoi déclenche un UPDATE sur logs, que le trigger refuse"
+      ],
+      "bonne": 3,
+      "explication": "Une cascade est une écriture comme une autre : ON DELETE SET NULL fait un UPDATE. C'est pour ça que l'étape « lister les clés étrangères entrantes » avant de supprimer est indispensable."
+    },
+    {
+      "question": "Les triggers sont désactivés pendant le script. Qu'est-ce qui garantit qu'ils ne restent pas désactivés si le script plante au milieu ?",
+      "choix": [
+        "En PostgreSQL le DDL est transactionnel : si la transaction échoue, l'annulation remet aussi les triggers dans leur état d'avant",
+        "Un cron les réactive chaque nuit",
+        "Supabase réactive automatiquement les triggers",
+        "Rien, il faut vérifier à la main"
+      ],
+      "bonne": 0,
+      "explication": "ALTER TABLE ... DISABLE TRIGGER fait partie de la transaction. Échec = ROLLBACK = triggers actifs. Succès = ils ont été réactivés juste avant le COMMIT. Dans les deux cas, pas de journal sans protection."
+    },
+    {
+      "question": "À quoi sert le bloc qui lève une exception si on ne trouve pas exactement 5 tournois ?",
+      "choix": [
+        "À accélérer le script",
+        "À empêcher un rejeu ou une erreur de cible : si la base n'est pas dans l'état attendu, rien n'est supprimé",
+        "À compter les tournois pour le journal",
+        "À vérifier les droits de l'utilisateur"
+      ],
+      "bonne": 1,
+      "explication": "C'est un garde-fou d'état : le script suppose un état précis et refuse de s'exécuter sur autre chose. Relancé une seconde fois, il ne trouve plus rien et s'arrête au lieu de faire des dégâts."
+    }
+  ]
+}
