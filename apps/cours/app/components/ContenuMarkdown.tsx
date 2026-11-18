@@ -14,7 +14,8 @@
 import { isValidElement, type ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import JeuLecon, { lireJeu } from "./JeuLecon";
+import JeuLecon from "./JeuLecon";
+import { lireJeu } from "@/lib/jeux";
 
 function texteDe(noeud: ReactNode): string {
   if (typeof noeud === "string") return noeud;
