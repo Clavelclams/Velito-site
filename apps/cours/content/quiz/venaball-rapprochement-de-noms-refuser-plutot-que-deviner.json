@@ -1,0 +1,49 @@
+{
+  "fiche": "venaball-rapprochement-de-noms-refuser-plutot-que-deviner",
+  "questions": [
+    {
+      "question": "Que mesure la distance de Levenshtein entre deux chaînes ?",
+      "choix": [
+        "Le nombre de lettres qu'elles ont en commun",
+        "La différence de longueur entre les deux",
+        "Le nombre minimal d'ajouts, de suppressions et de remplacements de caractères pour passer de l'une à l'autre",
+        "Le nombre de mots différents"
+      ],
+      "bonne": 2,
+      "explication": "« dupont » et « dup0nt » sont à une distance de 1 (un remplacement). La différence de longueur est un piège : deux mots de même longueur peuvent n'avoir aucune lettre en commun."
+    },
+    {
+      "question": "Dans FfbbResumeOcrParser, que devient une ligne du résumé dont le nom est à plus de 4 de toutes les joueuses ?",
+      "choix": [
+        "Elle n'est rattachée à personne et part dans la liste « C'est qui ? » pour décision du coach",
+        "Elle est rattachée à la joueuse la plus proche quand même",
+        "Une fiche joueuse est créée automatiquement",
+        "L'import du match entier est annulé"
+      ],
+      "bonne": 0,
+      "explication": "Au-delà du seuil, le programme refuse de deviner. Créer la fiche automatiquement serait tentant, mais une erreur de lecture créerait des joueuses fantômes ; c'est le coach qui choisit entre rattacher, créer ou ignorer."
+    },
+    {
+      "question": "Pourquoi le faux positif est-il plus grave que le faux négatif dans ce traitement ?",
+      "choix": [
+        "Parce qu'il fait planter l'import",
+        "Parce qu'il coûte un appel de plus à Google Vision",
+        "Parce qu'il oblige à relire tout le PDF",
+        "Parce qu'il est invisible : les stats vont à la mauvaise personne sans aucun message, alors qu'un nom non reconnu s'affiche et se corrige"
+      ],
+      "bonne": 3,
+      "explication": "Une erreur qui se voit est réparée le jour même. Une erreur silencieuse fausse les moyennes de deux joueuses pendant toute la saison. C'est le critère pour régler un seuil : le coût de chaque type d'erreur, pas le taux de réussite brut."
+    },
+    {
+      "question": "À quoi sert la colonne joueur.nom_ffbb ?",
+      "choix": [
+        "À afficher le nom en majuscules sur la feuille de match",
+        "À mémoriser l'orthographe exacte de la fédération après une décision du coach, pour la reconnaître à l'identique la fois suivante",
+        "À stocker le numéro de licence",
+        "À remplacer le nom de la joueuse dans toute l'application"
+      ],
+      "bonne": 1,
+      "explication": "La décision humaine est prise une fois puis réutilisée, et la comparaison exacte passe avant le calcul de distance. Le nom affiché dans l'application ne change pas : c'est un champ en plus, pas un remplacement."
+    }
+  ]
+}

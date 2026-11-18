@@ -1,0 +1,49 @@
+{
+  "fiche": "venaball-simulation-par-transaction-annulee",
+  "questions": [
+    {
+      "question": "Dans FfbbRelireSaisonCommand, que se passe-t-il si on lance la commande sans aucune option ?",
+      "choix": [
+        "Elle écrit les résultats en base",
+        "Elle demande une confirmation avant d'écrire",
+        "Elle refuse de démarrer",
+        "Elle simule : chaque match est traité dans une transaction qui est annulée"
+      ],
+      "bonne": 3,
+      "explication": "La simulation est le comportement par défaut, il faut --appliquer pour écrire. Le choix inverse (écrire par défaut, --simuler pour tester) est l'erreur classique : un oubli d'option lance l'action dangereuse."
+    },
+    {
+      "question": "Pourquoi appeler $this->em->clear() après chaque match, y compris en simulation ?",
+      "choix": [
+        "Parce que le rollBack annule la base mais pas les objets PHP : Doctrine garde en mémoire des entités modifiées",
+        "Parce que clear() valide la transaction",
+        "Parce que sans lui la connexion MySQL se ferme",
+        "Parce que c'est exigé par Symfony pour toute commande"
+      ],
+      "bonne": 0,
+      "explication": "Une transaction ne connaît que la base. Les entités chargées restent dans l'état modifié par le parser. clear() les détache, et le match suivant recharge des objets conformes à la base. Il libère aussi la mémoire sur une longue boucle."
+    },
+    {
+      "question": "Laquelle de ces actions une transaction annulée ne défait PAS ?",
+      "choix": [
+        "Un UPDATE sur le score de la rencontre",
+        "Un INSERT d'une ligne de statistiques",
+        "Un appel payant à Google Vision fait pendant le traitement",
+        "Un DELETE d'une évaluation absente du résumé"
+      ],
+      "bonne": 2,
+      "explication": "Le rollBack n'agit que sur les écritures en base. Un appel réseau, un e-mail, une notification push ou un fichier écrit sur le disque sont faits pour de vrai. C'est la limite à citer quand on présente cette technique."
+    },
+    {
+      "question": "Pourquoi une transaction par match plutôt qu'une seule pour toute la saison ?",
+      "choix": [
+        "Parce que MySQL limite une transaction à dix écritures",
+        "Parce qu'un match en erreur n'annule alors que lui, et que la transaction reste courte",
+        "Parce que Doctrine interdit les transactions dans une boucle",
+        "Parce que c'est plus rapide à écrire"
+      ],
+      "bonne": 1,
+      "explication": "Avec une seule grande transaction, une erreur au vingtième match ferait perdre les dix-neuf premiers, et les lignes resteraient verrouillées pendant tout le traitement. Par match, chaque résultat est indépendant."
+    }
+  ]
+}

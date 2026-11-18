@@ -1,0 +1,49 @@
+{
+  "fiche": "venaball-ocr-tableau-reconstruit-par-positions",
+  "questions": [
+    {
+      "question": "Vision saute une case qui contient 0 au milieu de la ligne d'une joueuse. Avec la lecture par positions, que devient cette case ?",
+      "choix": [
+        "Le nombre suivant prend sa place, comme dans l'ancienne lecture",
+        "Elle vaut 0 : aucun nombre n'est proche du centre de cette colonne, et les autres nombres restent dans la leur",
+        "La ligne entière est rejetée",
+        "Elle reprend la valeur de la même colonne sur la ligne du dessus"
+      ],
+      "bonne": 1,
+      "explication": "Chaque nombre est rangé dans la colonne dont le centre est le plus proche de sa position x. Une colonne sans nombre vaut 0. Le piège est le premier choix : c'est exactement le bug d'avant, quand on comptait les nombres dans l'ordre du texte."
+    },
+    {
+      "question": "Dans FfbbResumeOcrParser, à quelle condition la lecture par lignes remplace-t-elle la première lecture ?",
+      "choix": [
+        "Dès qu'elle trouve au moins autant de joueuses que la première",
+        "Quand toutes les joueuses lues ont une fiche dans le club",
+        "Quand la somme des points des joueuses lues est exactement égale au total officiel de l'équipe",
+        "Quand l'en-tête des colonnes a été trouvé"
+      ],
+      "bonne": 2,
+      "explication": "C'est un contrôle de cohérence : le total officiel est imprimé sur la feuille, donc si une ligne manque ou si une valeur a glissé, la somme ne tombe pas juste. Compter les joueuses ne prouve rien : on peut en lire huit avec des points faux."
+    },
+    {
+      "question": "Pourquoi le score du match n'est-il plus jamais calculé en additionnant les points des joueuses ?",
+      "choix": [
+        "Parce que l'addition est trop lente sur un hébergement mutualisé",
+        "Parce que la FFBB interdit de recalculer un score",
+        "Parce que les joueuses de l'équipe adverse ne sont pas dans la base",
+        "Parce qu'une somme faite sur une lecture douteuse donne un score faux sans aucune erreur visible ; le total officiel du PDF est la seule source"
+      ],
+      "bonne": 3,
+      "explication": "Un score calculé hérite de toutes les erreurs de lecture. Le troisième choix est vrai en partie (on ne lit pas l'effectif adverse) mais ce n'est pas la raison : même pour notre équipe, la somme a donné 115 points au lieu de 97 sur un vrai match."
+    },
+    {
+      "question": "Quelle est la limite honnête du contrôle par le total officiel ?",
+      "choix": [
+        "Il ne vérifie que la colonne des points : une faute ou un tir rangé dans la mauvaise colonne n'est pas détecté",
+        "Il ne fonctionne que pour les matchs à domicile",
+        "Il double le coût de l'appel à Google Vision",
+        "Il oblige le coach à saisir le total à la main"
+      ],
+      "bonne": 0,
+      "explication": "La somme porte sur les points seulement. C'est une preuve forte que les lignes sont complètes et alignées, pas une preuve que chaque case est juste. Savoir dire ce qu'un contrôle ne prouve pas compte autant que de l'avoir écrit."
+    }
+  ]
+}

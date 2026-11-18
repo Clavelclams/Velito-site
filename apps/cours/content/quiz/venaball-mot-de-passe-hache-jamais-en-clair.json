@@ -1,0 +1,49 @@
+{
+  "fiche": "venaball-mot-de-passe-hache-jamais-en-clair",
+  "questions": [
+    {
+      "question": "À quoi sert le sel dans un hash bcrypt ?",
+      "choix": [
+        "À chiffrer le mot de passe pour pouvoir le déchiffrer plus tard",
+        "À raccourcir le hash",
+        "À accélérer la vérification à la connexion",
+        "À ce que deux comptes ayant le même mot de passe aient deux hashs différents, ce qui rend inutiles les tables de hashs calculés d'avance"
+      ],
+      "bonne": 3,
+      "explication": "Le sel est aléatoire, propre à chaque compte, et stocké dans le hash. Le premier choix confond hachage et chiffrement : un hachage ne se déchiffre pas, c'est tout son intérêt."
+    },
+    {
+      "question": "Sur le serveur, tu lances une commande UPDATE avec le hash entre guillemets doubles côté bash. Que se passe-t-il ?",
+      "choix": [
+        "Bash interprète $2y, $13 et la suite comme des variables : le hash enregistré est tronqué et le compte ne peut plus se connecter",
+        "La commande échoue avec une erreur de syntaxe SQL",
+        "Rien de particulier, le hash est enregistré tel quel",
+        "Le hash est enregistré deux fois"
+      ],
+      "bonne": 0,
+      "explication": "Entre guillemets doubles, le shell remplace les $nom par leur valeur, ici du vide. La commande répond quand même « 1 ligne modifiée ». D'où les guillemets simples et le SELECT LENGTH(password) qui doit rendre 60."
+    },
+    {
+      "question": "Dans security.yaml, le hacheur est réglé sur 'auto'. Quel est l'intérêt par rapport à écrire 'bcrypt' en dur ?",
+      "choix": [
+        "Les mots de passe sont stockés en clair en environnement de développement",
+        "Le hash est plus court",
+        "Symfony choisit l'algorithme recommandé et recalcule le hash d'un compte à sa prochaine connexion si l'algorithme change",
+        "Il n'y a plus besoin de sel"
+      ],
+      "bonne": 2,
+      "explication": "C'est la migration des hashs : on peut durcir l'algorithme sans demander à tout le monde de changer de mot de passe. C'est ce que signale le « MigratingPasswordHasher » affiché par la commande."
+    },
+    {
+      "question": "Le hachage bcrypt protège-t-il contre quelqu'un qui essaie mille mots de passe courants sur le formulaire de connexion ?",
+      "choix": [
+        "Oui, parce que chaque essai est haché",
+        "Non : il protège une base volée. Contre les essais sur le formulaire il faut limiter les tentatives, et login_throttling est commenté dans ce projet",
+        "Oui, grâce au sel",
+        "Non, parce que bcrypt est réversible"
+      ],
+      "bonne": 1,
+      "explication": "Deux attaques, deux défenses. Le coût de bcrypt ralentit le cassage hors ligne. La limitation des tentatives bloque le cassage en ligne. Le projet a la première et pas la seconde : c'est une faiblesse connue à citer."
+    }
+  ]
+}

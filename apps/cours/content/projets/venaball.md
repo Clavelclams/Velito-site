@@ -2,7 +2,7 @@
 titre: "Venaball"
 avancement: 75
 statut: "en cours"
-maj: 2026-10-10
+maj: 2026-11-18
 ---
 
 ## C'est quoi
@@ -25,6 +25,11 @@ Venaball est une plateforme de gestion de clubs de basket, développée en Symfo
 
 ## Les décisions techniques et POURQUOI
 
+- **2026-11-17, Annonces du club : règles d'accès derrière une interface, testées sans base** (`src/Service/Annonce/AnnonceAcces.php`, `AnnuaireClub.php`, `tests/Unit/Service/Annonce/AnnonceAccesTest.php`, commits `8b33975`, `c01fa7d`, `86e2a40`, `6bccc0c`) : qui écrit à qui, qui lit quoi. Les droits sont calculés à chaque lecture, pas figés à la publication : quitter l'équipe ou perdre son rôle retire l'accès tout de suite. Une mineure n'est pas notifiée entre 22 h et 7 h. 18 tests unitaires avec un faux annuaire en mémoire. Limite : la classe Doctrine qui répond en production n'est pas testée.
+- **2026-11-16, Lecture des résumés FFBB refaite par positions, validée par le total officiel** (`src/Service/Ffbb/GoogleVisionOcrService.php`, `FfbbResumeOcrParser.php`) : les nombres sont rangés par colonne selon leur position sur la page, et la lecture n'est adoptée que si la somme des points retombe sur le total imprimé. Le score ne vient plus que des totaux officiels. Plusieurs essais ratés avant d'afficher la vraie sortie de l'OCR (`--voir-lignes`). Aucun test automatisé.
+- **2026-11-16, Pas de rapprochement par le nom de famille seul** (`FfbbResumeOcrParser.php`, commit `ab37773`) : deux sœurs portent le même nom. Une ligne non reconnue va dans l'écran « C'est qui ? » (`LigneFfbbInconnue`, `DocumentsMatchController`) où le coach tranche ; sa décision est mémorisée dans `joueur.nom_ffbb`.
+- **2026-11-16, Ligne officielle FFBB dans sa propre table** (`src/Entity/Sport/StatFfbbMatch.php`, migration `Version20261116160000`, commit `c7f0c5a`) : la stat fédérale et la saisie du club coexistent au lieu de s'écraser, parce que `evaluation_match` n'accepte qu'une ligne par joueuse et par match.
+- **2026-11-16, Relecture d'une saison : simulation par transaction annulée** (`src/Command/FfbbRelireSaisonCommand.php`) : le vrai traitement tourne, puis `rollBack` ; il faut `--appliquer` pour écrire. Lancée en production : 25 matchs, 23 sans rien à signaler, 2 à revoir.
 - **2026-10-09, Migration MABB vers l'instance Venaball, procédure écrite** (`instruction/46_MIGRATION_MABB_VENABALL_2026-10-09.md`, pas encore commitée au 10/10) : l'hébergement MABB (OVH cluster102, compte de Willy) ferme le 22/10/2026. Une seule instance au lieu de deux (décision de l'audit 44) : le MABB devient un club parmi d'autres. Trois temps : préparation en lecture seule, répétition sans toucher au MABB, bascule DNS avec retour arrière possible jusqu'au 22/10.
 - **2026-10-06, Badges de stats qui valorisent autre chose que les points** (`src/Gamification/BadgeChecker.php`, `src/Command/RecalculerBadgesCommand.php`, commits `3f46d3b` et `b76d766`) : passes, rebonds, interceptions, contres. Recalcul à la validation Stats Live, à la validation FFBB et à l'import Easy Stats (`syncPourRencontre`), commande de rattrapage `app:badges:recalculer`. La FFBB est exclue des badges de jeu parce que sa feuille n'a ni rebonds, ni passes, ni pertes : ses zéros donnaient « Mains sûres » à tort. Un badge n'est jamais retiré, même si les stats sont corrigées.
 - **2026-10-05, Documents du club ouverts par lien signé** (`src/Controller/Api/Club/ApiClubDocumentController.php`, commit `7c2ab04`) : le navigateur du téléphone ne peut pas envoyer le jeton Bearer de l'app, donc l'app demande un lien HMAC valable 2 minutes, lié au document et au compte, et les droits sont revérifiés à l'ouverture. Une seule route publique ajoutée dans `config/packages/security.yaml`.
@@ -75,6 +80,14 @@ D'après `instruction/31_ETAT_REEL_2026-07-13.md` (document maître) et `24_ETAT
 - **Les documents ENT qui sont des images restent lisibles par URL directe** : `src/Service/DocumentUploader.php` les écrit dans `public/uploads/ent/{clubId}/` avec un nom `uniqid` (dérivé de l'horloge, donc devinable), et `public/uploads/.htaccess` n'a fermé que `tresorerie` et `reunions`. Le lien signé protège la porte de l'API, pas cette fenêtre-là.
 - **Deux écarts de droits assumés entre l'app et le web** (documents « Parents et staff », documents rattachés à une joueuse) : l'app est plus stricte, le web n'est pas encore aligné.
 - Un badge n'est jamais retiré : si une stat erronée est corrigée, le badge gagné à tort reste.
+
+**Mise à jour du 2026-11-18 (session du 13 au 18/11, pas un audit complet).** Ce bloc ne couvre que ce qui a été touché ces jours-ci ; les constats des 04/10 et 10/10 ci-dessus n'ont pas été revérifiés, y compris l'état de la migration MABB.
+- **Les premiers tests depuis juillet existent** : 18 tests unitaires sur les règles des annonces. Toujours aucune CI, aucun test sur l'OCR, sur le rapprochement des noms ni sur les routes des annonces.
+- **Beaucoup de code livré vite et peu éprouvé** : feuille de table, « C'est qui ? », postes libres pour les services civiques, rappels de dépôt des documents n'ont pas été testés en conditions réelles. Les annonces n'ont pas d'écran dans les deux apps (lot A5 à faire) et leur cron de notification n'est pas posé.
+- **Une annonce visant une équipe n'a pas été vue par un compte de test.** Cause non établie ; hypothèse : beaucoup de joueuses n'ont pas d'affectation `JoueurEquipe`, donc l'effectif calculé est presque vide.
+- **Deux bases, des comptes qui divergent** : la synchronisation des comptes entre `manager.mabb.fr` et `club.venaball.fr` est manuelle (`scripts/synchro.ps1`, tous les trois jours). Un compte supprimé puis recréé a laissé une fiche joueuse liée à un compte anonymisé.
+- **Un commentaire de code cite les vrais noms de deux joueuses mineures** (`FfbbResumeOcrParser.php`, règle des sœurs), dans un dépôt qui a été public. À remplacer par un exemple fictif.
+- **Mots de passe remis à la main par la console** pour deux personnes : le hachage est correct, la procédure ne l'est pas (je connais le mot de passe). `login_throttling` est toujours commenté.
 
 Ce qui est **réellement problématique** (classé par gravité dans le doc d'état) :
 - **Uploads : colmaté, pas réglé** (26/07). Un `.htaccess` en refus par défaut dans `public/uploads/` bloque l'accès direct à tout sauf les images d'affichage public, et neutralise l'exécution de scripts. Mais les fichiers sont toujours DANS la racine web : la protection disparaît en silence sur un serveur qui ne lit pas les `.htaccess` (Nginx) ou si `AllowOverride` est désactivé. La correction de fond — écrire hors de `public/` et servir via un contrôleur — reste à faire.

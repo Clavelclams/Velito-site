@@ -1,0 +1,49 @@
+{
+  "fiche": "venaball-annonces-interface-et-faux-annuaire",
+  "questions": [
+    {
+      "question": "Dans le constructeur d'AnnonceAcces, quel est le type du paramètre injecté ?",
+      "choix": [
+        "AnnuaireClub, l'interface",
+        "AnnuaireClubDoctrine, la classe qui fait les requêtes",
+        "EntityManagerInterface",
+        "FauxAnnuaire"
+      ],
+      "bonne": 0,
+      "explication": "Le service dépend du contrat, pas d'une implémentation. C'est ce qui permet de lui donner un faux annuaire dans les tests. S'il demandait AnnuaireClubDoctrine, le test aurait besoin d'une base."
+    },
+    {
+      "question": "Qu'est-ce que les 18 tests d'AnnonceAccesTest ne prouvent PAS ?",
+      "choix": [
+        "Qu'un coach ne peut pas écrire à une équipe qui n'est pas la sienne",
+        "Qu'une mineure prévenue à 22 h 30 n'est notifiée qu'à 7 h",
+        "Que les requêtes SQL d'AnnuaireClubDoctrine renvoient les bonnes personnes",
+        "Qu'une joueuse sortie de l'effectif ne lit plus l'annonce"
+      ],
+      "bonne": 2,
+      "explication": "Les tests utilisent le faux annuaire : la classe Doctrine n'est jamais exécutée. Les trois autres choix sont des règles réellement couvertes. C'est la limite à connaître d'un fake : il teste la logique, pas l'accès aux données."
+    },
+    {
+      "question": "Les droits de lecture sont calculés à chaque lecture au lieu d'être figés à la publication. Quelle en est la conséquence directe ?",
+      "choix": [
+        "Les annonces s'affichent plus vite",
+        "Il faut une tâche planifiée pour retirer les anciens destinataires",
+        "Un nouveau membre ne voit jamais les anciennes annonces",
+        "Quelqu'un qui perd son rôle ou quitte l'équipe perd l'accès immédiatement, sans rien nettoyer"
+      ],
+      "bonne": 3,
+      "explication": "Rien n'est stocké, donc rien n'est périmé. Le deuxième choix décrit justement ce qu'il aurait fallu écrire avec une liste figée. Le prix à payer est un calcul à chaque lecture, donc un peu plus de requêtes."
+    },
+    {
+      "question": "Comment s'appelle le principe selon lequel le code métier dépend d'un contrat et non de la base de données ?",
+      "choix": [
+        "L'héritage",
+        "L'inversion de dépendance",
+        "La sérialisation",
+        "Le chargement paresseux"
+      ],
+      "bonne": 1,
+      "explication": "C'est le D de SOLID. L'héritage est tentant comme réponse parce que FauxAnnuaire et AnnuaireClubDoctrine ont la même forme, mais ils n'héritent pas l'un de l'autre : ils implémentent tous deux la même interface."
+    }
+  ]
+}
